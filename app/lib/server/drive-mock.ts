@@ -111,7 +111,8 @@ export function createMockDrive(
 
   const list = (folderId: string): DriveFile[] => {
     const parent = need(folderId);
-    if (parent.mimeType !== FOLDER_MIME) throw new DriveError(400, "Not a folder");
+    if (parent.mimeType !== FOLDER_MIME)
+      throw new DriveError(400, "Not a folder");
     const out = [...entries.values()]
       .filter((e) => e.parentId === folderId && !e.trashed)
       .map(strip);

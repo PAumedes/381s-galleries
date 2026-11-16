@@ -44,7 +44,9 @@ interface RawFile {
 /** "YYYY:MM:DD HH:MM:SS" (EXIF) -> ISO 8601 (UTC assumed), or undefined. */
 export function parseExifTime(s: string | undefined): string | undefined {
   if (!s) return undefined;
-  const m = /^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/.exec(s.trim());
+  const m = /^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/.exec(
+    s.trim(),
+  );
   if (!m) return undefined;
   const [y, mo, d, h, mi, se] = m.slice(1).map(Number);
   const dt = new Date(Date.UTC(y, mo - 1, d, h, mi, se));
@@ -141,7 +143,11 @@ export function createDriveClient(
       // ignore body read failures
     }
     if (detail && token) detail = detail.split(token).join("[redacted]");
-    return new DriveError(res.status, `Drive request failed (${res.status})`, detail);
+    return new DriveError(
+      res.status,
+      `Drive request failed (${res.status})`,
+      detail,
+    );
   }
 
   async function isRateLimit403(res: Response): Promise<boolean> {
@@ -151,7 +157,9 @@ export function createDriveClient(
         error?: { errors?: { reason?: string }[]; status?: string };
       };
       return !!j.error?.errors?.some(
-        (e) => e.reason === "rateLimitExceeded" || e.reason === "userRateLimitExceeded",
+        (e) =>
+          e.reason === "rateLimitExceeded" ||
+          e.reason === "userRateLimitExceeded",
       );
     } catch {
       return false;
@@ -244,7 +252,8 @@ export function createDriveClient(
     let pageToken: string | undefined;
     let pages = 0;
     do {
-      if (++pages > MAX_PAGES) throw new DriveError(502, "Drive listing exceeded page limit");
+      if (++pages > MAX_PAGES)
+        throw new DriveError(502, "Drive listing exceeded page limit");
       const params: Record<string, string> = {
         q,
         fields: `nextPageToken,files(${fields})`,
@@ -259,7 +268,8 @@ export function createDriveClient(
       out.push(...(page.files ?? []));
       pageToken = page.nextPageToken;
       if (pageToken) {
-        if (seen.has(pageToken)) throw new DriveError(502, "Drive pagination loop");
+        if (seen.has(pageToken))
+          throw new DriveError(502, "Drive pagination loop");
         seen.add(pageToken);
       }
     } while (pageToken);
@@ -330,7 +340,8 @@ export function createDriveClient(
       let token = pageToken;
       const seen = new Set<string>([pageToken]);
       for (let pages = 1; ; pages++) {
-        if (pages > MAX_PAGES) throw new DriveError(502, "Drive changes exceeded page limit");
+        if (pages > MAX_PAGES)
+          throw new DriveError(502, "Drive changes exceeded page limit");
         const page = await json<{
           nextPageToken?: string;
           newStartPageToken?: string;
@@ -349,9 +360,13 @@ export function createDriveClient(
           return { changed, newStartPageToken: page.newStartPageToken };
         }
         if (!page.nextPageToken) {
-          throw new DriveError(502, "Drive changes response missing page tokens");
+          throw new DriveError(
+            502,
+            "Drive changes response missing page tokens",
+          );
         }
-        if (seen.has(page.nextPageToken)) throw new DriveError(502, "Drive changes pagination loop");
+        if (seen.has(page.nextPageToken))
+          throw new DriveError(502, "Drive changes pagination loop");
         seen.add(page.nextPageToken);
         token = page.nextPageToken;
       }
