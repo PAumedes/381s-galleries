@@ -6,6 +6,8 @@ export interface GallerySession {
   visitorId?: string;
   /** PIN fingerprint (see pinFingerprint): changing/clearing the PIN invalidates the session. */
   pf: string;
+  /** Set once a gallery_views row was logged for this session. */
+  viewed?: boolean;
 }
 
 export const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
@@ -88,6 +90,7 @@ export async function readGallerySession(
       unlocked: s.unlocked,
       pf: s.pf,
       ...(s.visitorId ? { visitorId: s.visitorId } : {}),
+      ...(s.viewed === true ? { viewed: true } : {}),
     };
   }
   return null;

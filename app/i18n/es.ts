@@ -2,6 +2,11 @@ export const es = {
   "gallery.view": "Ver galería",
   "gallery.photoCount.one": "{count} foto",
   "gallery.photoCount.other": "{count} fotos",
+  "gallery.all": "Todas",
+  "gallery.sets": "Secciones",
+  "gallery.share": "Compartir",
+  "gallery.linkCopied": "Enlace copiado",
+  "pin.error.forbidden": "Solicitud no permitida.",
   "gallery.highlights": "Destacadas",
 
   "pin.title": "Esta galería está protegida",

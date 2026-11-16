@@ -214,10 +214,12 @@ export const galleryViews = sqliteTable(
     galleryId: text("gallery_id").notNull(),
     visitorId: text("visitor_id"),
     country: text("country"),
+    ipHash: text("ip_hash"),
     createdAt: createdAt(),
   },
   (t) => [
     index("gallery_views_gallery_created_idx").on(t.galleryId, t.createdAt),
+    index("gallery_views_dedupe_idx").on(t.galleryId, t.ipHash, t.createdAt),
   ],
 );
 

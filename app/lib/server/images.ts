@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import { isExpired } from "./time";
 import { getDb, photoVisible, schema } from "../../db";
 import { readGallerySession } from "./auth";
 import { mockImageUrl } from "./drive-mock";
@@ -144,10 +145,7 @@ export async function serveImage(
   const { photo, gallery } = row;
 
   if (gallery.status !== "published") return notFound();
-  if (gallery.expiresAt !== null) {
-    const exp = Date.parse(gallery.expiresAt);
-    if (!Number.isFinite(exp) || exp <= Date.now()) return notFound();
-  }
+  if (isExpired(gallery.expiresAt)) return notFound();
   if (gallery.pinHash !== null) {
     const session = await readGallerySession(
       request,

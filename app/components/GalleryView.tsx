@@ -1,0 +1,216 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouteLoaderData } from "react-router";
+
+import { useLang, useT } from "../i18n/use-t";
+import type { loader as rootLoader } from "../root";
+import { Grid } from "./Grid";
+import { LanguageToggle } from "./LanguageToggle";
+import { Lightbox } from "./Lightbox";
+import { Logo } from "./Logo";
+import { ChevronDown, Share } from "./icons";
+import { imgUrl, type GalleryPhoto, type OpenGallery } from "./types";
+
+const ALL = "\u0000all";
+
+function formatDate(value: string | null, lang: string): string | null {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat(lang, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(d);
+}
+
+const reducedMotion = () =>
+  typeof window !== "undefined" &&
+  typeof window.matchMedia === "function" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+export function GalleryView({
+  gallery,
+  photos,
+}: {
+  gallery: OpenGallery;
+  photos: readonly GalleryPhoto[];
+}) {
+  const t = useT();
+  const lang = useLang();
+  const studio =
+    useRouteLoaderData<typeof rootLoader>("root")?.studioName ?? "381 Studios";
+  const multi = gallery.sets.length > 1;
+  const [active, setActive] = useState<string>(
+    multi ? ALL : (gallery.sets[0]?.name ?? ALL),
+  );
+  const [open, setOpen] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const gridRef = useRef<HTMLElement>(null);
+  const coverRef = useRef<HTMLElement>(null);
+
+  const visible = useMemo(
+    () => (active === ALL ? photos : photos.filter((p) => p.set === active)),
+    [photos, active],
+  );
+
+  // Hide the top bar on scroll down, show it on scroll up.
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const past = y > (coverRef.current?.offsetHeight ?? 0);
+      if (Math.abs(y - last) > 6) {
+        setHidden(past && y > last);
+        last = y;
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!copied) return;
+    const id = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(id);
+  }, [copied]);
+
+  const scrollToGrid = useCallback(() => {
+    gridRef.current?.scrollIntoView?.({
+      behavior: reducedMotion() ? "auto" : "smooth",
+      block: "start",
+    });
+  }, []);
+
+  const share = useCallback(async () => {
+    const url = new URL(window.location.href);
+    const link = `${url.origin}${url.pathname}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+    } catch {
+      /* clipboard unavailable: nothing to confirm */
+    }
+  }, []);
+
+  const date = formatDate(gallery.eventDate, lang);
+  const tabs = multi
+    ? [
+        { key: ALL, label: t("gallery.all") },
+        ...gallery.sets.map((s) => ({ key: s.name, label: s.name })),
+      ]
+    : [];
+
+  return (
+    <div className="bg-paper text-ink">
+      <header
+        ref={coverRef}
+        className="on-dark relative flex h-dvh min-h-96 w-full flex-col justify-between overflow-hidden bg-night text-white"
+      >
+        {gallery.coverPhotoId && (
+          <img
+            src={imgUrl(gallery.coverPhotoId, "view-lg")}
+            alt=""
+            fetchPriority="high"
+            className="absolute inset-0 size-full object-cover"
+          />
+        )}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/20"
+        />
+        <div className="relative p-6">
+          <Logo variant="light" className="h-6 w-auto" />
+        </div>
+        <div className="relative flex flex-col items-center gap-6 px-6 pb-10 text-center">
+          <h1 className="text-display font-light uppercase">{gallery.title}</h1>
+          <p className="text-micro-label uppercase">
+            {[date, studio].filter(Boolean).join(" · ")}
+          </p>
+          <button
+            type="button"
+            onClick={scrollToGrid}
+            className="text-micro-label duration-base ease-out-soft flex min-h-11 flex-col items-center gap-1 uppercase text-white/80 transition-colors hover:text-white"
+          >
+            {t("gallery.view")}
+            <ChevronDown className="size-5" aria-hidden="true" />
+          </button>
+        </div>
+      </header>
+
+      <nav
+        className={`bg-paper/80 duration-base ease-out-soft sticky top-0 z-(--z-topbar) grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 backdrop-blur transition-transform ${
+          hidden ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
+        <Logo variant="dark" className="h-4 w-auto justify-self-start" />
+        <div
+          role="tablist"
+          aria-label={t("gallery.sets")}
+          className="flex items-center gap-1 overflow-x-auto"
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={active === tab.key}
+              onClick={() => {
+                setActive(tab.key);
+                setOpen(null);
+              }}
+              className={`text-micro-label duration-base ease-out-soft min-h-11 border-b px-3 uppercase whitespace-nowrap transition-colors ${
+                active === tab.key
+                  ? "border-ink text-ink"
+                  : "text-grey-500 hover:text-ink border-transparent"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center justify-self-end">
+          <button
+            type="button"
+            onClick={share}
+            aria-label={t("gallery.share")}
+            className="text-grey-600 hover:text-ink flex size-11 items-center justify-center"
+          >
+            <Share className="size-5" aria-hidden="true" />
+          </button>
+        </div>
+      </nav>
+
+      <main ref={gridRef} id="grid" className="scroll-mt-12 px-1 py-1">
+        <Grid photos={visible} t={t} onOpen={setOpen} />
+      </main>
+
+      <footer className="flex flex-col items-center gap-4 px-6 py-section">
+        <p className="text-micro-label text-grey-500 uppercase">
+          {t("footer.copyright", { year: new Date().getFullYear() })}
+        </p>
+        <LanguageToggle className="text-grey-500" />
+      </footer>
+
+      {copied && (
+        <p
+          role="status"
+          className="text-micro-label bg-ink text-paper fixed bottom-6 left-1/2 z-(--z-toast) -translate-x-1/2 px-5 py-3 uppercase"
+        >
+          {t("gallery.linkCopied")}
+        </p>
+      )}
+
+      {open !== null && (
+        <Lightbox
+          photos={visible}
+          index={open}
+          t={t}
+          onClose={() => setOpen(null)}
+          onIndexChange={setOpen}
+        />
+      )}
+    </div>
+  );
+}

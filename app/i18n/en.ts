@@ -4,6 +4,11 @@ export const en = {
   "gallery.view": "View gallery",
   "gallery.photoCount.one": "{count} photo",
   "gallery.photoCount.other": "{count} photos",
+  "gallery.all": "All",
+  "gallery.sets": "Sections",
+  "gallery.share": "Share",
+  "gallery.linkCopied": "Link copied",
+  "pin.error.forbidden": "Request not allowed.",
   "gallery.highlights": "Highlights",
 
   "pin.title": "This gallery is protected",
