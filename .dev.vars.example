@@ -1,4 +1,6 @@
 DRIVE_MODE=mock
+# Local dev only: lets /admin work on localhost without Cloudflare Access.
+ALLOW_DEV_ADMIN=1
 SESSION_SECRET=change-me
 DOWNLOAD_SECRET=change-me
 # Base64 32-byte key. Generate with: openssl rand -base64 32

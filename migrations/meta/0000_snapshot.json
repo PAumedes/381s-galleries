@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "46edee5a-a882-4e90-a6ad-384b9d1ebadd",
+  "id": "c26332bf-5743-4439-9f6c-d6720add0b03",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "downloads": {
@@ -69,7 +69,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(datetime('now'))"
+          "default": "(strftime('%Y-%m-%dT%H:%M:%SZ','now'))"
         }
       },
       "indexes": {
@@ -125,7 +125,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(datetime('now'))"
+          "default": "(strftime('%Y-%m-%dT%H:%M:%SZ','now'))"
         }
       },
       "indexes": {},
@@ -319,7 +319,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(datetime('now'))"
+          "default": "(strftime('%Y-%m-%dT%H:%M:%SZ','now'))"
         }
       },
       "indexes": {
@@ -373,10 +373,19 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(datetime('now'))"
+          "default": "(strftime('%Y-%m-%dT%H:%M:%SZ','now'))"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "gallery_views_gallery_created_idx": {
+          "name": "gallery_views_gallery_created_idx",
+          "columns": [
+            "gallery_id",
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -633,7 +642,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(datetime('now'))"
+          "default": "(strftime('%Y-%m-%dT%H:%M:%SZ','now'))"
         }
       },
       "indexes": {

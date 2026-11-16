@@ -72,6 +72,16 @@ describe("pin", () => {
     expect(await verifyPin("1234", h)).toBe(true);
     expect(await verifyPin("1235", h)).toBe(false);
     expect(await verifyPin("1234", "garbage")).toBe(false);
+    expect(await verifyPin("1234", "pbkdf2$100000$abc")).toBe(false);
+    expect(await verifyPin("1234", "pbkdf2$100000$$")).toBe(false);
+    expect(await verifyPin("1234", "pbkdf2$100000$!!$!!")).toBe(false);
+    expect(await verifyPin("1234", h.replace("pbkdf2", "md5"))).toBe(false);
+    expect(await verifyPin("1234", h + "$extra")).toBe(false);
+    // Huge iteration count must be rejected without running the KDF.
+    const [, , salt, hash] = h.split("$");
+    expect(await verifyPin("1234", `pbkdf2$999999999$${salt}$${hash}`)).toBe(
+      false,
+    );
   });
   it("salts differ", async () => {
     expect(await hashPin("1234")).not.toBe(await hashPin("1234"));
@@ -83,6 +93,18 @@ describe("encryptSecret", () => {
     const c = await encryptSecret("refresh-token", KEY);
     expect(c).not.toContain("refresh-token");
     expect(await decryptSecret(c, KEY)).toBe("refresh-token");
+  });
+  it("accepts base64 and base64url keys, rejects bad ones", async () => {
+    const raw = new Uint8Array(32).fill(0xfb);
+    const std = btoa(String.fromCharCode(...raw));
+    expect(std).toMatch(/[+/]/);
+    const c = await encryptSecret("x", std);
+    expect(await decryptSecret(c, b64urlEncode(raw))).toBe("x");
+    const msg =
+      "TOKEN_KEY must be base64 of 32 random bytes (openssl rand -base64 32)";
+    for (const bad of ["change-me", "", "AAAA", btoa("a".repeat(16))]) {
+      await expect(encryptSecret("x", bad)).rejects.toThrow(msg);
+    }
   });
   it("fails on tampered ciphertext", async () => {
     const c = await encryptSecret("refresh-token", KEY);

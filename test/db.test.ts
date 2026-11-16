@@ -36,7 +36,7 @@ describe("db", () => {
     const g = await seed();
     expect(g.status).toBe("draft");
     expect(g.allowHighres).toBe(true);
-    expect(g.createdAt).toMatch(/^\d{4}-\d{2}-\d{2} /);
+    expect(g.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
     const rows = await db
       .select()
       .from(schema.photos)

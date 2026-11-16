@@ -114,17 +114,16 @@ export async function hashPin(pin: string): Promise<string> {
 
 export async function verifyPin(pin: string, stored: string): Promise<boolean> {
   try {
-    const [scheme, iter, saltB64, hashB64] = stored.split("$");
-    const iterations = Number(iter);
-    if (
-      scheme !== "pbkdf2" ||
-      !Number.isInteger(iterations) ||
-      iterations < 1
-    ) {
-      return false;
-    }
+    const parts = stored.split("$");
+    if (parts.length !== 4) return false;
+    const [scheme, iter, saltB64, hashB64] = parts;
+    // Iterations are pinned so a tampered row cannot trigger a huge KDF run.
+    if (scheme !== "pbkdf2" || Number(iter) !== PBKDF2_ITERATIONS) return false;
+    if (!saltB64 || !hashB64) return false;
+    const salt = b64urlDecode(saltB64);
     const expected = b64urlDecode(hashB64);
-    const actual = await derivePin(pin, b64urlDecode(saltB64), iterations);
+    if (salt.length === 0 || expected.length === 0) return false;
+    const actual = await derivePin(pin, salt, PBKDF2_ITERATIONS);
     return timingSafeEqual(actual, expected);
   } catch {
     return false;
@@ -132,8 +131,18 @@ export async function verifyPin(pin: string, stored: string): Promise<boolean> {
 }
 
 function aesKey(keyB64: string, usages: KeyUsage[]): Promise<CryptoKey> {
-  const raw = Uint8Array.from(atob(keyB64), (c) => c.charCodeAt(0));
-  if (raw.length !== 32) throw new Error("TOKEN_KEY must be 32 bytes");
+  const msg =
+    "TOKEN_KEY must be base64 of 32 random bytes (openssl rand -base64 32)";
+  let raw: Uint8Array<ArrayBuffer>;
+  try {
+    // Accept base64 or base64url (b64urlDecode rejects "+", "/" and "=").
+    raw = b64urlDecode(
+      keyB64.trim().replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
+    );
+  } catch {
+    throw new Error(msg);
+  }
+  if (raw.length !== 32) throw new Error(msg);
   return crypto.subtle.importKey("raw", raw, "AES-GCM", false, usages);
 }
 

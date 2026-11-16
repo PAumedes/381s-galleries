@@ -9,10 +9,15 @@ interface __SecretEnv {
   ADMIN_EMAIL: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  /** Local dev only ("1" enables the header-less admin bypass in mock mode). */
+  ALLOW_DEV_ADMIN?: string;
 }
 declare namespace Cloudflare {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface Env extends __SecretEnv {}
+  interface Env extends __SecretEnv {
+    /** `wrangler types --strict-vars=false` widens this to string; narrow it. */
+    DRIVE_MODE: "google" | "mock";
+  }
 }
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface Env extends __SecretEnv {}
+interface Env extends __SecretEnv {
+  DRIVE_MODE: "google" | "mock";
+}
