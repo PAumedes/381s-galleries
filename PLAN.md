@@ -20,7 +20,7 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Area | Decision | Why |
 |---|---|---|
 | Language | TypeScript (strict) | |
-| Web framework | **React Router v7 (framework mode)** on Cloudflare Workers, using Cloudflare's official React Router template (`@cloudflare/vite-plugin`) | First-class Workers support; loaders/actions give SSR + API in one project; React is the stack agents write most reliably |
+| Web framework | **React Router (framework mode, v8 at scaffold time)** on Cloudflare Workers, using Cloudflare's official React Router template (`@cloudflare/vite-plugin`) | First-class Workers support; loaders/actions give SSR + API in one project; React is the stack agents write most reliably |
 | Styling | **Tailwind CSS v4** | Predictable for agents, no separate CSS architecture to maintain |
 | DB | Cloudflare D1 + **Drizzle ORM** (`drizzle-orm/d1`), migrations with `drizzle-kit` → `wrangler d1 migrations` | Typed queries, fewer SQL bugs |
 | Image source | Google Drive API v3, **read-only** (`https://www.googleapis.com/auth/drive.readonly`) | Files are created by Drive for desktop, not by the app, so `drive.file` can't see them |
@@ -161,7 +161,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done. Agents update only their 
 Tasks marked **∥** within a phase touch disjoint files and can run in parallel.
 
 ### Phase 0 — Foundation (sequential)
-- [ ] **T0.1 Scaffold.** Cloudflare React Router template, Tailwind v4, Drizzle, Vitest (workers pool), ESLint/Prettier, `wrangler.jsonc` with `DB`, `CACHE` (R2), cron `*/15 * * * *`, `.dev.vars.example`. *Accept:* `pnpm dev` serves hello page; `pnpm test`, `pnpm build` pass.
+- [x] **T0.1 Scaffold.** Cloudflare React Router template, Tailwind v4, Drizzle, Vitest (workers pool), ESLint/Prettier, `wrangler.jsonc` with `DB`, `CACHE` (R2), cron `*/15 * * * *`, `.dev.vars.example`. *Accept:* `pnpm dev` serves hello page; `pnpm test`, `pnpm build` pass.
 - [ ] **T0.2 Schema.** `app/db/schema.ts` per §4, first migration, `app/db/index.ts` helper. *Accept:* migration applies locally; test inserts/reads a gallery.
 - [ ] **T0.3 Crypto + auth utils.** `app/lib/server/crypto.ts` (HMAC, PBKDF2, AES-GCM, ids), `app/lib/server/auth.ts` (gallery cookie, admin guard). *Accept:* unit tests incl. tampered/expired tokens and wrong admin email.
 
@@ -264,7 +264,7 @@ Cost tips: keep `CLAUDE.md` tiny (it loads every turn); one task per subagent; `
 ```markdown
 # 381s-galleries
 Spec and tasks: PLAN.md — read only the sections you need.
-- TypeScript strict · React Router v7 on Cloudflare Workers · Tailwind v4 · D1 + Drizzle · R2 cache · Drive API read-only.
+- TypeScript strict · React Router on Cloudflare Workers · Tailwind v4 · D1 + Drizzle · R2 cache · Drive API read-only.
 - No image processing in code: Capture One makes every size. App never writes to Drive.
 - pnpm. Before finishing: pnpm lint && pnpm test && pnpm build.
 - Never commit secrets. Never expose Drive IDs, R2 keys or tokens to clients.
