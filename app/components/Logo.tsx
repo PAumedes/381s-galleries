@@ -1,6 +1,4 @@
-import { useRouteLoaderData } from "react-router";
-
-import type { loader as rootLoader } from "../root";
+import { useStudioName } from "../lib/use-studio-name";
 
 /**
  * Placeholder wordmark rendered as inline text so it can use the web font
@@ -25,8 +23,8 @@ export function Logo({
   name?: string;
   className?: string;
 }) {
-  const data = useRouteLoaderData<typeof rootLoader>("root");
-  const label = name ?? data?.studioName ?? "381 Studios";
+  const studio = useStudioName();
+  const label = name ?? studio;
   return (
     <span
       className={`${variant === "dark" ? "text-ink" : "text-white"} font-light tracking-[0.4em] whitespace-nowrap uppercase select-none ${className}`}

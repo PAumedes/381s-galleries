@@ -8,6 +8,7 @@ import { en } from "../i18n/en";
 import { es } from "../i18n/es";
 import { getLang, langCookie } from "../i18n/lang";
 import { makeT } from "../i18n/t";
+import { DEFAULT_STUDIO_NAME } from "../lib/use-studio-name";
 import { loadGallery, unlockGallery } from "../lib/server/gallery";
 import type { Route } from "./+types/$slug";
 
@@ -46,7 +47,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     result.status === 429
       ? t("pin.tooManyAttempts")
       : result.status === 403
-        ? t("pin.error.forbidden")
+        ? t("pin.forbidden")
         : result.status === 404
           ? t("unavailable.message")
           : t("pin.wrong");
@@ -61,11 +62,14 @@ export function headers({ loaderHeaders, actionHeaders }: Route.HeadersArgs) {
   return h;
 }
 
-export function meta({ loaderData: d }: Route.MetaArgs) {
+export function meta({ loaderData: d, matches }: Route.MetaArgs) {
+  const root = matches.find((m) => m?.id === "root")?.loaderData as
+    { studioName?: string } | undefined;
+  const studio = root?.studioName ?? DEFAULT_STUDIO_NAME;
   const title =
     d && d.state !== "unavailable"
-      ? `${d.state === "open" ? d.gallery.title : d.title} · 381 Studios`
-      : "381 Studios";
+      ? `${d.state === "open" ? d.gallery.title : d.title} · ${studio}`
+      : studio;
   return [
     { title },
     { name: "robots", content: "noindex,nofollow" },

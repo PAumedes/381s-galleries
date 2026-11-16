@@ -1,19 +1,15 @@
 export const es = {
   "gallery.view": "Ver galería",
-  "gallery.photoCount.one": "{count} foto",
-  "gallery.photoCount.other": "{count} fotos",
   "gallery.all": "Todas",
   "gallery.sets": "Secciones",
   "gallery.share": "Compartir",
   "gallery.linkCopied": "Enlace copiado",
-  "pin.error.forbidden": "Solicitud no permitida.",
-  "gallery.highlights": "Destacadas",
 
-  "pin.title": "Esta galería está protegida",
   "pin.placeholder": "PIN",
   "pin.submit": "Entrar",
   "pin.wrong": "PIN incorrecto",
   "pin.tooManyAttempts": "Demasiados intentos. Probá de nuevo en unos minutos.",
+  "pin.forbidden": "Solicitud no permitida.",
 
   "unavailable.title": "Galería no disponible",
   "unavailable.message": "Esta galería no está disponible en este momento.",
@@ -27,9 +23,6 @@ export const es = {
   "favorites.error": "No se pudo guardar tu favorita. Probá de nuevo.",
 
   "download.title": "Descargar",
-  "download.high": "Alta resolución · 2048 px",
-  "download.web": "Web · 1200 px",
-  "download.instagram": "Instagram · 1080 px",
 
   "gate.title": "Ingresá tu email para continuar",
   "gate.placeholder": "Email",
@@ -57,5 +50,5 @@ export const es = {
   "footer.langEs": "ES",
   "footer.langEn": "EN",
   "footer.language": "Idioma",
-  "footer.copyright": "© {year} 381 Studios",
+  "footer.copyright": "© {year} {studio}",
 } as const;

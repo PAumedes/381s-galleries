@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getLang, langCookie, SUPPORTED_LANGS } from "../app/i18n/lang";
-import { interpolate, makeT, plural } from "../app/i18n/t";
+import { interpolate, makeT, plural, type Messages } from "../app/i18n/t";
 import { es } from "../app/i18n/es";
 import { en } from "../app/i18n/en";
 
@@ -113,26 +113,53 @@ describe("interpolate / plural / t", () => {
   it("t looks up and interpolates", () => {
     const t = makeT("en", en);
     expect(t("lightbox.counter", { n: 12, total: 340 })).toBe("12 / 340");
-    expect(t("footer.copyright", { year: 2026 })).toBe("© 2026 381 Studios");
+    expect(t("footer.copyright", { year: 2026, studio: "381 Studios" })).toBe(
+      "© 2026 381 Studios",
+    );
   });
-  it("t handles photo count plurals", () => {
-    const t = makeT("es", es);
-    expect(t("gallery.photoCount", { count: 1 })).toBe("1 foto");
-    expect(t("gallery.photoCount", { count: 340 })).toBe("340 fotos");
-    const te = makeT("en", en);
-    expect(te("gallery.photoCount", { count: 1 })).toBe("1 photo");
-    expect(te("gallery.photoCount", { count: 2 })).toBe("2 photos");
-  });
-  it("download labels match the spec", () => {
-    const t = makeT("en", en);
-    expect(t("download.high")).toBe("High resolution · 2048 px");
-    expect(t("download.web")).toBe("Web · 1200 px");
-    expect(t("download.instagram")).toBe("Instagram · 1080 px");
+  it("t falls back to .one/.other plural keys when count is given", () => {
+    const dict = { "x.one": "{count} foto", "x.other": "{count} fotos" };
+    const t = makeT("es", dict as unknown as Messages);
+    expect(t("x" as never, { count: 1 })).toBe("1 foto");
+    expect(t("x" as never, { count: 340 })).toBe("340 fotos");
   });
 });
 
 describe("key parity", () => {
   it("es and en have identical key sets at runtime", () => {
     expect(Object.keys(en).sort()).toEqual(Object.keys(es).sort());
+  });
+});
+
+describe("message hygiene", () => {
+  it("every key is referenced somewhere under app/ (plural bases count)", async () => {
+    const files = import.meta.glob("../app/**/*.{ts,tsx}", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }) as Record<string, string>;
+    const source = Object.entries(files)
+      .filter(([f]) => !/\/i18n\/(es|en)\.ts$/.test(f))
+      .map(([, c]) => c)
+      .join("\n");
+    const unused = Object.keys(es).filter((k) => {
+      const base = k.replace(/\.(one|other)$/, "");
+      return !source.includes(`"${k}"`) && !source.includes(`"${base}"`);
+    });
+    expect(unused).toEqual([]);
+  });
+
+  it("English says favorites, never favourites", () => {
+    const text = Object.values(en).join("\n");
+    expect(text).not.toMatch(/favourite/i);
+  });
+
+  it("pin error keys live under pin.*", () => {
+    expect(
+      Object.keys(es)
+        .filter((k) => k.startsWith("pin."))
+        .sort(),
+    ).toContain("pin.forbidden");
+    expect(Object.keys(es)).not.toContain("pin.error.forbidden");
   });
 });

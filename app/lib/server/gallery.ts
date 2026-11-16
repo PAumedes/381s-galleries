@@ -1,19 +1,25 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { getDb, nowIso, photoVisible, schema } from "../../db";
 import type { OpenGallery } from "../../components/types";
 import type { GalleryPhoto } from "../../components/types";
+import { updateSession } from "./auth";
 import {
-  gallerySessionCookie,
-  pinFingerprint,
-  readGallerySession,
-  type GallerySession,
-} from "./auth";
-import { hashIp, verifyPin } from "./crypto";
+  clientIpHash,
+  crossSite,
+  findGallery,
+  isAvailable,
+  isSecure,
+  openGallery,
+  type AccessEnv,
+} from "./access";
+import { verifyPin } from "./crypto";
 import { asLang } from "../../i18n/lang";
-import { isExpired } from "./time";
+import { rateLimit, resetRateLimit } from "./rate-limit";
 
-type GalleryEnv = Pick<Env, "DB" | "SESSION_SECRET"> &
-  Partial<Pick<Env, "DRIVE_MODE">>;
+type GalleryEnv = AccessEnv;
+
+// Re-exported for existing importers.
+export { crossSite, findGallery, isAvailable, isSecure };
 
 export const VIEW_DEDUPE_MS = 30 * 60 * 1000;
 const BOT_RE =
@@ -45,40 +51,21 @@ const unavailable = (): LoadResult => ({
   data: { state: "unavailable" },
 });
 
-export const isSecure = (request: Request) =>
-  new URL(request.url).protocol === "https:";
-
-export async function findGallery(env: GalleryEnv, slug: string) {
-  const [g] = await getDb(env as Env)
-    .select()
-    .from(schema.galleries)
-    .where(sql`${schema.galleries.slug} = ${slug} COLLATE NOCASE`);
-  return g;
-}
-
-/** Draft, archived, expired and unknown all look the same. */
-export function isAvailable(
-  g: typeof schema.galleries.$inferSelect | undefined,
-) {
-  return !!g && g.status === "published" && !isExpired(g.expiresAt);
-}
-
 export async function loadGallery(
   request: Request,
   slug: string,
   env: GalleryEnv,
 ): Promise<LoadResult> {
+  // Slugs with a dot are files (favicon.ico, robots.txt, ...), never galleries.
+  if (slug.includes(".")) return unavailable();
   const g = await findGallery(env, slug);
-  if (!g || !isAvailable(g)) return unavailable();
+  if (!isAvailable(g)) return unavailable();
 
-  const session = await readGallerySession(
-    request,
-    { id: g.id, pinHash: g.pinHash },
-    env,
-  );
-  if (g.pinHash && !session?.unlocked) {
+  const open = await openGallery(request, g, env);
+  if (!open) {
     return { status: 200, data: { state: "locked", title: g.title } };
   }
+  const { session } = open;
 
   const db = getDb(env as Env);
   const rows = await db
@@ -112,20 +99,18 @@ export async function loadGallery(
     try {
       if (shouldLogView(request)) {
         const country = (request as { cf?: { country?: string } }).cf?.country;
-        const ipHash = await hashIp(
-          request.headers.get("CF-Connecting-IP") ?? "unknown",
-          env.SESSION_SECRET,
-        );
-        const cutoff = nowIso(new Date(Date.now() - VIEW_DEDUPE_MS));
-        if (session?.visitorId) {
+        const ipHash = await clientIpHash(request, env);
+        if (session?.visitorId || !ipHash) {
+          // Unknown IP has no dedupe bucket: log it with a NULL ip_hash.
           await db.insert(schema.galleryViews).values({
             galleryId: g.id,
-            visitorId: session.visitorId,
+            visitorId: session?.visitorId ?? null,
             country: country ?? null,
             ipHash,
           });
         } else {
           // Cookieless: one row per (gallery, ip) per 30 minutes.
+          const cutoff = nowIso(new Date(Date.now() - VIEW_DEDUPE_MS));
           await env.DB.prepare(
             `INSERT INTO gallery_views (gallery_id, visitor_id, country, ip_hash, created_at)
              SELECT ?1, NULL, ?2, ?3, ?4
@@ -136,16 +121,7 @@ export async function loadGallery(
             .run();
         }
       }
-      const next: GallerySession = {
-        galleryId: g.id,
-        unlocked: session?.unlocked ?? true,
-        pf: session?.pf ?? (await pinFingerprint(g.pinHash, env)),
-        ...(session?.visitorId ? { visitorId: session.visitorId } : {}),
-        viewed: true,
-      };
-      setCookie = await gallerySessionCookie(next, env, {
-        secure: isSecure(request),
-      });
+      setCookie = await updateSession(request, g, { viewed: true }, env);
     } catch (err) {
       console.error("gallery view logging failed", err);
     }
@@ -163,6 +139,9 @@ export async function loadGallery(
         clientName: g.clientName,
         coverPhotoId: cover,
         allowBulk: g.allowBulk,
+        allowHighres: g.allowHighres,
+        allowWeb: g.allowWeb,
+        allowIg: g.allowIg,
         sets,
       },
       photos: rows,
@@ -185,41 +164,6 @@ export type UnlockResult =
   | { status: 303; location: string; setCookie?: undefined }
   | { status: 400 | 403 | 404 | 429 };
 
-export function crossSite(request: Request): boolean {
-  const site = request.headers.get("Sec-Fetch-Site");
-  if (site && site !== "same-origin" && site !== "none") return true;
-  const origin = request.headers.get("Origin");
-  if (origin !== null) {
-    try {
-      if (new URL(origin).origin !== new URL(request.url).origin) return true;
-    } catch {
-      return true;
-    }
-  }
-  return false;
-}
-
-/** Counts this attempt atomically; returns the count in the current window. */
-async function countAttempt(
-  env: GalleryEnv,
-  ipHash: string,
-  galleryId: string,
-): Promise<number> {
-  const now = nowIso();
-  const cutoff = nowIso(new Date(Date.now() - PIN_WINDOW_MS));
-  const row = await env.DB.prepare(
-    `INSERT INTO pin_attempts (ip_hash, gallery_id, count, window_start)
-     VALUES (?1, ?2, 1, ?3)
-     ON CONFLICT (ip_hash, gallery_id) DO UPDATE SET
-       count = CASE WHEN window_start <= ?4 THEN 1 ELSE count + 1 END,
-       window_start = CASE WHEN window_start <= ?4 THEN ?3 ELSE window_start END
-     RETURNING count`,
-  )
-    .bind(ipHash, galleryId, now, cutoff)
-    .first<{ count: number }>();
-  return row?.count ?? 1;
-}
-
 export async function unlockGallery(
   request: Request,
   slug: string,
@@ -236,15 +180,18 @@ export async function unlockGallery(
   }
 
   const g = await findGallery(env, slug);
-  const ip =
-    request.headers.get("CF-Connecting-IP") ??
-    (env.DRIVE_MODE === "mock" ? "local" : null);
-  const ipHash = ip ? await hashIp(ip, env.SESSION_SECRET) : null;
-  if (!g || !isAvailable(g)) {
+  const ipHash = await clientIpHash(request, env);
+  const pinLimit = (galleryId: string, ip: string) =>
+    rateLimit(
+      env,
+      "pin",
+      `${ip}:${galleryId}`,
+      PIN_MAX_ATTEMPTS,
+      PIN_WINDOW_MS,
+    );
+  if (!isAvailable(g)) {
     if (!ipHash) return { status: 429 };
-    if ((await countAttempt(env, ipHash, UNKNOWN_GALLERY)) > PIN_MAX_ATTEMPTS) {
-      return { status: 429 };
-    }
+    if (!(await pinLimit(UNKNOWN_GALLERY, ipHash))) return { status: 429 };
     await verifyPin(pin, DUMMY_HASH);
     return { status: 404 };
   }
@@ -254,28 +201,11 @@ export async function unlockGallery(
   if (!g.pinHash) return { status: 303, location };
 
   if (!ipHash) return { status: 429 };
-  if ((await countAttempt(env, ipHash, g.id)) > PIN_MAX_ATTEMPTS) {
-    return { status: 429 };
-  }
+  if (!(await pinLimit(g.id, ipHash))) return { status: 429 };
   const ok = await verifyPin(pin, g.pinHash);
   if (!ok || !pin) return { status: 400 };
 
-  await getDb(env as Env)
-    .delete(schema.pinAttempts)
-    .where(
-      and(
-        eq(schema.pinAttempts.ipHash, ipHash),
-        eq(schema.pinAttempts.galleryId, g.id),
-      ),
-    );
-  const setCookie = await gallerySessionCookie(
-    {
-      galleryId: g.id,
-      unlocked: true,
-      pf: await pinFingerprint(g.pinHash, env),
-    },
-    env,
-    { secure: isSecure(request) },
-  );
+  await resetRateLimit(env, "pin", `${ipHash}:${g.id}`);
+  const setCookie = await updateSession(request, g, { unlocked: true }, env);
   return { status: 303, location, setCookie };
 }

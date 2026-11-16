@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import type { TFunction } from "../i18n/t";
+import { EMAIL_RE } from "../lib/email";
 import { Close } from "./icons";
 
 export type GateResult = "ok" | "invalid" | "error";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FOCUSABLE = "button:not([disabled]), input:not([disabled])";
 
 export type EmailGateProps = {
@@ -85,8 +85,8 @@ export function EmailGate({ t, onSubmit, onClose }: EmailGateProps) {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black/50 px-4"
-      style={{ zIndex: "var(--z-modal, 60)" }}
+      className="fixed inset-0 z-(--z-modal) flex items-center justify-center bg-black/50 px-4"
+
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -124,7 +124,7 @@ export function EmailGate({ t, onSubmit, onClose }: EmailGateProps) {
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("gate.placeholder")}
             aria-invalid={error ? true : undefined}
-            className="text-body border-grey-300 focus:border-ink h-11 border-b bg-transparent px-1 outline-none"
+            className="text-body border-grey-300 focus:border-ink h-11 border-b bg-transparent px-1"
           />
           <label className="sr-only" htmlFor="gate-name">
             {t("gate.name")}
@@ -137,7 +137,7 @@ export function EmailGate({ t, onSubmit, onClose }: EmailGateProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("gate.name")}
-            className="text-body border-grey-300 focus:border-ink h-11 border-b bg-transparent px-1 outline-none"
+            className="text-body border-grey-300 focus:border-ink h-11 border-b bg-transparent px-1"
           />
           {error && (
             <p role="alert" className="text-small text-grey-600">

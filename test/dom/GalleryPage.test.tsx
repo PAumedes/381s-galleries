@@ -9,7 +9,11 @@ import { PinScreen } from "../../app/components/PinScreen";
 import { UnavailableScreen } from "../../app/components/UnavailableScreen";
 import type { OpenGallery } from "../../app/components/types";
 
-function stub(node: ReactNode, lang: "en" | "es" = "en") {
+function stub(
+  node: ReactNode,
+  lang: "en" | "es" = "en",
+  studioName = "381 Studios",
+) {
   const Stub = createRoutesStub([
     {
       id: "root",
@@ -17,7 +21,7 @@ function stub(node: ReactNode, lang: "en" | "es" = "en") {
       loader: () => ({
         lang,
         messages: lang === "en" ? en : es,
-        studioName: "381 Studios",
+        studioName,
       }),
       Component: () => <>{node}</>,
     },
@@ -25,6 +29,11 @@ function stub(node: ReactNode, lang: "en" | "es" = "en") {
   return render(<Stub initialEntries={["/"]} />);
 }
 
+/** Set tabs are plain buttons in a "Sections" nav (no tab roles). */
+const findTabs = async () =>
+  within(
+    await screen.findByRole("navigation", { name: "Sections" }),
+  ).getAllByRole("button");
 const mk = (n: number, set: string, from = 0) =>
   Array.from({ length: n }, (_, i) => ({
     id: `${set}${from + i}`,
@@ -107,20 +116,50 @@ describe("GalleryView", () => {
     expect(screen.getByRole("button", { name: "View gallery" })).toBeTruthy();
   });
 
+  it("uses the studio name from the root loader in hero and footer", async () => {
+    stub(
+      <GalleryView gallery={gallery()} photos={photos} />,
+      "en",
+      "Foo Studio",
+    );
+    await screen.findByRole("heading", { level: 1, name: "Boda Ana" });
+    expect(screen.getByText(/© \d{4} Foo Studio/)).toBeTruthy();
+    expect(document.body.textContent).not.toContain("381 Studios");
+  });
+
+  it("renders a downloadSlot in the top bar only when provided", async () => {
+    const { unmount } = stub(
+      <GalleryView gallery={gallery()} photos={photos} />,
+    );
+    await screen.findByRole("heading", { level: 1 });
+    expect(screen.queryByTestId("dl-slot")).toBeNull();
+    unmount();
+    stub(
+      <GalleryView
+        gallery={gallery()}
+        photos={photos}
+        downloadSlot={<button data-testid="dl-slot">dl</button>}
+      />,
+    );
+    const slot = await screen.findByTestId("dl-slot");
+    expect(slot.closest("nav")).toBeTruthy();
+  });
+
   it("set tabs: All first and default; selecting a set filters the grid", async () => {
     stub(<GalleryView gallery={gallery()} photos={photos} />);
-    const tabs = await screen.findAllByRole("tab");
+    const tabs = await findTabs();
     expect(tabs.map((t) => t.textContent)).toEqual([
       "All",
       "Ceremonia",
       "Fiesta",
     ]);
-    expect(tabs[0].getAttribute("aria-selected")).toBe("true");
+    expect(tabs[0].getAttribute("aria-current")).toBe("true");
     const tiles = () => screen.getAllByRole("button", { name: /^Photo \d+/ });
     expect(tiles()).toHaveLength(5);
     fireEvent.click(tabs[2]);
     expect(tiles()).toHaveLength(2);
-    expect(tabs[2].getAttribute("aria-selected")).toBe("true");
+    expect(tabs[2].getAttribute("aria-current")).toBe("true");
+    expect(tabs[0].getAttribute("aria-current")).toBeNull();
   });
 
   it("a single set shows no tabs", async () => {
@@ -131,12 +170,12 @@ describe("GalleryView", () => {
       />,
     );
     await screen.findByRole("heading", { level: 1 });
-    expect(screen.queryAllByRole("tab")).toHaveLength(0);
+    expect(screen.queryByRole("navigation", { name: "Sections" })).toBeNull();
   });
 
   it("clicking a tile opens the lightbox on the filtered list; close unmounts it", async () => {
     stub(<GalleryView gallery={gallery()} photos={photos} />);
-    const tabs = await screen.findAllByRole("tab");
+    const tabs = await findTabs();
     expect(screen.queryByRole("dialog")).toBeNull();
     fireEvent.click(tabs[2]);
     fireEvent.click(screen.getAllByRole("button", { name: /^Photo \d+/ })[1]);

@@ -14,6 +14,7 @@ import {
   Download,
   Heart,
   HeartFilled,
+  Retry,
 } from "./icons";
 import { imgUrl, type GalleryPhoto } from "./types";
 
@@ -312,7 +313,7 @@ function LightboxView({
             <span>{t("lightbox.loadError")}</span>
             <button
               type="button"
-              className="min-h-11 px-3 underline hover:text-white"
+              className="flex min-h-11 items-center gap-2 px-3 underline hover:text-white"
               onClick={() => {
                 setFailedId(null);
                 setRetryState((r) => ({
@@ -321,6 +322,7 @@ function LightboxView({
                 }));
               }}
             >
+              <Retry className="size-4" aria-hidden="true" />
               {t("lightbox.retry")}
             </button>
           </div>

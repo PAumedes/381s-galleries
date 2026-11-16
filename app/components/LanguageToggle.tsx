@@ -39,7 +39,7 @@ export function LanguageToggle({ className }: { className?: string }) {
               reloadDocument
               hrefLang={code}
               lang={code}
-              className="text-grey-500 hover:text-ink"
+              className="text-grey-600 hover:text-ink"
             >
               {label}
             </Link>

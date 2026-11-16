@@ -26,3 +26,13 @@ In `.dev.vars`:
 Then open <http://localhost:5173/admin>.
 
 `pnpm seed` calls the running dev server (`POST /api/admin/sync`), so `pnpm dev` must be up first. The mock Drive tree is in-memory and deterministic, so seeding again is idempotent.
+
+After pulling: run `pnpm db:migrate:local` (new migrations are applied to the local D1).
+
+## Routes
+
+- `/:slug`: client gallery (PIN form, grid, lightbox); `?lang=es|en` switches language (also sets a cookie)
+- `/img/:id/:variant`: photo images (`thumb`, `view-sm`, `view-lg`), cached in R2
+- `/api/g/:slug/*`: client JSON API (`visitor`, `favorites`; downloads later)
+- `/admin`: admin UI (Cloudflare Access)
+- `/api/admin/sync`: "Sync now" (POST, admin only)

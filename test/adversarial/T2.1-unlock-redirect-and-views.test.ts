@@ -17,7 +17,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await env.DB.batch([
     env.DB.prepare("DELETE FROM gallery_views"),
-    env.DB.prepare("DELETE FROM pin_attempts"),
+    env.DB.prepare("DELETE FROM rate_limits"),
     env.DB.prepare("DELETE FROM photos"),
     env.DB.prepare("DELETE FROM galleries"),
   ]);

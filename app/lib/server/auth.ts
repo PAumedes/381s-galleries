@@ -117,6 +117,34 @@ export async function gallerySessionCookie(
   ].join("; ");
 }
 
+export const isSecure = (request: Request) =>
+  new URL(request.url).protocol === "https:";
+
+/**
+ * Set-Cookie value for this gallery's session: the current valid session (if
+ * any) merged with `patch`, so no field (viewed, visitorId, unlocked) is lost.
+ */
+export async function updateSession(
+  request: Request,
+  gallery: { id: string; pinHash: string | null },
+  patch: Partial<Pick<GallerySession, "unlocked" | "visitorId" | "viewed">>,
+  env: SessionEnv,
+): Promise<string> {
+  const prev = await readGallerySession(request, gallery, env);
+  const defined = Object.fromEntries(
+    Object.entries(patch).filter(([, v]) => v !== undefined),
+  );
+  const next: GallerySession = {
+    unlocked: prev?.unlocked ?? gallery.pinHash === null,
+    ...(prev?.visitorId ? { visitorId: prev.visitorId } : {}),
+    ...(prev?.viewed ? { viewed: true } : {}),
+    ...defined,
+    galleryId: gallery.id,
+    pf: await pinFingerprint(gallery.pinHash, env),
+  };
+  return gallerySessionCookie(next, env, { secure: isSecure(request) });
+}
+
 const JWKS_TTL_MS = 60 * 60 * 1000;
 const JWKS_REFETCH_MIN_MS = 60 * 1000;
 // Leniency applies to nbf only; exp is strict.

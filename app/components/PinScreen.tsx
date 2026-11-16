@@ -27,7 +27,7 @@ export function PinScreen({ title, error }: { title: string; error?: string }) {
           placeholder={t("pin.placeholder")}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "pin-error" : undefined}
-          className="text-body border-grey-300 focus:border-ink h-11 border-b bg-transparent px-1 text-center tracking-[0.3em] outline-none"
+          className="text-body border-grey-300 focus:border-ink h-11 border-b bg-transparent px-1 text-center tracking-[0.3em]"
         />
         {error && (
           <p id="pin-error" role="alert" className="text-small text-grey-600">

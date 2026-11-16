@@ -19,5 +19,8 @@ export type OpenGallery = {
   clientName: string | null;
   coverPhotoId: string | null;
   allowBulk: boolean;
+  allowHighres: boolean;
+  allowWeb: boolean;
+  allowIg: boolean;
   sets: { name: string; count: number }[];
 };

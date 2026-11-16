@@ -9,7 +9,7 @@ import {
 
 import { justify } from "../lib/justify";
 import type { TFunction } from "../i18n/t";
-import { Download, Heart, HeartFilled } from "./icons";
+import { Download, Heart, HeartFilled, Retry } from "./icons";
 import { imgUrl, type GalleryPhoto } from "./types";
 
 /** Width used for server rendering and before the first measurement. */
@@ -170,20 +170,7 @@ function Tile({
             setRetry((n) => n + 1);
           }}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M20 12a8 8 0 1 1-2.5-5.8" />
-            <path d="M20 4v5h-5" />
-          </svg>
+          <Retry className="size-5" aria-hidden="true" />
         </button>
       )}
       {hasActions && (

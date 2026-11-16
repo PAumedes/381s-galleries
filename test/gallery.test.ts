@@ -53,7 +53,7 @@ async function addPhoto(
 beforeEach(async () => {
   await env.DB.batch([
     env.DB.prepare("DELETE FROM gallery_views"),
-    env.DB.prepare("DELETE FROM pin_attempts"),
+    env.DB.prepare("DELETE FROM rate_limits"),
     env.DB.prepare("DELETE FROM photos"),
     env.DB.prepare("DELETE FROM galleries"),
   ]);
@@ -374,7 +374,7 @@ describe("unlockGallery", () => {
     const other = post("1234", { "CF-Connecting-IP": "198.51.100.9" });
     expect((await unlockGallery(other, "boda-ana", env)).status).toBe(303);
     // raw IP never stored
-    const rows = await db.select().from(schema.pinAttempts);
+    const rows = await db.select().from(schema.rateLimits);
     expect(JSON.stringify(rows)).not.toContain("203.0.113.7");
   });
 
@@ -383,12 +383,12 @@ describe("unlockGallery", () => {
     for (let i = 0; i < 6; i++)
       await unlockGallery(post("bad"), "boda-ana", env);
     await db
-      .update(schema.pinAttempts)
+      .update(schema.rateLimits)
       .set({ windowStart: nowIso(new Date(Date.now() - 11 * 60_000)) });
     expect((await unlockGallery(post("bad"), "boda-ana", env)).status).toBe(
       400,
     );
-    const [row] = await db.select().from(schema.pinAttempts);
+    const [row] = await db.select().from(schema.rateLimits);
     expect(row.count).toBe(1);
   });
 
@@ -396,7 +396,7 @@ describe("unlockGallery", () => {
     await addGallery({ pinHash: await hashPin("1234") });
     await unlockGallery(post("bad"), "boda-ana", env);
     await unlockGallery(post("1234"), "boda-ana", env);
-    expect(await db.select().from(schema.pinAttempts)).toHaveLength(0);
+    expect(await db.select().from(schema.rateLimits)).toHaveLength(0);
   });
 
   it("rejects cross-site requests with 403 and does not count them", async () => {
@@ -413,7 +413,7 @@ describe("unlockGallery", () => {
     );
     expect(a.status).toBe(403);
     expect(b.status).toBe(403);
-    expect(await db.select().from(schema.pinAttempts)).toHaveLength(0);
+    expect(await db.select().from(schema.rateLimits)).toHaveLength(0);
     const ok = await unlockGallery(
       post("1234", { Origin: "https://session.test" }),
       "boda-ana",
@@ -440,5 +440,76 @@ describe("unlockGallery", () => {
     ).toBe(404);
     const med = (a: number[]) => a.sort((x, y) => x - y)[1];
     expect(med(unknown)).toBeGreaterThan(med(known) * 0.4);
+  });
+});
+
+describe("review: session merge, payload flags, dotted slugs", () => {
+  it("unlocking keeps viewed and visitorId from the previous session", async () => {
+    const pinHash = await hashPin("1234");
+    await addGallery({ pinHash });
+    const pf = await pinFingerprint(pinHash, env);
+    const prev = await gallerySessionCookie(
+      { galleryId: G, unlocked: false, pf, viewed: true, visitorId: "vis-1" },
+      env,
+      { secure: false },
+    );
+    const r = await unlockGallery(
+      new Request(URL_, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "CF-Connecting-IP": "203.0.113.7",
+          "Sec-Fetch-Site": "same-origin",
+          Cookie: prev.split(";")[0],
+        },
+        body: new URLSearchParams({ pin: "1234" }).toString(),
+      }),
+      "boda-ana",
+      env,
+    );
+    expect(r.status).toBe(303);
+    if (r.status !== 303 || !r.setCookie) throw new Error("no cookie");
+    const s = await readGallerySession(
+      get(URL_, { Cookie: r.setCookie.split(";")[0] }),
+      { id: G, pinHash },
+      env,
+    );
+    expect(s).toMatchObject({
+      unlocked: true,
+      viewed: true,
+      visitorId: "vis-1",
+    });
+  });
+
+  it("the open payload carries the download permission flags", async () => {
+    await addGallery({ allowHighres: false, allowWeb: true, allowIg: false });
+    await addPhoto(1);
+    const r = await loadGallery(get(), "boda-ana", env);
+    if (r.data.state !== "open") throw new Error("not open");
+    expect(r.data.gallery).toMatchObject({
+      allowHighres: false,
+      allowWeb: true,
+      allowIg: false,
+    });
+  });
+
+  it("a slug containing a dot is unavailable without touching D1", async () => {
+    const boom = new Proxy(
+      {},
+      {
+        get() {
+          throw new Error("D1 must not be used");
+        },
+      },
+    );
+    const guarded = {
+      DB: boom,
+      SESSION_SECRET: env.SESSION_SECRET,
+    } as unknown as typeof env;
+    for (const slug of ["favicon.ico", "robots.txt", "a.b"]) {
+      const r = await loadGallery(get(), slug, guarded);
+      expect(r.status).toBe(404);
+      expect(r.data).toEqual({ state: "unavailable" });
+    }
   });
 });

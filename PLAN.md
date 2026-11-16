@@ -34,7 +34,7 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Image processing | **None.** Never resize, re-encode or watermark in code | Capture One does all of it |
 | URLs | Public: `https://session.381studios.ar/<slug>`. Admin: `/admin`. Reserved slugs (rejected by sync, suffixed with `-2`): `admin, api, img, dl, assets, brand, favicon.ico, robots.txt, manifest.webmanifest` | |
 | i18n | **Spanish (default) + English**. Strings in `app/i18n/{es,en}.ts` with a typed key set; language from `?lang=` → cookie → `Accept-Language` → `es`. Small ES/EN toggle in the footer. Admin UI in Spanish only | |
-| Branding | Studio name "381 Studios", black/white logos (see §5.8), Montserrat | |
+| Branding | Studio name "381 Studios", black/white logos (see §5.8), Montserrat, monochrome palette (no accent colour) | |
 | Max image size | **2048px is the largest file delivered.** Web sharing only, no prints, no full-size originals | |
 | Dev mode | `DRIVE_MODE=mock` (§5.9): fake galleries, images from picsum.photos. Default in `.dev.vars.example` | Build and test without Google |
 | Package manager | pnpm (single package, no monorepo) | |
@@ -79,6 +79,8 @@ photos        (id PK, gallery_id FK cascade, set_name default 'Highlights', base
                UNIQUE(gallery_id, id), UNIQUE(gallery_id, set_name, base_name))
 visitors      (id PK, gallery_id FK, email, name?, first_seen,
                UNIQUE(gallery_id, id), UNIQUE(gallery_id, email COLLATE NOCASE))
+               // Anonymous visitors (favourite without email, only when require_email=0): email = `anon-<uuid>@anon.invalid`
+               // (`ANON_DOMAIN`; real emails on that domain are rejected). Exclude them from stats and CSV export.
 favorites     (gallery_id, visitor_id, photo_id, list_name default 'Favoritos', comment?, created_at,
                PK(visitor_id, photo_id, list_name),
                FK(gallery_id, visitor_id) -> visitors(gallery_id, id) cascade,
@@ -86,7 +88,9 @@ favorites     (gallery_id, visitor_id, photo_id, list_name default 'Favoritos', 
 downloads     (id PK, gallery_id, photo_id?, visitor_id?, variant: 'highres'|'web'|'ig',
                kind: 'single'|'bulk', country?, ua?, created_at)
 gallery_views (gallery_id, visitor_id?, country?, ip_hash?, created_at)  // idx (gallery_id, ip_hash, created_at); cookieless views deduped per (gallery, ip_hash) for 30 min
-pin_attempts  (ip_hash, gallery_id, count, window_start)  // rate limit
+rate_limits   (key PK, count, window_start)  // the ONE fixed-window limiter (`rateLimit(env, scope, key, max, windowMs)`, `app/lib/server/rate-limit.ts`);
+               //   key = `<scope>:<key>`; scopes: `pin:<ip_hash>:<gallery_id>` (5/10 min; pseudo-gallery `unknown`), `visitor:<ip_hash>:<gallery_id>`,
+               //   `anon:<ip_hash>:<gallery_id>`, later `dl:`. Expired rows of a scope are pruned opportunistically.
 ```
 
 Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in code). The `DriveFile` contract (`drive-types.ts`, shared by the real client and the mock) carries `trashed` and **rotation-corrected** `width`/`height` (the real client swaps them for EXIF rotation 1/3); `takenAt` is exactly `YYYY-MM-DDTHH:MM:SSZ`. Sort = `taken_at`, then filename; admin can reorder.
@@ -103,23 +107,26 @@ Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in
 7. **Mock auto-publish:** when `DRIVE_MODE=mock`, new galleries are created `published` (instead of `draft`) so the seeded galleries are viewable immediately.
 
 ### 5.2 Client views gallery
-`/:slug` → PIN form if needed → cookie. Draft/expired/archived → "gallery unavailable" page. Justified grid of thumbs (using width/height), sets as tabs, lightbox showing `web` (or `preview-wm` when watermark is on), keyboard + swipe, preload next. Log one `gallery_views` row per session; skipped for HEAD, prefetch (`Purpose`/`Sec-Purpose`) and bot UAs, and cookieless views are deduped per (gallery, hashed IP) within 30 min. Unlock redirects to `/` + `encodeURIComponent(slug)` (+ `?lang=` if valid), never the raw pathname; missing `CF-Connecting-IP` is "local" in mock mode and a 429 otherwise; unknown-slug POSTs share a per-IP limiter (pseudo-gallery `unknown`). The locked screen shows the gallery title (accepted studio choice). **All client queries filter `photos.missing_since IS NULL`, via the shared `photoVisible` predicate (`app/db/index.ts`)** (photos in their sync grace period are hidden from clients).
+`/:slug` → PIN form if needed → cookie. Draft/expired/archived → "gallery unavailable" page. Justified grid of thumbs (using width/height), sets as tabs, lightbox showing `web` (or `preview-wm` when watermark is on), keyboard + swipe, preload next. Log one `gallery_views` row per session; skipped for HEAD, prefetch (`Purpose`/`Sec-Purpose`) and bot UAs, and cookieless views are deduped per (gallery, hashed IP) within 30 min. Unlock redirects to `/` + `encodeURIComponent(slug)` (+ `?lang=` if valid), never the raw pathname; missing `CF-Connecting-IP` is "local" in mock mode and otherwise null (`clientIpHash`): PIN/visitor endpoints answer 429, views are logged with `ip_hash` NULL (no dedupe bucket); unknown-slug POSTs share a per-IP limiter (pseudo-gallery `unknown`). The locked screen shows the gallery title (accepted studio choice). **All client queries filter `photos.missing_since IS NULL`, via the shared `photoVisible` predicate (`app/db/index.ts`)** (photos in their sync grace period are hidden from clients).
 
 ### 5.3 Images route — `/img/:photoId/:variant` (`thumb` | `view-sm` | `view-lg`)
-Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` → on miss, stream from Drive (`files/<id>?alt=media`), `tee()` the body into R2 and the response. `Cache-Control: private, max-age=600`, ETag/304. R2 `customMetadata` = `{fileId, wm, v}` where `v` is the resolved source file's modifiedTime (from `photos.variant_versions`); a hit requires fileId + wm + v to match, otherwise it is a miss and R2 is overwritten (Drive for desktop overwrites re-exports in place, keeping the file id). Unknown `v` is never cached. A blank/unparseable Drive Content-Length counts as absent (streamed uncached). Accepted: browsers may keep a stale image up to 10 min after a watermark toggle or re-export.
+Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` → on miss, stream from Drive (`files/<id>?alt=media`), `tee()` the body into R2 and the response. `Cache-Control: private, max-age=600`, ETag/304. A blank/unparseable Drive Content-Length counts as absent (streamed uncached). Accepted: browsers may keep a stale image up to 10 min after a watermark toggle or re-export.
 - `thumb` → thumb (fallbacks per §3)
 - `view-sm` → web 1200 (lightbox on phones, via `srcset`/`sizes`)
 - `view-lg` → high-res 2048 (lightbox on large/retina screens)
 - When watermark is on, both `view-*` serve `preview-wm`; `thumb` falls back to `thumb ?? preview-wm` (never clean web/high-res), 404 if neither.
-- R2 objects store `customMetadata {fileId, wm: "0"|"1"}` (server-side only, never in responses) and `httpMetadata.contentType`. A hit is valid only if `fileId` equals the currently resolved Drive file id and `wm` equals the current watermark flag; otherwise it is a miss and is overwritten. So re-exports and watermark toggles need no explicit invalidation. Only non-empty bodies (Content-Length > 0) are cached; length 0 → 502. Content-Type passes through if `image/jpeg|png|webp`, else `image/jpeg`.
+Cache rules (one paragraph): R2 objects carry `httpMetadata.contentType` and `customMetadata {fileId, wm: "0"|"1", v}` (server-side only, never in responses), where `v` is the resolved source file's Drive modifiedTime from `photos.variant_versions`. A hit is valid only if `fileId`, `wm` and `v` equal the current resolved file id, watermark flag and version; otherwise it is a miss and the object is overwritten, so re-exports and watermark toggles need no explicit invalidation (Drive for desktop overwrites in place and keeps the file id). Unknown `v` is never cached; only non-empty bodies (Content-Length > 0) are cached (length 0 → 502). Content-Type passes through if `image/jpeg|png|webp`, else `image/jpeg`.
 
 R2 cache keys are exactly `<photoId>/thumb`, `<photoId>/view-sm` and `<photoId>/view-lg`. Image routes must not serve photos with `missing_since` set. When sync hard-deletes photos it removes those three keys per photo with ONE `CACHE.delete(keys[])` per <=1000 keys; on failure the ids stay in settings `r2_pending_deletes` (JSON, capped at 2000) and are retried first thing on the next run. The cron handler stores `sync_last_error` (`{at, message}`, generic text) for failures and for `no_root`/`empty_root` skips, and clears it on success; it rethrows so Cron shows the failure.
 
 ### 5.4 Email gate
-If `require_email`, the first download or favorite opens an email (+ optional name) form → upsert `visitors` (normalize email with trim + lowercase before insert/lookup; the DB unique index is also NOCASE) → visitor id in the cookie.
+If `require_email`, the first download or favorite opens an email (+ optional name) form → upsert `visitors` (normalize email with trim + lowercase before insert/lookup; the DB unique index is also NOCASE; shared regex in `app/lib/email.ts`) → visitor id in the cookie. Server gate: `requireVisitor` (`app/lib/server/access.ts`): `require_email && (no visitor || anonymous)` → `403 email_required`.
+API (JSON, `Cache-Control: no-store`, cross-site POSTs rejected):
+- `POST /api/g/:slug/visitor {email, name?}` → registers the visitor and sets the session cookie (rate limit scope `visitor:`).
+- `GET /api/g/:slug/favorites` → `{visitor, favorites[]}`; `POST /api/g/:slug/favorites {photoId, on}` toggles one favourite (cap 2000 visible favourites; anonymous visitors, scope `anon:`, only when `require_email=0`).
 
 ### 5.5 Download
-1. `POST /api/:slug/download-tokens {photoIds[], variant}` (max 50) → check session + gallery flags → returns `/dl/<token>` URLs.
+1. `POST /api/g/:slug/download-tokens {photoIds[], variant}` (max 50) → `openGallery` + `requireVisitor` (downloads reuse the favourites email gate) + gallery flags → returns `/dl/<token>` URLs. Rate limit scope `dl:`.
 2. `GET /dl/:token` → verify HMAC + expiry → insert `downloads` row → stream from Drive with `Content-Disposition: attachment; filename="<base_name>[-web|-ig].jpg"` and `Content-Length`. Variants: `highres` (2048), `web` (1200), `ig` (1080). Downloads always serve the **clean** files, never `preview-wm`. No buffering.
 3. Access token: `app/lib/server/google-auth.ts#getAccessToken(env, {forceRefresh?})` refreshes from the stored refresh token, caches in `settings` until 5 min before expiry; on 401 refresh once and retry.
 
@@ -127,7 +134,7 @@ If `require_email`, the first download or favorite opens an email (+ optional na
 Browser: request tokens in batches of 50 → fetch each `/dl/<token>` → `client-zip` → `showSaveFilePicker` when available, else Blob fallback with a warning above ~2 GB. Log one `kind=bulk` row plus per-photo rows (the `/dl` hits do that).
 
 ### 5.7 Admin (behind Cloudflare Access)
-- **Setup page:** Connect Google (OAuth), pick root folder (paste link or ID), branding (studio name, logo URL, accent color).
+- **Setup page:** Connect Google (OAuth), pick root folder (paste link or ID), branding (studio name, logo URL; no accent colour: the palette is monochrome).
 - **Galleries list:** status, photo count, views, downloads, expiry, sync issues badge, "Sync now".
 - **Gallery edit:** title, slug, client, date, PIN set/clear, expiry, status (publish button), flags, cover picker, reorder (drag), sync issues list.
 - **Share panel:** link + copy, **QR code** (SVG/PNG via `qrcode`, generated in browser), printable A6 card (QR, title, studio logo).
@@ -141,7 +148,7 @@ Simple, elegant, minimal, **Pixieset-inspired**: the photos are the interface.
 - **Cover:** full-viewport hero with the cover photo, album title in Montserrat (light weight, wide tracking, uppercase), date + studio name small and spaced, a subtle "View gallery" scroll cue. Optional cover layouts later (centered / left / split).
 - **Typography:** **Montserrat only** (self-hosted via `@fontsource-variable/montserrat`). Titles: weight 300, uppercase, letter-spacing ~0.2em. UI: weight 400/500, small sizes, uppercase micro-labels with generous tracking.
 - **Logos:** black-and-white only. `public/brand/logo-black.svg` on light backgrounds, `public/brand/logo-white.svg` on dark ones and over the cover photo. The palette stays monochrome (black, white, warm greys); no accent colour.
-- **Colour:** near-white background (#FAFAF8-ish), near-black text, one muted accent from branding. Dark lightbox. Optional dark gallery theme per album.
+- **Colour:** near-white background (#FAFAF8-ish), near-black text, monochrome (no accent colour). Dark lightbox. Optional dark gallery theme per album.
 - **Grid:** justified rows (Flickr-style) with thin gutters (4–8px), lazy-loaded, fade-in on load, no borders/shadows/rounded cards.
 - **Top bar:** appears after the cover, sticky, translucent with blur: studio logo left, set names centered as text tabs, icon buttons right (favorites, download all, share). Hides on scroll down, shows on scroll up.
 - **Hover/tap on a photo:** discreet heart + download icons in a corner, nothing else.
@@ -162,7 +169,7 @@ Simple, elegant, minimal, **Pixieset-inspired**: the photos are the interface.
 ## 6. Security rules
 - Never expose Drive file IDs, R2 keys or tokens to the client.
 - Every client route checks the gallery cookie **and** that the photo belongs to that gallery **and** gallery is published + not expired.
-- PIN: PBKDF2-SHA256 (Web Crypto), 100k iterations, random salt; max 5 attempts / 10 min per IP+gallery.
+- PIN: PBKDF2-SHA256 (Web Crypto), 100k iterations, random salt; max 5 attempts / 10 min per IP+gallery, via the shared `rateLimit` helper (`pin:` scope in `rate_limits`, §4).
 - Constant-time comparison for HMACs.
 - Refresh token stored AES-GCM encrypted (`TOKEN_KEY`).
 - Secrets only via `wrangler secret put` / `.dev.vars` (gitignored).

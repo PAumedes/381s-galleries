@@ -1,21 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { GateResult } from "./EmailGate";
-
-type Visitor = { email: string; name: string | null } | null;
+import { EmailRequiredError, useVisitor, type Visitor } from "./use-visitor";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
 /**
  * Favourites for one gallery. Loaded client-side (page HTML stays cacheable),
- * toggled optimistically with rollback. `gateOpen` is true while the email
- * gate must be shown; the pending favourite completes after `submitGate`.
+ * toggled optimistically with rollback. The email gate comes from
+ * `useVisitor`: a favourite that needs an email completes after `submitGate`.
  */
 export function useFavorites(slug: string, requireEmail: boolean) {
   const base = `/api/g/${encodeURIComponent(slug)}`;
   const [ids, setIds] = useState<ReadonlySet<string>>(new Set());
-  const [visitor, setVisitor] = useState<Visitor>(null);
-  const [gateOpen, setGateOpen] = useState(false);
+  const {
+    visitor,
+    setVisitor,
+    markKnown,
+    ensure,
+    gateOpen,
+    submitGate,
+    closeGate,
+  } = useVisitor(slug, requireEmail);
   const [failed, setFailed] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -26,8 +31,6 @@ export function useFavorites(slug: string, requireEmail: boolean) {
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setFailed(false), 3000);
   }, []);
-  const pending = useRef<string | null>(null);
-  const hasVisitor = useRef(false);
   const touched = useRef(new Set<string>());
 
   useEffect(() => {
@@ -41,8 +44,6 @@ export function useFavorites(slug: string, requireEmail: boolean) {
           favorites: string[];
         };
         setVisitor(body.visitor);
-        // A signed-in visitor exists server-side even when anonymous (visitor null).
-        hasVisitor.current = body.visitor !== null;
         // Do not clobber toggles made while this request was in flight.
         setIds((cur) => {
           const next = new Set(body.favorites);
@@ -57,7 +58,7 @@ export function useFavorites(slug: string, requireEmail: boolean) {
       }
     })();
     return () => ctl.abort();
-  }, [base]);
+  }, [base, setVisitor]);
 
   const send = useCallback(
     async (photoId: string, on: boolean): Promise<"ok" | "email" | "fail"> => {
@@ -84,7 +85,7 @@ export function useFavorites(slug: string, requireEmail: boolean) {
           body: JSON.stringify({ photoId, on }),
         });
         if (res.ok) {
-          hasVisitor.current = true;
+          markKnown();
           return "ok";
         }
         rollback();
@@ -100,58 +101,20 @@ export function useFavorites(slug: string, requireEmail: boolean) {
         return "fail";
       }
     },
-    [base],
+    [base, markKnown],
   );
 
   const toggle = useCallback(
-    async (photoId: string) => {
+    (photoId: string) => {
       const on = !ids.has(photoId);
-      if (requireEmail && !hasVisitor.current && !visitor) {
-        pending.current = photoId;
-        setGateOpen(true);
-        return;
-      }
-      const r = await send(photoId, on);
-      if (r === "email") {
-        pending.current = photoId;
-        setGateOpen(true);
-      } else if (r === "fail") flashError();
+      return ensure(async () => {
+        const r = await send(photoId, on);
+        if (r === "email") throw new EmailRequiredError();
+        if (r === "fail") flashError();
+      });
     },
-    [ids, requireEmail, visitor, send, flashError],
+    [ids, ensure, send, flashError],
   );
-
-  const submitGate = useCallback(
-    async (email: string, name: string): Promise<GateResult> => {
-      try {
-        const res = await fetch(`${base}/visitor`, {
-          method: "POST",
-          headers: JSON_HEADERS,
-          body: JSON.stringify(name ? { email, name } : { email }),
-        });
-        if (res.status === 400) return "invalid";
-        if (!res.ok) return "error";
-        const body = (await res.json()) as { visitor: Visitor };
-        setVisitor(body.visitor);
-        hasVisitor.current = true;
-      } catch {
-        return "error";
-      }
-      setGateOpen(false);
-      const photoId = pending.current;
-      pending.current = null;
-      if (photoId) {
-        const r = await send(photoId, true);
-        if (r !== "ok") flashError();
-      }
-      return "ok";
-    },
-    [base, send, flashError],
-  );
-
-  const closeGate = useCallback(() => {
-    pending.current = null;
-    setGateOpen(false);
-  }, []);
 
   return { ids, visitor, gateOpen, failed, toggle, submitGate, closeGate };
 }

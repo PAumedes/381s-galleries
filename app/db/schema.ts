@@ -223,18 +223,7 @@ export const galleryViews = sqliteTable(
   ],
 );
 
-export const pinAttempts = sqliteTable(
-  "pin_attempts",
-  {
-    ipHash: text("ip_hash").notNull(),
-    galleryId: text("gallery_id").notNull(),
-    count: integer("count").notNull().default(0),
-    windowStart: text("window_start").notNull(),
-  },
-  (t) => [primaryKey({ columns: [t.ipHash, t.galleryId] })],
-);
-
-/** Generic fixed-window rate limiter: key = `<scope>:<ip_hash>:<gallery_id>`. */
+/** Generic fixed-window rate limiter (see `rateLimit`): key = `<scope>:<key>`, e.g. `pin:<ip_hash>:<gallery_id>`. */
 export const rateLimits = sqliteTable("rate_limits", {
   key: text("key").primaryKey(),
   count: integer("count").notNull().default(0),
@@ -255,5 +244,3 @@ export type Download = typeof downloads.$inferSelect;
 export type NewDownload = typeof downloads.$inferInsert;
 export type GalleryView = typeof galleryViews.$inferSelect;
 export type NewGalleryView = typeof galleryViews.$inferInsert;
-export type PinAttempt = typeof pinAttempts.$inferSelect;
-export type NewPinAttempt = typeof pinAttempts.$inferInsert;

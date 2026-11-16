@@ -1,7 +1,6 @@
 import { and, eq } from "drizzle-orm";
-import { isExpired } from "./time";
 import { getDb, photoVisible, schema } from "../../db";
-import { readGallerySession } from "./auth";
+import { openGallery } from "./access";
 import { mockImageUrl } from "./drive-mock";
 import type { MockVariant } from "./drive-mock";
 import { DriveError } from "./drive-types";
@@ -144,16 +143,7 @@ export async function serveImage(
   if (!row) return notFound();
   const { photo, gallery } = row;
 
-  if (gallery.status !== "published") return notFound();
-  if (isExpired(gallery.expiresAt)) return notFound();
-  if (gallery.pinHash !== null) {
-    const session = await readGallerySession(
-      request,
-      { id: gallery.id, pinHash: gallery.pinHash },
-      env,
-    );
-    if (!session?.unlocked) return notFound();
-  }
+  if (!(await openGallery(request, gallery, env))) return notFound();
 
   const watermark = v !== "thumb" && gallery.useWatermarkPreview;
   if (watermark && !photo.driveWmId) return notFound();

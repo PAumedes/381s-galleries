@@ -11,6 +11,7 @@ import {
   handleListFavorites,
   handleSetFavorite,
   handleVisitor,
+  visibleFavoritesQuery,
 } from "../app/lib/server/favorites";
 
 const db = getDb(env);
@@ -540,5 +541,35 @@ describe("POST favorites", () => {
     expect(a.status).toBe(404);
     expect(b.status).toBe(404);
     expect(await a.text()).toBe(await b.text());
+  });
+});
+
+describe("visibleFavoritesQuery", () => {
+  it("returns only this visitor's visible favourites in the default list, oldest first", async () => {
+    await addGallery();
+    await addPhoto("p1");
+    await addPhoto("p2");
+    await addPhoto("p3", G, { missingSince: nowIso() });
+    const c = await register();
+    await fav(c, "p1");
+    await fav(c, "p2");
+    const [v] = await db.select().from(schema.visitors);
+    await db.insert(schema.favorites).values({
+      galleryId: G,
+      visitorId: v.id,
+      photoId: "p3",
+      listName: "Favoritos",
+    });
+    await db.insert(schema.favorites).values({
+      galleryId: G,
+      visitorId: v.id,
+      photoId: "p1",
+      listName: "Other",
+    });
+    const rows = await visibleFavoritesQuery(db, v.id, G).orderBy(
+      schema.favorites.createdAt,
+      schema.favorites.photoId,
+    );
+    expect(rows.map((r) => r.id)).toEqual(["p1", "p2"]);
   });
 });

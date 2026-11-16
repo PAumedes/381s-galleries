@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouteLoaderData } from "react-router";
+import type { ReactNode } from "react";
 
 import { useLang, useT } from "../i18n/use-t";
-import type { loader as rootLoader } from "../root";
+import { useStudioName } from "../lib/use-studio-name";
 import { EmailGate } from "./EmailGate";
 import { Grid } from "./Grid";
 import { LanguageToggle } from "./LanguageToggle";
@@ -35,14 +35,16 @@ const reducedMotion = () =>
 export function GalleryView({
   gallery,
   photos,
+  downloadSlot,
 }: {
   gallery: OpenGallery;
   photos: readonly GalleryPhoto[];
+  /** Right side of the top bar; Phase 3 puts the download menu here. */
+  downloadSlot?: ReactNode;
 }) {
   const t = useT();
   const lang = useLang();
-  const studio =
-    useRouteLoaderData<typeof rootLoader>("root")?.studioName ?? "381 Studios";
+  const studio = useStudioName();
   const multi = gallery.sets.length > 1;
   const [active, setActive] = useState<string>(
     multi ? ALL : (gallery.sets[0]?.name ?? ALL),
@@ -51,7 +53,7 @@ export function GalleryView({
   const [copied, setCopied] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [edges, setEdges] = useState({ start: false, end: false });
-  const tabsRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLElement>(null);
   const gridRef = useRef<HTMLElement>(null);
   const coverRef = useRef<HTMLElement>(null);
 
@@ -100,7 +102,7 @@ export function GalleryView({
   // Keep the active tab in view (horizontal only: never scrolls the page).
   useEffect(() => {
     const list = tabsRef.current;
-    const tab = list?.querySelector<HTMLElement>('[aria-selected="true"]');
+    const tab = list?.querySelector<HTMLElement>('[aria-current="true"]');
     if (list && tab && typeof list.scrollTo === "function")
       list.scrollTo({
         left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2,
@@ -198,37 +200,40 @@ export function GalleryView({
           variant="dark"
           className="hidden justify-self-start text-xs sm:block"
         />
-        <div
-          ref={tabsRef}
-          role="tablist"
-          aria-label={t("gallery.sets")}
-          onScroll={updateEdges}
-          style={{
-            maskImage: `linear-gradient(to right, ${edges.start ? "transparent, #000 1.5rem" : "#000, #000 0"}, ${edges.end ? "#000 calc(100% - 1.5rem), transparent" : "#000 100%, #000"})`,
-          }}
-          className="flex min-w-0 snap-x snap-proximity items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              aria-selected={active === tab.key}
-              onClick={() => {
-                setActive(tab.key);
-                setOpen(null);
-              }}
-              className={`text-micro-label duration-base ease-out-soft min-h-11 shrink-0 snap-center border-b px-3 uppercase whitespace-nowrap transition-colors ${
-                active === tab.key
-                  ? "border-ink text-ink"
-                  : "text-grey-500 hover:text-ink border-transparent"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        {tabs.length === 0 ? (
+          <div aria-hidden="true" />
+        ) : (
+          <nav
+            ref={tabsRef}
+            aria-label={t("gallery.sets")}
+            onScroll={updateEdges}
+            style={{
+              maskImage: `linear-gradient(to right, ${edges.start ? "transparent, #000 1.5rem" : "#000, #000 0"}, ${edges.end ? "#000 calc(100% - 1.5rem), transparent" : "#000 100%, #000"})`,
+            }}
+            className="flex min-w-0 snap-x snap-proximity items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                aria-current={active === tab.key ? "true" : undefined}
+                onClick={() => {
+                  setActive(tab.key);
+                  setOpen(null);
+                }}
+                className={`text-micro-label duration-base ease-out-soft min-h-11 shrink-0 snap-center border-b px-3 uppercase whitespace-nowrap transition-colors ${
+                  active === tab.key
+                    ? "border-ink text-ink"
+                    : "text-grey-600 hover:text-ink border-transparent"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        )}
         <div className="flex items-center justify-self-end">
+          {downloadSlot}
           <button
             type="button"
             onClick={() => {
@@ -264,7 +269,7 @@ export function GalleryView({
 
       <main ref={gridRef} id="grid" className="scroll-mt-12 px-1 py-1">
         {active === FAV && visible.length === 0 ? (
-          <p className="text-body text-grey-500 py-section text-center">
+          <p className="text-body text-grey-600 py-section text-center">
             {t("favorites.empty")}
           </p>
         ) : (
@@ -279,10 +284,10 @@ export function GalleryView({
       </main>
 
       <footer className="flex flex-col items-center gap-4 px-6 py-section">
-        <p className="text-micro-label text-grey-500 uppercase">
-          {t("footer.copyright", { year: new Date().getFullYear() })}
+        <p className="text-micro-label text-grey-600 uppercase">
+          {t("footer.copyright", { year: new Date().getFullYear(), studio })}
         </p>
-        <LanguageToggle className="text-grey-500" />
+        <LanguageToggle className="text-grey-600" />
       </footer>
 
       {copied && (

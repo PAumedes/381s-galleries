@@ -102,3 +102,8 @@ export const Play = (p: IconProps) => (
     <path d="M8 5.5v13l10.5-6.5Z" />
   </Icon>
 );
+export const Retry = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5" />
+  </Icon>
+);

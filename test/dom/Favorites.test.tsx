@@ -238,7 +238,7 @@ describe("favorites in GalleryView", () => {
     state.visitor = { email: "a@b.co", name: null };
     state.favorites = ["p1", "p3"];
     stub(<GalleryView gallery={gallery()} photos={photos} />);
-    const tab = await screen.findByRole("tab", { name: /Favorites\s*2/ });
+    const tab = await screen.findByRole("button", { name: /Favorites\s*2/ });
     fireEvent.click(tab);
     expect(screen.getAllByRole("button", { name: /^Photo \d+/ })).toHaveLength(
       2,
@@ -342,6 +342,6 @@ describe("EmailGate", () => {
 
   it("has Spanish copy", () => {
     expect(es["gate.reason"]).toBe("Para guardar tus favoritas");
-    expect(en["gate.reason"]).toBe("To save your favourites");
+    expect(en["gate.reason"]).toBe("To save your favorites");
   });
 });

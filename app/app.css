@@ -71,8 +71,9 @@
 
   /* Z-layers */
   --z-topbar: 30;
-  --z-sheet: 40;
   --z-lightbox: 50;
+  --z-sheet: 52;
+  --z-modal: 55;
   --z-toast: 60;
 }
 

@@ -1,24 +1,27 @@
 import { and, eq, sql } from "drizzle-orm";
-import { getDb, nowIso, photoVisible, schema } from "../../db";
+import { getDb, photoVisible, schema } from "../../db";
+import { updateSession } from "./auth";
+import { newId } from "./crypto";
+import { EMAIL_RE } from "../email";
 import {
-  gallerySessionCookie,
-  pinFingerprint,
-  readGallerySession,
-  type GallerySession,
-} from "./auth";
-import { hashIp, newId } from "./crypto";
-import { crossSite, findGallery, isAvailable, isSecure } from "./gallery";
+  ANON_DOMAIN,
+  clientIpHash,
+  crossSite,
+  findGallery,
+  isAnon,
+  openGallery,
+  requireVisitor,
+  type AccessEnv,
+} from "./access";
+import { rateLimit } from "./rate-limit";
 
-type FavEnv = Pick<Env, "DB" | "SESSION_SECRET"> &
-  Partial<Pick<Env, "DRIVE_MODE">>;
+type FavEnv = AccessEnv;
 
 export const FAVORITES_MAX = 2000;
 export const VISITOR_MAX_PER_WINDOW = 30;
 export const ANON_MAX_PER_WINDOW = 20; // per IP+gallery per 10 min; venues share Wi-Fi, each device needs one
 export const VISITOR_WINDOW_MS = 10 * 60 * 1000;
 export const DEFAULT_LIST = "Favoritos";
-const ANON_DOMAIN = "@anon.invalid";
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // eslint-disable-next-line no-control-regex
 const CONTROL_RE = /[\u0000-\u001f\u007f-\u009f]/g;
 
@@ -68,80 +71,39 @@ async function readJson(
   }
 }
 
-type Gallery = typeof schema.galleries.$inferSelect;
-
-/** Same gate as loadGallery: available and (unlocked if PIN). Otherwise null. */
-async function openGallery(
-  request: Request,
-  slug: string,
-  env: FavEnv,
-): Promise<{ g: Gallery; session: GallerySession | null } | null> {
-  const g = await findGallery(env, slug);
-  if (!g || !isAvailable(g)) return null;
-  const session = await readGallerySession(
-    request,
-    { id: g.id, pinHash: g.pinHash },
-    env,
-  );
-  if (g.pinHash && !session?.unlocked) return null;
-  return { g, session };
+/** Gallery by slug through the shared gate (available + PIN session). */
+async function openBySlug(request: Request, slug: string, env: FavEnv) {
+  return openGallery(request, await findGallery(env, slug), env);
 }
 
-async function sessionWithVisitor(
-  request: Request,
-  g: Gallery,
-  session: GallerySession | null,
+/**
+ * The visitor's visible favourites (default list, visible photos only), as
+ * `{ id }` rows. Shared by the list endpoint and the favourites cap so both
+ * count exactly the same set. Callers add ordering.
+ */
+export function visibleFavoritesQuery(
+  db: ReturnType<typeof getDb>,
   visitorId: string,
-  env: FavEnv,
-): Promise<string> {
-  const next: GallerySession = {
-    galleryId: g.id,
-    unlocked: session?.unlocked ?? true,
-    pf: session?.pf ?? (await pinFingerprint(g.pinHash, env)),
-    visitorId,
-    ...(session?.viewed ? { viewed: true } : {}),
-  };
-  return gallerySessionCookie(next, env, { secure: isSecure(request) });
-}
-
-async function currentVisitor(
-  env: FavEnv,
-  g: Gallery,
-  session: GallerySession | null,
+  galleryId: string,
 ) {
-  if (!session?.visitorId) return null;
-  const [v] = await getDb(env as Env)
-    .select()
-    .from(schema.visitors)
+  return db
+    .select({ id: schema.favorites.photoId })
+    .from(schema.favorites)
+    .innerJoin(
+      schema.photos,
+      and(
+        eq(schema.photos.galleryId, schema.favorites.galleryId),
+        eq(schema.photos.id, schema.favorites.photoId),
+      ),
+    )
     .where(
       and(
-        eq(schema.visitors.id, session.visitorId),
-        eq(schema.visitors.galleryId, g.id),
+        eq(schema.favorites.visitorId, visitorId),
+        eq(schema.favorites.galleryId, galleryId),
+        eq(schema.favorites.listName, DEFAULT_LIST),
+        photoVisible,
       ),
     );
-  return v ?? null;
-}
-
-const isAnon = (email: string) => email.endsWith(ANON_DOMAIN);
-
-async function hitRateLimit(env: FavEnv, key: string): Promise<number> {
-  const now = nowIso();
-  const cutoff = nowIso(new Date(Date.now() - VISITOR_WINDOW_MS));
-  if (Math.random() < 0.01) {
-    await env.DB.prepare("DELETE FROM rate_limits WHERE window_start <= ?1")
-      .bind(cutoff)
-      .run();
-  }
-  const row = await env.DB.prepare(
-    `INSERT INTO rate_limits (key, count, window_start) VALUES (?1, 1, ?2)
-     ON CONFLICT (key) DO UPDATE SET
-       count = CASE WHEN window_start <= ?3 THEN 1 ELSE count + 1 END,
-       window_start = CASE WHEN window_start <= ?3 THEN ?2 ELSE window_start END
-     RETURNING count`,
-  )
-    .bind(key, now, cutoff)
-    .first<{ count: number }>();
-  return row?.count ?? 1;
 }
 
 export async function handleVisitor(
@@ -150,9 +112,9 @@ export async function handleVisitor(
   env: FavEnv,
 ): Promise<Response> {
   if (crossSite(request)) return reply({ error: "forbidden" }, 403);
-  const open = await openGallery(request, slug, env);
+  const open = await openBySlug(request, slug, env);
   if (!open) return notFound();
-  const { g, session } = open;
+  const { g } = open;
 
   const body = await readJson(request);
   const email = normalizeEmail(body?.email);
@@ -179,8 +141,13 @@ export async function handleVisitor(
     const ipHash = await clientIpHash(request, env);
     if (!ipHash) return reply({ error: "rate_limited" }, 429);
     if (
-      (await hitRateLimit(env, `visitor:${ipHash}:${g.id}`)) >
-      VISITOR_MAX_PER_WINDOW
+      !(await rateLimit(
+        env,
+        "visitor",
+        `${ipHash}:${g.id}`,
+        VISITOR_MAX_PER_WINDOW,
+        VISITOR_WINDOW_MS,
+      ))
     ) {
       return reply({ error: "rate_limited" }, 429);
     }
@@ -191,7 +158,7 @@ export async function handleVisitor(
     v = await findByEmail();
   }
   if (!v) return reply({ error: "server_error" }, 500);
-  const cookie = await sessionWithVisitor(request, g, session, v.id, env);
+  const cookie = await updateSession(request, g, { visitorId: v.id }, env);
   return reply(
     {
       visitor: existed ? { email: v.email } : { email: v.email, name: v.name },
@@ -201,42 +168,21 @@ export async function handleVisitor(
   );
 }
 
-async function clientIpHash(request: Request, env: FavEnv) {
-  const ip =
-    request.headers.get("CF-Connecting-IP") ??
-    (env.DRIVE_MODE === "mock" ? "local" : null);
-  return ip ? hashIp(ip, env.SESSION_SECRET) : null;
-}
-
 export async function handleListFavorites(
   request: Request,
   slug: string,
   env: FavEnv,
 ): Promise<Response> {
-  const open = await openGallery(request, slug, env);
+  const open = await openBySlug(request, slug, env);
   if (!open) return notFound();
   const { g, session } = open;
-  const v = await currentVisitor(env, g, session);
+  const { visitor: v } = await requireVisitor(env, g, session);
   if (!v) return reply({ visitor: null, favorites: [] });
-  const rows = await getDb(env as Env)
-    .select({ id: schema.favorites.photoId })
-    .from(schema.favorites)
-    .innerJoin(
-      schema.photos,
-      and(
-        eq(schema.photos.galleryId, schema.favorites.galleryId),
-        eq(schema.photos.id, schema.favorites.photoId),
-      ),
-    )
-    .where(
-      and(
-        eq(schema.favorites.visitorId, v.id),
-        eq(schema.favorites.galleryId, g.id),
-        eq(schema.favorites.listName, DEFAULT_LIST),
-        photoVisible,
-      ),
-    )
-    .orderBy(schema.favorites.createdAt);
+  const rows = await visibleFavoritesQuery(
+    getDb(env as Env),
+    v.id,
+    g.id,
+  ).orderBy(schema.favorites.createdAt);
   return reply({
     visitor: isAnon(v.email) ? null : { email: v.email, name: v.name },
     favorites: rows.map((r) => r.id),
@@ -249,7 +195,7 @@ export async function handleSetFavorite(
   env: FavEnv,
 ): Promise<Response> {
   if (crossSite(request)) return reply({ error: "forbidden" }, 403);
-  const open = await openGallery(request, slug, env);
+  const open = await openBySlug(request, slug, env);
   if (!open) return notFound();
   const { g, session } = open;
 
@@ -266,11 +212,10 @@ export async function handleSetFavorite(
   }
 
   const db = getDb(env as Env);
-  let v = await currentVisitor(env, g, session);
+  const gate = await requireVisitor(env, g, session);
+  if (gate.error) return reply({ error: gate.error }, 403);
+  let v = gate.visitor;
   let cookie: string | undefined;
-  if (g.requireEmail && (!v || isAnon(v.email))) {
-    return reply({ error: "email_required" }, 403);
-  }
   if (!v && !on) return reply({ ok: true }); // nothing to remove
 
   if (!on && v) {
@@ -298,7 +243,13 @@ export async function handleSetFavorite(
     const ipHash = await clientIpHash(request, env);
     if (!ipHash) return reply({ error: "rate_limited" }, 429);
     if (
-      (await hitRateLimit(env, `anon:${ipHash}:${g.id}`)) > ANON_MAX_PER_WINDOW
+      !(await rateLimit(
+        env,
+        "anon",
+        `${ipHash}:${g.id}`,
+        ANON_MAX_PER_WINDOW,
+        VISITOR_WINDOW_MS,
+      ))
     ) {
       return reply({ error: "rate_limited" }, 429);
     }
@@ -312,18 +263,14 @@ export async function handleSetFavorite(
     v = (
       await db.select().from(schema.visitors).where(eq(schema.visitors.id, id))
     )[0];
-    cookie = await sessionWithVisitor(request, g, session, id, env);
+    cookie = await updateSession(request, g, { visitorId: id }, env);
   }
 
-  const res = await env.DB.prepare(
-    `INSERT OR IGNORE INTO favorites (gallery_id, visitor_id, photo_id, list_name)
-     SELECT ?1, ?2, ?3, ?4
-     WHERE (SELECT COUNT(*) FROM favorites f
-              JOIN photos p ON p.gallery_id = f.gallery_id AND p.id = f.photo_id
-             WHERE f.visitor_id = ?2 AND p.missing_since IS NULL) < ?5`,
-  )
-    .bind(g.id, v.id, photo.id, DEFAULT_LIST, FAVORITES_MAX)
-    .run();
+  const res = await db.run(
+    sql`INSERT OR IGNORE INTO favorites (gallery_id, visitor_id, photo_id, list_name)
+     SELECT ${g.id}, ${v.id}, ${photo.id}, ${DEFAULT_LIST}
+     WHERE (SELECT COUNT(*) FROM (${visibleFavoritesQuery(db, v.id, g.id)})) < ${FAVORITES_MAX}`,
+  );
   if (res.meta.changes === 0) {
     const exists = await env.DB.prepare(
       "SELECT 1 AS x FROM favorites WHERE visitor_id = ?1 AND photo_id = ?2 AND list_name = ?3",
