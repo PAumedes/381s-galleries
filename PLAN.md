@@ -203,60 +203,36 @@ Tasks marked **∥** within a phase touch disjoint files and can run in parallel
 - Face search (needs compute outside Workers)
 
 ## 8. Definition of done (every task)
-1. Acceptance criteria pass.
-2. `pnpm lint && pnpm test && pnpm build` green.
-3. Only the task's files changed (plus its checkbox in §7).
-4. Report back in ≤10 lines: files changed, how to verify, open questions.
+1. **TDD:** tests written first and seen failing (red), then implementation (green), then refactor.
+2. Acceptance criteria pass.
+3. `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green.
+4. **Adversary pass:** the `adversary` agent reviewed the task and either reported `No findings` or every finding has a test in `test/adversarial/` that now passes (or is skipped with a stated reason the orchestrator accepted).
+5. Only the task's files changed (plus its checkbox in §7 and `test/adversarial/`).
+6. One commit per task (implementation + adversary fixes), message `T<x.y>: <summary>`.
 
-## 9. Running with Sonnet subagents (cost control)
+## 9. Workflow with Sonnet subagents (cost control)
+
+Agent definitions live in `.claude/agents/` (source of truth — don't duplicate them here):
+- `implementer` (Sonnet): one task, strict TDD.
+- `adversary` (Sonnet): tries to break each task; proves findings with failing tests in `test/adversarial/`; never edits app code.
+- `reviewer` (Sonnet): end-of-phase cross-task consistency review.
+- `scout` (Haiku): doc lookups.
 
 Run the **main session on Sonnet** too (`/model sonnet`). Escalate a single task to Opus only if it fails twice.
 
-**`.claude/agents/implementer.md`**
-```markdown
----
-name: implementer
-description: Implements exactly one task from PLAN.md §7. Use for any coding task in this repo.
-model: sonnet
-tools: Read, Write, Edit, Glob, Grep, Bash
----
-You implement ONE task from PLAN.md. First read PLAN.md §2 (decisions), §6 (security), §8 (done) and your task in §7, plus any §3–§5 section it references.
-- Touch only the files your task needs. No unrelated refactors.
-- Never change §2 decisions. Never add image processing. If blocked, stop and report the question.
-- Write tests for the acceptance criteria.
-- Run `pnpm lint && pnpm test && pnpm build` before finishing.
-- Mark your task `[x]` in PLAN.md §7.
-- Reply in ≤10 lines: files changed, how to verify, open questions.
+**Per task loop:**
 ```
-
-**`.claude/agents/reviewer.md`**
-```markdown
----
-name: reviewer
-description: Reviews a finished task or phase against PLAN.md. Read-only.
-model: sonnet
-tools: Read, Glob, Grep, Bash
----
-Review the given changes against PLAN.md §2, §6 and the task acceptance criteria.
-Output only concrete problems: file:line — problem — fix. No praise, no summary. Do not edit files.
-```
-
-**`.claude/agents/scout.md`**
-```markdown
----
-name: scout
-description: Looks up library/API docs (React Router, Drizzle, Workers, Drive API) or finds code in the repo.
-model: haiku
-tools: Read, Glob, Grep, WebFetch, WebSearch
----
-Answer in ≤15 lines with the exact snippet or doc reference needed. No code changes.
+implementer(task) → adversary(task, diff)
+  → findings? implementer(fix: make test/adversarial/* pass) → adversary(re-check)   (max 2 rounds; then escalate to the human)
+  → No findings → lint/typecheck/test/build → commit "T<x.y>: …"
 ```
 
 **Orchestration prompt** (main session, once per phase):
 ```
-Read PLAN.md §7. For Phase <N>, launch one `implementer` per task, giving each only its task ID.
-Run tasks marked ∥ in parallel, the rest sequentially. When done, run `reviewer` on the phase,
-send only the flagged fixes back to an implementer, then stop and summarize in 5 lines.
+Read PLAN.md §7–§9. For Phase <N>, run the per-task loop for each task, giving agents only the task ID
+and diff range. Run tasks marked ∥ in parallel, the rest sequentially. After all tasks, run `reviewer`
+on the phase diff, fix flagged items through the same loop, push the branch phase-<N>, open a PR,
+and summarize in 5 lines.
 ```
 
 Cost tips: keep `CLAUDE.md` tiny (it loads every turn); one task per subagent; `/compact` between phases.
@@ -267,7 +243,8 @@ Cost tips: keep `CLAUDE.md` tiny (it loads every turn); one task per subagent; `
 Spec and tasks: PLAN.md — read only the sections you need.
 - TypeScript strict · React Router on Cloudflare Workers · Tailwind v4 · D1 + Drizzle · R2 cache · Drive API read-only.
 - No image processing in code: Capture One makes every size. App never writes to Drive.
-- pnpm. Before finishing: pnpm lint && pnpm test && pnpm build.
+- pnpm. Strict TDD (tests first, seen failing). Before finishing: pnpm lint && pnpm typecheck && pnpm test && pnpm build.
+- Every task is attacked by the `adversary` agent; its tests live in test/adversarial/.
 - Never commit secrets. Never expose Drive IDs, R2 keys or tokens to clients.
 ```
 
