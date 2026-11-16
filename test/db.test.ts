@@ -169,3 +169,26 @@ describe("db", () => {
     ).toHaveLength(0);
   });
 });
+
+describe("cover photo trigger", () => {
+  it("deleting the cover photo nulls cover_photo_id", async () => {
+    await applyD1Migrations(
+      env.DB,
+      (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
+    );
+    await env.DB.prepare(
+      "INSERT INTO galleries (id, drive_folder_id, slug, title) VALUES ('cv-g','cv-f','cv-s','T')",
+    ).run();
+    await env.DB.prepare(
+      "INSERT INTO photos (id, gallery_id, base_name, drive_highres_id) VALUES ('cv-p','cv-g','x','d')",
+    ).run();
+    await env.DB.prepare(
+      "UPDATE galleries SET cover_photo_id='cv-p' WHERE id='cv-g'",
+    ).run();
+    await env.DB.prepare("DELETE FROM photos WHERE id='cv-p'").run();
+    const row = await env.DB.prepare(
+      "SELECT cover_photo_id FROM galleries WHERE id='cv-g'",
+    ).first<{ cover_photo_id: string | null }>();
+    expect(row?.cover_photo_id).toBeNull();
+  });
+});

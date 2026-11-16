@@ -72,6 +72,7 @@ export async function gallerySessionCookie(
 
 const JWKS_TTL_MS = 60 * 60 * 1000;
 const JWKS_REFETCH_MIN_MS = 60 * 1000;
+// Leniency applies to nbf only; exp is strict.
 const CLOCK_SKEW_SECONDS = 60;
 const jwksCache = new Map<string, { at: number; keys: JsonWebKey[] }>();
 
@@ -155,7 +156,7 @@ async function verifyAccessJwt(
   }
   const now = Math.floor(Date.now() / 1000);
   const { exp, nbf, iss, email } = payload;
-  if (typeof exp !== "number" || exp + CLOCK_SKEW_SECONDS <= now) return null;
+  if (typeof exp !== "number" || exp <= now) return null;
   if (
     nbf !== undefined &&
     (typeof nbf !== "number" || nbf - CLOCK_SKEW_SECONDS > now)

@@ -34,7 +34,9 @@ function assertStrongSecret(secret: string): void {
   if (
     typeof secret !== "string" ||
     secret.length < MIN_SECRET_LENGTH ||
-    secret === "change-me"
+    secret === "change-me" ||
+    secret.trim().length === 0 ||
+    new Set(secret).size === 1
   ) {
     throw new Error(
       "Secret must be at least 32 characters (generate: openssl rand -base64 32)",
@@ -161,7 +163,9 @@ function aesKey(keyB64: string, usages: KeyUsage[]): Promise<CryptoKey> {
   } catch {
     throw new Error(msg);
   }
-  if (raw.length !== 32) throw new Error(msg);
+  if (raw.length !== 32 || raw.every((b) => b === raw[0])) {
+    throw new Error(msg);
+  }
   return crypto.subtle.importKey("raw", raw, "AES-GCM", false, usages);
 }
 

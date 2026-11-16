@@ -13,7 +13,7 @@ import {
 } from "../app/lib/server/crypto";
 
 const S = "test-secret-0123456789-abcdefghijklmnop";
-const KEY = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+const KEY = "yogTK+cwJid8noG4Vt0xD2UnRFi5DXpIYNqlDl+l0HE=";
 
 afterEach(() => vi.useRealTimers());
 
@@ -121,7 +121,7 @@ describe("encryptSecret", () => {
     expect(await decryptSecret(c, KEY)).toBe("refresh-token");
   });
   it("accepts base64 and base64url keys, rejects bad ones", async () => {
-    const raw = new Uint8Array(32).fill(0xfb);
+    const raw = Uint8Array.from({ length: 32 }, (_, i) => 0xfb - (i % 3));
     const std = btoa(String.fromCharCode(...raw));
     expect(std).toMatch(/[+/]/);
     const c = await encryptSecret("x", std);
