@@ -1,0 +1,16 @@
+DRIVE_MODE=mock
+# Local dev only: lets /admin work on localhost without Cloudflare Access.
+ALLOW_DEV_ADMIN=1
+# Secrets must be >= 32 chars; the app refuses empty/short/"change-me" values.
+# generate: openssl rand -base64 32
+SESSION_SECRET=
+# generate: openssl rand -base64 32
+DOWNLOAD_SECRET=
+# Base64 32-byte key. generate: openssl rand -base64 32
+TOKEN_KEY=
+ADMIN_EMAIL=admin@example.com
+# Cloudflare Access (production admin): Zero Trust team domain and application AUD tag.
+ACCESS_TEAM_DOMAIN=
+ACCESS_AUD=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=

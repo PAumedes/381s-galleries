@@ -20,13 +20,13 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Area | Decision | Why |
 |---|---|---|
 | Language | TypeScript (strict) | |
-| Web framework | **React Router v7 (framework mode)** on Cloudflare Workers, using Cloudflare's official React Router template (`@cloudflare/vite-plugin`) | First-class Workers support; loaders/actions give SSR + API in one project; React is the stack agents write most reliably |
+| Web framework | **React Router (framework mode, v8 at scaffold time)** on Cloudflare Workers, using Cloudflare's official React Router template (`@cloudflare/vite-plugin`) | First-class Workers support; loaders/actions give SSR + API in one project; React is the stack agents write most reliably |
 | Styling | **Tailwind CSS v4** | Predictable for agents, no separate CSS architecture to maintain |
 | DB | Cloudflare D1 + **Drizzle ORM** (`drizzle-orm/d1`), migrations with `drizzle-kit` → `wrangler d1 migrations` | Typed queries, fewer SQL bugs |
 | Image source | Google Drive API v3, **read-only** (`https://www.googleapis.com/auth/drive.readonly`) | Files are created by Drive for desktop, not by the app, so `drive.file` can't see them |
-| Preview cache | R2 bucket `revelado-cache`, key `<photoId>/<variant>`; filled lazily on first request | Fast repeat views, fewer Drive calls |
+| Preview cache | R2 bucket `381s-galleries-cache`, key `<photoId>/<variant>`; filled lazily on first request | Fast repeat views, fewer Drive calls |
 | Google auth | OAuth **Web application** client. Admin clicks "Connect Google" once; the Worker runs the OAuth flow and stores the refresh token (encrypted with `TOKEN_KEY`) in D1. Consent screen **In production** (unverified is fine for personal use; you'll see a warning screen once) | No local scripts |
-| Admin auth | **Cloudflare Access** on `/admin*` and `/api/admin*`. App trusts `Cf-Access-Authenticated-User-Email` and checks it equals `ADMIN_EMAIL` | No login code |
+| Admin auth | **Cloudflare Access** on `/admin*` and `/api/admin*`. App verifies the `Cf-Access-Jwt-Assertion` JWT (RS256 vs team JWKS, `aud` = `ACCESS_AUD`, `iss`, `exp`/`nbf`); its `email` claim must equal `ADMIN_EMAIL` (the header alone is never trusted). Needs `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` | No login code |
 | Client auth | Gallery slug + optional PIN → HMAC-signed cookie (Web Crypto, `SESSION_SECRET`), scoped per gallery | |
 | Download links | Short-lived HMAC tokens `/dl/<token>`, 10 min TTL, `DOWNLOAD_SECRET` | |
 | Sync | Cloudflare **Cron Trigger** every 15 min + "Sync now" button in admin | |
@@ -38,6 +38,7 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Max image size | **2048px is the largest file delivered.** Web sharing only, no prints, no full-size originals | |
 | Dev mode | `DRIVE_MODE=mock` (§5.9): fake galleries, images from picsum.photos. Default in `.dev.vars.example` | Build and test without Google |
 | Package manager | pnpm (single package, no monorepo) | |
+| Timestamps | ISO 8601 UTC strings `YYYY-MM-DDTHH:MM:SSZ` everywhere (`nowIso()`) | |
 | Tests | Vitest + `@cloudflare/vitest-pool-workers` | |
 | Lint/format | ESLint + Prettier defaults | |
 
@@ -72,10 +73,13 @@ galleries     (id PK, drive_folder_id UNIQUE, slug UNIQUE, title, client_name?, 
 photos        (id PK, gallery_id FK cascade, set_name default 'Highlights', base_name,
                drive_highres_id, drive_web_id?, drive_ig_id?, drive_thumb_id?, drive_wm_id?,
                highres_bytes?, width?, height?, taken_at?, sort int,   // width/height of high-res
-               UNIQUE(gallery_id, set_name, base_name))
-visitors      (id PK, gallery_id FK, email, name?, first_seen, UNIQUE(gallery_id, email))
-favorites     (visitor_id FK, photo_id FK, list_name default 'Favoritos', comment?, created_at,
-               PK(visitor_id, photo_id, list_name))
+               UNIQUE(gallery_id, id), UNIQUE(gallery_id, set_name, base_name))
+visitors      (id PK, gallery_id FK, email, name?, first_seen,
+               UNIQUE(gallery_id, id), UNIQUE(gallery_id, email COLLATE NOCASE))
+favorites     (gallery_id, visitor_id, photo_id, list_name default 'Favoritos', comment?, created_at,
+               PK(visitor_id, photo_id, list_name),
+               FK(gallery_id, visitor_id) -> visitors(gallery_id, id) cascade,
+               FK(gallery_id, photo_id) -> photos(gallery_id, id) cascade)   // same-gallery guaranteed by DB
 downloads     (id PK, gallery_id, photo_id?, visitor_id?, variant: 'highres'|'web'|'ig',
                kind: 'single'|'bulk', country?, ua?, created_at)
 gallery_views (gallery_id, visitor_id?, country?, created_at)
@@ -104,7 +108,7 @@ Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` �
 - When watermark is on, both `view-*` serve `preview-wm`.
 
 ### 5.4 Email gate
-If `require_email`, the first download or favorite opens an email (+ optional name) form → upsert `visitors` → visitor id in the cookie.
+If `require_email`, the first download or favorite opens an email (+ optional name) form → upsert `visitors` (normalize email with trim + lowercase before insert/lookup; the DB unique index is also NOCASE) → visitor id in the cookie.
 
 ### 5.5 Download
 1. `POST /api/:slug/download-tokens {photoIds[], variant}` (max 50) → check session + gallery flags → returns `/dl/<token>` URLs.
@@ -161,9 +165,9 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done. Agents update only their 
 Tasks marked **∥** within a phase touch disjoint files and can run in parallel.
 
 ### Phase 0 — Foundation (sequential)
-- [ ] **T0.1 Scaffold.** Cloudflare React Router template, Tailwind v4, Drizzle, Vitest (workers pool), ESLint/Prettier, `wrangler.jsonc` with `DB`, `CACHE` (R2), cron `*/15 * * * *`, `.dev.vars.example`. *Accept:* `pnpm dev` serves hello page; `pnpm test`, `pnpm build` pass.
-- [ ] **T0.2 Schema.** `app/db/schema.ts` per §4, first migration, `app/db/index.ts` helper. *Accept:* migration applies locally; test inserts/reads a gallery.
-- [ ] **T0.3 Crypto + auth utils.** `app/lib/server/crypto.ts` (HMAC, PBKDF2, AES-GCM, ids), `app/lib/server/auth.ts` (gallery cookie, admin guard). *Accept:* unit tests incl. tampered/expired tokens and wrong admin email.
+- [x] **T0.1 Scaffold.** Cloudflare React Router template, Tailwind v4, Drizzle, Vitest (workers pool), ESLint/Prettier, `wrangler.jsonc` with `DB`, `CACHE` (R2), cron `*/15 * * * *`, `.dev.vars.example`. *Accept:* `pnpm dev` serves hello page; `pnpm test`, `pnpm build` pass.
+- [x] **T0.2 Schema.** `app/db/schema.ts` per §4, first migration, `app/db/index.ts` helper. *Accept:* migration applies locally; test inserts/reads a gallery.
+- [x] **T0.3 Crypto + auth utils.** `app/lib/server/crypto.ts` (HMAC, PBKDF2, AES-GCM, ids), `app/lib/server/auth.ts` (gallery cookie, admin guard). *Accept:* unit tests incl. tampered/expired tokens and wrong admin email.
 
 ### Phase 1 — Google + sync
 - [ ] **T1.1 ∥ Google OAuth.** Routes `/admin/google/connect` + callback, encrypted token storage, `drive.ts#getAccessToken`. *Accept:* tests with mocked token endpoint; refresh-on-401.
@@ -202,60 +206,36 @@ Tasks marked **∥** within a phase touch disjoint files and can run in parallel
 - Face search (needs compute outside Workers)
 
 ## 8. Definition of done (every task)
-1. Acceptance criteria pass.
-2. `pnpm lint && pnpm test && pnpm build` green.
-3. Only the task's files changed (plus its checkbox in §7).
-4. Report back in ≤10 lines: files changed, how to verify, open questions.
+1. **TDD:** tests written first and seen failing (red), then implementation (green), then refactor.
+2. Acceptance criteria pass.
+3. `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green.
+4. **Adversary pass:** the `adversary` agent reviewed the task and either reported `No findings` or every finding has a test in `test/adversarial/` that now passes (or is skipped with a stated reason the orchestrator accepted).
+5. Only the task's files changed (plus its checkbox in §7 and `test/adversarial/`).
+6. One commit per task (implementation + adversary fixes), message `T<x.y>: <summary>`.
 
-## 9. Running with Sonnet subagents (cost control)
+## 9. Workflow with Sonnet subagents (cost control)
+
+Agent definitions live in `.claude/agents/` (source of truth — don't duplicate them here):
+- `implementer` (Sonnet): one task, strict TDD.
+- `adversary` (Sonnet): tries to break each task; proves findings with failing tests in `test/adversarial/`; never edits app code.
+- `reviewer` (Sonnet): end-of-phase cross-task consistency review.
+- `scout` (Haiku): doc lookups.
 
 Run the **main session on Sonnet** too (`/model sonnet`). Escalate a single task to Opus only if it fails twice.
 
-**`.claude/agents/implementer.md`**
-```markdown
----
-name: implementer
-description: Implements exactly one task from PLAN.md §7. Use for any coding task in this repo.
-model: sonnet
-tools: Read, Write, Edit, Glob, Grep, Bash
----
-You implement ONE task from PLAN.md. First read PLAN.md §2 (decisions), §6 (security), §8 (done) and your task in §7, plus any §3–§5 section it references.
-- Touch only the files your task needs. No unrelated refactors.
-- Never change §2 decisions. Never add image processing. If blocked, stop and report the question.
-- Write tests for the acceptance criteria.
-- Run `pnpm lint && pnpm test && pnpm build` before finishing.
-- Mark your task `[x]` in PLAN.md §7.
-- Reply in ≤10 lines: files changed, how to verify, open questions.
+**Per task loop:**
 ```
-
-**`.claude/agents/reviewer.md`**
-```markdown
----
-name: reviewer
-description: Reviews a finished task or phase against PLAN.md. Read-only.
-model: sonnet
-tools: Read, Glob, Grep, Bash
----
-Review the given changes against PLAN.md §2, §6 and the task acceptance criteria.
-Output only concrete problems: file:line — problem — fix. No praise, no summary. Do not edit files.
-```
-
-**`.claude/agents/scout.md`**
-```markdown
----
-name: scout
-description: Looks up library/API docs (React Router, Drizzle, Workers, Drive API) or finds code in the repo.
-model: haiku
-tools: Read, Glob, Grep, WebFetch, WebSearch
----
-Answer in ≤15 lines with the exact snippet or doc reference needed. No code changes.
+implementer(task) → adversary(task, diff)
+  → findings? implementer(fix: make test/adversarial/* pass) → adversary(re-check)   (max 2 rounds; then escalate to the human)
+  → No findings → lint/typecheck/test/build → commit "T<x.y>: …"
 ```
 
 **Orchestration prompt** (main session, once per phase):
 ```
-Read PLAN.md §7. For Phase <N>, launch one `implementer` per task, giving each only its task ID.
-Run tasks marked ∥ in parallel, the rest sequentially. When done, run `reviewer` on the phase,
-send only the flagged fixes back to an implementer, then stop and summarize in 5 lines.
+Read PLAN.md §7–§9. For Phase <N>, run the per-task loop for each task, giving agents only the task ID
+and diff range. Run tasks marked ∥ in parallel, the rest sequentially. After all tasks, run `reviewer`
+on the phase diff, fix flagged items through the same loop, push the branch phase-<N>, open a PR,
+and summarize in 5 lines.
 ```
 
 Cost tips: keep `CLAUDE.md` tiny (it loads every turn); one task per subagent; `/compact` between phases.
@@ -264,17 +244,18 @@ Cost tips: keep `CLAUDE.md` tiny (it loads every turn); one task per subagent; `
 ```markdown
 # 381s-galleries
 Spec and tasks: PLAN.md — read only the sections you need.
-- TypeScript strict · React Router v7 on Cloudflare Workers · Tailwind v4 · D1 + Drizzle · R2 cache · Drive API read-only.
+- TypeScript strict · React Router on Cloudflare Workers · Tailwind v4 · D1 + Drizzle · R2 cache · Drive API read-only.
 - No image processing in code: Capture One makes every size. App never writes to Drive.
-- pnpm. Before finishing: pnpm lint && pnpm test && pnpm build.
+- pnpm. Strict TDD (tests first, seen failing). Before finishing: pnpm lint && pnpm typecheck && pnpm test && pnpm build.
+- Every task is attacked by the `adversary` agent; its tests live in test/adversarial/.
 - Never commit secrets. Never expose Drive IDs, R2 keys or tokens to clients.
 ```
 
 ## 11. Manual steps for the photographer (not for agents)
-1. Cloudflare: add custom domain `session.381studios.ar` to the Worker (DNS already on Cloudflare).
+1. Cloudflare: add custom domain `session.381studios.ar` to the Worker (DNS already on Cloudflare). Worker has workers.dev and preview URLs disabled; only the custom domain serves it.
 2. Google Cloud project → enable Drive API → OAuth **Web** client with redirect `https://<domain>/admin/google/callback` → consent screen **In production**.
-3. Cloudflare Zero Trust → Access application for `/admin*` and `/api/admin*` allowing your email.
-4. `wrangler secret put`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`, `ADMIN_EMAIL`.
+3. Cloudflare Zero Trust → Access application for `/admin*` and `/api/admin*` allowing your email. Copy the application's **Audience (AUD) tag** (Access > Applications > your app > Overview) into `ACCESS_AUD`, and your team domain (`<team>.cloudflareaccess.com`, Zero Trust > Settings > Custom Pages) into `ACCESS_TEAM_DOMAIN`.
+4. `wrangler secret put`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`, `ADMIN_EMAIL`, `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`. Secrets must be >= 32 chars (`openssl rand -base64 32`).
 5. Drive for desktop syncing `My Drive/381studios`.
 6. Capture One: create the recipes from §3, all enabled, output to `…/381studios/[Session Name]/<recipe>`.
 7. Admin → Setup → Connect Google → paste root folder → after a sync, publish the gallery and share the link/QR.

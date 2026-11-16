@@ -1,0 +1,17 @@
+@import "tailwindcss" source(".");
+@import "@fontsource-variable/montserrat";
+
+@theme {
+  --font-sans:
+    "Montserrat Variable", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+html,
+body {
+  @apply bg-white font-sans text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+}
