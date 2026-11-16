@@ -335,6 +335,30 @@ describe("first sync on fixtures", () => {
     expect(r.photos).toEqual({ added: 0, updated: 1, removed: 0 });
   });
 
+  it("stores each variant's modifiedTime; a change in any variant counts as updated", async () => {
+    const g = await galleryBy("2026-11-14-boda-ana-y-juan");
+    const before = (await photosOf(g.id))[0];
+    const vv = JSON.parse(before.variantVersions!);
+    expect(Object.keys(vv).sort()).toEqual([
+      "highres",
+      "ig",
+      "thumb",
+      "web",
+      "wm",
+    ]);
+    expect(typeof vv.highres).toBe("string");
+    expect(vv.wm).toBeNull();
+    // Same file id, same base name, new modifiedTime (in-place re-export).
+    const target = await drive.getMeta(before.driveThumbId!);
+    drive.renameFile(target.id, target.name.replace(/\.jpg$/i, ".jpeg"));
+    const r = await runSync(e, { drive });
+    expect(r.photos.updated).toBe(1);
+    const after = (await photosOf(g.id)).find((p) => p.id === before.id)!;
+    expect(after.driveThumbId).toBe(before.driveThumbId);
+    expect(JSON.parse(after.variantVersions!).thumb).not.toBe(vv.thumb);
+    expect(JSON.parse(after.variantVersions!).highres).toBe(vv.highres);
+  });
+
   it("album trashed -> archived, rows kept", async () => {
     const root = buildFixtures().rootId;
     const album = await findChild(drive, root, "Retrato Sofía");

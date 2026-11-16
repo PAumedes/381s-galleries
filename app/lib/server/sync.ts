@@ -340,6 +340,13 @@ const photoFields = (p: PhotoDraft) => ({
   driveThumbId: p.thumb?.id ?? null,
   driveWmId: p.wm?.id ?? null,
   highresBytes: p.highres.size ?? null,
+  variantVersions: JSON.stringify({
+    highres: p.highres.modifiedTime,
+    web: p.web?.modifiedTime ?? null,
+    ig: p.ig?.modifiedTime ?? null,
+    thumb: p.thumb?.modifiedTime ?? null,
+    wm: p.wm?.modifiedTime ?? null,
+  }),
   width: p.width,
   height: p.height,
   takenAt: p.highres.takenAt ?? null,
@@ -736,7 +743,7 @@ export async function runSync(
             cmp(x.setName, y.setName),
         );
         let sort = rows.reduce((m, r) => Math.max(m, r.sort), -1) + 1;
-        for (const part of chunk(fresh, 7))
+        for (const part of chunk(fresh, 6))
           stmts.push(
             db.insert(schema.photos).values(
               part.map((p) => ({

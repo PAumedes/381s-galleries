@@ -114,6 +114,8 @@ export const photos = sqliteTable(
     driveThumbId: text("drive_thumb_id"),
     driveWmId: text("drive_wm_id"),
     highresBytes: integer("highres_bytes"),
+    // JSON {highres,web,ig,thumb,wm}: each variant's Drive modifiedTime (cache validation).
+    variantVersions: text("variant_versions"),
     width: integer("width"),
     height: integer("height"),
     takenAt: text("taken_at"),

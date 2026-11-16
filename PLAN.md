@@ -74,7 +74,7 @@ galleries     (id PK, drive_folder_id UNIQUE, slug UNIQUE, title, client_name?, 
                folder_missing_since?, archived_prev_status? ('draft'|'published'), created_at)
 photos        (id PK, gallery_id FK cascade, set_name default 'Highlights', base_name,
                drive_highres_id, drive_web_id?, drive_ig_id?, drive_thumb_id?, drive_wm_id?,
-               highres_bytes?, width?, height?, taken_at?, sort int,   // width/height of high-res
+               highres_bytes?, variant_versions? (JSON {highres,web,ig,thumb,wm} = each variant's Drive modifiedTime), width?, height?, taken_at?, sort int,   // width/height of high-res
                missing_since?,                                         // set while the high-res file is absent (sync grace period)
                UNIQUE(gallery_id, id), UNIQUE(gallery_id, set_name, base_name))
 visitors      (id PK, gallery_id FK, email, name?, first_seen,
@@ -106,11 +106,12 @@ Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in
 `/:slug` → PIN form if needed → cookie. Draft/expired/archived → "gallery unavailable" page. Justified grid of thumbs (using width/height), sets as tabs, lightbox showing `web` (or `preview-wm` when watermark is on), keyboard + swipe, preload next. Log one `gallery_views` row per session. **All client queries filter `photos.missing_since IS NULL`, via the shared `photoVisible` predicate (`app/db/index.ts`)** (photos in their sync grace period are hidden from clients).
 
 ### 5.3 Images route — `/img/:photoId/:variant` (`thumb` | `view-sm` | `view-lg`)
-Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` → on miss, stream from Drive (`files/<id>?alt=media`), `tee()` the body into R2 and the response. `Cache-Control: private, max-age=86400`, ETag.
+Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` → on miss, stream from Drive (`files/<id>?alt=media`), `tee()` the body into R2 and the response. `Cache-Control: private, max-age=600`, ETag/304. R2 `customMetadata` = `{fileId, wm, v}` where `v` is the resolved source file's modifiedTime (from `photos.variant_versions`); a hit requires fileId + wm + v to match, otherwise it is a miss and R2 is overwritten (Drive for desktop overwrites re-exports in place, keeping the file id). Unknown `v` is never cached. A blank/unparseable Drive Content-Length counts as absent (streamed uncached). Accepted: browsers may keep a stale image up to 10 min after a watermark toggle or re-export.
 - `thumb` → thumb (fallbacks per §3)
 - `view-sm` → web 1200 (lightbox on phones, via `srcset`/`sizes`)
 - `view-lg` → high-res 2048 (lightbox on large/retina screens)
-- When watermark is on, both `view-*` serve `preview-wm`.
+- When watermark is on, both `view-*` serve `preview-wm`; `thumb` falls back to `thumb ?? preview-wm` (never clean web/high-res), 404 if neither.
+- R2 objects store `customMetadata {fileId, wm: "0"|"1"}` (server-side only, never in responses) and `httpMetadata.contentType`. A hit is valid only if `fileId` equals the currently resolved Drive file id and `wm` equals the current watermark flag; otherwise it is a miss and is overwritten. So re-exports and watermark toggles need no explicit invalidation. Only non-empty bodies (Content-Length > 0) are cached; length 0 → 502. Content-Type passes through if `image/jpeg|png|webp`, else `image/jpeg`.
 
 R2 cache keys are exactly `<photoId>/thumb`, `<photoId>/view-sm` and `<photoId>/view-lg`. Image routes must not serve photos with `missing_since` set. When sync hard-deletes photos it removes those three keys per photo with ONE `CACHE.delete(keys[])` per <=1000 keys; on failure the ids stay in settings `r2_pending_deletes` (JSON, capped at 2000) and are retried first thing on the next run. The cron handler stores `sync_last_error` (`{at, message}`, generic text) for failures and for `no_root`/`empty_root` skips, and clears it on success; it rethrows so Cron shows the failure.
 
@@ -188,7 +189,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T2.0 Foundations** (first). Design tokens in `app/app.css` per §5.8 (colours, type scale, spacing, motion durations, z-layers), icon set (`app/components/icons.tsx`, thin 1.5px stroke, inline SVG, no icon library), placeholder logos `public/brand/logo-black.svg` / `logo-white.svg` (text "381 STUDIOS" in Montserrat light, to be replaced by the real files), i18n infra (`app/i18n/{es,en}.ts` typed key set, `getLang(request)` per §2, `t()` helper + `useT()` hook via root loader, `<html lang>` set, ES/EN footer toggle component), root ErrorBoundary restyled + translated. *Accept:* typed keys (missing key in `en` fails typecheck), lang resolution order tested.
 - [ ] **T2.1 Gallery page + PIN + status/expiry + view logging.** `app/routes/$slug*.tsx`, `PinForm`. *Accept:* sessions carry the PIN fingerprint `pf` (`pinFingerprint()` in `auth.ts`; `readGallerySession(request, {id, pinHash}, env)` rejects a mismatch, so changing/clearing the PIN logs visitors out); all photo queries use `photoVisible`.
 - [ ] **T2.2 Grid + Lightbox components.** `app/components/Grid.tsx`, `Lightbox.tsx` (justified layout, keyboard, swipe, preload). *Accept:* all photo queries use `photoVisible`.
-- [ ] **T2.3 Images route** per §5.3 with R2 read-through cache. *Accept (carried from T1.4 review):* in mock mode the 302 Location seed equals the DB photo id and never contains any drive_*_id; call `mockImageUrl(photo.id, variant, photo.width, photo.height)` with the row's width/height. All photo queries use `photoVisible`.
+- [x] **T2.3 Images route** per §5.3 with R2 read-through cache. *Accept (carried from T1.4 review):* in mock mode the 302 Location seed equals the DB photo id and never contains any drive_*_id; call `mockImageUrl(photo.id, variant, photo.width, photo.height)` with the row's width/height. All photo queries use `photoVisible`.
 - [ ] **T2.4 Email gate + favorites** (after T2.1). `EmailGate.tsx`, visitor + favorites API, heart button in grid and lightbox. *Accept:* all photo queries use `photoVisible`.
 
 ### Phase 3 — Downloads
