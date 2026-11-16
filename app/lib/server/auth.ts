@@ -1,9 +1,11 @@
-import { b64urlDecode, signToken, verifyToken } from "./crypto";
+import { b64urlDecode, b64urlEncode, signToken, verifyToken } from "./crypto";
 
 export interface GallerySession {
   galleryId: string;
   unlocked: boolean;
   visitorId?: string;
+  /** PIN fingerprint (see pinFingerprint): changing/clearing the PIN invalidates the session. */
+  pf: string;
 }
 
 export const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
@@ -11,6 +13,39 @@ export const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 type SessionEnv = Pick<Env, "SESSION_SECRET">;
 type AdminEnv = Pick<Env, "ADMIN_EMAIL" | "DRIVE_MODE"> &
   Partial<Pick<Env, "ALLOW_DEV_ADMIN" | "ACCESS_TEAM_DOMAIN" | "ACCESS_AUD">>;
+
+/**
+ * First 16 base64url chars of HMAC-SHA256(SESSION_SECRET, pinHash === null ? "pin:none" : "pin:h:" + pinHash).
+ * Stored in the session so a PIN change or removal logs everyone out.
+ */
+export async function pinFingerprint(
+  pinHash: string | null,
+  env: SessionEnv,
+): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(env.SESSION_SECRET),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const mac = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(pinHash == null ? "pin:none" : `pin:h:${pinHash}`),
+  );
+  return b64urlEncode(new Uint8Array(mac)).slice(0, 16);
+}
+
+function safeEqual(a: string, b: string): boolean {
+  const x = new TextEncoder().encode(a);
+  const y = new TextEncoder().encode(b);
+  let diff = x.length ^ y.length;
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    diff |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  }
+  return diff === 0;
+}
 
 /** One cookie per gallery so unlocking one gallery never unlocks another. */
 export function sessionCookieName(galleryId: string): string {
@@ -30,19 +65,28 @@ function getCookies(request: Request, name: string): string[] {
   return out;
 }
 
+/** `gallery` is the current DB row (id + pin_hash): a stale PIN fingerprint is rejected. */
 export async function readGallerySession(
   request: Request,
-  galleryId: string,
+  gallery: { id: string; pinHash: string | null },
   env: SessionEnv,
 ): Promise<GallerySession | null> {
-  for (const raw of getCookies(request, sessionCookieName(galleryId))) {
+  const pf = await pinFingerprint(gallery.pinHash, env);
+  for (const raw of getCookies(request, sessionCookieName(gallery.id))) {
     const s = await verifyToken<GallerySession>(raw, env.SESSION_SECRET);
-    if (!s || s.galleryId !== galleryId || typeof s.unlocked !== "boolean") {
+    if (
+      !s ||
+      s.galleryId !== gallery.id ||
+      typeof s.unlocked !== "boolean" ||
+      typeof s.pf !== "string" ||
+      !safeEqual(s.pf, pf)
+    ) {
       continue;
     }
     return {
       galleryId: s.galleryId,
       unlocked: s.unlocked,
+      pf: s.pf,
       ...(s.visitorId ? { visitorId: s.visitorId } : {}),
     };
   }

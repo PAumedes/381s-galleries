@@ -1,8 +1,8 @@
 import { applyD1Migrations } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { beforeAll, describe, expect, it } from "vitest";
-import { eq } from "drizzle-orm";
-import { getDb, schema } from "../app/db";
+import { and, eq } from "drizzle-orm";
+import { getDb, nowIso, photoVisible, schema } from "../app/db";
 
 declare module "cloudflare:test" {
   interface ProvidedEnv extends Env {
@@ -190,5 +190,31 @@ describe("cover photo trigger", () => {
       "SELECT cover_photo_id FROM galleries WHERE id='cv-g'",
     ).first<{ cover_photo_id: string | null }>();
     expect(row?.cover_photo_id).toBeNull();
+  });
+});
+
+describe("nowIso / photoVisible", () => {
+  it("nowIso formats a given date at second precision, default is now", () => {
+    expect(nowIso(new Date("2026-03-04T05:06:07.891Z"))).toBe(
+      "2026-03-04T05:06:07Z",
+    );
+    expect(nowIso()).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
+  });
+
+  it("photoVisible hides photos in their sync grace period", async () => {
+    await applyD1Migrations(
+      env.DB,
+      (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
+    );
+    const g = await seed();
+    await db
+      .update(schema.photos)
+      .set({ missingSince: nowIso() })
+      .where(eq(schema.photos.baseName, "b"));
+    const rows = await db
+      .select()
+      .from(schema.photos)
+      .where(and(eq(schema.photos.galleryId, g.id), photoVisible));
+    expect(rows.map((r) => r.baseName)).toEqual(["a"]);
   });
 });

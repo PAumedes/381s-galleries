@@ -11,7 +11,9 @@ describe("T0r2 adversarial: schema", () => {
     for (const n of ["a", "b"]) {
       await env.DB.prepare(
         "INSERT INTO galleries (id, drive_folder_id, slug, title) VALUES (?,?,?,'T')",
-      ).bind(`r2g-${n}`, `r2f-${n}`, `r2s-${n}`).run();
+      )
+        .bind(`r2g-${n}`, `r2f-${n}`, `r2s-${n}`)
+        .run();
     }
     await env.DB.prepare(
       "INSERT INTO photos (id, gallery_id, base_name, drive_highres_id) VALUES ('r2p-b','r2g-b','x','d')",

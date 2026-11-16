@@ -66,6 +66,14 @@ export const galleries = sqliteTable(
     driveModifiedAt: text("drive_modified_at"),
     lastSyncedAt: text("last_synced_at"),
     syncIssuesJson: text("sync_issues_json"),
+    // Sync safety (T1.3): set when the Drive folder is first seen missing;
+    // the gallery is archived only after a grace period. When sync archives,
+    // the previous status is kept here so it can be restored if the folder
+    // comes back.
+    folderMissingSince: text("folder_missing_since"),
+    archivedPrevStatus: text("archived_prev_status", {
+      enum: ["draft", "published"],
+    }),
     createdAt: createdAt(),
   },
   (t) => [
@@ -110,6 +118,9 @@ export const photos = sqliteTable(
     height: integer("height"),
     takenAt: text("taken_at"),
     sort: integer("sort").notNull().default(0),
+    // Set when sync first sees the photo's high-res file missing; hard-deleted
+    // only after a grace period. Client queries MUST filter `missing_since IS NULL`.
+    missingSince: text("missing_since"),
   },
   (t) => [
     // Target for favorites' composite FK (same-gallery guarantee).
