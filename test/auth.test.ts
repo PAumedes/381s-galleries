@@ -7,6 +7,7 @@ import {
   requireAdmin,
   resetAccessKeyCache,
   sessionCookieName,
+  updateSession,
 } from "../app/lib/server/auth";
 import { b64urlEncode } from "../app/lib/server/crypto";
 
@@ -334,5 +335,73 @@ describe("requireAdmin", () => {
     await expect401(
       requireAdmin(mk("https://session.381studios.ar/admin"), mock),
     );
+  });
+});
+
+describe("updateSession", () => {
+  const req = (cookie?: string) =>
+    new Request(
+      "https://x.test/",
+      cookie ? { headers: { Cookie: cookie } } : {},
+    );
+  const read = (sc: string) => readGallerySession(reqWithCookie(sc), g1, env);
+
+  it("merges the patch into the previous session", async () => {
+    const first = await gallerySessionCookie(
+      {
+        galleryId: G1,
+        unlocked: true,
+        visitorId: "v1",
+        viewed: true,
+        pf: await PF_NONE(),
+      },
+      env,
+      { secure: false },
+    );
+    const sc = await updateSession(
+      req(first.split(";")[0]),
+      g1,
+      { visitorId: "v2" },
+      env,
+    );
+    expect(await read(sc)).toMatchObject({
+      unlocked: true,
+      visitorId: "v2",
+      viewed: true,
+    });
+  });
+
+  it("starts from defaults without a previous session and sets pf", async () => {
+    const sc = await updateSession(req(), g1, { unlocked: false }, env);
+    expect(await read(sc)).toMatchObject({ galleryId: G1, unlocked: false });
+  });
+
+  it("sets Secure only over https", async () => {
+    const https = await updateSession(
+      new Request("https://x.test/"),
+      g1,
+      {},
+      env,
+    );
+    const http = await updateSession(
+      new Request("http://x.test/"),
+      g1,
+      {},
+      env,
+    );
+    expect(https).toContain("Secure");
+    expect(http).not.toContain("Secure");
+  });
+
+  it("does not carry over a session whose PIN fingerprint is stale", async () => {
+    const old = await gallerySessionCookie(
+      { galleryId: G1, unlocked: true, visitorId: "v1", pf: await PF_NONE() },
+      env,
+      { secure: false },
+    );
+    const withPin = { id: G1, pinHash: "pbkdf2$x" };
+    const sc = await updateSession(req(old.split(";")[0]), withPin, {}, env);
+    const s = await readGallerySession(reqWithCookie(sc), withPin, env);
+    expect(s?.visitorId).toBeUndefined();
   });
 });

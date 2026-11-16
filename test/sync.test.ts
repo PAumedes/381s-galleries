@@ -335,6 +335,30 @@ describe("first sync on fixtures", () => {
     expect(r.photos).toEqual({ added: 0, updated: 1, removed: 0 });
   });
 
+  it("stores each variant's modifiedTime; a change in any variant counts as updated", async () => {
+    const g = await galleryBy("2026-11-14-boda-ana-y-juan");
+    const before = (await photosOf(g.id))[0];
+    const vv = JSON.parse(before.variantVersions!);
+    expect(Object.keys(vv).sort()).toEqual([
+      "highres",
+      "ig",
+      "thumb",
+      "web",
+      "wm",
+    ]);
+    expect(typeof vv.highres).toBe("string");
+    expect(vv.wm).toBeNull();
+    // Same file id, same base name, new modifiedTime (in-place re-export).
+    const target = await drive.getMeta(before.driveThumbId!);
+    drive.renameFile(target.id, target.name.replace(/\.jpg$/i, ".jpeg"));
+    const r = await runSync(e, { drive });
+    expect(r.photos.updated).toBe(1);
+    const after = (await photosOf(g.id)).find((p) => p.id === before.id)!;
+    expect(after.driveThumbId).toBe(before.driveThumbId);
+    expect(JSON.parse(after.variantVersions!).thumb).not.toBe(vv.thumb);
+    expect(JSON.parse(after.variantVersions!).highres).toBe(vv.highres);
+  });
+
   it("album trashed -> archived, rows kept", async () => {
     const root = buildFixtures().rootId;
     const album = await findChild(drive, root, "Retrato Sofía");
@@ -352,6 +376,78 @@ describe("first sync on fixtures", () => {
     expect((await photosOf(g.id)).length).toBe(30);
     const r2 = await runSync(e, { drive, force: true, now: later() });
     expect(r2.galleries.archived).toBe(0);
+  });
+
+  it("parses a leading date into event_date and strips it from the title", async () => {
+    const cases: [string, string, string | null, string][] = [
+      [
+        "2026-11-14 Boda Ana y Juan",
+        "Boda Ana y Juan",
+        "2026-11-14",
+        "2026-11-14-boda-ana-y-juan",
+      ],
+      [
+        "2026-11-14_Evento Uno",
+        "Evento Uno",
+        "2026-11-14",
+        "2026-11-14-evento-uno",
+      ],
+      [
+        "2026-11-15 - Evento Dos",
+        "Evento Dos",
+        "2026-11-15",
+        "2026-11-15-evento-dos",
+      ],
+      [
+        "20261116 Evento Tres",
+        "Evento Tres",
+        "2026-11-16",
+        "20261116-evento-tres",
+      ],
+      [
+        "2026-13-40 Fecha Rota",
+        "2026-13-40 Fecha Rota",
+        null,
+        "2026-13-40-fecha-rota",
+      ],
+      [
+        "2026-02-30 Feb Rota",
+        "2026-02-30 Feb Rota",
+        null,
+        "2026-02-30-feb-rota",
+      ],
+      ["2024-02-29 Bisiesto", "Bisiesto", "2024-02-29", "2024-02-29-bisiesto"],
+      ["Sin Fecha", "Sin Fecha", null, "sin-fecha"],
+    ];
+    await db.delete(schema.galleries);
+    await db.delete(schema.settings);
+    const names = Object.fromEntries(
+      cases.map(([n]) => [n, { "high-res": { "": ["a.jpg"] } }]),
+    );
+    const fx = tree(names);
+    await setRoot(fx.rootId);
+    await runSync(e, { drive: createMockDrive(fx) });
+    for (const [, title, date, slug] of cases) {
+      const g = await galleryBy(slug);
+      expect(g, slug).toBeTruthy();
+      expect(g.title).toBe(title);
+      expect(g.eventDate).toBe(date);
+    }
+  });
+
+  it("does not re-parse the date for existing galleries", async () => {
+    await db.delete(schema.galleries);
+    await db.delete(schema.settings);
+    const fx = tree({ "2026-11-14 Boda": { "high-res": { "": ["a.jpg"] } } });
+    await setRoot(fx.rootId);
+    const d = createMockDrive(fx);
+    await runSync(e, { drive: d });
+    await db
+      .update(schema.galleries)
+      .set({ eventDate: "2030-01-01", title: "Mio" });
+    await runSync(e, { drive: d, force: true });
+    const [g] = await db.select().from(schema.galleries);
+    expect([g.eventDate, g.title]).toEqual(["2030-01-01", "Mio"]);
   });
 
   it("existing galleries keep slug/title/status when folder is renamed", async () => {

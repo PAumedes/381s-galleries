@@ -114,6 +114,8 @@ export const photos = sqliteTable(
     driveThumbId: text("drive_thumb_id"),
     driveWmId: text("drive_wm_id"),
     highresBytes: integer("highres_bytes"),
+    // JSON {highres,web,ig,thumb,wm}: each variant's Drive modifiedTime (cache validation).
+    variantVersions: text("variant_versions"),
     width: integer("width"),
     height: integer("height"),
     takenAt: text("taken_at"),
@@ -212,23 +214,21 @@ export const galleryViews = sqliteTable(
     galleryId: text("gallery_id").notNull(),
     visitorId: text("visitor_id"),
     country: text("country"),
+    ipHash: text("ip_hash"),
     createdAt: createdAt(),
   },
   (t) => [
     index("gallery_views_gallery_created_idx").on(t.galleryId, t.createdAt),
+    index("gallery_views_dedupe_idx").on(t.galleryId, t.ipHash, t.createdAt),
   ],
 );
 
-export const pinAttempts = sqliteTable(
-  "pin_attempts",
-  {
-    ipHash: text("ip_hash").notNull(),
-    galleryId: text("gallery_id").notNull(),
-    count: integer("count").notNull().default(0),
-    windowStart: text("window_start").notNull(),
-  },
-  (t) => [primaryKey({ columns: [t.ipHash, t.galleryId] })],
-);
+/** Generic fixed-window rate limiter (see `rateLimit`): key = `<scope>:<key>`, e.g. `pin:<ip_hash>:<gallery_id>`. */
+export const rateLimits = sqliteTable("rate_limits", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull().default(0),
+  windowStart: text("window_start").notNull(),
+});
 
 export type Setting = typeof settings.$inferSelect;
 export type NewSetting = typeof settings.$inferInsert;
@@ -244,5 +244,3 @@ export type Download = typeof downloads.$inferSelect;
 export type NewDownload = typeof downloads.$inferInsert;
 export type GalleryView = typeof galleryViews.$inferSelect;
 export type NewGalleryView = typeof galleryViews.$inferInsert;
-export type PinAttempt = typeof pinAttempts.$inferSelect;
-export type NewPinAttempt = typeof pinAttempts.$inferInsert;

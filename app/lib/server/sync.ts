@@ -77,6 +77,31 @@ type SyncEnv = Pick<Env, "DB" | "CACHE" | "DRIVE_MODE">;
 const nfc = (s: string) => s.normalize("NFC").trim();
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
+/**
+ * Splits a leading date off an album folder name ("2026-11-14 Boda",
+ * "2026-11-14_Boda", "2026-11-14 - Boda", "20261114 Boda"). Invalid calendar
+ * dates and date-only names are left untouched.
+ */
+export function parseFolderDate(name: string): {
+  title: string;
+  eventDate: string | null;
+} {
+  const m = /^(\d{4})-?(\d{2})-?(\d{2})(?:\s*[-_]\s*|[\s_]+)(\S.*)$/u.exec(
+    name,
+  );
+  if (m) {
+    const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    const dt = new Date(Date.UTC(y, mo - 1, d));
+    if (
+      dt.getUTCFullYear() === y &&
+      dt.getUTCMonth() === mo - 1 &&
+      dt.getUTCDate() === d
+    )
+      return { title: m[4].trim(), eventDate: `${m[1]}-${m[2]}-${m[3]}` };
+  }
+  return { title: name, eventDate: null };
+}
+
 const isFolder = (f: DriveFile) => f.mimeType === FOLDER_MIME;
 const isLive = (f: DriveFile) => !f.trashed && f.mimeType !== SHORTCUT_MIME;
 const isJpeg = (f: DriveFile) =>
@@ -340,6 +365,13 @@ const photoFields = (p: PhotoDraft) => ({
   driveThumbId: p.thumb?.id ?? null,
   driveWmId: p.wm?.id ?? null,
   highresBytes: p.highres.size ?? null,
+  variantVersions: JSON.stringify({
+    highres: p.highres.modifiedTime,
+    web: p.web?.modifiedTime ?? null,
+    ig: p.ig?.modifiedTime ?? null,
+    thumb: p.thumb?.modifiedTime ?? null,
+    wm: p.wm?.modifiedTime ?? null,
+  }),
   width: p.width,
   height: p.height,
   takenAt: p.highres.takenAt ?? null,
@@ -639,13 +671,15 @@ export async function runSync(
           );
       } else {
         result.galleries.created++;
-        const title = nfc(a.folder.name);
+        const full = nfc(a.folder.name);
+        const { title, eventDate } = parseFolderDate(full);
         stmts.push(
           db.insert(schema.galleries).values({
             id: galleryId,
             driveFolderId: a.folder.id,
-            slug: uniqueSlug(title, takenSlugs),
+            slug: uniqueSlug(full, takenSlugs),
             title,
+            eventDate,
             status: env.DRIVE_MODE === "mock" ? "published" : "draft",
             useWatermarkPreview: a.hasWm,
             syncIssuesJson: issuesJson,
@@ -736,7 +770,7 @@ export async function runSync(
             cmp(x.setName, y.setName),
         );
         let sort = rows.reduce((m, r) => Math.max(m, r.sort), -1) + 1;
-        for (const part of chunk(fresh, 7))
+        for (const part of chunk(fresh, 6))
           stmts.push(
             db.insert(schema.photos).values(
               part.map((p) => ({

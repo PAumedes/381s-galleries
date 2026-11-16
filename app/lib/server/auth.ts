@@ -6,6 +6,8 @@ export interface GallerySession {
   visitorId?: string;
   /** PIN fingerprint (see pinFingerprint): changing/clearing the PIN invalidates the session. */
   pf: string;
+  /** Set once a gallery_views row was logged for this session. */
+  viewed?: boolean;
 }
 
 export const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
@@ -88,6 +90,7 @@ export async function readGallerySession(
       unlocked: s.unlocked,
       pf: s.pf,
       ...(s.visitorId ? { visitorId: s.visitorId } : {}),
+      ...(s.viewed === true ? { viewed: true } : {}),
     };
   }
   return null;
@@ -112,6 +115,34 @@ export async function gallerySessionCookie(
     `Max-Age=${SESSION_TTL_SECONDS}`,
     ...(secure ? ["Secure"] : []),
   ].join("; ");
+}
+
+export const isSecure = (request: Request) =>
+  new URL(request.url).protocol === "https:";
+
+/**
+ * Set-Cookie value for this gallery's session: the current valid session (if
+ * any) merged with `patch`, so no field (viewed, visitorId, unlocked) is lost.
+ */
+export async function updateSession(
+  request: Request,
+  gallery: { id: string; pinHash: string | null },
+  patch: Partial<Pick<GallerySession, "unlocked" | "visitorId" | "viewed">>,
+  env: SessionEnv,
+): Promise<string> {
+  const prev = await readGallerySession(request, gallery, env);
+  const defined = Object.fromEntries(
+    Object.entries(patch).filter(([, v]) => v !== undefined),
+  );
+  const next: GallerySession = {
+    unlocked: prev?.unlocked ?? gallery.pinHash === null,
+    ...(prev?.visitorId ? { visitorId: prev.visitorId } : {}),
+    ...(prev?.viewed ? { viewed: true } : {}),
+    ...defined,
+    galleryId: gallery.id,
+    pf: await pinFingerprint(gallery.pinHash, env),
+  };
+  return gallerySessionCookie(next, env, { secure: isSecure(request) });
 }
 
 const JWKS_TTL_MS = 60 * 60 * 1000;

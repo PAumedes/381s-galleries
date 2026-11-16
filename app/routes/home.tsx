@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 
+import { Logo } from "../components/Logo";
 import type { Route } from "./+types/home";
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -12,9 +13,13 @@ export function loader() {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-2xl font-light tracking-[0.3em] uppercase">
-        {loaderData.studioName}
+    <main className="flex min-h-dvh items-center justify-center px-6">
+      <h1>
+        <Logo
+          variant="dark"
+          name={loaderData.studioName}
+          className="text-base"
+        />
       </h1>
     </main>
   );
