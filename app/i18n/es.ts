@@ -28,10 +28,14 @@ export const es = {
   "gate.submit": "Continuar",
   "gate.invalid": "Ingresá un email válido",
 
+  "grid.photo": "Foto {n}",
+
   "lightbox.close": "Cerrar",
   "lightbox.previous": "Anterior",
   "lightbox.next": "Siguiente",
   "lightbox.counter": "{n} / {total}",
+  "lightbox.loadError": "No se pudo cargar la imagen",
+  "lightbox.retry": "Reintentar",
 
   "error.notFound.title": "404",
   "error.notFound.message": "No encontramos la página que buscás.",
