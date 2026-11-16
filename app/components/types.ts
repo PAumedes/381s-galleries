@@ -3,6 +3,8 @@ export type GalleryPhoto = {
   width: number | null;
   height: number | null;
   set: string;
+  /** Which downloadable sizes exist (high-res is always present). Downloads never fall back between sizes. */
+  variants: { web: boolean; ig: boolean };
 };
 
 export type ImgVariant = "thumb" | "view-sm" | "view-lg";

@@ -10,4 +10,5 @@ export const photos = (n: number): GalleryPhoto[] =>
     width: i % 3 === 2 ? 2000 : 3000,
     height: i % 3 === 2 ? 3000 : 2000,
     set: "A",
+    variants: { web: true, ig: true },
   }));

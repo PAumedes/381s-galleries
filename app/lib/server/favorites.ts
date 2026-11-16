@@ -12,6 +12,8 @@ import {
   openGallery,
   requireVisitor,
   type AccessEnv,
+  type GalleryRow,
+  type VisitorRow,
 } from "./access";
 import { rateLimit } from "./rate-limit";
 
@@ -104,6 +106,47 @@ export function visibleFavoritesQuery(
         photoVisible,
       ),
     );
+}
+
+/**
+ * Anonymous visitor for a gallery without an email gate (favourites, downloads):
+ * per IP+gallery limiter (`anon:`), then a synthetic `anon-<uuid>@anon.invalid`
+ * visitor and the session cookie. Null when rate limited / no client IP.
+ */
+export async function createAnonVisitor(
+  request: Request,
+  env: FavEnv,
+  g: GalleryRow,
+): Promise<{ visitor: VisitorRow; cookie: string } | null> {
+  const ipHash = await clientIpHash(request, env);
+  if (!ipHash) return null;
+  if (
+    !(await rateLimit(
+      env,
+      "anon",
+      `${ipHash}:${g.id}`,
+      ANON_MAX_PER_WINDOW,
+      VISITOR_WINDOW_MS,
+    ))
+  ) {
+    return null;
+  }
+  const db = getDb(env as Env);
+  const id = newId();
+  await db.insert(schema.visitors).values({
+    id,
+    galleryId: g.id,
+    email: `anon-${crypto.randomUUID()}${ANON_DOMAIN}`,
+    name: null,
+  });
+  const [visitor] = await db
+    .select()
+    .from(schema.visitors)
+    .where(eq(schema.visitors.id, id));
+  return {
+    visitor,
+    cookie: await updateSession(request, g, { visitorId: id }, env),
+  };
 }
 
 export async function handleVisitor(
@@ -240,30 +283,10 @@ export async function handleSetFavorite(
   if (!photo) return notFound();
 
   if (!v) {
-    const ipHash = await clientIpHash(request, env);
-    if (!ipHash) return reply({ error: "rate_limited" }, 429);
-    if (
-      !(await rateLimit(
-        env,
-        "anon",
-        `${ipHash}:${g.id}`,
-        ANON_MAX_PER_WINDOW,
-        VISITOR_WINDOW_MS,
-      ))
-    ) {
-      return reply({ error: "rate_limited" }, 429);
-    }
-    const id = newId();
-    await db.insert(schema.visitors).values({
-      id,
-      galleryId: g.id,
-      email: `anon-${crypto.randomUUID()}${ANON_DOMAIN}`,
-      name: null,
-    });
-    v = (
-      await db.select().from(schema.visitors).where(eq(schema.visitors.id, id))
-    )[0];
-    cookie = await updateSession(request, g, { visitorId: id }, env);
+    const anon = await createAnonVisitor(request, env, g);
+    if (!anon) return reply({ error: "rate_limited" }, 429);
+    v = anon.visitor;
+    cookie = anon.cookie;
   }
 
   const res = await db.run(

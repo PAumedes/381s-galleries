@@ -186,6 +186,7 @@ describe("loadGallery: open data", () => {
       width: 3000,
       height: 2000,
       set: "Ceremonia",
+      variants: { web: true, ig: false },
     });
     expect(r.data.gallery).toMatchObject({
       title: "Boda Ana",
@@ -240,7 +241,7 @@ describe("loadGallery: open data", () => {
     for (const r of [open, locked]) {
       const s = JSON.stringify(r.data);
       expect(s).not.toMatch(
-        /SECRET|pbkdf2|drive|pin_?hash|variant|baseName|IMG_/i,
+        /SECRET|pbkdf2|drive|pin_?hash|variant_?versions|baseName|IMG_/i,
       );
     }
   });

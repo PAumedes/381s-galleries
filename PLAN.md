@@ -86,11 +86,11 @@ favorites     (gallery_id, visitor_id, photo_id, list_name default 'Favoritos', 
                FK(gallery_id, visitor_id) -> visitors(gallery_id, id) cascade,
                FK(gallery_id, photo_id) -> photos(gallery_id, id) cascade)   // same-gallery guaranteed by DB
 downloads     (id PK, gallery_id, photo_id?, visitor_id?, variant: 'highres'|'web'|'ig',
-               kind: 'single'|'bulk', country?, ua?, created_at)
+               kind: 'single'|'bulk', token_id? UNIQUE (jti of the /dl token: retries log once), country?, ua?, created_at)
 gallery_views (gallery_id, visitor_id?, country?, ip_hash?, created_at)  // idx (gallery_id, ip_hash, created_at); cookieless views deduped per (gallery, ip_hash) for 30 min
 rate_limits   (key PK, count, window_start)  // the ONE fixed-window limiter (`rateLimit(env, scope, key, max, windowMs)`, `app/lib/server/rate-limit.ts`);
                //   key = `<scope>:<key>`; scopes: `pin:<ip_hash>:<gallery_id>` (5/10 min; pseudo-gallery `unknown`), `visitor:<ip_hash>:<gallery_id>`,
-               //   `anon:<ip_hash>:<gallery_id>`, later `dl:`. Expired rows of a scope are pruned opportunistically.
+               //   `anon:<ip_hash>:<gallery_id>`, `dl:<ip_hash>:<gallery_id>` (120 token/bulk requests per 10 min). Expired rows of a scope are pruned opportunistically.
 ```
 
 Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in code). The `DriveFile` contract (`drive-types.ts`, shared by the real client and the mock) carries `trashed` and **rotation-corrected** `width`/`height` (the real client swaps them for EXIF rotation 1/3); `takenAt` is exactly `YYYY-MM-DDTHH:MM:SSZ`. Sort = `taken_at`, then filename; admin can reorder.
@@ -126,12 +126,14 @@ API (JSON, `Cache-Control: no-store`, cross-site POSTs rejected):
 - `GET /api/g/:slug/favorites` → `{visitor, favorites[]}`; `POST /api/g/:slug/favorites {photoId, on}` toggles one favourite (cap 2000 visible favourites; anonymous visitors, scope `anon:`, only when `require_email=0`).
 
 ### 5.5 Download
-1. `POST /api/g/:slug/download-tokens {photoIds[], variant}` (max 50) → `openGallery` + `requireVisitor` (downloads reuse the favourites email gate) + gallery flags → returns `/dl/<token>` URLs. Rate limit scope `dl:`.
-2. `GET /dl/:token` → verify HMAC + expiry → insert `downloads` row → stream from Drive with `Content-Disposition: attachment; filename="<base_name>[-web|-ig].jpg"` and `Content-Length`. Variants: `highres` (2048), `web` (1200), `ig` (1080). Downloads always serve the **clean** files, never `preview-wm`. No buffering.
-3. Access token: `app/lib/server/google-auth.ts#getAccessToken(env, {forceRefresh?})` refreshes from the stored refresh token, caches in `settings` until 5 min before expiry; on 401 refresh once and retry.
+Client photo payload (`GalleryPhoto`) carries `variants: { web: boolean; ig: boolean }` (high-res is always present). **Downloads never fall back between sizes**: a missing web/ig makes that option unavailable (`unavailable[]` at issue time, 410 at `/dl`). The §3 viewing fallbacks are unchanged.
+1. `POST /api/g/:slug/download-tokens {photoIds[1..50 unique], variant: "highres"|"web"|"ig", bulkId?}` (JSON, `no-store`): cross-site 403 → `openGallery` (404 parity) → body 400 → `requireVisitor` (`403 email_required`; anonymous visitors are created like favourites, scope `anon:`, when `require_email=0`) → variant flag else `403 variant_disabled` → `allow_bulk` required when >1 id or `bulkId` (`403 bulk_disabled`) → rate limit `dl:` 120/10 min (429) → `{tokens: [{photoId, url: "/dl/<token>", filename, bytes?}], missing[], unavailable[]}`. Ids not in this gallery / not `photoVisible` go to `missing`; photos lacking the variant to `unavailable`. `filename` = `<base_name>.jpg` | `-web.jpg` | `-ig.jpg` (path separators and control chars stripped, unicode kept); `bytes` only for high-res. A `bulkId` must be a bulk row of this gallery (else 400).
+2. Token: `signToken` with `DOWNLOAD_SECRET`, TTL 10 min, payload `{t:"dl", jti, g, p, v, vid, pf: pinFingerprint(pin_hash), b?: bulkId}`.
+3. `GET|HEAD /dl/:token` → verify HMAC + expiry, reload the gallery: available, `pf` equals the current PIN fingerprint (a PIN change/clear revokes), photo `photoVisible` in that gallery, variant still allowed and present; any failure (also bad/expired token) → the same generic `410`. Logs `INSERT OR IGNORE INTO downloads` keyed by `token_id = jti` (so retries/resumes log once; HEAD never logs; `kind` = bulk if `b`; country from `cf`, UA cut to 200). Google mode: `drive.streamFile(fileId, {range})` passthrough (Range → 206), `Content-Type` allowlisted (default `image/jpeg`), `Content-Length`/`Content-Range` from upstream, `Content-Disposition: attachment; filename="<ascii>"; filename*=UTF-8''<pct>`, `Cache-Control: private, no-store`, `nosniff`, `Referrer-Policy: no-referrer`. Mock mode: log, then 302 to `mockImageUrl(photo.id, variant, w, h)`. Drive 404 → 410, other errors → 502. Downloads always serve the **clean** files, never `preview-wm`. No buffering.
+4. Access token: `app/lib/server/google-auth.ts#getAccessToken(env, {forceRefresh?})` refreshes from the stored refresh token, caches in `settings` until 5 min before expiry; on 401 refresh once and retry.
 
 ### 5.6 Download all / set
-Browser: request tokens in batches of 50 → fetch each `/dl/<token>` → `client-zip` → `showSaveFilePicker` when available, else Blob fallback with a warning above ~2 GB. Log one `kind=bulk` row plus per-photo rows (the `/dl` hits do that).
+`POST /api/g/:slug/bulk {scope: "all"|"set"|"favorites", set?, variant}` (same gates, `allow_bulk` required, shares the `dl:` limit) inserts ONE `downloads` row (`kind=bulk`, `photo_id` NULL) and returns `{bulkId, photoIds (visible, gallery order, filtered by scope and by having the variant; favourites = the current visitor's), totalBytes? (high-res only)}`. Browser: request tokens in batches of 50 (passing `bulkId`) → fetch each `/dl/<token>` → `client-zip` → `showSaveFilePicker` when available, else Blob fallback with a warning above ~2 GB. The per-photo rows come from the `/dl` hits.
 
 ### 5.7 Admin (behind Cloudflare Access)
 - **Setup page:** Connect Google (OAuth), pick root folder (paste link or ID), branding (studio name, logo URL; no accent colour: the palette is monochrome).
@@ -200,7 +202,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T2.4 Email gate + favorites** (after T2.1). `EmailGate.tsx`, visitor + favorites API, heart button in grid and lightbox. *Accept:* all photo queries use `photoVisible`.
 
 ### Phase 3 — Downloads
-- [ ] **T3.1 Token endpoint + `/dl/:token`** per §5.5. *Accept:* integration test streams a mocked Drive body without buffering; expired → 410; no download variant ever returns the preview-wm file; all photo queries use `photoVisible`.
+- [x] **T3.1 Token endpoint + `/dl/:token`** per §5.5. *Accept:* integration test streams a mocked Drive body without buffering; expired → 410; no download variant ever returns the preview-wm file; all photo queries use `photoVisible`.
 - [ ] **T3.2 Download UI.** `DownloadMenu.tsx` (High-res / Web / Instagram per flags), download all / set with `client-zip`, progress. *Accept:* all photo queries use `photoVisible`.
 
 ### Phase 4 — Admin UI

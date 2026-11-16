@@ -74,6 +74,8 @@ export async function loadGallery(
       width: schema.photos.width,
       height: schema.photos.height,
       set: schema.photos.setName,
+      driveWebId: schema.photos.driveWebId,
+      driveIgId: schema.photos.driveIgId,
     })
     .from(schema.photos)
     .where(and(eq(schema.photos.galleryId, g.id), photoVisible))
@@ -146,7 +148,10 @@ export async function loadGallery(
         allowIg: g.allowIg,
         sets,
       },
-      photos: rows,
+      photos: rows.map(({ driveWebId, driveIgId, ...p }) => ({
+        ...p,
+        variants: { web: !!driveWebId, ig: !!driveIgId },
+      })),
     },
     ...(setCookie ? { setCookie } : {}),
   };
