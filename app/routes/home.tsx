@@ -18,7 +18,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <Logo
           variant="dark"
           name={loaderData.studioName}
-          className="h-8 w-auto"
+          className="text-base"
         />
       </h1>
     </main>

@@ -378,6 +378,78 @@ describe("first sync on fixtures", () => {
     expect(r2.galleries.archived).toBe(0);
   });
 
+  it("parses a leading date into event_date and strips it from the title", async () => {
+    const cases: [string, string, string | null, string][] = [
+      [
+        "2026-11-14 Boda Ana y Juan",
+        "Boda Ana y Juan",
+        "2026-11-14",
+        "2026-11-14-boda-ana-y-juan",
+      ],
+      [
+        "2026-11-14_Evento Uno",
+        "Evento Uno",
+        "2026-11-14",
+        "2026-11-14-evento-uno",
+      ],
+      [
+        "2026-11-15 - Evento Dos",
+        "Evento Dos",
+        "2026-11-15",
+        "2026-11-15-evento-dos",
+      ],
+      [
+        "20261116 Evento Tres",
+        "Evento Tres",
+        "2026-11-16",
+        "20261116-evento-tres",
+      ],
+      [
+        "2026-13-40 Fecha Rota",
+        "2026-13-40 Fecha Rota",
+        null,
+        "2026-13-40-fecha-rota",
+      ],
+      [
+        "2026-02-30 Feb Rota",
+        "2026-02-30 Feb Rota",
+        null,
+        "2026-02-30-feb-rota",
+      ],
+      ["2024-02-29 Bisiesto", "Bisiesto", "2024-02-29", "2024-02-29-bisiesto"],
+      ["Sin Fecha", "Sin Fecha", null, "sin-fecha"],
+    ];
+    await db.delete(schema.galleries);
+    await db.delete(schema.settings);
+    const names = Object.fromEntries(
+      cases.map(([n]) => [n, { "high-res": { "": ["a.jpg"] } }]),
+    );
+    const fx = tree(names);
+    await setRoot(fx.rootId);
+    await runSync(e, { drive: createMockDrive(fx) });
+    for (const [, title, date, slug] of cases) {
+      const g = await galleryBy(slug);
+      expect(g, slug).toBeTruthy();
+      expect(g.title).toBe(title);
+      expect(g.eventDate).toBe(date);
+    }
+  });
+
+  it("does not re-parse the date for existing galleries", async () => {
+    await db.delete(schema.galleries);
+    await db.delete(schema.settings);
+    const fx = tree({ "2026-11-14 Boda": { "high-res": { "": ["a.jpg"] } } });
+    await setRoot(fx.rootId);
+    const d = createMockDrive(fx);
+    await runSync(e, { drive: d });
+    await db
+      .update(schema.galleries)
+      .set({ eventDate: "2030-01-01", title: "Mio" });
+    await runSync(e, { drive: d, force: true });
+    const [g] = await db.select().from(schema.galleries);
+    expect([g.eventDate, g.title]).toEqual(["2030-01-01", "Mio"]);
+  });
+
   it("existing galleries keep slug/title/status when folder is renamed", async () => {
     const root = buildFixtures().rootId;
     const album = await findChild(drive, root, "Retrato Sofía");

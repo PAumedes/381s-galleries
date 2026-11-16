@@ -16,6 +16,8 @@ export default defineConfig(async () => {
           // Server code: runs inside the Workers runtime.
           plugins: [
             cloudflareTest({
+              // Hermetic: miniflare bindings below set every var/secret the app
+              // reads, so a developer's .dev.vars can't leak into tests.
               wrangler: { configPath: "./wrangler.jsonc" },
               miniflare: {
                 bindings: {
@@ -25,6 +27,13 @@ export default defineConfig(async () => {
                   // fixed random 32 bytes, base64
                   TOKEN_KEY: "yogTK+cwJid8noG4Vt0xD2UnRFi5DXpIYNqlDl+l0HE=",
                   ADMIN_EMAIL: "Admin@Example.com",
+                  STUDIO_NAME: "381 Studios",
+                  ALLOW_DEV_ADMIN: "",
+                  DRIVE_MODE: "mock",
+                  ACCESS_TEAM_DOMAIN: "",
+                  ACCESS_AUD: "",
+                  GOOGLE_CLIENT_ID: "",
+                  GOOGLE_CLIENT_SECRET: "",
                 },
               },
             }),

@@ -34,7 +34,7 @@ describe("Lightbox", () => {
     expect(img.getAttribute("srcset")).toBe(
       "/img/p3/view-sm 1200w, /img/p3/view-lg 2048w",
     );
-    expect(img.getAttribute("sizes")).toBe("92vw");
+    expect(img.getAttribute("sizes")).toBe("(min-width: 768px) 92vw, 100vw");
     expect(img.getAttribute("src")).toBe("/img/p3/view-sm");
     expect(img.getAttribute("alt")).toBe("Photo 4");
   });

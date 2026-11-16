@@ -171,7 +171,7 @@ function LightboxView({
     for (const p of [photos[index + 1], photos[index - 1]]) {
       if (!p) continue;
       const img = new Image();
-      img.sizes = "92vw";
+      img.sizes = "(min-width: 768px) 92vw, 100vw";
       img.srcset = srcSet(p.id);
       img.src = imgUrl(p.id, "view-sm");
     }
@@ -333,12 +333,12 @@ function LightboxView({
             data-testid="lightbox-img"
             src={withRetry(imgUrl(photo.id, "view-sm"), retry)}
             srcSet={retry ? undefined : srcSet(photo.id)}
-            sizes="92vw"
+            sizes="(min-width: 768px) 92vw, 100vw"
             alt={t("grid.photo", { n: index + 1 })}
             draggable={false}
             onLoad={() => setLoadedId(photo.id)}
             onError={() => setFailedId(photo.id)}
-            className={`block max-h-[86vh] max-w-[92vw] object-contain ${
+            className={`block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] ${
               dragX === 0
                 ? "transition-[opacity,transform] duration-slow ease-out-soft"
                 : "transition-opacity duration-slow"

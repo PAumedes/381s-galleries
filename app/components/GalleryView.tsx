@@ -47,6 +47,8 @@ export function GalleryView({
   const [open, setOpen] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [edges, setEdges] = useState({ start: false, end: false });
+  const tabsRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLElement>(null);
   const coverRef = useRef<HTMLElement>(null);
 
@@ -69,6 +71,32 @@ export function GalleryView({
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Fade mask on whichever edge of the tab row has more tabs beyond it.
+  const updateEdges = useCallback(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const start = el.scrollLeft > 1;
+    const end = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    setEdges((e) => (e.start === start && e.end === end ? e : { start, end }));
+  }, []);
+
+  // Keep the active tab in view (horizontal only: never scrolls the page).
+  useEffect(() => {
+    const list = tabsRef.current;
+    const tab = list?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (list && tab && typeof list.scrollTo === "function")
+      list.scrollTo({
+        left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2,
+        behavior: reducedMotion() ? "auto" : "smooth",
+      });
+    updateEdges();
+  }, [active, updateEdges]);
+
+  useEffect(() => {
+    window.addEventListener("resize", updateEdges);
+    return () => window.removeEventListener("resize", updateEdges);
+  }, [updateEdges]);
 
   useEffect(() => {
     if (!copied) return;
@@ -121,13 +149,14 @@ export function GalleryView({
           className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/20"
         />
         <div className="relative p-6">
-          <Logo variant="light" className="h-6 w-auto" />
+          <Logo variant="light" className="text-sm" />
         </div>
         <div className="relative flex flex-col items-center gap-6 px-6 pb-10 text-center">
           <h1 className="text-display font-light uppercase">{gallery.title}</h1>
-          <p className="text-micro-label uppercase">
-            {[date, studio].filter(Boolean).join(" · ")}
-          </p>
+          {date && (
+            <p className="text-body -mt-3 font-light tracking-wide">{date}</p>
+          )}
+          <p className="text-micro-label uppercase">{studio}</p>
           <button
             type="button"
             onClick={scrollToGrid}
@@ -140,15 +169,23 @@ export function GalleryView({
       </header>
 
       <nav
-        className={`bg-paper/80 duration-base ease-out-soft sticky top-0 z-(--z-topbar) grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 backdrop-blur transition-transform ${
+        className={`bg-paper/80 duration-base ease-out-soft sticky top-0 z-(--z-topbar) grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 sm:grid-cols-[1fr_auto_1fr] sm:gap-4 backdrop-blur transition-transform ${
           hidden ? "-translate-y-full" : "translate-y-0"
         }`}
       >
-        <Logo variant="dark" className="h-4 w-auto justify-self-start" />
+        <Logo
+          variant="dark"
+          className="hidden justify-self-start text-xs sm:block"
+        />
         <div
+          ref={tabsRef}
           role="tablist"
           aria-label={t("gallery.sets")}
-          className="flex items-center gap-1 overflow-x-auto"
+          onScroll={updateEdges}
+          style={{
+            maskImage: `linear-gradient(to right, ${edges.start ? "transparent, #000 1.5rem" : "#000, #000 0"}, ${edges.end ? "#000 calc(100% - 1.5rem), transparent" : "#000 100%, #000"})`,
+          }}
+          className="flex min-w-0 snap-x snap-proximity items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {tabs.map((tab) => (
             <button
@@ -160,7 +197,7 @@ export function GalleryView({
                 setActive(tab.key);
                 setOpen(null);
               }}
-              className={`text-micro-label duration-base ease-out-soft min-h-11 border-b px-3 uppercase whitespace-nowrap transition-colors ${
+              className={`text-micro-label duration-base ease-out-soft min-h-11 shrink-0 snap-center border-b px-3 uppercase whitespace-nowrap transition-colors ${
                 active === tab.key
                   ? "border-ink text-ink"
                   : "text-grey-500 hover:text-ink border-transparent"
