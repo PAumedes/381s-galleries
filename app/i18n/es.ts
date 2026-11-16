@@ -23,6 +23,9 @@ export const es = {
   "favorites.remove": "Quitar de favoritas",
   "favorites.empty": "Todavía no marcaste ninguna foto.",
 
+  "favorites.tab": "Favoritas {n}",
+  "favorites.error": "No se pudo guardar tu favorita. Probá de nuevo.",
+
   "download.title": "Descargar",
   "download.high": "Alta resolución · 2048 px",
   "download.web": "Web · 1200 px",
@@ -31,6 +34,9 @@ export const es = {
   "gate.title": "Ingresá tu email para continuar",
   "gate.placeholder": "Email",
   "gate.submit": "Continuar",
+  "gate.reason": "Para guardar tus favoritas",
+  "gate.name": "Nombre (opcional)",
+  "gate.error": "Algo salió mal. Probá de nuevo.",
   "gate.invalid": "Ingresá un email válido",
 
   "grid.photo": "Foto {n}",

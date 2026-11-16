@@ -3,14 +3,17 @@ import { useRouteLoaderData } from "react-router";
 
 import { useLang, useT } from "../i18n/use-t";
 import type { loader as rootLoader } from "../root";
+import { EmailGate } from "./EmailGate";
 import { Grid } from "./Grid";
 import { LanguageToggle } from "./LanguageToggle";
 import { Lightbox } from "./Lightbox";
 import { Logo } from "./Logo";
-import { ChevronDown, Share } from "./icons";
+import { ChevronDown, Heart, HeartFilled, Share } from "./icons";
+import { useFavorites } from "./use-favorites";
 import { imgUrl, type GalleryPhoto, type OpenGallery } from "./types";
 
 const ALL = "\u0000all";
+const FAV = "\u0000fav";
 
 function formatDate(value: string | null, lang: string): string | null {
   if (!value) return null;
@@ -52,9 +55,22 @@ export function GalleryView({
   const gridRef = useRef<HTMLElement>(null);
   const coverRef = useRef<HTMLElement>(null);
 
+  const favs = useFavorites(gallery.slug, gallery.requireEmail);
+  const favCount = useMemo(
+    () => photos.filter((p) => favs.ids.has(p.id)).length,
+    [photos, favs.ids],
+  );
+  const isFavorite = useCallback((id: string) => favs.ids.has(id), [favs.ids]);
+  const toggleFav = favs.toggle;
+
   const visible = useMemo(
-    () => (active === ALL ? photos : photos.filter((p) => p.set === active)),
-    [photos, active],
+    () =>
+      active === ALL
+        ? photos
+        : active === FAV
+          ? photos.filter((p) => favs.ids.has(p.id))
+          : photos.filter((p) => p.set === active),
+    [photos, active, favs.ids],
   );
 
   // Hide the top bar on scroll down, show it on scroll up.
@@ -123,12 +139,17 @@ export function GalleryView({
   }, []);
 
   const date = formatDate(gallery.eventDate, lang);
-  const tabs = multi
-    ? [
-        { key: ALL, label: t("gallery.all") },
-        ...gallery.sets.map((s) => ({ key: s.name, label: s.name })),
-      ]
-    : [];
+  const tabs = [
+    ...(multi
+      ? [
+          { key: ALL, label: t("gallery.all") },
+          ...gallery.sets.map((s) => ({ key: s.name, label: s.name })),
+        ]
+      : []),
+    ...(favCount > 0 || active === FAV
+      ? [{ key: FAV, label: t("favorites.tab", { n: favCount }) }]
+      : []),
+  ];
 
   return (
     <div className="bg-paper text-ink">
@@ -210,6 +231,28 @@ export function GalleryView({
         <div className="flex items-center justify-self-end">
           <button
             type="button"
+            onClick={() => {
+              setActive(
+                active === FAV
+                  ? multi
+                    ? ALL
+                    : (gallery.sets[0]?.name ?? ALL)
+                  : FAV,
+              );
+              setOpen(null);
+            }}
+            aria-label={t("favorites.title")}
+            aria-pressed={active === FAV}
+            className="text-grey-600 hover:text-ink flex size-11 items-center justify-center"
+          >
+            {active === FAV || favCount > 0 ? (
+              <HeartFilled className="size-5" aria-hidden="true" />
+            ) : (
+              <Heart className="size-5" aria-hidden="true" />
+            )}
+          </button>
+          <button
+            type="button"
             onClick={share}
             aria-label={t("gallery.share")}
             className="text-grey-600 hover:text-ink flex size-11 items-center justify-center"
@@ -220,7 +263,19 @@ export function GalleryView({
       </nav>
 
       <main ref={gridRef} id="grid" className="scroll-mt-12 px-1 py-1">
-        <Grid photos={visible} t={t} onOpen={setOpen} />
+        {active === FAV && visible.length === 0 ? (
+          <p className="text-body text-grey-500 py-section text-center">
+            {t("favorites.empty")}
+          </p>
+        ) : (
+          <Grid
+            photos={visible}
+            t={t}
+            onOpen={setOpen}
+            onFavorite={toggleFav}
+            isFavorite={isFavorite}
+          />
+        )}
       </main>
 
       <footer className="flex flex-col items-center gap-4 px-6 py-section">
@@ -246,7 +301,22 @@ export function GalleryView({
           t={t}
           onClose={() => setOpen(null)}
           onIndexChange={setOpen}
+          onFavorite={toggleFav}
+          isFavorite={isFavorite}
         />
+      )}
+
+      {favs.failed && (
+        <p
+          role="status"
+          className="text-micro-label bg-ink text-paper fixed bottom-6 left-1/2 z-(--z-toast) -translate-x-1/2 px-5 py-3 uppercase"
+        >
+          {t("favorites.error")}
+        </p>
+      )}
+
+      {favs.gateOpen && (
+        <EmailGate t={t} onSubmit={favs.submitGate} onClose={favs.closeGate} />
       )}
     </div>
   );

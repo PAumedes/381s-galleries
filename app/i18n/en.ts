@@ -26,6 +26,9 @@ export const en = {
   "favorites.remove": "Remove from favorites",
   "favorites.empty": "You haven't marked any photos yet.",
 
+  "favorites.tab": "Favorites {n}",
+  "favorites.error": "Couldn't save your favourite. Please try again.",
+
   "download.title": "Download",
   "download.high": "High resolution · 2048 px",
   "download.web": "Web · 1200 px",
@@ -34,6 +37,9 @@ export const en = {
   "gate.title": "Enter your email to continue",
   "gate.placeholder": "Email",
   "gate.submit": "Continue",
+  "gate.reason": "To save your favourites",
+  "gate.name": "Name (optional)",
+  "gate.error": "Something went wrong. Please try again.",
   "gate.invalid": "Enter a valid email",
 
   "grid.photo": "Photo {n}",

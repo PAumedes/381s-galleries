@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { createRoutesStub } from "react-router";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import { en } from "../../app/i18n/en";
 import { es } from "../../app/i18n/es";
@@ -34,6 +34,8 @@ const mk = (n: number, set: string, from = 0) =>
   }));
 
 const gallery = (over: Partial<OpenGallery> = {}): OpenGallery => ({
+  slug: "boda",
+  requireEmail: true,
   title: "Boda Ana",
   eventDate: "2026-03-14",
   clientName: null,
@@ -50,7 +52,20 @@ const photos = [...mk(3, "Cer"), ...mk(2, "Fie")].map((p) => ({
   set: p.id.startsWith("Cer") ? "Ceremonia" : "Fiesta",
 }));
 
-afterEach(() => vi.restoreAllMocks());
+beforeEach(() => {
+  // GalleryView loads favourites on mount; keep the network out of these tests.
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response(JSON.stringify({ visitor: null, favorites: [] })),
+    ),
+  );
+});
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 describe("PinScreen", () => {
   it("renders title, a non-autofilled password field, submit, and error", async () => {

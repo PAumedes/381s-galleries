@@ -45,10 +45,10 @@ const unavailable = (): LoadResult => ({
   data: { state: "unavailable" },
 });
 
-const isSecure = (request: Request) =>
+export const isSecure = (request: Request) =>
   new URL(request.url).protocol === "https:";
 
-async function findGallery(env: GalleryEnv, slug: string) {
+export async function findGallery(env: GalleryEnv, slug: string) {
   const [g] = await getDb(env as Env)
     .select()
     .from(schema.galleries)
@@ -57,7 +57,9 @@ async function findGallery(env: GalleryEnv, slug: string) {
 }
 
 /** Draft, archived, expired and unknown all look the same. */
-function isAvailable(g: typeof schema.galleries.$inferSelect | undefined) {
+export function isAvailable(
+  g: typeof schema.galleries.$inferSelect | undefined,
+) {
   return !!g && g.status === "published" && !isExpired(g.expiresAt);
 }
 
@@ -154,6 +156,8 @@ export async function loadGallery(
     data: {
       state: "open",
       gallery: {
+        slug: g.slug,
+        requireEmail: g.requireEmail,
         title: g.title,
         eventDate: g.eventDate,
         clientName: g.clientName,
@@ -181,7 +185,7 @@ export type UnlockResult =
   | { status: 303; location: string; setCookie?: undefined }
   | { status: 400 | 403 | 404 | 429 };
 
-function crossSite(request: Request): boolean {
+export function crossSite(request: Request): boolean {
   const site = request.headers.get("Sec-Fetch-Site");
   if (site && site !== "same-origin" && site !== "none") return true;
   const origin = request.headers.get("Origin");

@@ -234,6 +234,13 @@ export const pinAttempts = sqliteTable(
   (t) => [primaryKey({ columns: [t.ipHash, t.galleryId] })],
 );
 
+/** Generic fixed-window rate limiter: key = `<scope>:<ip_hash>:<gallery_id>`. */
+export const rateLimits = sqliteTable("rate_limits", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull().default(0),
+  windowStart: text("window_start").notNull(),
+});
+
 export type Setting = typeof settings.$inferSelect;
 export type NewSetting = typeof settings.$inferInsert;
 export type Gallery = typeof galleries.$inferSelect;

@@ -12,6 +12,8 @@ export const imgUrl = (id: string, variant: ImgVariant): string =>
 
 /** Client-safe gallery summary (no Drive ids, no PIN hash). */
 export type OpenGallery = {
+  slug: string;
+  requireEmail: boolean;
   title: string;
   eventDate: string | null;
   clientName: string | null;

@@ -190,7 +190,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T2.1 Gallery page + PIN + status/expiry + view logging.** `app/routes/$slug*.tsx`, `PinForm`. *Accept:* sessions carry the PIN fingerprint `pf` (`pinFingerprint()` in `auth.ts`; `readGallerySession(request, {id, pinHash}, env)` rejects a mismatch, so changing/clearing the PIN logs visitors out); all photo queries use `photoVisible`.
 - [x] **T2.2 Grid + Lightbox components.** `app/components/Grid.tsx`, `Lightbox.tsx` (justified layout, keyboard, swipe, preload). *Accept:* all photo queries use `photoVisible`.
 - [x] **T2.3 Images route** per §5.3 with R2 read-through cache. *Accept (carried from T1.4 review):* in mock mode the 302 Location seed equals the DB photo id and never contains any drive_*_id; call `mockImageUrl(photo.id, variant, photo.width, photo.height)` with the row's width/height. All photo queries use `photoVisible`.
-- [ ] **T2.4 Email gate + favorites** (after T2.1). `EmailGate.tsx`, visitor + favorites API, heart button in grid and lightbox. *Accept:* all photo queries use `photoVisible`.
+- [x] **T2.4 Email gate + favorites** (after T2.1). `EmailGate.tsx`, visitor + favorites API, heart button in grid and lightbox. *Accept:* all photo queries use `photoVisible`.
 
 ### Phase 3 — Downloads
 - [ ] **T3.1 Token endpoint + `/dl/:token`** per §5.5. *Accept:* integration test streams a mocked Drive body without buffering; expired → 410; no download variant ever returns the preview-wm file; all photo queries use `photoVisible`.
