@@ -13,7 +13,16 @@ export default defineConfig(async () => {
     plugins: [
       cloudflareTest({
         wrangler: { configPath: "./wrangler.jsonc" },
-        miniflare: { bindings: { TEST_MIGRATIONS: migrations } },
+        miniflare: {
+          bindings: {
+            TEST_MIGRATIONS: migrations,
+            SESSION_SECRET: "test-session-secret",
+            DOWNLOAD_SECRET: "test-download-secret",
+            // 32 zero bytes, base64
+            TOKEN_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            ADMIN_EMAIL: "Admin@Example.com",
+          },
+        },
       }),
     ],
     test: {
