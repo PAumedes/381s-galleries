@@ -92,7 +92,7 @@ Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in
 
 ### 5.1 Sync (cron + button) — `app/lib/server/sync.ts`
 1. List child folders of the root → upsert a `galleries` row per folder (new ones start as **draft**, slug = slugified folder name, title = folder name).
-2. For each non-archived gallery whose Drive `modifiedTime` changed since `drive_modified_at` (or "Sync now" forced): list recipe folders and their set subfolders (paginate, request only `id,name,size,imageMediaMetadata(width,height,time),parents`).
+2. Change detection: Drive folder `modifiedTime` does NOT reflect changes deep inside it, so use the **Changes API**: keep a `drive_changes_token` in `settings`; if `listChanges(token)` reports nothing changed (and it's not a forced "Sync now"), stop. Otherwise rescan every non-archived gallery: list recipe folders and their set subfolders (paginate, request only `id,name,mimeType,size,modifiedTime,imageMediaMetadata(width,height,time)`). Store the new token only after a successful run.
 3. Build photo records with the matching rule (§3). Upsert; delete rows whose high-res file disappeared and delete their R2 cache keys.
 4. Store mismatches in `sync_issues_json`; set `use_watermark_preview` if `preview-wm` exists.
 5. Stay within Worker limits: process galleries in batches, continue next cron run if needed (`last_synced_at` cursor).
@@ -170,11 +170,12 @@ Tasks marked **∥** within a phase touch disjoint files and can run in parallel
 - [x] **T0.3 Crypto + auth utils.** `app/lib/server/crypto.ts` (HMAC, PBKDF2, AES-GCM, ids), `app/lib/server/auth.ts` (gallery cookie, admin guard). *Accept:* unit tests incl. tampered/expired tokens and wrong admin email.
 
 ### Phase 1 — Google + sync
-- [ ] **T1.1 ∥ Google OAuth.** Routes `/admin/google/connect` + callback, encrypted token storage, `drive.ts#getAccessToken`. *Accept:* tests with mocked token endpoint; refresh-on-401.
-- [ ] **T1.2 ∥ Drive client.** `drive.ts`: `listChildren(folderId)` (paginated, minimal fields), `streamFile(id, range?)`, `getFolderMeta(id)`. *Accept:* mocked-fetch tests incl. pagination.
-- [ ] **T1.3 Sync engine** (after T1.1, T1.2). `sync.ts` per §5.1 + `scheduled` handler + `POST /api/admin/sync`. *Accept:* fixture-based tests: sets, missing thumb fallback, mismatch reporting, deletion, wm detection.
+All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`.
+- [ ] **T1.1 ∥ Google OAuth.** `app/lib/server/google-auth.ts` (`getAccessToken(env, {forceRefresh?})`, token cached in `settings`) + routes `/admin/google/connect` and `/admin/google/callback` (OAuth `state` CSRF protection, scope drive.readonly, `access_type=offline`, `prompt=consent`), refresh token stored encrypted. *Accept:* tests with mocked token endpoint; cache hit/miss/expiry; bad state rejected; admin-only.
+- [ ] **T1.2 ∥ Drive client.** `app/lib/server/drive.ts`: `createDriveClient(getToken: (forceRefresh?: boolean) => Promise<string>, fetchImpl = fetch): DriveClient`. Paginated, minimal `fields`, excludes trashed, query values escaped, retries 429/5xx with backoff (max 3), on 401 refreshes the token once. *Accept:* mocked-fetch tests incl. pagination, escaping, 401 refresh, 404 → DriveError, streaming without buffering, Range passthrough.
+- [ ] **T1.3 Sync engine** (after T1.1, T1.2, T1.4). `sync.ts` per §5.1 (takes a `DriveClient`), `getDrive(env)` factory (mock vs google), `scheduled` handler, `POST /api/admin/sync`, `pnpm seed` (mock sync into local D1). *Accept:* tests on the mock fixtures: sets, fallbacks, mismatch reporting, deletion, wm detection, reserved/duplicate slugs, idempotent re-run, changes-token skip.
 
-- [ ] **T1.4 ∥ Mock Drive + fixtures + `pnpm seed`** per §5.9 (can start right after T0.2; T1.3 uses it for tests).
+- [ ] **T1.4 ∥ Mock Drive + fixtures** per §5.9: `app/lib/server/drive-mock.ts` (`createMockDrive(fixtures)`: DriveClient) + `fixtures.ts` + `mockImageUrl(fileId, variant)` helper for picsum. Fixture tree mirrors §3 exactly (root `381studios` → album folders → recipe folders → optional set subfolders). Includes a mutation API for tests (add/remove/rename file → bumps changes token).
 
 ### Phase 2 — Client gallery
 - [ ] **T2.1 ∥ Gallery page + PIN + status/expiry + view logging.** `app/routes/$slug*.tsx`, `PinForm`.
