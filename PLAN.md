@@ -26,7 +26,7 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Image source | Google Drive API v3, **read-only** (`https://www.googleapis.com/auth/drive.readonly`) | Files are created by Drive for desktop, not by the app, so `drive.file` can't see them |
 | Preview cache | R2 bucket `381s-galleries-cache`, key `<photoId>/<variant>`; filled lazily on first request | Fast repeat views, fewer Drive calls |
 | Google auth | OAuth **Web application** client. Admin clicks "Connect Google" once; the Worker runs the OAuth flow and stores the refresh token (encrypted with `TOKEN_KEY`) in D1. Consent screen **In production** (unverified is fine for personal use; you'll see a warning screen once) | No local scripts |
-| Admin auth | **Cloudflare Access** on `/admin*` and `/api/admin*`. App trusts `Cf-Access-Authenticated-User-Email` and checks it equals `ADMIN_EMAIL` | No login code |
+| Admin auth | **Cloudflare Access** on `/admin*` and `/api/admin*`. App verifies the `Cf-Access-Jwt-Assertion` JWT (RS256 vs team JWKS, `aud` = `ACCESS_AUD`, `iss`, `exp`/`nbf`); its `email` claim must equal `ADMIN_EMAIL` (the header alone is never trusted). Needs `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` | No login code |
 | Client auth | Gallery slug + optional PIN → HMAC-signed cookie (Web Crypto, `SESSION_SECRET`), scoped per gallery | |
 | Download links | Short-lived HMAC tokens `/dl/<token>`, 10 min TTL, `DOWNLOAD_SECRET` | |
 | Sync | Cloudflare **Cron Trigger** every 15 min + "Sync now" button in admin | |
@@ -73,10 +73,13 @@ galleries     (id PK, drive_folder_id UNIQUE, slug UNIQUE, title, client_name?, 
 photos        (id PK, gallery_id FK cascade, set_name default 'Highlights', base_name,
                drive_highres_id, drive_web_id?, drive_ig_id?, drive_thumb_id?, drive_wm_id?,
                highres_bytes?, width?, height?, taken_at?, sort int,   // width/height of high-res
-               UNIQUE(gallery_id, set_name, base_name))
-visitors      (id PK, gallery_id FK, email, name?, first_seen, UNIQUE(gallery_id, email))
-favorites     (visitor_id FK, photo_id FK, list_name default 'Favoritos', comment?, created_at,
-               PK(visitor_id, photo_id, list_name))
+               UNIQUE(gallery_id, id), UNIQUE(gallery_id, set_name, base_name))
+visitors      (id PK, gallery_id FK, email, name?, first_seen,
+               UNIQUE(gallery_id, id), UNIQUE(gallery_id, email COLLATE NOCASE))
+favorites     (gallery_id, visitor_id, photo_id, list_name default 'Favoritos', comment?, created_at,
+               PK(visitor_id, photo_id, list_name),
+               FK(gallery_id, visitor_id) -> visitors(gallery_id, id) cascade,
+               FK(gallery_id, photo_id) -> photos(gallery_id, id) cascade)   // same-gallery guaranteed by DB
 downloads     (id PK, gallery_id, photo_id?, visitor_id?, variant: 'highres'|'web'|'ig',
                kind: 'single'|'bulk', country?, ua?, created_at)
 gallery_views (gallery_id, visitor_id?, country?, created_at)
@@ -105,7 +108,7 @@ Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` �
 - When watermark is on, both `view-*` serve `preview-wm`.
 
 ### 5.4 Email gate
-If `require_email`, the first download or favorite opens an email (+ optional name) form → upsert `visitors` → visitor id in the cookie.
+If `require_email`, the first download or favorite opens an email (+ optional name) form → upsert `visitors` (normalize email with trim + lowercase before insert/lookup; the DB unique index is also NOCASE) → visitor id in the cookie.
 
 ### 5.5 Download
 1. `POST /api/:slug/download-tokens {photoIds[], variant}` (max 50) → check session + gallery flags → returns `/dl/<token>` URLs.
@@ -251,8 +254,8 @@ Spec and tasks: PLAN.md — read only the sections you need.
 ## 11. Manual steps for the photographer (not for agents)
 1. Cloudflare: add custom domain `session.381studios.ar` to the Worker (DNS already on Cloudflare). Worker has workers.dev and preview URLs disabled; only the custom domain serves it.
 2. Google Cloud project → enable Drive API → OAuth **Web** client with redirect `https://<domain>/admin/google/callback` → consent screen **In production**.
-3. Cloudflare Zero Trust → Access application for `/admin*` and `/api/admin*` allowing your email.
-4. `wrangler secret put`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`, `ADMIN_EMAIL`.
+3. Cloudflare Zero Trust → Access application for `/admin*` and `/api/admin*` allowing your email. Copy the application's **Audience (AUD) tag** (Access > Applications > your app > Overview) into `ACCESS_AUD`, and your team domain (`<team>.cloudflareaccess.com`, Zero Trust > Settings > Custom Pages) into `ACCESS_TEAM_DOMAIN`.
+4. `wrangler secret put`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`, `ADMIN_EMAIL`, `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`. Secrets must be >= 32 chars (`openssl rand -base64 32`).
 5. Drive for desktop syncing `My Drive/381studios`.
 6. Capture One: create the recipes from §3, all enabled, output to `…/381studios/[Session Name]/<recipe>`.
 7. Admin → Setup → Connect Google → paste root folder → after a sync, publish the gallery and share the link/QR.

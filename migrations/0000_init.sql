@@ -7,19 +7,22 @@ CREATE TABLE `downloads` (
 	`kind` text NOT NULL,
 	`country` text,
 	`ua` text,
-	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')) NOT NULL
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')) NOT NULL,
+	CONSTRAINT "downloads_variant_check" CHECK("downloads"."variant" IN ('highres','web','ig')),
+	CONSTRAINT "downloads_kind_check" CHECK("downloads"."kind" IN ('single','bulk'))
 );
 --> statement-breakpoint
 CREATE INDEX `downloads_gallery_created_idx` ON `downloads` (`gallery_id`,`created_at`);--> statement-breakpoint
 CREATE TABLE `favorites` (
+	`gallery_id` text NOT NULL,
 	`visitor_id` text NOT NULL,
 	`photo_id` text NOT NULL,
 	`list_name` text DEFAULT 'Favoritos' NOT NULL,
 	`comment` text,
 	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')) NOT NULL,
 	PRIMARY KEY(`visitor_id`, `photo_id`, `list_name`),
-	FOREIGN KEY (`visitor_id`) REFERENCES `visitors`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`photo_id`) REFERENCES `photos`(`id`) ON UPDATE no action ON DELETE cascade
+	FOREIGN KEY (`gallery_id`,`visitor_id`) REFERENCES `visitors`(`gallery_id`,`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`gallery_id`,`photo_id`) REFERENCES `photos`(`gallery_id`,`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `galleries` (
@@ -42,11 +45,12 @@ CREATE TABLE `galleries` (
 	`drive_modified_at` text,
 	`last_synced_at` text,
 	`sync_issues_json` text,
-	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')) NOT NULL
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')) NOT NULL,
+	CONSTRAINT "galleries_status_check" CHECK("galleries"."status" IN ('draft','published','archived'))
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `galleries_drive_folder_id_unique` ON `galleries` (`drive_folder_id`);--> statement-breakpoint
-CREATE UNIQUE INDEX `galleries_slug_unique` ON `galleries` (`slug`);--> statement-breakpoint
+CREATE UNIQUE INDEX `galleries_slug_nocase_unique` ON `galleries` ("slug" COLLATE NOCASE);--> statement-breakpoint
 CREATE TABLE `gallery_views` (
 	`gallery_id` text NOT NULL,
 	`visitor_id` text,
@@ -74,6 +78,7 @@ CREATE TABLE `photos` (
 );
 --> statement-breakpoint
 CREATE INDEX `photos_gallery_set_sort_idx` ON `photos` (`gallery_id`,`set_name`,`sort`);--> statement-breakpoint
+CREATE UNIQUE INDEX `photos_gallery_id_id_unique` ON `photos` (`gallery_id`,`id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `photos_gallery_set_base_unique` ON `photos` (`gallery_id`,`set_name`,`base_name`);--> statement-breakpoint
 CREATE TABLE `pin_attempts` (
 	`ip_hash` text NOT NULL,
@@ -97,4 +102,5 @@ CREATE TABLE `visitors` (
 	FOREIGN KEY (`gallery_id`) REFERENCES `galleries`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `visitors_gallery_email_unique` ON `visitors` (`gallery_id`,`email`);
+CREATE UNIQUE INDEX `visitors_gallery_email_nocase_unique` ON `visitors` (`gallery_id`,"email" COLLATE NOCASE);--> statement-breakpoint
+CREATE UNIQUE INDEX `visitors_gallery_id_id_unique` ON `visitors` (`gallery_id`,`id`);

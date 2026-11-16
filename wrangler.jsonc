@@ -12,6 +12,7 @@
   // could forge on workers.dev or preview URLs (no Access in front of them).
   "workers_dev": false,
   "preview_urls": false,
+  "routes": [{ "pattern": "session.381studios.ar", "custom_domain": true }],
   "vars": {
     "DRIVE_MODE": "google",
     "STUDIO_NAME": "381 Studios",

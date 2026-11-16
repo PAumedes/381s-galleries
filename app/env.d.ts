@@ -7,6 +7,10 @@ interface __SecretEnv {
   /** Base64 32-byte key: `openssl rand -base64 32`. */
   TOKEN_KEY: string;
   ADMIN_EMAIL: string;
+  /** Zero Trust team domain, e.g. `myteam.cloudflareaccess.com` (no scheme). */
+  ACCESS_TEAM_DOMAIN: string;
+  /** Access application Audience (AUD) tag. */
+  ACCESS_AUD: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   /** Local dev only ("1" enables the header-less admin bypass in mock mode). */

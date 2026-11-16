@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c26332bf-5743-4439-9f6c-d6720add0b03",
+  "id": "1bfa2342-10e4-416a-9d7d-2edb13c2d3e8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "downloads": {
@@ -85,11 +85,27 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "downloads_variant_check": {
+          "name": "downloads_variant_check",
+          "value": "\"downloads\".\"variant\" IN ('highres','web','ig')"
+        },
+        "downloads_kind_check": {
+          "name": "downloads_kind_check",
+          "value": "\"downloads\".\"kind\" IN ('single','bulk')"
+        }
+      }
     },
     "favorites": {
       "name": "favorites",
       "columns": {
+        "gallery_id": {
+          "name": "gallery_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "visitor_id": {
           "name": "visitor_id",
           "type": "text",
@@ -130,27 +146,31 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "favorites_visitor_id_visitors_id_fk": {
-          "name": "favorites_visitor_id_visitors_id_fk",
+        "favorites_gallery_id_visitor_id_visitors_gallery_id_id_fk": {
+          "name": "favorites_gallery_id_visitor_id_visitors_gallery_id_id_fk",
           "tableFrom": "favorites",
           "tableTo": "visitors",
           "columnsFrom": [
+            "gallery_id",
             "visitor_id"
           ],
           "columnsTo": [
+            "gallery_id",
             "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "favorites_photo_id_photos_id_fk": {
-          "name": "favorites_photo_id_photos_id_fk",
+        "favorites_gallery_id_photo_id_photos_gallery_id_id_fk": {
+          "name": "favorites_gallery_id_photo_id_photos_gallery_id_id_fk",
           "tableFrom": "favorites",
           "tableTo": "photos",
           "columnsFrom": [
+            "gallery_id",
             "photo_id"
           ],
           "columnsTo": [
+            "gallery_id",
             "id"
           ],
           "onDelete": "cascade",
@@ -330,10 +350,10 @@
           ],
           "isUnique": true
         },
-        "galleries_slug_unique": {
-          "name": "galleries_slug_unique",
+        "galleries_slug_nocase_unique": {
+          "name": "galleries_slug_nocase_unique",
           "columns": [
-            "slug"
+            "\"slug\" COLLATE NOCASE"
           ],
           "isUnique": true
         }
@@ -341,7 +361,12 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "galleries_status_check": {
+          "name": "galleries_status_check",
+          "value": "\"galleries\".\"status\" IN ('draft','published','archived')"
+        }
+      }
     },
     "gallery_views": {
       "name": "gallery_views",
@@ -505,6 +530,14 @@
           ],
           "isUnique": false
         },
+        "photos_gallery_id_id_unique": {
+          "name": "photos_gallery_id_id_unique",
+          "columns": [
+            "gallery_id",
+            "id"
+          ],
+          "isUnique": true
+        },
         "photos_gallery_set_base_unique": {
           "name": "photos_gallery_set_base_unique",
           "columns": [
@@ -646,11 +679,19 @@
         }
       },
       "indexes": {
-        "visitors_gallery_email_unique": {
-          "name": "visitors_gallery_email_unique",
+        "visitors_gallery_email_nocase_unique": {
+          "name": "visitors_gallery_email_nocase_unique",
           "columns": [
             "gallery_id",
-            "email"
+            "\"email\" COLLATE NOCASE"
+          ],
+          "isUnique": true
+        },
+        "visitors_gallery_id_id_unique": {
+          "name": "visitors_gallery_id_id_unique",
+          "columns": [
+            "gallery_id",
+            "id"
           ],
           "isUnique": true
         }
@@ -683,6 +724,21 @@
     "columns": {}
   },
   "internal": {
-    "indexes": {}
+    "indexes": {
+      "galleries_slug_nocase_unique": {
+        "columns": {
+          "\"slug\" COLLATE NOCASE": {
+            "isExpression": true
+          }
+        }
+      },
+      "visitors_gallery_email_nocase_unique": {
+        "columns": {
+          "\"email\" COLLATE NOCASE": {
+            "isExpression": true
+          }
+        }
+      }
+    }
   }
 }
