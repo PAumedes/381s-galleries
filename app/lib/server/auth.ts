@@ -9,7 +9,7 @@ export interface GallerySession {
 export const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 type SessionEnv = Pick<Env, "SESSION_SECRET">;
-type AdminEnv = Pick<Env, "ADMIN_EMAIL" | "DRIVE_MODE">;
+type AdminEnv = Pick<Env, "ADMIN_EMAIL" | "DRIVE_MODE" | "ALLOW_DEV_ADMIN">;
 
 /** One cookie per gallery so unlocking one gallery never unlocks another. */
 export function sessionCookieName(galleryId: string): string {
@@ -72,10 +72,9 @@ export async function gallerySessionCookie(
  * injects `Cf-Access-Authenticated-User-Email`; we require it to equal
  * ADMIN_EMAIL (case-insensitive).
  *
- * LOCAL DEV EXCEPTION: when DRIVE_MODE is "mock" AND the request host is
- * localhost or 127.0.0.1, the header is not required, so the admin UI can be
- * developed without Access. Production uses DRIVE_MODE=google, so this bypass
- * can never apply there.
+ * LOCAL DEV EXCEPTION: the header is not required only when ALL hold:
+ * DRIVE_MODE is "mock", ALLOW_DEV_ADMIN is "1" (set only in .dev.vars, never
+ * in wrangler.jsonc), and the request host is localhost or 127.0.0.1.
  *
  * Throws a 401 Response when access is denied.
  */
@@ -90,7 +89,8 @@ export function requireAdmin(request: Request, env: AdminEnv): void {
   }
   const host = new URL(request.url).hostname;
   if (
-    (env.DRIVE_MODE as string) === "mock" &&
+    env.DRIVE_MODE === "mock" &&
+    env.ALLOW_DEV_ADMIN === "1" &&
     (host === "localhost" || host === "127.0.0.1")
   ) {
     return;

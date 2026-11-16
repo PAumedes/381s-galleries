@@ -83,11 +83,21 @@ describe("requireAdmin", () => {
   const google = {
     ADMIN_EMAIL: "Admin@Example.com",
     DRIVE_MODE: "google",
+    ALLOW_DEV_ADMIN: "1",
   } as const;
   const mock = {
     ADMIN_EMAIL: "Admin@Example.com",
     DRIVE_MODE: "mock",
-  } as unknown as Env;
+    ALLOW_DEV_ADMIN: "1",
+  } as const;
+  const denied = (fn: () => void) => {
+    try {
+      fn();
+      expect.unreachable();
+    } catch (e) {
+      expect((e as Response).status).toBe(401);
+    }
+  };
 
   it("accepts correct email, case-insensitive", () => {
     expect(() =>
@@ -95,35 +105,32 @@ describe("requireAdmin", () => {
     ).not.toThrow();
   });
   it("401 on wrong email", () => {
-    try {
-      requireAdmin(mk("https://s.test/admin", "evil@example.com"), google);
-      expect.unreachable();
-    } catch (e) {
-      expect((e as Response).status).toBe(401);
-    }
+    denied(() =>
+      requireAdmin(mk("https://s.test/admin", "evil@example.com"), google),
+    );
   });
   it("401 on missing header in google mode, even on localhost", () => {
     for (const u of ["https://s.test/admin", "http://localhost:5173/admin"]) {
-      try {
-        requireAdmin(mk(u), google);
-        expect.unreachable();
-      } catch (e) {
-        expect((e as Response).status).toBe(401);
-      }
+      denied(() => requireAdmin(mk(u), google));
     }
   });
-  it("mock mode: ok on localhost, 401 elsewhere", () => {
+  it("bypass ok only with mock + ALLOW_DEV_ADMIN=1 + localhost", () => {
     expect(() =>
       requireAdmin(mk("http://localhost:5173/admin"), mock),
     ).not.toThrow();
     expect(() =>
       requireAdmin(mk("http://127.0.0.1:5173/admin"), mock),
     ).not.toThrow();
-    try {
-      requireAdmin(mk("https://session.381studios.ar/admin"), mock);
-      expect.unreachable();
-    } catch (e) {
-      expect((e as Response).status).toBe(401);
-    }
+  });
+  it("401 in mock mode when ALLOW_DEV_ADMIN is missing", () => {
+    denied(() =>
+      requireAdmin(mk("http://localhost:5173/admin"), {
+        ADMIN_EMAIL: "Admin@Example.com",
+        DRIVE_MODE: "mock",
+      }),
+    );
+  });
+  it("401 in mock mode on a non-localhost host", () => {
+    denied(() => requireAdmin(mk("https://session.381studios.ar/admin"), mock));
   });
 });

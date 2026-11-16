@@ -8,6 +8,11 @@ import {
   unique,
 } from "drizzle-orm/sqlite-core";
 
+// Timestamp convention: every timestamp column is an ISO 8601 UTC string
+// `YYYY-MM-DDTHH:MM:SSZ`. DB defaults use strftime('%Y-%m-%dT%H:%M:%SZ','now');
+// app code uses nowIso() (app/db/index.ts). Both sort lexicographically
+// and compare correctly with each other at second precision.
+
 const id = () =>
   text("id")
     .primaryKey()
@@ -15,7 +20,7 @@ const id = () =>
 const createdAt = () =>
   text("created_at")
     .notNull()
-    .default(sql`(datetime('now'))`);
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%SZ','now'))`);
 
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
@@ -94,7 +99,7 @@ export const visitors = sqliteTable(
     name: text("name"),
     firstSeen: text("first_seen")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`(strftime('%Y-%m-%dT%H:%M:%SZ','now'))`),
   },
   (t) => [unique("visitors_gallery_email_unique").on(t.galleryId, t.email)],
 );
@@ -132,12 +137,18 @@ export const downloads = sqliteTable(
   (t) => [index("downloads_gallery_created_idx").on(t.galleryId, t.createdAt)],
 );
 
-export const galleryViews = sqliteTable("gallery_views", {
-  galleryId: text("gallery_id").notNull(),
-  visitorId: text("visitor_id"),
-  country: text("country"),
-  createdAt: createdAt(),
-});
+export const galleryViews = sqliteTable(
+  "gallery_views",
+  {
+    galleryId: text("gallery_id").notNull(),
+    visitorId: text("visitor_id"),
+    country: text("country"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("gallery_views_gallery_created_idx").on(t.galleryId, t.createdAt),
+  ],
+);
 
 export const pinAttempts = sqliteTable(
   "pin_attempts",

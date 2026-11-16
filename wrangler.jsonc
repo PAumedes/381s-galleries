@@ -7,6 +7,11 @@
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./workers/app.ts",
+  // The Worker must only be reachable via the Access-protected custom domain:
+  // admin trusts the Cf-Access-Authenticated-User-Email header, which anyone
+  // could forge on workers.dev or preview URLs (no Access in front of them).
+  "workers_dev": false,
+  "preview_urls": false,
   "vars": {
     "DRIVE_MODE": "google",
     "STUDIO_NAME": "381 Studios",

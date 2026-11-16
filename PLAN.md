@@ -24,7 +24,7 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Styling | **Tailwind CSS v4** | Predictable for agents, no separate CSS architecture to maintain |
 | DB | Cloudflare D1 + **Drizzle ORM** (`drizzle-orm/d1`), migrations with `drizzle-kit` → `wrangler d1 migrations` | Typed queries, fewer SQL bugs |
 | Image source | Google Drive API v3, **read-only** (`https://www.googleapis.com/auth/drive.readonly`) | Files are created by Drive for desktop, not by the app, so `drive.file` can't see them |
-| Preview cache | R2 bucket `revelado-cache`, key `<photoId>/<variant>`; filled lazily on first request | Fast repeat views, fewer Drive calls |
+| Preview cache | R2 bucket `381s-galleries-cache`, key `<photoId>/<variant>`; filled lazily on first request | Fast repeat views, fewer Drive calls |
 | Google auth | OAuth **Web application** client. Admin clicks "Connect Google" once; the Worker runs the OAuth flow and stores the refresh token (encrypted with `TOKEN_KEY`) in D1. Consent screen **In production** (unverified is fine for personal use; you'll see a warning screen once) | No local scripts |
 | Admin auth | **Cloudflare Access** on `/admin*` and `/api/admin*`. App trusts `Cf-Access-Authenticated-User-Email` and checks it equals `ADMIN_EMAIL` | No login code |
 | Client auth | Gallery slug + optional PIN → HMAC-signed cookie (Web Crypto, `SESSION_SECRET`), scoped per gallery | |
@@ -38,6 +38,7 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Max image size | **2048px is the largest file delivered.** Web sharing only, no prints, no full-size originals | |
 | Dev mode | `DRIVE_MODE=mock` (§5.9): fake galleries, images from picsum.photos. Default in `.dev.vars.example` | Build and test without Google |
 | Package manager | pnpm (single package, no monorepo) | |
+| Timestamps | ISO 8601 UTC strings `YYYY-MM-DDTHH:MM:SSZ` everywhere (`nowIso()`) | |
 | Tests | Vitest + `@cloudflare/vitest-pool-workers` | |
 | Lint/format | ESLint + Prettier defaults | |
 
@@ -271,7 +272,7 @@ Spec and tasks: PLAN.md — read only the sections you need.
 ```
 
 ## 11. Manual steps for the photographer (not for agents)
-1. Cloudflare: add custom domain `session.381studios.ar` to the Worker (DNS already on Cloudflare).
+1. Cloudflare: add custom domain `session.381studios.ar` to the Worker (DNS already on Cloudflare). Worker has workers.dev and preview URLs disabled; only the custom domain serves it.
 2. Google Cloud project → enable Drive API → OAuth **Web** client with redirect `https://<domain>/admin/google/callback` → consent screen **In production**.
 3. Cloudflare Zero Trust → Access application for `/admin*` and `/api/admin*` allowing your email.
 4. `wrangler secret put`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`, `ADMIN_EMAIL`.
