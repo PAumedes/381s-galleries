@@ -147,7 +147,7 @@ Simple, elegant, minimal, **Pixieset-inspired**: the photos are the interface.
 ### 5.9 Mock Drive (development)
 `app/lib/server/drive-mock.ts` implements the same interface as `drive.ts` and is selected when `DRIVE_MODE=mock`.
 - Fixtures in `app/lib/server/fixtures.ts`: 3 galleries (e.g. a wedding with sets "Ceremonia"/"Fiesta" ~120 photos, a portrait session ~30 photos with `preview-wm`, a gallery with sync mismatches), mixed landscape/portrait aspect ratios, deterministic ids.
-- Images: `/img` and `/dl` respond with a **302 redirect** to `https://picsum.photos/seed/<photoId>/<w>/<h>` using the right size for each variant (thumb 600, web 1200, ig 1080, high-res 2048 long edge). The browser fetches them; the Worker never does (the dev sandbox can't reach picsum anyway). No R2 caching in mock mode.
+- Images: In mock mode the /img and /dl routes (not the Drive mock) respond with a 302 to `mockImageUrl(photoId, variant)`; i.e. a **302 redirect** to `https://picsum.photos/seed/<photoId>/<w>/<h>` using the right size for each variant (thumb 600, web 1200, ig 1080, high-res 2048 long edge). The browser fetches them; the Worker never does (the dev sandbox can't reach picsum anyway). No R2 caching in mock mode.
 - Download logging, favorites, PIN etc. all work normally against local D1.
 - `pnpm seed` runs a mock sync so the admin and galleries are populated.
 
@@ -175,12 +175,12 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [ ] **T1.2 ∥ Drive client.** `app/lib/server/drive.ts`: `createDriveClient(getToken: (forceRefresh?: boolean) => Promise<string>, fetchImpl = fetch): DriveClient`. Paginated, minimal `fields`, excludes trashed, query values escaped, retries 429/5xx with backoff (max 3), on 401 refreshes the token once. *Accept:* mocked-fetch tests incl. pagination, escaping, 401 refresh, 404 → DriveError, streaming without buffering, Range passthrough.
 - [ ] **T1.3 Sync engine** (after T1.1, T1.2, T1.4). `sync.ts` per §5.1 (takes a `DriveClient`), `getDrive(env)` factory (mock vs google), `scheduled` handler, `POST /api/admin/sync`, `pnpm seed` (mock sync into local D1). *Accept:* tests on the mock fixtures: sets, fallbacks, mismatch reporting, deletion, wm detection, reserved/duplicate slugs, idempotent re-run, changes-token skip.
 
-- [ ] **T1.4 ∥ Mock Drive + fixtures** per §5.9: `app/lib/server/drive-mock.ts` (`createMockDrive(fixtures)`: DriveClient) + `fixtures.ts` + `mockImageUrl(fileId, variant)` helper for picsum. Fixture tree mirrors §3 exactly (root `381studios` → album folders → recipe folders → optional set subfolders). Includes a mutation API for tests (add/remove/rename file → bumps changes token).
+- [x] **T1.4 ∥ Mock Drive + fixtures** per §5.9: `app/lib/server/drive-mock.ts` (`createMockDrive(fixtures)`: DriveClient) + `fixtures.ts` + `mockImageUrl(fileId, variant)` helper for picsum. Fixture tree mirrors §3 exactly (root `381studios` → album folders → recipe folders → optional set subfolders). Includes a mutation API for tests (add/remove/rename file → bumps changes token).
 
 ### Phase 2 — Client gallery
 - [ ] **T2.1 ∥ Gallery page + PIN + status/expiry + view logging.** `app/routes/$slug*.tsx`, `PinForm`.
 - [ ] **T2.2 ∥ Grid + Lightbox components.** `app/components/Grid.tsx`, `Lightbox.tsx` (justified layout, keyboard, swipe, preload).
-- [ ] **T2.3 ∥ Images route** per §5.3 with R2 read-through cache.
+- [ ] **T2.3 ∥ Images route** per §5.3 with R2 read-through cache. *Accept (carried from T1.4 review):* in mock mode the 302 Location seed equals the DB photo id and never contains any drive_*_id.
 - [ ] **T2.4 Email gate + favorites** (after T2.1). `EmailGate.tsx`, visitor + favorites API, heart button in grid and lightbox.
 
 ### Phase 3 — Downloads

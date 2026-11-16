@@ -5,6 +5,7 @@
  */
 
 export const FOLDER_MIME = "application/vnd.google-apps.folder";
+export const SHORTCUT_MIME = "application/vnd.google-apps.shortcut";
 
 export interface DriveFile {
   id: string;
@@ -19,6 +20,8 @@ export interface DriveFile {
   height?: number;
   /** imageMediaMetadata.time (EXIF capture time) normalized to ISO 8601, if present. */
   takenAt?: string;
+  /** True if the file is in the trash (only visible via getMeta). */
+  trashed?: boolean;
 }
 
 export interface DriveChanges {

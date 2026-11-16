@@ -10,7 +10,10 @@ describe("T0r2 adversarial: weak secret guard", () => {
   });
   it("rejects an all-zero AES TOKEN_KEY", async () => {
     await expect(
-      encryptSecret("refresh-token", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+      encryptSecret(
+        "refresh-token",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      ),
     ).rejects.toThrow();
   });
 });

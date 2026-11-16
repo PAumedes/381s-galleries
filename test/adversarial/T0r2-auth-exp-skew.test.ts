@@ -65,7 +65,9 @@ describe("T0r2 adversarial: Access JWT", () => {
     });
 
   it("control: valid token accepted", async () => {
-    await expect(requireAdmin(req(await jwt({})), google)).resolves.toBeUndefined();
+    await expect(
+      requireAdmin(req(await jwt({})), google),
+    ).resolves.toBeUndefined();
   });
 
   it("a token that expired 30s ago must be rejected (exp skew extends lifetime)", async () => {
