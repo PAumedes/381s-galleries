@@ -6,11 +6,16 @@ type Handler = (req: { url: URL; headers: Headers }, n: number) => Response;
 
 function setup(handler: Handler, tokens = ["tok1", "tok2"]) {
   const calls: { url: URL; headers: Headers }[] = [];
-  const fetchFn = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-    const rec = { url: new URL(String(input)), headers: new Headers(init?.headers) };
-    calls.push(rec);
-    return handler(rec, calls.length - 1);
-  });
+  const fetchFn = vi.fn(
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      const rec = {
+        url: new URL(String(input)),
+        headers: new Headers(init?.headers),
+      };
+      calls.push(rec);
+      return handler(rec, calls.length - 1);
+    },
+  );
   let t = 0;
   const getToken = vi.fn(async (force?: boolean) => {
     if (force) t = Math.min(t + 1, tokens.length - 1);
@@ -33,7 +38,10 @@ const json = (b: unknown, status = 200, h: Record<string, string> = {}) =>
     headers: { "content-type": "application/json", ...h },
   });
 const gerr = (status: number, message: string, reason?: string) =>
-  json({ error: { code: status, message, errors: reason ? [{ reason }] : [] } }, status);
+  json(
+    { error: { code: status, message, errors: reason ? [{ reason }] : [] } },
+    status,
+  );
 
 const f = (id: string, extra: object = {}) => ({
   id,
@@ -53,7 +61,11 @@ describe("listChildren", () => {
       return json({
         files: [
           f("3", {
-            imageMediaMetadata: { width: 100, height: 50, time: "2023:05:06 07:08:09" },
+            imageMediaMetadata: {
+              width: 100,
+              height: 50,
+              time: "2023:05:06 07:08:09",
+            },
           }),
         ],
       });
@@ -72,8 +84,12 @@ describe("listChildren", () => {
     const { client, calls } = setup(() => json({ files: [] }));
     await client.listChildren("abc");
     const u = calls[0].url;
-    expect(u.origin + u.pathname).toBe("https://www.googleapis.com/drive/v3/files");
-    expect(u.searchParams.get("q")).toBe("'abc' in parents and trashed = false");
+    expect(u.origin + u.pathname).toBe(
+      "https://www.googleapis.com/drive/v3/files",
+    );
+    expect(u.searchParams.get("q")).toBe(
+      "'abc' in parents and trashed = false",
+    );
     expect(u.searchParams.get("fields")).toBe(
       "nextPageToken,files(id,name,mimeType,size,modifiedTime,trashed,imageMediaMetadata(width,height,time,rotation))",
     );
@@ -107,7 +123,16 @@ describe("listChildren", () => {
 
   it("omits size for folders", async () => {
     const { client } = setup(() =>
-      json({ files: [{ id: "d", name: "d", mimeType: "application/vnd.google-apps.folder", modifiedTime: "2024-01-01T00:00:00.000Z" }] }),
+      json({
+        files: [
+          {
+            id: "d",
+            name: "d",
+            mimeType: "application/vnd.google-apps.folder",
+            modifiedTime: "2024-01-01T00:00:00.000Z",
+          },
+        ],
+      }),
     );
     const [d] = await client.listChildren("x");
     expect(d.size).toBeUndefined();
@@ -137,9 +162,18 @@ describe("getMeta", () => {
   });
 
   it("swaps width/height for rotation 1 and 3 only", async () => {
-    for (const [rot, w, h] of [[0, 100, 50], [1, 50, 100], [2, 100, 50], [3, 50, 100]]) {
+    for (const [rot, w, h] of [
+      [0, 100, 50],
+      [1, 50, 100],
+      [2, 100, 50],
+      [3, 50, 100],
+    ]) {
       const { client } = setup(() =>
-        json(f("a", { imageMediaMetadata: { width: 100, height: 50, rotation: rot } })),
+        json(
+          f("a", {
+            imageMediaMetadata: { width: 100, height: 50, rotation: rot },
+          }),
+        ),
       );
       const m = await client.getMeta("a");
       expect([m.width, m.height]).toEqual([w, h]);
@@ -147,7 +181,15 @@ describe("getMeta", () => {
   });
 
   it("size accepts numbers and digit strings only", async () => {
-    for (const [size, want] of [[12, 12], ["34", 34], ["", undefined], ["1e3", undefined], ["-5", undefined], ["abc", undefined], [null, undefined]]) {
+    for (const [size, want] of [
+      [12, 12],
+      ["34", 34],
+      ["", undefined],
+      ["1e3", undefined],
+      ["-5", undefined],
+      ["abc", undefined],
+      [null, undefined],
+    ]) {
       const { client } = setup(() => json(f("a", { size })));
       expect((await client.getMeta("a")).size).toBe(want);
     }
@@ -174,15 +216,21 @@ describe("getMeta", () => {
   });
 
   it("subrequests counts retries", async () => {
-    const { client } = setup((_, n) => (n === 0 ? gerr(503, "x") : json(f("a"))));
+    const { client } = setup((_, n) =>
+      n === 0 ? gerr(503, "x") : json(f("a")),
+    );
     await client.getMeta("a");
     expect(client.subrequests()).toBe(2);
   });
 
   it("pagination caps at 50 pages", async () => {
     let n = 0;
-    const { client, calls } = setup(() => json({ nextPageToken: `t${n++}`, files: [] }));
-    await expect(client.listChildren("F")).rejects.toMatchObject({ status: 502 });
+    const { client, calls } = setup(() =>
+      json({ nextPageToken: `t${n++}`, files: [] }),
+    );
+    await expect(client.listChildren("F")).rejects.toMatchObject({
+      status: 502,
+    });
     expect(calls.length).toBeLessThanOrEqual(50);
   });
 });
@@ -190,12 +238,20 @@ describe("getMeta", () => {
 describe("listChildrenMany", () => {
   it("one query for several folders, groups by parents, fills empties", async () => {
     const { client, calls } = setup(() =>
-      json({ files: [f("1", { parents: ["A"] }), f("2", { parents: ["B"] }), f("3", { parents: ["A"] })] }),
+      json({
+        files: [
+          f("1", { parents: ["A"] }),
+          f("2", { parents: ["B"] }),
+          f("3", { parents: ["A"] }),
+        ],
+      }),
     );
     const m = await client.listChildrenMany(["A", "B", "C"]);
     expect(calls).toHaveLength(1);
     const q = calls[0].url.searchParams.get("q");
-    expect(q).toBe("('A' in parents or 'B' in parents or 'C' in parents) and trashed = false");
+    expect(q).toBe(
+      "('A' in parents or 'B' in parents or 'C' in parents) and trashed = false",
+    );
     expect(calls[0].url.searchParams.get("fields")).toContain("parents");
     expect(m.get("A")?.map((x) => x.id)).toEqual(["1", "3"]);
     expect(m.get("B")?.map((x) => x.id)).toEqual(["2"]);
@@ -281,7 +337,8 @@ describe("changes", () => {
     const { client, calls } = setup(({ url }) => {
       const p = url.searchParams.get("pageToken");
       if (p === "t0") return json({ nextPageToken: "t1", changes: [] });
-      if (p === "t1") return json({ nextPageToken: "t2", changes: [{ fileId: "x" }] });
+      if (p === "t1")
+        return json({ nextPageToken: "t2", changes: [{ fileId: "x" }] });
       return json({ newStartPageToken: "t9", changes: [] });
     });
     const r = await client.listChanges("t0");
@@ -295,8 +352,13 @@ describe("changes", () => {
   });
 
   it("changed false when none", async () => {
-    const { client } = setup(() => json({ newStartPageToken: "n", changes: [] }));
-    expect(await client.listChanges("t")).toEqual({ changed: false, newStartPageToken: "n" });
+    const { client } = setup(() =>
+      json({ newStartPageToken: "n", changes: [] }),
+    );
+    expect(await client.listChanges("t")).toEqual({
+      changed: false,
+      newStartPageToken: "n",
+    });
   });
 });
 
@@ -333,7 +395,9 @@ describe("auth and retries", () => {
   });
 
   it("403 rateLimitExceeded is retried; other 403 is not", async () => {
-    const a = setup((_, n) => (n === 0 ? gerr(403, "rl", "userRateLimitExceeded") : json(f("a"))));
+    const a = setup((_, n) =>
+      n === 0 ? gerr(403, "rl", "userRateLimitExceeded") : json(f("a")),
+    );
     await a.client.getMeta("a");
     expect(a.calls).toHaveLength(2);
     const b = setup(() => gerr(403, "forbidden", "forbidden"));
@@ -351,7 +415,9 @@ describe("auth and retries", () => {
   });
 
   it("non-JSON error body still yields DriveError", async () => {
-    const { client } = setup(() => new Response("<html>bad</html>", { status: 400 }));
+    const { client } = setup(
+      () => new Response("<html>bad</html>", { status: 400 }),
+    );
     await expect(client.getMeta("a")).rejects.toMatchObject({ status: 400 });
   });
 
@@ -359,7 +425,10 @@ describe("auth and retries", () => {
     const { client } = setup(() => gerr(500, "boom"), ["SECRET-TOKEN-xyz"]);
     const e = await client.getMeta("a").catch((x) => x);
     expect(String(e.message)).not.toContain("SECRET-TOKEN-xyz");
-    const s = setup(() => new Response("Bearer SECRET-TOKEN-xyz", { status: 400 }), ["SECRET-TOKEN-xyz"]);
+    const s = setup(
+      () => new Response("Bearer SECRET-TOKEN-xyz", { status: 400 }),
+      ["SECRET-TOKEN-xyz"],
+    );
     const e2 = await s.client.getMeta("a").catch((x) => x);
     expect(String(e2.message)).not.toContain("SECRET-TOKEN-xyz");
   });

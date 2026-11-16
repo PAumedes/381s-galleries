@@ -7,3 +7,13 @@ Client photo galleries for **381 Studios** — a free, self-hosted Pixieset alte
 - Runs on Cloudflare Workers + D1 + R2 (cache). No servers.
 
 See [PLAN.md](PLAN.md) for the full spec and task list.
+
+## Local development
+
+```sh
+cp .dev.vars.example .dev.vars   # keep DRIVE_MODE=mock and ALLOW_DEV_ADMIN=1; fill the secrets
+pnpm dev                         # http://localhost:5173
+pnpm seed                        # in another terminal: runs a mock sync into local D1
+```
+
+Apply migrations to the local D1 first if needed: `pnpm db:migrate:local`.

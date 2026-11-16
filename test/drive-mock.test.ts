@@ -398,7 +398,10 @@ describe("mock listChildrenMany and subrequests", () => {
     expect(d.subrequests()).toBe(4);
     const albums = await d.listChildren(fx.rootId);
     const before = d.subrequests();
-    const many = Array.from({ length: 41 }, (_, i) => albums[i % albums.length].id);
+    const many = Array.from(
+      { length: 41 },
+      (_, i) => albums[i % albums.length].id,
+    );
     await d.listChildrenMany([...new Set(many)]);
     expect(d.subrequests()).toBe(before + 1);
     const file = (await recipe(d, albums[0].id, "web"))[0];

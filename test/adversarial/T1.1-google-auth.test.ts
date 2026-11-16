@@ -19,8 +19,14 @@ const e = {
   ALLOW_DEV_ADMIN: "1",
 } as Env;
 const R = "http://localhost/admin/google/callback";
-const j = (b: object, status = 200) => new Response(JSON.stringify(b), { status });
-const good = { access_token: "A", refresh_token: "RT", expires_in: 3600, scope: SCOPE };
+const j = (b: object, status = 200) =>
+  new Response(JSON.stringify(b), { status });
+const good = {
+  access_token: "A",
+  refresh_token: "RT",
+  expires_in: 3600,
+  scope: SCOPE,
+};
 
 beforeAll(async () => {
   await applyD1Migrations(
@@ -36,7 +42,10 @@ describe("T1.1 adversarial", () => {
   it("misconfigured TOKEN_KEY must not permanently delete the stored refresh token", async () => {
     await exchangeCode(e, "c", R, async () => j(good));
     const bad = { ...e, TOKEN_KEY: "not-a-valid-key" } as Env;
-    await getAccessToken(bad, { forceRefresh: true, fetchImpl: async () => j({}) }).catch(() => {});
+    await getAccessToken(bad, {
+      forceRefresh: true,
+      fetchImpl: async () => j({}),
+    }).catch(() => {});
     // Config typo (not a rotation) destroyed the credential; restoring the key should recover.
     expect(await isGoogleConnected(e)).toBe(true);
   });
@@ -47,7 +56,9 @@ describe("T1.1 adversarial", () => {
       forceRefresh: true,
       fetchImpl: async () => {
         // admin reconnects while the old-token refresh is in flight
-        await exchangeCode(e, "c2", R, async () => j({ ...good, refresh_token: "RT2" }));
+        await exchangeCode(e, "c2", R, async () =>
+          j({ ...good, refresh_token: "RT2" }),
+        );
         return j({ error: "invalid_grant" }, 400);
       },
     });
@@ -73,13 +84,21 @@ describe("T1.1 adversarial", () => {
   });
 
   it("state is single-use: replaying the same cookie+state after success is rejected", async () => {
-    const res = await handleConnect(new Request("http://localhost/admin/google/connect"), e);
+    const res = await handleConnect(
+      new Request("http://localhost/admin/google/connect"),
+      e,
+    );
     const cookie = res.headers.get("Set-Cookie")!.split(";")[0];
-    const state = new URL(res.headers.get("Location")!).searchParams.get("state")!;
+    const state = new URL(res.headers.get("Location")!).searchParams.get(
+      "state",
+    )!;
     const mk = () =>
-      new Request(`http://localhost/admin/google/callback?code=x&state=${state}`, {
-        headers: { Cookie: cookie },
-      });
+      new Request(
+        `http://localhost/admin/google/callback?code=x&state=${state}`,
+        {
+          headers: { Cookie: cookie },
+        },
+      );
     const ok = () => async () => j(good);
     const first = await handleCallback(mk(), e, ok());
     expect(first.headers.get("Location")).toContain("connected");
