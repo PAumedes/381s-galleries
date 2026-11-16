@@ -100,8 +100,10 @@ export async function loadGallery(
       if (shouldLogView(request)) {
         const country = (request as { cf?: { country?: string } }).cf?.country;
         const ipHash = await clientIpHash(request, env);
-        if (session?.visitorId || !ipHash) {
-          // Unknown IP has no dedupe bucket: log it with a NULL ip_hash.
+        if (!session?.visitorId && !ipHash) {
+          // Cookieless request with no client IP (never happens behind
+          // Cloudflare): skip logging rather than allow unbounded inflation.
+        } else if (session?.visitorId) {
           await db.insert(schema.galleryViews).values({
             galleryId: g.id,
             visitorId: session?.visitorId ?? null,
