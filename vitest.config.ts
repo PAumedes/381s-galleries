@@ -18,8 +18,8 @@ export default defineConfig(async () => {
             TEST_MIGRATIONS: migrations,
             SESSION_SECRET: "test-session-secret-0123456789-abcdefghij",
             DOWNLOAD_SECRET: "test-download-secret-0123456789-abcdefghij",
-            // 32 zero bytes, base64
-            TOKEN_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            // fixed random 32 bytes, base64
+            TOKEN_KEY: "yogTK+cwJid8noG4Vt0xD2UnRFi5DXpIYNqlDl+l0HE=",
             ADMIN_EMAIL: "Admin@Example.com",
           },
         },

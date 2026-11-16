@@ -11,6 +11,10 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
+// NOTE: drizzle-kit does not manage triggers. The cover_photo_id same-gallery
+// triggers live in migrations/0000_init.sql (appended after generation).
+// Re-append them whenever the migration is regenerated.
+
 // Timestamp convention: every timestamp column is an ISO 8601 UTC string
 // `YYYY-MM-DDTHH:MM:SSZ`. DB defaults use strftime('%Y-%m-%dT%H:%M:%SZ','now');
 // app code uses nowIso() (app/db/index.ts). Both sort lexicographically
@@ -69,6 +73,17 @@ export const galleries = sqliteTable(
     uniqueIndex("galleries_slug_nocase_unique").on(
       sql`${t.slug} COLLATE NOCASE`,
     ),
+    check("galleries_slug_nonempty_check", sql`length(${t.slug}) > 0`),
+    ...(
+      [
+        ["allow_highres", t.allowHighres],
+        ["allow_web", t.allowWeb],
+        ["allow_ig", t.allowIg],
+        ["allow_bulk", t.allowBulk],
+        ["require_email", t.requireEmail],
+        ["use_watermark_preview", t.useWatermarkPreview],
+      ] as const
+    ).map(([n, c]) => check(`galleries_${n}_bool_check`, sql`${c} IN (0,1)`)),
     check(
       "galleries_status_check",
       sql`${t.status} IN ('draft','published','archived')`,

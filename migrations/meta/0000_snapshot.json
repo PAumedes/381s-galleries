@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1bfa2342-10e4-416a-9d7d-2edb13c2d3e8",
+  "id": "51a05b81-a041-4387-9c90-05f7b5b42a03",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "downloads": {
@@ -362,6 +362,34 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
+        "galleries_slug_nonempty_check": {
+          "name": "galleries_slug_nonempty_check",
+          "value": "length(\"galleries\".\"slug\") > 0"
+        },
+        "galleries_allow_highres_bool_check": {
+          "name": "galleries_allow_highres_bool_check",
+          "value": "\"galleries\".\"allow_highres\" IN (0,1)"
+        },
+        "galleries_allow_web_bool_check": {
+          "name": "galleries_allow_web_bool_check",
+          "value": "\"galleries\".\"allow_web\" IN (0,1)"
+        },
+        "galleries_allow_ig_bool_check": {
+          "name": "galleries_allow_ig_bool_check",
+          "value": "\"galleries\".\"allow_ig\" IN (0,1)"
+        },
+        "galleries_allow_bulk_bool_check": {
+          "name": "galleries_allow_bulk_bool_check",
+          "value": "\"galleries\".\"allow_bulk\" IN (0,1)"
+        },
+        "galleries_require_email_bool_check": {
+          "name": "galleries_require_email_bool_check",
+          "value": "\"galleries\".\"require_email\" IN (0,1)"
+        },
+        "galleries_use_watermark_preview_bool_check": {
+          "name": "galleries_use_watermark_preview_bool_check",
+          "value": "\"galleries\".\"use_watermark_preview\" IN (0,1)"
+        },
         "galleries_status_check": {
           "name": "galleries_status_check",
           "value": "\"galleries\".\"status\" IN ('draft','published','archived')"
