@@ -60,7 +60,7 @@ export function parseExifTime(s: string | undefined): string | undefined {
   ) {
     return undefined;
   }
-  return dt.toISOString();
+  return dt.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
 function mapFile(r: RawFile): DriveFile {

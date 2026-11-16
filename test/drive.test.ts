@@ -77,7 +77,7 @@ describe("listChildren", () => {
     expect(typeof files[0].size).toBe("number");
     expect(files[2].width).toBe(100);
     expect(files[2].height).toBe(50);
-    expect(files[2].takenAt).toBe("2023-05-06T07:08:09.000Z");
+    expect(files[2].takenAt).toBe("2023-05-06T07:08:09Z");
   });
 
   it("sends the expected params and bearer token", async () => {

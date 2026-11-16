@@ -1,17 +1,20 @@
-import { eq } from "drizzle-orm";
-import { getDb, schema } from "../../db";
 import { createDriveClient } from "./drive";
 import { createMockDrive } from "./drive-mock";
 import type { MockDrive } from "./drive-mock";
 import type { DriveClient } from "./drive-types";
 import { buildFixtures } from "./fixtures";
 import { getAccessToken } from "./google-auth";
-
-export const ROOT_KEY = "drive_root_id";
+import { SETTINGS_KEYS, getSetting } from "./settings";
 
 // One in-memory tree per isolate so mutations and the changes token persist.
 let mock: MockDrive | undefined;
 let mockRootId: string | undefined;
+
+/** Test hook: drop the in-memory mock tree (and its mutations / changes token). */
+export function resetMockDrive(): void {
+  mock = undefined;
+  mockRootId = undefined;
+}
 
 export function getDrive(env: Env): DriveClient {
   if (env.DRIVE_MODE === "mock") {
@@ -39,13 +42,9 @@ export function getDrive(env: Env): DriveClient {
 /** Root folder id from settings; in mock mode defaults to the fixtures root. */
 export async function getRootFolderId(
   env: Pick<Env, "DB" | "DRIVE_MODE">,
-  _drive?: DriveClient,
 ): Promise<string | undefined> {
-  const [row] = await getDb(env as Env)
-    .select()
-    .from(schema.settings)
-    .where(eq(schema.settings.key, ROOT_KEY));
-  if (row?.value) return row.value;
+  const id = await getSetting(env, SETTINGS_KEYS.driveRootId);
+  if (id) return id;
   if (env.DRIVE_MODE === "mock") {
     mockRootId ??= buildFixtures().rootId;
     return mockRootId;

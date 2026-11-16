@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   gallerySessionCookie,
+  pinFingerprint,
   readGallerySession,
   requireAdmin,
   resetAccessKeyCache,
@@ -11,6 +12,9 @@ import { b64urlEncode } from "../app/lib/server/crypto";
 
 const G1 = "11111111-aaaa-bbbb-cccc-000000000001";
 const G2 = "22222222-aaaa-bbbb-cccc-000000000002";
+const g1 = { id: G1, pinHash: null };
+const g2 = { id: G2, pinHash: null };
+const PF_NONE = () => pinFingerprint(null, env);
 
 function reqWithCookie(setCookie: string) {
   return new Request("https://x.test/", {
@@ -21,7 +25,7 @@ function reqWithCookie(setCookie: string) {
 describe("gallery session cookie", () => {
   it("roundtrips and sets attributes", async () => {
     const sc = await gallerySessionCookie(
-      { galleryId: G1, unlocked: true, visitorId: "v1" },
+      { galleryId: G1, unlocked: true, visitorId: "v1", pf: await PF_NONE() },
       env,
       { secure: true },
     );
@@ -34,15 +38,16 @@ describe("gallery session cookie", () => {
     ]) {
       expect(sc).toContain(a);
     }
-    expect(await readGallerySession(reqWithCookie(sc), G1, env)).toEqual({
+    expect(await readGallerySession(reqWithCookie(sc), g1, env)).toEqual({
       galleryId: G1,
       unlocked: true,
       visitorId: "v1",
+      pf: await PF_NONE(),
     });
   });
   it("omits Secure in dev", async () => {
     const sc = await gallerySessionCookie(
-      { galleryId: G1, unlocked: false },
+      { galleryId: G1, unlocked: false, pf: await PF_NONE() },
       env,
       {
         secure: false,
@@ -52,29 +57,89 @@ describe("gallery session cookie", () => {
   });
   it("rejects a cookie for another gallery", async () => {
     const sc = await gallerySessionCookie(
-      { galleryId: G1, unlocked: true },
+      { galleryId: G1, unlocked: true, pf: await PF_NONE() },
       env,
       {
         secure: true,
       },
     );
-    expect(await readGallerySession(reqWithCookie(sc), G2, env)).toBeNull();
+    expect(await readGallerySession(reqWithCookie(sc), g2, env)).toBeNull();
     // Same cookie name forced onto the other gallery: signed galleryId must still match.
     const forced = new Request("https://x.test/", {
       headers: {
         Cookie: `${sessionCookieName(G2)}=${sc.split("=")[1].split(";")[0]}`,
       },
     });
-    expect(await readGallerySession(forced, G2, env)).toBeNull();
+    expect(await readGallerySession(forced, g2, env)).toBeNull();
   });
   it("rejects missing or garbage cookies", async () => {
     expect(
-      await readGallerySession(new Request("https://x.test/"), G1, env),
+      await readGallerySession(new Request("https://x.test/"), g1, env),
     ).toBeNull();
     const bad = new Request("https://x.test/", {
       headers: { Cookie: `${sessionCookieName(G1)}=junk` },
     });
-    expect(await readGallerySession(bad, G1, env)).toBeNull();
+    expect(await readGallerySession(bad, g1, env)).toBeNull();
+  });
+});
+
+describe("gallery session pin fingerprint (pf)", () => {
+  const cookieFor = async (pinHash: string | null, galleryId = G1) =>
+    gallerySessionCookie(
+      { galleryId, unlocked: true, pf: await pinFingerprint(pinHash, env) },
+      env,
+      { secure: true },
+    );
+
+  it("pf is 16 base64url chars and depends on the pin hash", async () => {
+    const a = await pinFingerprint("hash-a", env);
+    expect(a).toMatch(/^[A-Za-z0-9_-]{16}$/);
+    expect(await pinFingerprint("hash-b", env)).not.toBe(a);
+    expect(await pinFingerprint(null, env)).not.toBe(a);
+    expect(await pinFingerprint(null, env)).toBe(
+      await pinFingerprint(null, env),
+    );
+  });
+  it("pf is keyed by SESSION_SECRET", async () => {
+    expect(await pinFingerprint("h", env)).not.toBe(
+      await pinFingerprint("h", { SESSION_SECRET: "x".repeat(40) }),
+    );
+  });
+  it("accepts a cookie while the pin hash is unchanged", async () => {
+    const sc = await cookieFor("h1");
+    expect(
+      await readGallerySession(
+        reqWithCookie(sc),
+        { id: G1, pinHash: "h1" },
+        env,
+      ),
+    ).not.toBeNull();
+  });
+  it("rejects the cookie after the PIN is changed or cleared", async () => {
+    const sc = await cookieFor("h1");
+    for (const pinHash of ["h2", null]) {
+      expect(
+        await readGallerySession(reqWithCookie(sc), { id: G1, pinHash }, env),
+      ).toBeNull();
+    }
+  });
+  it("rejects a cookie issued without a PIN once a PIN is set", async () => {
+    const sc = await cookieFor(null);
+    expect(
+      await readGallerySession(
+        reqWithCookie(sc),
+        { id: G1, pinHash: "h1" },
+        env,
+      ),
+    ).toBeNull();
+  });
+  it("rejects a legacy cookie with no pf claim", async () => {
+    const sc = await gallerySessionCookie(
+      { galleryId: G1, unlocked: true } as never,
+      env,
+      { secure: true },
+    );
+    expect(await readGallerySession(reqWithCookie(sc), g1, env)).toBeNull();
   });
 });
 

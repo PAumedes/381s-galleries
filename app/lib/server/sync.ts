@@ -7,33 +7,24 @@
  * gallery). A budget overrun therefore aborts before any write.
  */
 import { and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
-import { getDb, schema } from "../../db";
+import { getDb, nowIso, schema } from "../../db";
 import { getRootFolderId } from "./drive-factory";
 import { DriveError, FOLDER_MIME, SHORTCUT_MIME } from "./drive-types";
 import type { DriveClient, DriveFile } from "./drive-types";
+import * as settings from "./settings";
+import { SETTINGS_KEYS } from "./settings";
+import { uniqueSlug } from "./slug";
 
-export const RESERVED_SLUGS = [
-  "admin",
-  "api",
-  "img",
-  "dl",
-  "assets",
-  "brand",
-  "favicon.ico",
-  "robots.txt",
-  "manifest.webmanifest",
-];
-const LOCK_KEY = "sync_lock";
-const TOKEN_KEY = "drive_changes_token";
+const LOCK_KEY = SETTINGS_KEYS.syncLock;
+const TOKEN_KEY = SETTINGS_KEYS.driveChangesToken;
 const LOCK_MS = 5 * 60_000;
 const DEFAULT_SET = "Highlights";
 const RECIPES = ["high-res", "web", "ig", "thumb", "preview-wm"] as const;
 type Recipe = (typeof RECIPES)[number];
-const SLUG_MAX = 60;
 /** A photo/folder must be missing for longer than this before it is deleted/archived. */
 export const SYNC_DELETE_GRACE_MS = 60 * 60_000;
-const PENDING_DELETES_KEY = "r2_pending_deletes";
-const LAST_ERROR_KEY = "sync_last_error";
+const PENDING_DELETES_KEY = SETTINGS_KEYS.r2PendingDeletes;
+const LAST_ERROR_KEY = SETTINGS_KEYS.syncLastError;
 // ids are 36 chars; keep the JSON value well under D1's 100 KB statement limit.
 const PENDING_DELETES_CAP = 2000;
 const ISSUES_CAP = 200;
@@ -85,30 +76,6 @@ type SyncEnv = Pick<Env, "DB" | "CACHE" | "DRIVE_MODE">;
 
 const nfc = (s: string) => s.normalize("NFC").trim();
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-const isoSec = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z");
-
-export function slugify(name: string): string {
-  const s = name
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, SLUG_MAX)
-    .replace(/-+$/, "");
-  return s || "galeria";
-}
-
-function uniqueSlug(name: string, taken: Set<string>): string {
-  const base = slugify(name);
-  let slug = base;
-  for (let n = 2; taken.has(slug) || RESERVED_SLUGS.includes(slug); n++) {
-    const suffix = `-${n}`;
-    slug = base.slice(0, SLUG_MAX - suffix.length).replace(/-+$/, "") + suffix;
-  }
-  taken.add(slug);
-  return slug;
-}
 
 const isFolder = (f: DriveFile) => f.mimeType === FOLDER_MIME;
 const isLive = (f: DriveFile) => !f.trashed && f.mimeType !== SHORTCUT_MIME;
@@ -397,26 +364,20 @@ function capIssues(issues: SyncIssue[]): string {
   ]);
 }
 
-async function getSetting(db: Db, key: string, op: Op) {
+// Op-counting wrappers: every settings read/write is one D1 subrequest.
+async function getSetting(env: SyncEnv, key: string, op: Op) {
   op();
-  const [r] = await db
-    .select()
-    .from(schema.settings)
-    .where(eq(schema.settings.key, key));
-  return r?.value;
+  return settings.getSetting(env, key);
 }
 
-async function putSetting(db: Db, key: string, value: string, op: Op) {
+async function putSetting(env: SyncEnv, key: string, value: string, op: Op) {
   op();
-  await db
-    .insert(schema.settings)
-    .values({ key, value })
-    .onConflictDoUpdate({ target: schema.settings.key, set: { value } });
+  await settings.putSetting(env, key, value);
 }
 
-async function dropSetting(db: Db, key: string, op: Op) {
+async function dropSetting(env: SyncEnv, key: string, op: Op) {
   op();
-  await db.delete(schema.settings).where(eq(schema.settings.key, key));
+  await settings.deleteSetting(env, key);
 }
 
 function parsePending(raw: string | undefined): string[] {
@@ -440,7 +401,6 @@ function parsePending(raw: string | undefined): string[] {
  */
 async function flushR2(
   env: SyncEnv,
-  db: Db,
   op: Op,
   pending: string[],
 ): Promise<string[]> {
@@ -460,10 +420,10 @@ async function flushR2(
   } catch {
     console.error("sync: cache cleanup failed");
     const rest = ids.slice(done);
-    await putSetting(db, PENDING_DELETES_KEY, JSON.stringify(rest), op);
+    await putSetting(env, PENDING_DELETES_KEY, JSON.stringify(rest), op);
     return rest;
   }
-  await dropSetting(db, PENDING_DELETES_KEY, op);
+  await dropSetting(env, PENDING_DELETES_KEY, op);
   return [];
 }
 
@@ -492,27 +452,28 @@ export async function runSync(
   };
 
   // 1. Lock (expiry-based; only an expired lock can be taken over).
-  const lockValue = `${new Date(now.getTime() + LOCK_MS).toISOString()}|${crypto.randomUUID()}`;
+  // The one timestamp that is not a bare ISO value: `<iso>|<uuid>` (expiry + owner token).
+  const lockValue = `${nowIso(new Date(now.getTime() + LOCK_MS))}|${crypto.randomUUID()}`;
   const got = await env.DB.prepare(
     "INSERT INTO settings (key, value) VALUES (?1, ?2) ON CONFLICT(key) DO UPDATE SET value = excluded.value WHERE settings.value < ?3",
   )
-    .bind(LOCK_KEY, lockValue, now.toISOString())
+    .bind(LOCK_KEY, lockValue, nowIso(now))
     .run();
   if (!got.meta.changes) return { ...result, skipped: "locked" };
   op();
 
   try {
     // 1b. Retry R2 cleanups that failed on a previous run, first thing.
-    let pending = parsePending(await getSetting(db, PENDING_DELETES_KEY, op));
-    if (pending.length) pending = await flushR2(env, db, op, pending);
+    let pending = parsePending(await getSetting(env, PENDING_DELETES_KEY, op));
+    if (pending.length) pending = await flushR2(env, op, pending);
 
-    const rootId = await getRootFolderId(env, drive);
+    const rootId = await getRootFolderId(env);
     if (!rootId) return { ...result, skipped: "no_root" };
 
     // 2. Change detection; take the next token BEFORE scanning. Unfinished
     // grace periods (missing photos/folders) force a rescan so they can mature
     // even when Drive itself reports no new changes.
-    const stored = await getSetting(db, TOKEN_KEY, op);
+    const stored = await getSetting(env, TOKEN_KEY, op);
     let nextToken: string | undefined;
     if (stored && !force) {
       op(2);
@@ -590,7 +551,7 @@ export async function runSync(
     }
     const byFolder = new Map(existing.map((g) => [g.driveFolderId, g]));
     const takenSlugs = new Set(existing.map((g) => g.slug.toLowerCase()));
-    const syncedAt = isoSec(now);
+    const syncedAt = nowIso(now);
     // Removed photo ids whose R2 keys still need deleting (persisted with the row deletes).
     let pendingIds = pending;
     const graceOver = (since: string | null) =>
@@ -823,9 +784,9 @@ export async function runSync(
     await flush(gstmts);
     result.galleries.archived = due.length;
 
-    await putSetting(db, TOKEN_KEY, nextToken, op);
+    await putSetting(env, TOKEN_KEY, nextToken, op);
 
-    await flushR2(env, db, op, pendingIds);
+    await flushR2(env, op, pendingIds);
     result.subrequests = drive.subrequests() - startSubs;
     return result;
   } finally {
@@ -843,14 +804,13 @@ export async function runScheduledSync(
   env: SyncEnv,
   drive: DriveClient,
 ): Promise<SyncResult> {
-  const db = getDb(env as Env);
   const noop: Op = () => {};
   const record = async (message: string) => {
     try {
       await putSetting(
-        db,
+        env,
         LAST_ERROR_KEY,
-        JSON.stringify({ at: isoSec(new Date()), message }),
+        JSON.stringify({ at: nowIso(), message }),
         noop,
       );
     } catch {
@@ -859,9 +819,11 @@ export async function runScheduledSync(
   };
   try {
     const r = await runSync(env, { drive });
-    if (r.skipped === "empty_root") await record("root folder listed empty");
+    if (r.skipped === "no_root") await record("no root folder configured");
+    else if (r.skipped === "empty_root")
+      await record("root folder listed empty");
     else if (r.skipped !== "locked")
-      await dropSetting(db, LAST_ERROR_KEY, noop);
+      await dropSetting(env, LAST_ERROR_KEY, noop);
     return r;
   } catch (err) {
     // Name only: messages may hold Drive ids.

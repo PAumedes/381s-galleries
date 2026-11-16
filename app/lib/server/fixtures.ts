@@ -105,7 +105,7 @@ export function buildFixtures(): MockFixtures {
     if (!opts.noMeta) {
       entry.width = width;
       entry.height = height;
-      entry.takenAt = new Date(taken).toISOString();
+      entry.takenAt = new Date(taken).toISOString().replace(/\.\d{3}Z$/, "Z");
     }
     if (opts.trashed) entry.trashed = true;
     entries.push(entry);

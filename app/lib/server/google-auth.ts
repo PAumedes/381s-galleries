@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { getDb, schema } from "../../db";
 import { requireAdmin } from "./auth";
 import {
@@ -8,12 +8,18 @@ import {
   signToken,
   verifyToken,
 } from "./crypto";
+import {
+  SETTINGS_KEYS,
+  deleteSetting,
+  getSetting,
+  putSetting,
+} from "./settings";
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const SCOPE = "https://www.googleapis.com/auth/drive.readonly";
-const REFRESH_KEY = "google_refresh_token";
-const ACCESS_KEY = "google_access_token";
+const REFRESH_KEY = SETTINGS_KEYS.googleRefreshToken;
+const ACCESS_KEY = SETTINGS_KEYS.googleAccessToken;
 const EXPIRY_MARGIN_MS = 300_000;
 const STATE_COOKIE = "g_oauth_state";
 const STATE_TTL_SECONDS = 600;
@@ -64,21 +70,6 @@ export function buildAuthUrl(
     state,
   }).toString();
   return u.toString();
-}
-
-async function putSetting(env: GoogleEnv, key: string, value: string) {
-  await getDb(env as Env)
-    .insert(schema.settings)
-    .values({ key, value })
-    .onConflictDoUpdate({ target: schema.settings.key, set: { value } });
-}
-
-async function getSetting(env: GoogleEnv, key: string) {
-  const [r] = await getDb(env as Env)
-    .select()
-    .from(schema.settings)
-    .where(eq(schema.settings.key, key));
-  return r?.value;
 }
 
 async function cacheAccessToken(
@@ -227,9 +218,7 @@ async function disconnectIfStored(env: GoogleEnv, enc: string) {
     .bind(REFRESH_KEY, enc)
     .run();
   if (r.meta.changes > 0) {
-    await getDb(env as Env)
-      .delete(schema.settings)
-      .where(eq(schema.settings.key, ACCESS_KEY));
+    await deleteSetting(env, ACCESS_KEY);
   }
 }
 
@@ -410,14 +399,14 @@ async function consumeState(
 ): Promise<boolean> {
   const nowSec = Math.floor(Date.now() / 1000);
   await env.DB.prepare(
-    "DELETE FROM settings WHERE key LIKE 'oauth_state_used:%' AND CAST(value AS INTEGER) < ?1",
+    "DELETE FROM settings WHERE key LIKE ?1 AND CAST(value AS INTEGER) < ?2",
   )
-    .bind(nowSec)
+    .bind(`${SETTINGS_KEYS.oauthStateUsedPrefix}%`, nowSec)
     .run();
   const r = await env.DB.prepare(
     "INSERT INTO settings (key, value) VALUES (?1, ?2) ON CONFLICT(key) DO NOTHING",
   )
-    .bind(`oauth_state_used:${nonce}`, String(expSec))
+    .bind(`${SETTINGS_KEYS.oauthStateUsedPrefix}${nonce}`, String(expSec))
     .run();
   return r.meta.changes > 0;
 }

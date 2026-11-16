@@ -38,7 +38,7 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Max image size | **2048px is the largest file delivered.** Web sharing only, no prints, no full-size originals | |
 | Dev mode | `DRIVE_MODE=mock` (§5.9): fake galleries, images from picsum.photos. Default in `.dev.vars.example` | Build and test without Google |
 | Package manager | pnpm (single package, no monorepo) | |
-| Timestamps | ISO 8601 UTC strings `YYYY-MM-DDTHH:MM:SSZ` everywhere (`nowIso()`) | |
+| Timestamps | ISO 8601 UTC strings `YYYY-MM-DDTHH:MM:SSZ` everywhere (`nowIso(date?)` in `app/db/index.ts`). One exception: the `sync_lock` settings value is `<iso>\|<uuid>` (expiry + owner token) | |
 | Tests | Vitest + `@cloudflare/vitest-pool-workers` | |
 | Lint/format | ESLint + Prettier defaults | |
 
@@ -64,15 +64,18 @@ My Drive/
 ## 4. Data model (Drizzle schema in `app/db/schema.ts`)
 
 ```ts
-settings      (key PK, value)                           // drive_root_id, google_refresh_token (encrypted), access_token cache, branding
+settings      (key PK, value)                           // keys (constants in settings.ts): drive_root_id, google_refresh_token (encrypted), google_access_token (encrypted cache),
+               //   oauth_state_used:<nonce>, drive_changes_token, sync_lock (`<iso>|<uuid>`), r2_pending_deletes, sync_last_error; branding later
 galleries     (id PK, drive_folder_id UNIQUE, slug UNIQUE, title, client_name?, event_date?,
                pin_hash?, expires_at?, status: 'draft'|'published'|'archived' default 'draft',
                cover_photo_id?, allow_highres bool=1, allow_web bool=1, allow_ig bool=1, allow_bulk bool=1,
                require_email bool=1, use_watermark_preview bool (auto true if preview-wm exists),
-               drive_modified_at?, last_synced_at?, sync_issues_json?, created_at)
+               drive_modified_at?, last_synced_at?, sync_issues_json?,
+               folder_missing_since?, archived_prev_status? ('draft'|'published'), created_at)
 photos        (id PK, gallery_id FK cascade, set_name default 'Highlights', base_name,
                drive_highres_id, drive_web_id?, drive_ig_id?, drive_thumb_id?, drive_wm_id?,
                highres_bytes?, width?, height?, taken_at?, sort int,   // width/height of high-res
+               missing_since?,                                         // set while the high-res file is absent (sync grace period)
                UNIQUE(gallery_id, id), UNIQUE(gallery_id, set_name, base_name))
 visitors      (id PK, gallery_id FK, email, name?, first_seen,
                UNIQUE(gallery_id, id), UNIQUE(gallery_id, email COLLATE NOCASE))
@@ -86,13 +89,13 @@ gallery_views (gallery_id, visitor_id?, country?, created_at)
 pin_attempts  (ip_hash, gallery_id, count, window_start)  // rate limit
 ```
 
-Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in code). Sort = `taken_at`, then filename; admin can reorder.
+Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in code). The `DriveFile` contract (`drive-types.ts`, shared by the real client and the mock) carries `trashed` and **rotation-corrected** `width`/`height` (the real client swaps them for EXIF rotation 1/3); `takenAt` is exactly `YYYY-MM-DDTHH:MM:SSZ`. Sort = `taken_at`, then filename; admin can reorder.
 
 ## 5. Core flows
 
 ### 5.1 Sync (cron + button) — `app/lib/server/sync.ts`
 1. List child folders of the root → upsert a `galleries` row per folder (new ones start as **draft**, slug = slugified folder name, title = folder name).
-2. Change detection: Drive folder `modifiedTime` does NOT reflect changes deep inside it, so use the **Changes API**: keep a `drive_changes_token` in `settings`; if `listChanges(token)` reports nothing changed (and it's not a forced "Sync now"), stop. Otherwise rescan every non-archived gallery: list recipe folders and their set subfolders (paginate, request only `id,name,mimeType,size,modifiedTime,imageMediaMetadata(width,height,time)`). Store the new token only after a successful run.
+2. Change detection: Drive folder `modifiedTime` does NOT reflect changes deep inside it, so use the **Changes API**: keep a `drive_changes_token` in `settings`; if `listChanges(token)` reports nothing changed (and it's not a forced "Sync now"), stop. Otherwise rescan every non-archived gallery: list recipe folders and their set subfolders (paginate, request only `id,name,mimeType,size,modifiedTime,trashed,imageMediaMetadata(width,height,time,rotation)`; the contract's width/height are rotation-corrected). Store the new token only after a successful run.
 3. Build photo records with the matching rule (§3; set names and base names match case-insensitively; a case-only set rename updates `set_name` in place, ids unchanged). Upsert. **No hard deletes on a single scan:** a photo whose high-res file is absent gets `photos.missing_since` (ISO) set; if it is present again the column is cleared; it is hard-deleted (with its R2 keys) only when `missing_since` is older than `SYNC_DELETE_GRACE_MS` (1 hour) on a later run (runs keep rescanning while any grace period is pending). If a gallery's high-res folder is missing or has zero JPEGs while the gallery has photos, nothing is marked or deleted and the gallery gets issue `highres_empty`.
 4. Store mismatches in `sync_issues_json` (capped at 200 entries + a final `{"truncated": n}` summary); set `use_watermark_preview` if `preview-wm` exists.
 5. Stay within Worker limits (T1.3 decision): the scan is **breadth-first with `listChildrenMany`** (root → albums → all recipe folders → all set folders: ~4 queries for the whole library). `runSync` takes a `budget` (default 45; Workers Free allows 50 external subrequests) counting EVERY external call: `listChanges`, `getStartPageToken`, `getMeta(root)`, every scan query and the Google OAuth refresh (the drive factory counts it in `drive.subrequests()`). It checks that the next call fits BEFORE making it and re-checks after; on overrun it aborts with `SyncBudgetError` before any DB write and the changes token is not stored. D1/R2 calls are a separate pool (limit 1000): a counter aborts above 900. D1 writes are chunked into batches of <=100 statements per gallery (ordered so a failure mid-gallery leaves consistent rows; the next run re-diffs). A `sync_lock` settings row (5 min expiry) prevents overlapping runs. `listChanges` falls back to a full rescan only on 400/404 (stale token); other errors are rethrown.
@@ -100,7 +103,7 @@ Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in
 7. **Mock auto-publish:** when `DRIVE_MODE=mock`, new galleries are created `published` (instead of `draft`) so the seeded galleries are viewable immediately.
 
 ### 5.2 Client views gallery
-`/:slug` → PIN form if needed → cookie. Draft/expired/archived → "gallery unavailable" page. Justified grid of thumbs (using width/height), sets as tabs, lightbox showing `web` (or `preview-wm` when watermark is on), keyboard + swipe, preload next. Log one `gallery_views` row per session. **All client queries filter `photos.missing_since IS NULL`** (photos in their sync grace period are hidden from clients).
+`/:slug` → PIN form if needed → cookie. Draft/expired/archived → "gallery unavailable" page. Justified grid of thumbs (using width/height), sets as tabs, lightbox showing `web` (or `preview-wm` when watermark is on), keyboard + swipe, preload next. Log one `gallery_views` row per session. **All client queries filter `photos.missing_since IS NULL`, via the shared `photoVisible` predicate (`app/db/index.ts`)** (photos in their sync grace period are hidden from clients).
 
 ### 5.3 Images route — `/img/:photoId/:variant` (`thumb` | `view-sm` | `view-lg`)
 Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` → on miss, stream from Drive (`files/<id>?alt=media`), `tee()` the body into R2 and the response. `Cache-Control: private, max-age=86400`, ETag.
@@ -109,7 +112,7 @@ Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` �
 - `view-lg` → high-res 2048 (lightbox on large/retina screens)
 - When watermark is on, both `view-*` serve `preview-wm`.
 
-R2 cache keys are exactly `<photoId>/thumb`, `<photoId>/view-sm` and `<photoId>/view-lg`. Image routes must not serve photos with `missing_since` set. When sync hard-deletes photos it removes those three keys per photo with ONE `CACHE.delete(keys[])` per <=1000 keys; on failure the ids stay in settings `r2_pending_deletes` (JSON, capped at 5000) and are retried first thing on the next run. The cron handler stores `sync_last_error` (`{at, message}`, generic text) and clears it on success; it rethrows so Cron shows the failure.
+R2 cache keys are exactly `<photoId>/thumb`, `<photoId>/view-sm` and `<photoId>/view-lg`. Image routes must not serve photos with `missing_since` set. When sync hard-deletes photos it removes those three keys per photo with ONE `CACHE.delete(keys[])` per <=1000 keys; on failure the ids stay in settings `r2_pending_deletes` (JSON, capped at 2000) and are retried first thing on the next run. The cron handler stores `sync_last_error` (`{at, message}`, generic text) for failures and for `no_root`/`empty_root` skips, and clears it on success; it rethrows so Cron shows the failure.
 
 ### 5.4 Email gate
 If `require_email`, the first download or favorite opens an email (+ optional name) form → upsert `visitors` (normalize email with trim + lowercase before insert/lookup; the DB unique index is also NOCASE) → visitor id in the cookie.
@@ -117,7 +120,7 @@ If `require_email`, the first download or favorite opens an email (+ optional na
 ### 5.5 Download
 1. `POST /api/:slug/download-tokens {photoIds[], variant}` (max 50) → check session + gallery flags → returns `/dl/<token>` URLs.
 2. `GET /dl/:token` → verify HMAC + expiry → insert `downloads` row → stream from Drive with `Content-Disposition: attachment; filename="<base_name>[-web|-ig].jpg"` and `Content-Length`. Variants: `highres` (2048), `web` (1200), `ig` (1080). Downloads always serve the **clean** files, never `preview-wm`. No buffering.
-3. Access token: `app/lib/server/drive.ts#getAccessToken()` refreshes from the stored refresh token, caches in `settings` until 5 min before expiry; on 401 refresh once and retry.
+3. Access token: `app/lib/server/google-auth.ts#getAccessToken(env, {forceRefresh?})` refreshes from the stored refresh token, caches in `settings` until 5 min before expiry; on 401 refresh once and retry.
 
 ### 5.6 Download all / set
 Browser: request tokens in batches of 50 → fetch each `/dl/<token>` → `client-zip` → `showSaveFilePicker` when available, else Blob fallback with a warning above ~2 GB. Log one `kind=bulk` row plus per-photo rows (the `/dl` hits do that).
@@ -151,7 +154,7 @@ Simple, elegant, minimal, **Pixieset-inspired**: the photos are the interface.
 ### 5.9 Mock Drive (development)
 `app/lib/server/drive-mock.ts` implements the same interface as `drive.ts` and is selected when `DRIVE_MODE=mock`.
 - Fixtures in `app/lib/server/fixtures.ts`: 3 galleries (e.g. a wedding with sets "Ceremonia"/"Fiesta" ~120 photos, a portrait session ~30 photos with `preview-wm`, a gallery with sync mismatches), mixed landscape/portrait aspect ratios, deterministic ids.
-- Images: In mock mode the /img and /dl routes (not the Drive mock) respond with a 302 to `mockImageUrl(photoId, variant)`; i.e. a **302 redirect** to `https://picsum.photos/seed/<photoId>/<w>/<h>` using the right size for each variant (thumb 600, web 1200, ig 1080, high-res 2048 long edge). The browser fetches them; the Worker never does (the dev sandbox can't reach picsum anyway). No R2 caching in mock mode.
+- Images: In mock mode the /img and /dl routes (not the Drive mock) respond with a 302 to `mockImageUrl(photoId, variant, width, height)` (`photoId` = the DB `photos.id`, never a Drive id; width/height = the photo row's, giving the aspect ratio); i.e. a **302 redirect** to `https://picsum.photos/seed/<photoId>/<w>/<h>` using the right size for each variant (thumb 600, web 1200, ig 1080, high-res 2048 long edge). The browser fetches them; the Worker never does (the dev sandbox can't reach picsum anyway). No R2 caching in mock mode.
 - Download logging, favorites, PIN etc. all work normally against local D1.
 - `pnpm seed` runs a mock sync so the admin and galleries are populated.
 
@@ -179,17 +182,17 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T1.2 ∥ Drive client.** `app/lib/server/drive.ts`: `createDriveClient(getToken: (forceRefresh?: boolean) => Promise<string>, fetchImpl = fetch): DriveClient`. Paginated, minimal `fields`, excludes trashed, query values escaped, retries 429/5xx with backoff (max 3), on 401 refreshes the token once. *Accept:* mocked-fetch tests incl. pagination, escaping, 401 refresh, 404 → DriveError, streaming without buffering, Range passthrough.
 - [x] **T1.3 Sync engine** (after T1.1, T1.2, T1.4). `sync.ts` per §5.1 (takes a `DriveClient`), `getDrive(env)` factory (mock vs google), `scheduled` handler, `POST /api/admin/sync`, `pnpm seed` (mock sync into local D1). *Accept:* tests on the mock fixtures: sets, fallbacks, mismatch reporting, deletion, wm detection, reserved/duplicate slugs, idempotent re-run, changes-token skip.
 
-- [x] **T1.4 ∥ Mock Drive + fixtures** per §5.9: `app/lib/server/drive-mock.ts` (`createMockDrive(fixtures)`: DriveClient) + `fixtures.ts` + `mockImageUrl(fileId, variant)` helper for picsum. Fixture tree mirrors §3 exactly (root `381studios` → album folders → recipe folders → optional set subfolders). Includes a mutation API for tests (add/remove/rename file → bumps changes token).
+- [x] **T1.4 ∥ Mock Drive + fixtures** per §5.9: `app/lib/server/drive-mock.ts` (`createMockDrive(fixtures)`: DriveClient) + `fixtures.ts` + `mockImageUrl(photoId, variant, width, height)` helper for picsum (first arg is the DB `photos.id`). Fixture tree mirrors §3 exactly (root `381studios` → album folders → recipe folders → optional set subfolders). Includes a mutation API for tests (add/remove/rename file → bumps changes token).
 
 ### Phase 2 — Client gallery
-- [ ] **T2.1 ∥ Gallery page + PIN + status/expiry + view logging.** `app/routes/$slug*.tsx`, `PinForm`.
-- [ ] **T2.2 ∥ Grid + Lightbox components.** `app/components/Grid.tsx`, `Lightbox.tsx` (justified layout, keyboard, swipe, preload).
-- [ ] **T2.3 ∥ Images route** per §5.3 with R2 read-through cache. *Accept (carried from T1.4 review):* in mock mode the 302 Location seed equals the DB photo id and never contains any drive_*_id.
-- [ ] **T2.4 Email gate + favorites** (after T2.1). `EmailGate.tsx`, visitor + favorites API, heart button in grid and lightbox.
+- [ ] **T2.1 ∥ Gallery page + PIN + status/expiry + view logging.** `app/routes/$slug*.tsx`, `PinForm`. *Accept:* sessions carry the PIN fingerprint `pf` (`pinFingerprint()` in `auth.ts`; `readGallerySession(request, {id, pinHash}, env)` rejects a mismatch, so changing/clearing the PIN logs visitors out); all photo queries use `photoVisible`.
+- [ ] **T2.2 ∥ Grid + Lightbox components.** `app/components/Grid.tsx`, `Lightbox.tsx` (justified layout, keyboard, swipe, preload). *Accept:* all photo queries use `photoVisible`.
+- [ ] **T2.3 ∥ Images route** per §5.3 with R2 read-through cache. *Accept (carried from T1.4 review):* in mock mode the 302 Location seed equals the DB photo id and never contains any drive_*_id; call `mockImageUrl(photo.id, variant, photo.width, photo.height)` with the row's width/height. All photo queries use `photoVisible`.
+- [ ] **T2.4 Email gate + favorites** (after T2.1). `EmailGate.tsx`, visitor + favorites API, heart button in grid and lightbox. *Accept:* all photo queries use `photoVisible`.
 
 ### Phase 3 — Downloads
-- [ ] **T3.1 Token endpoint + `/dl/:token`** per §5.5. *Accept:* integration test streams a mocked Drive body without buffering; expired → 410; no download variant ever returns the preview-wm file.
-- [ ] **T3.2 Download UI.** `DownloadMenu.tsx` (High-res / Web / Instagram per flags), download all / set with `client-zip`, progress.
+- [ ] **T3.1 Token endpoint + `/dl/:token`** per §5.5. *Accept:* integration test streams a mocked Drive body without buffering; expired → 410; no download variant ever returns the preview-wm file; all photo queries use `photoVisible`.
+- [ ] **T3.2 Download UI.** `DownloadMenu.tsx` (High-res / Web / Instagram per flags), download all / set with `client-zip`, progress. *Accept:* all photo queries use `photoVisible`.
 
 ### Phase 4 — Admin UI
 - [ ] **T4.1 ∥ Setup page** (connect Google, root folder, branding).

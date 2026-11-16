@@ -10,7 +10,11 @@ import type { MockEntry, MockFixtures } from "../app/lib/server/fixtures";
 import { DriveError, FOLDER_MIME } from "../app/lib/server/drive-types";
 import type { DriveClient } from "../app/lib/server/drive-types";
 import { runScheduledSync, runSync } from "../app/lib/server/sync";
-import { getDrive, getRootFolderId } from "../app/lib/server/drive-factory";
+import {
+  getDrive,
+  getRootFolderId,
+  resetMockDrive,
+} from "../app/lib/server/drive-factory";
 import { handleSync } from "../app/routes/api.admin.sync";
 
 const e = {
@@ -29,6 +33,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  resetMockDrive();
   await db.delete(schema.galleries);
   await db.delete(schema.settings);
   const l = await env.CACHE.list();
@@ -116,15 +121,26 @@ describe("drive factory", () => {
   it("returns a singleton mock in mock mode and defaults the root", async () => {
     const a = getDrive(e);
     expect(getDrive(e)).toBe(a);
-    expect(await getRootFolderId(e, a)).toBe(buildFixtures().rootId);
+    expect(await getRootFolderId(e)).toBe(buildFixtures().rootId);
+  });
+  it("resetMockDrive drops the singleton and its mutations", async () => {
+    const a = getDrive(e) as MockDrive;
+    const root = buildFixtures().rootId;
+    a.addFile(root, { name: "zzz-folder", mimeType: FOLDER_MIME });
+    resetMockDrive();
+    const b = getDrive(e);
+    expect(b).not.toBe(a);
+    expect((await b.listChildren(root)).map((f) => f.name)).not.toContain(
+      "zzz-folder",
+    );
   });
   it("uses the settings root when present", async () => {
     await setRoot("abc");
-    expect(await getRootFolderId(e, getDrive(e))).toBe("abc");
+    expect(await getRootFolderId(e)).toBe("abc");
   });
   it("no root outside mock mode", async () => {
     expect(
-      await getRootFolderId({ ...e, DRIVE_MODE: "google" } as Env, getDrive(e)),
+      await getRootFolderId({ ...e, DRIVE_MODE: "google" } as Env),
     ).toBeUndefined();
   });
 });
@@ -882,6 +898,98 @@ describe("sync safety", () => {
     await runSync(e, { drive: d, force: true, now: later() });
     expect((await env.CACHE.list({ prefix: `${p.id}/` })).objects).toHaveLength(
       0,
+    );
+  });
+});
+
+describe("review fixes", () => {
+  it("hard-delete clears galleries.cover_photo_id when it points at a deleted photo", async () => {
+    await setRoot(buildFixtures().rootId);
+    const d = createMockDrive();
+    await runSync(e, { drive: d });
+    const g = await galleryBy("retrato-sofia");
+    const [victim, keeper] = await photosOf(g.id);
+    await db
+      .update(schema.galleries)
+      .set({ coverPhotoId: victim.id })
+      .where(eq(schema.galleries.id, g.id));
+    d.removeFile(victim.driveHighresId);
+    await runSync(e, { drive: d });
+    expect((await galleryBy("retrato-sofia")).coverPhotoId).toBe(victim.id);
+    const r = await runSync(e, { drive: d, force: true, now: later() });
+    expect(r.photos.removed).toBe(1);
+    expect((await galleryBy("retrato-sofia")).coverPhotoId).toBeNull();
+    expect((await photosOf(g.id)).some((p) => p.id === keeper.id)).toBe(true);
+  });
+
+  it("sync_lock is `<second-precision iso>|<uuid>` while running", async () => {
+    await setRoot(buildFixtures().rootId);
+    const inner = createMockDrive();
+    let seen: string | undefined;
+    const d: DriveClient = {
+      ...inner,
+      subrequests: () => inner.subrequests(),
+      getMeta: async (id) => {
+        const [l] = await db
+          .select()
+          .from(schema.settings)
+          .where(eq(schema.settings.key, "sync_lock"));
+        seen = l?.value;
+        return inner.getMeta(id);
+      },
+      listChildrenMany: (ids) => inner.listChildrenMany(ids),
+      getStartPageToken: () => inner.getStartPageToken(),
+    };
+    await runSync(e, { drive: d });
+    expect(seen).toMatch(
+      /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ\|[0-9a-f]{8}-[0-9a-f-]{27}$/,
+    );
+  });
+
+  const lastError = async () =>
+    (
+      await db
+        .select()
+        .from(schema.settings)
+        .where(eq(schema.settings.key, "sync_last_error"))
+    )[0];
+
+  it("scheduled sync with no root records a generic sync_last_error", async () => {
+    await runScheduledSync(
+      { ...e, DRIVE_MODE: "google" } as Env,
+      createMockDrive(),
+    );
+    const row = await lastError();
+    expect(row).toBeDefined();
+    const v = JSON.parse(row.value) as { at: string; message: string };
+    expect(v.message).toBe("no root folder configured");
+    expect(v.at).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
+  });
+
+  it("scheduled sync with an empty root listing records sync_last_error", async () => {
+    await setRoot(buildFixtures().rootId);
+    const inner = createMockDrive();
+    await runSync(e, { drive: inner });
+    const blind: DriveClient = {
+      ...inner,
+      subrequests: () => inner.subrequests(),
+      getMeta: (id) => inner.getMeta(id),
+      getStartPageToken: () => inner.getStartPageToken(),
+      listChanges: (t) => inner.listChanges(t),
+      listChildrenMany: async (ids) => {
+        const r = await inner.listChildrenMany(ids);
+        if (ids.length === 1) r.set(ids[0], []);
+        return r;
+      },
+    };
+    // force a rescan: drop the stored token
+    await db
+      .delete(schema.settings)
+      .where(eq(schema.settings.key, "drive_changes_token"));
+    const r = await runScheduledSync(e, blind);
+    expect(r.skipped).toBe("empty_root");
+    expect(JSON.parse((await lastError()).value).message).toBe(
+      "root folder listed empty",
     );
   });
 });
