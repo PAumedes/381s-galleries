@@ -15,7 +15,7 @@ type AdminEnv = Pick<Env, "ADMIN_EMAIL" | "DRIVE_MODE"> &
   Partial<Pick<Env, "ALLOW_DEV_ADMIN" | "ACCESS_TEAM_DOMAIN" | "ACCESS_AUD">>;
 
 /**
- * First 16 base64url chars of HMAC-SHA256(SESSION_SECRET, "pin:" + (pin_hash ?? "none")).
+ * First 16 base64url chars of HMAC-SHA256(SESSION_SECRET, pinHash === null ? "pin:none" : "pin:h:" + pinHash).
  * Stored in the session so a PIN change or removal logs everyone out.
  */
 export async function pinFingerprint(
@@ -32,7 +32,7 @@ export async function pinFingerprint(
   const mac = await crypto.subtle.sign(
     "HMAC",
     key,
-    new TextEncoder().encode(`pin:${pinHash ?? "none"}`),
+    new TextEncoder().encode(pinHash == null ? "pin:none" : `pin:h:${pinHash}`),
   );
   return b64urlEncode(new Uint8Array(mac)).slice(0, 16);
 }
