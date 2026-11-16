@@ -22,10 +22,28 @@ export function b64urlDecode(s: string): Uint8Array<ArrayBuffer> {
   const bin = atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4));
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  // Canonical form only: reject encodings with non-zero unused trailing bits.
+  if (b64urlEncode(out) !== s) throw new Error("non-canonical base64url");
   return out;
 }
 
+const MIN_SECRET_LENGTH = 32;
+
+/** Throws on empty, short or placeholder secrets. */
+function assertStrongSecret(secret: string): void {
+  if (
+    typeof secret !== "string" ||
+    secret.length < MIN_SECRET_LENGTH ||
+    secret === "change-me"
+  ) {
+    throw new Error(
+      "Secret must be at least 32 characters (generate: openssl rand -base64 32)",
+    );
+  }
+}
+
 function hmacKey(secret: string, usages: KeyUsage[]): Promise<CryptoKey> {
+  assertStrongSecret(secret);
   return crypto.subtle.importKey(
     "raw",
     enc.encode(secret),
@@ -56,8 +74,9 @@ export async function verifyToken<T>(
   const parts = token.split(".");
   if (parts.length !== 2) return null;
   const [body, sig] = parts;
+  // Outside the try: a weak/placeholder secret is a config error, not "invalid token".
+  const key = await hmacKey(secret, ["verify"]);
   try {
-    const key = await hmacKey(secret, ["verify"]);
     // subtle.verify compares in constant time.
     const ok = await crypto.subtle.verify(
       "HMAC",
@@ -181,7 +200,7 @@ export async function decryptSecret(
 export async function hashIp(ip: string, secret: string): Promise<string> {
   const key = await hmacKey(secret, ["sign"]);
   const sig = new Uint8Array(
-    await crypto.subtle.sign("HMAC", key, enc.encode(ip)),
+    await crypto.subtle.sign("HMAC", key, enc.encode(`ip:${ip}`)),
   );
   return Array.from(sig.slice(0, 8), (b) =>
     b.toString(16).padStart(2, "0"),

@@ -16,8 +16,8 @@ export default defineConfig(async () => {
         miniflare: {
           bindings: {
             TEST_MIGRATIONS: migrations,
-            SESSION_SECRET: "test-session-secret",
-            DOWNLOAD_SECRET: "test-download-secret",
+            SESSION_SECRET: "test-session-secret-0123456789-abcdefghij",
+            DOWNLOAD_SECRET: "test-download-secret-0123456789-abcdefghij",
             // 32 zero bytes, base64
             TOKEN_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
             ADMIN_EMAIL: "Admin@Example.com",

@@ -1,11 +1,14 @@
 import { sql } from "drizzle-orm";
 import {
+  check,
+  foreignKey,
   index,
   integer,
   primaryKey,
   sqliteTable,
   text,
   unique,
+  uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
 // Timestamp convention: every timestamp column is an ISO 8601 UTC string
@@ -27,36 +30,51 @@ export const settings = sqliteTable("settings", {
   value: text("value").notNull(),
 });
 
-export const galleries = sqliteTable("galleries", {
-  id: id(),
-  driveFolderId: text("drive_folder_id").notNull().unique(),
-  slug: text("slug").notNull().unique(),
-  title: text("title").notNull(),
-  clientName: text("client_name"),
-  eventDate: text("event_date"),
-  pinHash: text("pin_hash"),
-  expiresAt: text("expires_at"),
-  status: text("status", { enum: ["draft", "published", "archived"] })
-    .notNull()
-    .default("draft"),
-  coverPhotoId: text("cover_photo_id"),
-  allowHighres: integer("allow_highres", { mode: "boolean" })
-    .notNull()
-    .default(true),
-  allowWeb: integer("allow_web", { mode: "boolean" }).notNull().default(true),
-  allowIg: integer("allow_ig", { mode: "boolean" }).notNull().default(true),
-  allowBulk: integer("allow_bulk", { mode: "boolean" }).notNull().default(true),
-  requireEmail: integer("require_email", { mode: "boolean" })
-    .notNull()
-    .default(true),
-  useWatermarkPreview: integer("use_watermark_preview", { mode: "boolean" })
-    .notNull()
-    .default(false),
-  driveModifiedAt: text("drive_modified_at"),
-  lastSyncedAt: text("last_synced_at"),
-  syncIssuesJson: text("sync_issues_json"),
-  createdAt: createdAt(),
-});
+export const galleries = sqliteTable(
+  "galleries",
+  {
+    id: id(),
+    driveFolderId: text("drive_folder_id").notNull().unique(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    clientName: text("client_name"),
+    eventDate: text("event_date"),
+    pinHash: text("pin_hash"),
+    expiresAt: text("expires_at"),
+    status: text("status", { enum: ["draft", "published", "archived"] })
+      .notNull()
+      .default("draft"),
+    coverPhotoId: text("cover_photo_id"),
+    allowHighres: integer("allow_highres", { mode: "boolean" })
+      .notNull()
+      .default(true),
+    allowWeb: integer("allow_web", { mode: "boolean" }).notNull().default(true),
+    allowIg: integer("allow_ig", { mode: "boolean" }).notNull().default(true),
+    allowBulk: integer("allow_bulk", { mode: "boolean" })
+      .notNull()
+      .default(true),
+    requireEmail: integer("require_email", { mode: "boolean" })
+      .notNull()
+      .default(true),
+    useWatermarkPreview: integer("use_watermark_preview", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    driveModifiedAt: text("drive_modified_at"),
+    lastSyncedAt: text("last_synced_at"),
+    syncIssuesJson: text("sync_issues_json"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    // Case-insensitive: "Boda-Ana" and "boda-ana" are the same URL.
+    uniqueIndex("galleries_slug_nocase_unique").on(
+      sql`${t.slug} COLLATE NOCASE`,
+    ),
+    check(
+      "galleries_status_check",
+      sql`${t.status} IN ('draft','published','archived')`,
+    ),
+  ],
+);
 
 export const photos = sqliteTable(
   "photos",
@@ -79,6 +97,8 @@ export const photos = sqliteTable(
     sort: integer("sort").notNull().default(0),
   },
   (t) => [
+    // Target for favorites' composite FK (same-gallery guarantee).
+    unique("photos_gallery_id_id_unique").on(t.galleryId, t.id),
     unique("photos_gallery_set_base_unique").on(
       t.galleryId,
       t.setName,
@@ -101,23 +121,39 @@ export const visitors = sqliteTable(
       .notNull()
       .default(sql`(strftime('%Y-%m-%dT%H:%M:%SZ','now'))`),
   },
-  (t) => [unique("visitors_gallery_email_unique").on(t.galleryId, t.email)],
+  (t) => [
+    // Target for favorites' composite FK (same-gallery guarantee).
+    unique("visitors_gallery_id_id_unique").on(t.galleryId, t.id),
+    // Case-insensitive; app code must also trim + lowercase emails (PLAN 5.4).
+    uniqueIndex("visitors_gallery_email_nocase_unique").on(
+      t.galleryId,
+      sql`${t.email} COLLATE NOCASE`,
+    ),
+  ],
 );
 
 export const favorites = sqliteTable(
   "favorites",
   {
-    visitorId: text("visitor_id")
-      .notNull()
-      .references(() => visitors.id, { onDelete: "cascade" }),
-    photoId: text("photo_id")
-      .notNull()
-      .references(() => photos.id, { onDelete: "cascade" }),
+    galleryId: text("gallery_id").notNull(),
+    visitorId: text("visitor_id").notNull(),
+    photoId: text("photo_id").notNull(),
     listName: text("list_name").notNull().default("Favoritos"),
     comment: text("comment"),
     createdAt: createdAt(),
   },
-  (t) => [primaryKey({ columns: [t.visitorId, t.photoId, t.listName] })],
+  (t) => [
+    primaryKey({ columns: [t.visitorId, t.photoId, t.listName] }),
+    // Composite FKs: visitor and photo must both belong to gallery_id.
+    foreignKey({
+      columns: [t.galleryId, t.visitorId],
+      foreignColumns: [visitors.galleryId, visitors.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.galleryId, t.photoId],
+      foreignColumns: [photos.galleryId, photos.id],
+    }).onDelete("cascade"),
+  ],
 );
 
 // Stats tables intentionally have no FKs so history survives gallery deletion.
@@ -134,7 +170,14 @@ export const downloads = sqliteTable(
     ua: text("ua"),
     createdAt: createdAt(),
   },
-  (t) => [index("downloads_gallery_created_idx").on(t.galleryId, t.createdAt)],
+  (t) => [
+    index("downloads_gallery_created_idx").on(t.galleryId, t.createdAt),
+    check(
+      "downloads_variant_check",
+      sql`${t.variant} IN ('highres','web','ig')`,
+    ),
+    check("downloads_kind_check", sql`${t.kind} IN ('single','bulk')`),
+  ],
 );
 
 export const galleryViews = sqliteTable(

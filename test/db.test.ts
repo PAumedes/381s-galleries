@@ -15,7 +15,11 @@ const db = getDb(env);
 async function seed() {
   const [g] = await db
     .insert(schema.galleries)
-    .values({ driveFolderId: "f1", slug: "s1", title: "T" })
+    .values({
+      driveFolderId: `f-${crypto.randomUUID()}`,
+      slug: `s-${crypto.randomUUID()}`,
+      title: "T",
+    })
     .returning();
   await db.insert(schema.photos).values([
     { galleryId: g.id, baseName: "a", driveHighresId: "d1", sort: 1 },
@@ -48,7 +52,11 @@ describe("db", () => {
   it("rejects duplicate (gallery_id, set_name, base_name)", async () => {
     const [g] = await db
       .insert(schema.galleries)
-      .values({ driveFolderId: "f2", slug: "s2", title: "T2" })
+      .values({
+        driveFolderId: `f-${crypto.randomUUID()}`,
+        slug: `s-${crypto.randomUUID()}`,
+        title: "T2",
+      })
       .returning();
     const p = { galleryId: g.id, baseName: "x", driveHighresId: "d" };
     await db.insert(schema.photos).values(p);
@@ -58,7 +66,11 @@ describe("db", () => {
   it("cascades gallery deletion to photos", async () => {
     const [g] = await db
       .insert(schema.galleries)
-      .values({ driveFolderId: "f3", slug: "s3", title: "T3" })
+      .values({
+        driveFolderId: `f-${crypto.randomUUID()}`,
+        slug: `s-${crypto.randomUUID()}`,
+        title: "T3",
+      })
       .returning();
     await db
       .insert(schema.photos)
@@ -69,5 +81,91 @@ describe("db", () => {
       .from(schema.photos)
       .where(eq(schema.photos.galleryId, g.id));
     expect(rows).toHaveLength(0);
+  });
+
+  async function mkGallery() {
+    const [g] = await db
+      .insert(schema.galleries)
+      .values({
+        driveFolderId: `f-${crypto.randomUUID()}`,
+        slug: `s-${crypto.randomUUID()}`,
+        title: "T",
+      })
+      .returning();
+    return g;
+  }
+
+  it("rejects orphan FKs (photo/visitor/favorite without parents)", async () => {
+    await expect(
+      db
+        .insert(schema.photos)
+        .values({ galleryId: "nope", baseName: "x", driveHighresId: "d" }),
+    ).rejects.toThrow();
+    await expect(
+      db.insert(schema.visitors).values({ galleryId: "nope", email: "a@b.c" }),
+    ).rejects.toThrow();
+    await expect(
+      db.insert(schema.favorites).values({
+        galleryId: "nope",
+        visitorId: "nope",
+        photoId: "nope",
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("cascades gallery deletion to visitors and favorites", async () => {
+    const g = await mkGallery();
+    const [p] = await db
+      .insert(schema.photos)
+      .values({ galleryId: g.id, baseName: "x", driveHighresId: "d" })
+      .returning();
+    const [v] = await db
+      .insert(schema.visitors)
+      .values({ galleryId: g.id, email: "a@b.c" })
+      .returning();
+    await db
+      .insert(schema.favorites)
+      .values({ galleryId: g.id, visitorId: v.id, photoId: p.id });
+    await db.delete(schema.galleries).where(eq(schema.galleries.id, g.id));
+    expect(
+      await db
+        .select()
+        .from(schema.visitors)
+        .where(eq(schema.visitors.galleryId, g.id)),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(schema.favorites)
+        .where(eq(schema.favorites.galleryId, g.id)),
+    ).toHaveLength(0);
+  });
+
+  it("cascades photo / visitor deletion to favorites", async () => {
+    const g = await mkGallery();
+    const mk = async (base: string, email: string) => {
+      const [p] = await db
+        .insert(schema.photos)
+        .values({ galleryId: g.id, baseName: base, driveHighresId: "d" })
+        .returning();
+      const [v] = await db
+        .insert(schema.visitors)
+        .values({ galleryId: g.id, email })
+        .returning();
+      await db
+        .insert(schema.favorites)
+        .values({ galleryId: g.id, visitorId: v.id, photoId: p.id });
+      return { p, v };
+    };
+    const a = await mk("a", "a@b.c");
+    const b = await mk("b", "b@b.c");
+    await db.delete(schema.photos).where(eq(schema.photos.id, a.p.id));
+    await db.delete(schema.visitors).where(eq(schema.visitors.id, b.v.id));
+    expect(
+      await db
+        .select()
+        .from(schema.favorites)
+        .where(eq(schema.favorites.galleryId, g.id)),
+    ).toHaveLength(0);
   });
 });
