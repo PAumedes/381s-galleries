@@ -116,5 +116,14 @@ export function useFavorites(slug: string, requireEmail: boolean) {
     [ids, ensure, send, flashError],
   );
 
-  return { ids, visitor, gateOpen, failed, toggle, submitGate, closeGate };
+  return {
+    ids,
+    visitor,
+    gateOpen,
+    failed,
+    toggle,
+    submitGate,
+    closeGate,
+    ensure,
+  };
 }

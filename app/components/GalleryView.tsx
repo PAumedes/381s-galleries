@@ -3,12 +3,13 @@ import type { ReactNode } from "react";
 
 import { useLang, useT } from "../i18n/use-t";
 import { useStudioName } from "../lib/use-studio-name";
+import { DownloadMenu, enabledSizes } from "./DownloadMenu";
 import { EmailGate } from "./EmailGate";
 import { Grid } from "./Grid";
 import { LanguageToggle } from "./LanguageToggle";
 import { Lightbox } from "./Lightbox";
 import { Logo } from "./Logo";
-import { ChevronDown, Heart, HeartFilled, Share } from "./icons";
+import { ChevronDown, Download, Heart, HeartFilled, Share } from "./icons";
 import { useFavorites } from "./use-favorites";
 import { imgUrl, type GalleryPhoto, type OpenGallery } from "./types";
 
@@ -51,6 +52,10 @@ export function GalleryView({
   );
   const [open, setOpen] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  const [sheet, setSheet] = useState<
+    { kind: "single"; id: string } | { kind: "bulk" } | null
+  >(null);
+  const [dlFailed, setDlFailed] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [edges, setEdges] = useState({ start: false, end: false });
   const tabsRef = useRef<HTMLElement>(null);
@@ -117,6 +122,12 @@ export function GalleryView({
   }, [updateEdges]);
 
   useEffect(() => {
+    if (!dlFailed) return;
+    const id = setTimeout(() => setDlFailed(false), 3000);
+    return () => clearTimeout(id);
+  }, [dlFailed]);
+
+  useEffect(() => {
     if (!copied) return;
     const id = setTimeout(() => setCopied(false), 2000);
     return () => clearTimeout(id);
@@ -139,6 +150,15 @@ export function GalleryView({
       /* clipboard unavailable: nothing to confirm */
     }
   }, []);
+
+  const canDownload = enabledSizes(gallery).length > 0;
+  const openSingle = canDownload
+    ? (id: string) => setSheet({ kind: "single", id })
+    : undefined;
+  const sheetPhoto =
+    sheet?.kind === "single"
+      ? photos.find((p) => p.id === sheet.id)
+      : undefined;
 
   const date = formatDate(gallery.eventDate, lang);
   const tabs = [
@@ -234,6 +254,16 @@ export function GalleryView({
         )}
         <div className="flex items-center justify-self-end">
           {downloadSlot}
+          {canDownload && gallery.allowBulk && (
+            <button
+              type="button"
+              onClick={() => setSheet({ kind: "bulk" })}
+              aria-label={t("download.title")}
+              className="text-grey-600 hover:text-ink flex size-11 items-center justify-center"
+            >
+              <Download className="size-5" aria-hidden="true" />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
@@ -278,6 +308,7 @@ export function GalleryView({
             t={t}
             onOpen={setOpen}
             onFavorite={toggleFav}
+            onDownload={openSingle}
             isFavorite={isFavorite}
           />
         )}
@@ -307,8 +338,38 @@ export function GalleryView({
           onClose={() => setOpen(null)}
           onIndexChange={setOpen}
           onFavorite={toggleFav}
+          onDownload={openSingle}
           isFavorite={isFavorite}
         />
+      )}
+
+      {sheet && (sheet.kind === "bulk" || sheetPhoto) && (
+        <DownloadMenu
+          gallery={gallery}
+          t={t}
+          ensure={favs.ensure}
+          onClose={() => setSheet(null)}
+          onError={() => setDlFailed(true)}
+          mode={
+            sheet.kind === "bulk"
+              ? {
+                  kind: "bulk",
+                  photos,
+                  activeSet: active === ALL || active === FAV ? null : active,
+                  favoriteIds: favs.ids,
+                }
+              : { kind: "single", photo: sheetPhoto! }
+          }
+        />
+      )}
+
+      {dlFailed && (
+        <p
+          role="status"
+          className="text-micro-label bg-ink text-paper fixed bottom-6 left-1/2 z-(--z-toast) -translate-x-1/2 px-5 py-3 uppercase"
+        >
+          {t("download.error")}
+        </p>
       )}
 
       {favs.failed && (

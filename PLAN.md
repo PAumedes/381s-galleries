@@ -203,7 +203,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 
 ### Phase 3 — Downloads
 - [x] **T3.1 Token endpoint + `/dl/:token`** per §5.5. *Accept:* integration test streams a mocked Drive body without buffering; expired → 410; no download variant ever returns the preview-wm file; all photo queries use `photoVisible`.
-- [ ] **T3.2 Download UI.** `DownloadMenu.tsx` (High-res / Web / Instagram per flags), download all / set with `client-zip`, progress. *Accept:* all photo queries use `photoVisible`.
+- [x] **T3.2 Download UI.** `DownloadMenu.tsx` (High-res / Web / Instagram per flags), download all / set with `client-zip`, progress. *Accept:* all photo queries use `photoVisible`.
 
 ### Phase 4 — Admin UI
 - [ ] **T4.1 ∥ Setup page** (connect Google, root folder, branding).
