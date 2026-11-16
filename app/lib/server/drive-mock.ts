@@ -100,6 +100,7 @@ export function createMockDrive(
   const shuffleRand =
     options.shuffleSeed === undefined ? null : mulberry32(options.shuffleSeed);
   let counter = 0;
+  let subs = 0;
   const tick = () => new Date((clock += 1000)).toISOString();
 
   const need = (id: string): MockEntry => {
@@ -108,25 +109,44 @@ export function createMockDrive(
     return e;
   };
 
+  const list = (folderId: string): DriveFile[] => {
+    const parent = need(folderId);
+    if (parent.mimeType !== FOLDER_MIME) throw new DriveError(400, "Not a folder");
+    const out = [...entries.values()]
+      .filter((e) => e.parentId === folderId && !e.trashed)
+      .map(strip);
+    if (shuffleRand)
+      for (let i = out.length - 1; i > 0; i--) {
+        const j = Math.floor(shuffleRand() * (i + 1));
+        [out[i], out[j]] = [out[j], out[i]];
+      }
+    return out;
+  };
+
   return {
+    subrequests: () => subs,
     async listChildren(folderId) {
-      const parent = need(folderId);
-      if (parent.mimeType !== FOLDER_MIME)
-        throw new DriveError(400, "Not a folder");
-      const list = [...entries.values()]
-        .filter((e) => e.parentId === folderId && !e.trashed)
-        .map(strip);
-      if (shuffleRand)
-        for (let i = list.length - 1; i > 0; i--) {
-          const j = Math.floor(shuffleRand() * (i + 1));
-          [list[i], list[j]] = [list[j], list[i]];
+      subs++;
+      return list(folderId);
+    },
+    async listChildrenMany(folderIds) {
+      const ids = [...new Set(folderIds)];
+      const result = new Map<string, DriveFile[]>();
+      for (let i = 0; i < ids.length; i += 40) {
+        subs++;
+        for (const id of ids.slice(i, i + 40)) {
+          const e = entries.get(id);
+          result.set(id, e && e.mimeType === FOLDER_MIME ? list(id) : []);
         }
-      return list;
+      }
+      return result;
     },
     async getMeta(id) {
+      subs++;
       return strip(need(id));
     },
     async streamFile(id, opts?: StreamOptions) {
+      subs++;
       const e = need(id);
       if (e.mimeType === FOLDER_MIME)
         throw new DriveError(400, "Cannot download a folder");
@@ -168,6 +188,7 @@ export function createMockDrive(
       return String(token);
     },
     async listChanges(pageToken): Promise<DriveChanges> {
+      subs++;
       const since = /^\d+$/.test(pageToken) ? Number(pageToken) : NaN;
       if (Number.isNaN(since)) throw new DriveError(400, "Invalid page token");
       return { changed: token > since, newStartPageToken: String(token) };

@@ -39,6 +39,14 @@ export interface StreamOptions {
 export interface DriveClient {
   /** All direct children of a folder (handles pagination internally), not trashed. */
   listChildren(folderId: string): Promise<DriveFile[]>;
+  /**
+   * Children of several folders using as few queries as possible (one paginated
+   * query per ~40 ids). Every requested id is a key (empty array if no children).
+   * Unknown ids and non-folder ids yield [] (never throw); only requested ids are keys.
+   */
+  listChildrenMany(folderIds: string[]): Promise<Map<string, DriveFile[]>>;
+  /** Number of upstream fetch calls made by this client instance (incl. retries). */
+  subrequests(): number;
   /** Metadata of a single file or folder. Throws DriveError(404) if missing. */
   getMeta(id: string): Promise<DriveFile>;
   /**
@@ -56,6 +64,8 @@ export class DriveError extends Error {
   constructor(
     public readonly status: number,
     message: string,
+    /** Upstream detail (may contain ids); server-log-only, never sent to clients. Capped at 4 KB read. */
+    public readonly detail?: string,
   ) {
     super(message);
     this.name = "DriveError";

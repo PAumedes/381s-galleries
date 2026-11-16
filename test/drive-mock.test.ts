@@ -374,3 +374,36 @@ describe("mutations and changes token", () => {
     });
   });
 });
+
+describe("mock listChildrenMany and subrequests", () => {
+  it("matches listChildren per id and includes every id", async () => {
+    const fx = buildFixtures();
+    const d = createMockDrive(fx);
+    const albums = await d.listChildren(fx.rootId);
+    const ids = [fx.rootId, ...albums.map((a) => a.id)];
+    const m = await d.listChildrenMany(ids);
+    expect([...m.keys()]).toEqual(ids);
+    for (const id of ids) expect(m.get(id)).toEqual(await d.listChildren(id));
+  });
+
+  it("counts one subrequest per call / 40-id chunk", async () => {
+    const fx = buildFixtures();
+    const d = createMockDrive(fx);
+    expect(d.subrequests()).toBe(0);
+    await d.listChildren(fx.rootId);
+    await d.getMeta(fx.rootId);
+    await d.listChanges("1");
+    expect(d.subrequests()).toBe(3);
+    await d.listChildrenMany([fx.rootId]);
+    expect(d.subrequests()).toBe(4);
+    const albums = await d.listChildren(fx.rootId);
+    const before = d.subrequests();
+    const many = Array.from({ length: 41 }, (_, i) => albums[i % albums.length].id);
+    await d.listChildrenMany([...new Set(many)]);
+    expect(d.subrequests()).toBe(before + 1);
+    const file = (await recipe(d, albums[0].id, "web"))[0];
+    const b2 = d.subrequests();
+    await d.streamFile(file.id);
+    expect(d.subrequests()).toBe(b2 + 1);
+  });
+});
