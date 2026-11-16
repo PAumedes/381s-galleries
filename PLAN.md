@@ -163,7 +163,7 @@ Tasks marked **∥** within a phase touch disjoint files and can run in parallel
 ### Phase 0 — Foundation (sequential)
 - [x] **T0.1 Scaffold.** Cloudflare React Router template, Tailwind v4, Drizzle, Vitest (workers pool), ESLint/Prettier, `wrangler.jsonc` with `DB`, `CACHE` (R2), cron `*/15 * * * *`, `.dev.vars.example`. *Accept:* `pnpm dev` serves hello page; `pnpm test`, `pnpm build` pass.
 - [x] **T0.2 Schema.** `app/db/schema.ts` per §4, first migration, `app/db/index.ts` helper. *Accept:* migration applies locally; test inserts/reads a gallery.
-- [ ] **T0.3 Crypto + auth utils.** `app/lib/server/crypto.ts` (HMAC, PBKDF2, AES-GCM, ids), `app/lib/server/auth.ts` (gallery cookie, admin guard). *Accept:* unit tests incl. tampered/expired tokens and wrong admin email.
+- [x] **T0.3 Crypto + auth utils.** `app/lib/server/crypto.ts` (HMAC, PBKDF2, AES-GCM, ids), `app/lib/server/auth.ts` (gallery cookie, admin guard). *Accept:* unit tests incl. tampered/expired tokens and wrong admin email.
 
 ### Phase 1 — Google + sync
 - [ ] **T1.1 ∥ Google OAuth.** Routes `/admin/google/connect` + callback, encrypted token storage, `drive.ts#getAccessToken`. *Accept:* tests with mocked token endpoint; refresh-on-401.
