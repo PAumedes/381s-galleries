@@ -201,6 +201,10 @@ export const downloads = sqliteTable(
     kind: text("kind", { enum: ["single", "bulk"] }).notNull(),
     /** Download token id (jti): a retried/resumed token logs only once. */
     tokenId: text("token_id"),
+    /** Per-photo rows of a bulk run: the header row's id (null for single downloads and "multi" tokens). */
+    bulkId: text("bulk_id"),
+    /** Bulk header rows only: `all`, `favorites` or `set:<name>`. */
+    bulkScope: text("bulk_scope"),
     country: text("country"),
     ua: text("ua"),
     createdAt: createdAt(),

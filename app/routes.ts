@@ -10,10 +10,15 @@ export default [
   ),
   // Outside the admin layout: the print card must not carry the shell.
   route("admin/g/:id/card", "routes/admin.g.$id.card.tsx"),
+  // Resource routes (downloads): outside the layout too.
+  route("admin/g/:id/activity.csv", "routes/admin.g.$id.activity-csv.tsx"),
+  route("admin/g/:id/favorites.txt", "routes/admin.g.$id.favorites-txt.tsx"),
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
     route("setup", "routes/admin.setup.tsx"),
     route("g/:id", "routes/admin.g.$id.tsx"),
+    route("g/:id/activity", "routes/admin.g.$id.activity.tsx"),
+    route("g/:id/favorites", "routes/admin.g.$id.favorites.tsx"),
   ]),
   route("img/:photoId/:variant", "routes/img.$photoId.$variant.tsx"),
   route("dl/:token", "routes/dl.$token.tsx"),

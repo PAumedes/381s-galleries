@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
 import {
   clientIpHash,
@@ -233,6 +233,8 @@ export async function handleDownloadTokens(
           eq(schema.downloads.id, body.bulkId),
           eq(schema.downloads.galleryId, g.id),
           eq(schema.downloads.kind, "bulk"),
+          isNull(schema.downloads.photoId),
+          eq(schema.downloads.visitorId, visitor.id),
         ),
       );
     if (!row) return bad();
@@ -338,6 +340,10 @@ export async function handleBulk(
     visitorId: visitor.id,
     variant,
     kind: "bulk",
+    bulkScope:
+      scope === "set"
+        ? `set:${photos[0].setName ?? (set as string)}`
+        : (scope as string),
   });
   const totalBytes =
     variant === "highres"
@@ -467,6 +473,7 @@ export async function serveDownload(
         variant,
         kind: claims.b ? "bulk" : "single",
         tokenId: claims.jti,
+        bulkId: claims.b && claims.b !== "multi" ? claims.b : null,
         country: country ?? null,
         ua: request.headers.get("User-Agent")?.slice(0, 200) ?? null,
       })

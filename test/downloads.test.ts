@@ -421,6 +421,7 @@ describe("POST bulk", () => {
       photoId: null,
       variant: "web",
       galleryId: G,
+      bulkScope: "all",
     });
     const hi = (await (
       await bulk({ scope: "all", variant: "highres" })
@@ -503,15 +504,37 @@ describe("POST bulk", () => {
     await addGallery();
     await addPhoto("p1");
     await addPhoto("p2", { baseName: "B" });
-    const b = (await (
-      await bulk({ scope: "all", variant: "highres" })
-    ).json()) as { bulkId: string };
-    const t = await issue("p1", "highres", { bulkId: b.bulkId });
+    const br = await bulk({ scope: "all", variant: "highres" });
+    const b = (await br.clone().json()) as { bulkId: string };
+    const t = await issue(
+      "p1",
+      "highres",
+      { bulkId: b.bulkId },
+      {
+        Cookie: cookieOf(br),
+      },
+    );
     const { drive } = fakeDrive();
     expect((await dl(t, drive)).status).toBe(200);
     const rows = (await downloadRows()).filter((r) => r.photoId === "p1");
     expect(rows).toHaveLength(1);
     expect(rows[0].kind).toBe("bulk");
+    expect(rows[0].bulkId).toBe(b.bulkId);
+  });
+
+  it("bulk header stores the set scope; single downloads have no bulk link", async () => {
+    await addGallery();
+    await addPhoto("p1", { setName: "Fiesta" });
+    const b = (await (
+      await bulk({ scope: "set", set: "Fiesta", variant: "highres" })
+    ).json()) as { bulkId: string };
+    const h = (await downloadRows()).find((r) => r.id === b.bulkId);
+    expect(h?.bulkScope).toBe("set:Fiesta");
+    const t = await issue("p1", "highres");
+    const { drive } = fakeDrive();
+    await dl(t, drive);
+    const single = (await downloadRows()).find((r) => r.photoId === "p1");
+    expect(single).toMatchObject({ kind: "single", bulkId: null });
   });
 });
 
@@ -732,10 +755,16 @@ describe("GET /dl/:token", () => {
     await addGallery();
     await addPhoto("p1");
     const { drive } = fakeDrive();
-    const bulkRes = (await (
-      await bulk({ scope: "all", variant: "highres" })
-    ).json()) as { bulkId: string };
-    const tb = await issue("p1", "highres", { bulkId: bulkRes.bulkId });
+    const bulkResp = await bulk({ scope: "all", variant: "highres" });
+    const bulkRes = (await bulkResp.clone().json()) as { bulkId: string };
+    const tb = await issue(
+      "p1",
+      "highres",
+      { bulkId: bulkRes.bulkId },
+      {
+        Cookie: cookieOf(bulkResp),
+      },
+    );
     const single = await issue("p1", "highres");
     const th = await issue("p1", "ig");
     expect((await dl(tb, drive)).status).toBe(200);

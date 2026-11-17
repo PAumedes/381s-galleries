@@ -5,6 +5,7 @@ import type {
   GalleryActionResult,
   loadGalleryEdit,
 } from "../../lib/server/admin-galleries";
+import { GalleryTabs } from "./GalleryTabs";
 import { StatusPill } from "./GalleryList";
 import { PhotoReorder } from "./PhotoReorder";
 import { SharePanel } from "./SharePanel";
@@ -165,6 +166,7 @@ export function GalleryEditView({
         <h1 className="text-title text-ink">{g.title}</h1>
         <StatusPill status={g.status} />
       </div>
+      <GalleryTabs id={g.id} current="datos" />
 
       <div className="grid gap-10 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
         <div className="flex flex-col gap-8">

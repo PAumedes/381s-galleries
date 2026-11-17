@@ -57,6 +57,13 @@
       "when": 1794877694766,
       "tag": "0007_archived_by_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794879229126,
+      "tag": "0008_download_bulk_link",
+      "breakpoints": true
     }
   ]
 }
