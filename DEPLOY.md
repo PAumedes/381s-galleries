@@ -31,7 +31,7 @@ Los valores se guardan como **secrets de GitHub**: en el repositorio, **Settings
 
 1. Cloudflare → **Zero Trust** → **Access controls** → **Applications**. Si es la primera vez, te pide un **team name** (por ejemplo `381studios`) y un plan: elegí **Free** (hasta 50 usuarios). Tu **team domain** es `<equipo>.cloudflareaccess.com`.
 2. **Create new application** → **Self-hosted and private**. Nombre: `381 Galerías Admin`.
-3. **Add public hostname**: subdominio `session`, dominio `381studios.ar` (desplegable), path `admin`. Volvé a tocar **Add public hostname** para un segundo: `session` / `381studios.ar` / path `api/admin`. Las dos en **la misma aplicación**.
+3. **Add public hostname**: subdominio `session`, dominio `381studios.ar` (desplegable), path `admin`. Volvé a tocar **Add public hostname** para un segundo: `session` / `381studios.ar` / path `api/admin`. Agregá un tercero: `session` / `381studios.ar` / path `admin.data` (lo usa la app al navegar a "Galerías" sin recargar). Los tres en **la misma aplicación**.
 4. **Access policies** → crear una nueva: nombre `Solo yo`, acción **Allow**, regla **Include → Emails** = tu email. (Todo lo demás queda denegado por defecto.)
 5. Autenticación: las organizaciones nuevas usan **Cloudflare** como método de login (entrás con tu cuenta de Cloudflare); no hace falta configurar nada más. Usá en la policy (paso 4) y en `ADMIN_EMAIL` el **mismo email de tu cuenta de Cloudflare**. Opcional: para entrar con un código por email, agregá **One-time PIN** en **Zero Trust → Integrations → Identity providers → Add new identity provider**.
 6. **Session Duration**: 24 horas → **Create**.
@@ -130,6 +130,7 @@ Creá cinco recetas de proceso (Process Recipes), todas habilitadas, formato **J
 | "Google no verificó esta app" | Es normal. **Avanzado → Ir a…**. Confirmá que la app esté "In production". |
 | La sincronización dice "no root folder" / "Primero elegí una carpeta raíz" | Falta pegar el link de la carpeta `381studios` en Ajustes y guardar. Comprobá que sea la carpeta de tu cuenta conectada. |
 | Access entra en bucle o da 403 | `ACCESS_AUD`, `ACCESS_TEAM_DOMAIN` o `ADMIN_EMAIL` incorrectos (o email distinto al de la policy). Corregí el secret de GitHub y ejecutá Setup. Las rutas `admin` y `api/admin` deben estar bajo Access. |
+| Error al navegar entre páginas del admin pero no al recargar | Actualizá la app (ya se resolvió) / agregá el path `admin.data` en Access. |
 | Las imágenes no se ven | Falta el bucket R2 (`381s-galleries-cache`): ejecutá Setup de nuevo. |
 | Error 429 / "rate limit" | Google limita las llamadas a Drive; esperá unos minutos y volvé a sincronizar. |
 | Error de CPU o "too many subrequests" al sincronizar | Biblioteca muy grande para el plan gratis: pasá a **Workers Paid (USD 5/mes)**. La sincronización aborta sin dañar datos. |

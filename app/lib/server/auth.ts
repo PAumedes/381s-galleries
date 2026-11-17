@@ -250,7 +250,8 @@ async function verifyAccessJwt(
  * The `Cf-Access-Authenticated-User-Email` header alone is never enough: the
  * `Cf-Access-Jwt-Assertion` JWT must verify (RS256 against the team JWKS, aud,
  * iss, exp/nbf) and its `email` claim, which is authoritative, must equal
- * ADMIN_EMAIL (case-insensitive). The header must match too.
+ * ADMIN_EMAIL (case-insensitive). The header must match too. Without the JWT
+ * header, the `CF_Authorization` cookie JWT is verified the same way.
  *
  * LOCAL DEV EXCEPTION: nothing is required only when ALL hold:
  * DRIVE_MODE is "mock", ALLOW_DEV_ADMIN is "1" (set only in .dev.vars, never
@@ -268,9 +269,22 @@ export async function requireAdmin(
     ?.trim()
     .toLowerCase();
   const jwt = request.headers.get("Cf-Access-Jwt-Assertion");
-  if (admin && header === admin && jwt) {
-    const email = await verifyAccessJwt(jwt, env);
-    if (email === admin) return;
+  if (jwt) {
+    // Header path (preferred): the email header must match too.
+    if (admin && header === admin) {
+      const email = await verifyAccessJwt(jwt, env);
+      if (email === admin) return;
+    }
+  } else if (admin) {
+    // Cookie path: single-fetch `.data` URLs (e.g. /admin.data) fall outside
+    // the Access paths, so Access does not add its headers. The
+    // `CF_Authorization` cookie holds the same signed JWT; it is verified
+    // identically and its email claim is authoritative (no email header
+    // exists on this path).
+    for (const token of getCookies(request, "CF_Authorization")) {
+      if (!token) continue;
+      if ((await verifyAccessJwt(token, env)) === admin) return;
+    }
   }
   const host = new URL(request.url).hostname;
   if (

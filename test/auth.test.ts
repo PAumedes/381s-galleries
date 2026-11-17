@@ -1,3 +1,4 @@
+import { applyD1Migrations } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -10,6 +11,7 @@ import {
   updateSession,
 } from "../app/lib/server/auth";
 import { b64urlEncode } from "../app/lib/server/crypto";
+import { adminIndexData } from "../app/routes/admin._index";
 
 const G1 = "11111111-aaaa-bbbb-cccc-000000000001";
 const G2 = "22222222-aaaa-bbbb-cccc-000000000002";
@@ -334,6 +336,105 @@ describe("requireAdmin", () => {
   it("401 in mock mode on a non-localhost host", async () => {
     await expect401(
       requireAdmin(mk("https://session.381studios.ar/admin"), mock),
+    );
+  });
+});
+
+describe("requireAdmin via CF_Authorization cookie", () => {
+  const google = {
+    ADMIN_EMAIL: "Admin@Example.com",
+    DRIVE_MODE: "google",
+    ACCESS_TEAM_DOMAIN: TEAM,
+    ACCESS_AUD: AUD,
+  } as const;
+  const withCookie = (cookie: string, headers: Record<string, string> = {}) =>
+    new Request("https://s.test/admin.data", {
+      headers: { Cookie: cookie, ...headers },
+    });
+  let pair: CryptoKeyPair;
+  let other: CryptoKeyPair;
+  beforeEach(async () => {
+    resetAccessKeyCache();
+    pair ??= await genKey();
+    other ??= await genKey();
+    const jwk = {
+      ...(await crypto.subtle.exportKey("jwk", pair.publicKey)),
+      kid: KID,
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ keys: [jwk] })),
+    );
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("cookie-only valid token is accepted (no email header)", async () => {
+    const jwt = await makeJwt(pair.privateKey, {});
+    await expect(
+      requireAdmin(withCookie(`CF_Authorization=${jwt}`), google),
+    ).resolves.toBeUndefined();
+  });
+  it("parses the cookie among other cookies", async () => {
+    const jwt = await makeJwt(pair.privateKey, {});
+    await expect(
+      requireAdmin(withCookie(`a=1; CF_Authorization=${jwt}; g_x=2`), google),
+    ).resolves.toBeUndefined();
+  });
+  it("401 on wrong aud / expired / bad signature / wrong email", async () => {
+    const bad = [
+      await makeJwt(pair.privateKey, { aud: ["other"] }),
+      await makeJwt(pair.privateKey, {
+        exp: Math.floor(Date.now() / 1000) - 120,
+      }),
+      await makeJwt(other.privateKey, {}),
+      await makeJwt(pair.privateKey, { email: "evil@example.com" }),
+    ];
+    for (const jwt of bad) {
+      await expect401(
+        requireAdmin(withCookie(`CF_Authorization=${jwt}`), google),
+      );
+    }
+  });
+  it("401 on a forged non-JWT cookie or an empty one", async () => {
+    await expect401(
+      requireAdmin(withCookie("CF_Authorization=forged"), google),
+    );
+    await expect401(requireAdmin(withCookie("CF_Authorization="), google));
+  });
+  it("header JWT is preferred: an invalid header is not rescued by a valid cookie", async () => {
+    const good = await makeJwt(pair.privateKey, {});
+    const bad = await makeJwt(other.privateKey, {});
+    await expect401(
+      requireAdmin(
+        withCookie(`CF_Authorization=${good}`, {
+          "Cf-Access-Jwt-Assertion": bad,
+          "Cf-Access-Authenticated-User-Email": "admin@example.com",
+        }),
+        google,
+      ),
+    );
+    await expect(
+      requireAdmin(
+        withCookie(`CF_Authorization=${bad}`, {
+          "Cf-Access-Jwt-Assertion": good,
+          "Cf-Access-Authenticated-User-Email": "admin@example.com",
+        }),
+        google,
+      ),
+    ).resolves.toBeUndefined();
+  });
+  it("admin index loader (/admin.data) works with only the cookie", async () => {
+    await applyD1Migrations(
+      env.DB,
+      (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
+    );
+    const jwt = await makeJwt(pair.privateKey, {});
+    const e = { ...env, ...google } as unknown as Env;
+    const r = await adminIndexData(withCookie(`CF_Authorization=${jwt}`), e);
+    expect(r.connected).toBe(false);
+    await adminIndexData(withCookie("CF_Authorization=forged"), e).then(
+      () => expect.unreachable(),
+      (x: unknown) => expect((x as Response).status).toBe(401),
     );
   });
 });
