@@ -77,11 +77,32 @@
   --z-toast: 60;
 }
 
-/* Dark gallery theme (per album): swaps the tokens under a [data-theme="dark"]
-   root. Paper/ink flip; greys invert (grey-600 on #0b0b0b is ~9:1, grey-500
-   ~4.7:1: AA for text). The cover (.on-dark) and the lightbox keep their own
-   fixed night/white colours. */
-[data-theme="dark"] {
+/* Gallery palettes (per album, `galleries.palette`): each is a token set under
+   [data-theme="..."]. Paper/ink and the grey ramp are swapped; every text pair
+   (ink and grey-600..900 on paper and grey-50, paper on ink/grey-800) is >= 4.5:1
+   (AA), checked from these values by test/dom/palettes.test.tsx. The cover
+   (.on-dark) keeps white text over a photo scrim (--cover-scrim-*); the
+   lightbox is always [data-theme="oscuro"]. Elements carrying `data-page` also
+   paint <html>/<body> (see the html:has rules below) so overscroll never shows
+   another colour. */
+[data-theme="claro"] {
+  --color-paper: #fafaf8;
+  --color-ink: #111111;
+  --color-grey-50: #f5f5f3;
+  --color-grey-100: #ecebe8;
+  --color-grey-200: #dddcd8;
+  --color-grey-300: #c4c3be;
+  --color-grey-400: #a3a29c;
+  --color-grey-500: #7d7c77;
+  --color-grey-600: #615f5b;
+  --color-grey-700: #4a4946;
+  --color-grey-800: #31302e;
+  --color-grey-900: #1c1c1b;
+  --cover-scrim-from: rgb(0 0 0 / 0.6);
+  --cover-scrim-to: rgb(0 0 0 / 0.2);
+}
+
+[data-theme="oscuro"] {
   --color-paper: #0b0b0b;
   --color-ink: #fafaf8;
   --color-grey-50: #1c1c1b;
@@ -94,8 +115,68 @@
   --color-grey-700: #dddcd8;
   --color-grey-800: #ecebe8;
   --color-grey-900: #f5f5f3;
-  background-color: var(--color-paper);
-  color: var(--color-ink);
+  --cover-scrim-from: rgb(0 0 0 / 0.6);
+  --cover-scrim-to: rgb(0 0 0 / 0.2);
+}
+
+/* Arena: warm off-white, warm brown-grey text, warm brown cover scrim. */
+[data-theme="arena"] {
+  --color-paper: #f4efe8;
+  --color-ink: #2b2620;
+  --color-grey-50: #ece6dc;
+  --color-grey-100: #e3dccf;
+  --color-grey-200: #d4cbbb;
+  --color-grey-300: #bcb2a0;
+  --color-grey-400: #9a8f7d;
+  --color-grey-500: #7b705f;
+  --color-grey-600: #5f5546;
+  --color-grey-700: #4a4136;
+  --color-grey-800: #382f26;
+  --color-grey-900: #231e18;
+  --cover-scrim-from: rgb(52 34 18 / 0.62);
+  --cover-scrim-to: rgb(52 34 18 / 0.22);
+}
+
+/* Gris: cool light grey. */
+[data-theme="gris"] {
+  --color-paper: #edeef0;
+  --color-ink: #14161a;
+  --color-grey-50: #e3e5e8;
+  --color-grey-100: #d9dce0;
+  --color-grey-200: #c8ccd2;
+  --color-grey-300: #aeb3bb;
+  --color-grey-400: #8b919b;
+  --color-grey-500: #6a707a;
+  --color-grey-600: #535962;
+  --color-grey-700: #41454d;
+  --color-grey-800: #2c2f35;
+  --color-grey-900: #1b1d21;
+  --cover-scrim-from: rgb(8 10 14 / 0.6);
+  --cover-scrim-to: rgb(8 10 14 / 0.2);
+}
+
+/* Page-level roots (gallery, PIN, unavailable) also theme <html>. */
+html:has([data-page][data-theme="oscuro"]) {
+  --color-paper: #0b0b0b;
+  --color-ink: #fafaf8;
+  color-scheme: dark;
+}
+html:has([data-page][data-theme="arena"]) {
+  --color-paper: #f4efe8;
+  --color-ink: #2b2620;
+}
+html:has([data-page][data-theme="gris"]) {
+  --color-paper: #edeef0;
+  --color-ink: #14161a;
+}
+
+.cover-scrim {
+  background-image: linear-gradient(
+    to top,
+    var(--cover-scrim-from, rgb(0 0 0 / 0.6)),
+    transparent 50%,
+    var(--cover-scrim-to, rgb(0 0 0 / 0.2))
+  );
 }
 
 @layer base {
@@ -113,13 +194,6 @@
 
   html {
     color-scheme: light;
-  }
-  html:has([data-theme="dark"]) {
-    color-scheme: dark;
-  }
-  html:has([data-theme="dark"]) body {
-    background-color: #0b0b0b;
-    color: #fafaf8;
   }
 
   body {
@@ -141,7 +215,7 @@
   }
 
   .on-dark :focus-visible,
-  [data-theme="dark"] :focus-visible {
+  [data-theme="oscuro"] :focus-visible {
     outline-color: var(--color-paper);
     box-shadow: 0 0 0 4px var(--color-night);
   }

@@ -2,6 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { getDb, nowIso, photoVisible, schema } from "../../db";
 import type { OpenGallery } from "../../components/types";
 import type { GalleryPhoto } from "../../components/types";
+import type { Palette } from "../design";
 import { updateSession } from "./auth";
 import {
   clientIpHash,
@@ -39,7 +40,7 @@ function shouldLogView(request: Request): boolean {
 
 export type GalleryData =
   | { state: "unavailable" }
-  | { state: "locked"; slug: string; title: string; theme: "light" | "dark" }
+  | { state: "locked"; slug: string; title: string; palette: Palette }
   | {
       state: "open";
       gallery: OpenGallery;
@@ -94,7 +95,12 @@ export async function loadGallery(
   if (!open) {
     return {
       status: 200,
-      data: { state: "locked", slug: g.slug, title: g.title, theme: g.theme },
+      data: {
+        state: "locked",
+        slug: g.slug,
+        title: g.title,
+        palette: g.palette,
+      },
     };
   }
   const { session } = open;
@@ -207,7 +213,10 @@ export async function loadGallery(
         allowHighres: !proofing && g.allowHighres,
         allowWeb: !proofing && g.allowWeb,
         allowIg: !proofing && g.allowIg,
-        theme: g.theme,
+        palette: g.palette,
+        coverLayout: g.coverLayout,
+        gridStyle: g.gridStyle,
+        gridGap: g.gridGap,
         sets,
       },
       photos: await Promise.all(

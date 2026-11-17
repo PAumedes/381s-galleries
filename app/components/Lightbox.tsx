@@ -324,7 +324,7 @@ function LightboxView({
       aria-modal="true"
       tabIndex={-1}
       aria-label={t("grid.photo", { n: index + 1 })}
-      data-theme="dark"
+      data-theme="oscuro"
       data-controls={visible ? "visible" : "hidden"}
       onPointerMove={wake}
       onFocus={onFocusWake}

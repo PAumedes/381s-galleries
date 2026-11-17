@@ -1,4 +1,6 @@
 import { sql } from "drizzle-orm";
+
+import { COVER_LAYOUTS, GRID_GAPS, GRID_STYLES, PALETTES } from "../lib/design";
 import {
   check,
   foreignKey,
@@ -74,10 +76,21 @@ export const galleries = sqliteTable(
     mode: text("mode", { enum: ["proofing", "delivery"] })
       .notNull()
       .default("delivery"),
-    // Client gallery appearance (§5.8): "light" (default) or "dark".
+    // Legacy (0010, replaced by `palette` in 0015): kept to avoid rebuilding
+    // the table (its CHECK cannot be altered and FKs cascade from it); nothing
+    // reads or writes it any more.
     theme: text("theme", { enum: ["light", "dark"] })
       .notNull()
       .default("light"),
+    // Client design (T6.5, §5.8). Enums are also CHECKed in D1 (0015).
+    palette: text("palette", { enum: PALETTES }).notNull().default("claro"),
+    coverLayout: text("cover_layout", { enum: COVER_LAYOUTS })
+      .notNull()
+      .default("completa"),
+    gridStyle: text("grid_style", { enum: GRID_STYLES })
+      .notNull()
+      .default("filas"),
+    gridGap: text("grid_gap", { enum: GRID_GAPS }).notNull().default("normal"),
     driveModifiedAt: text("drive_modified_at"),
     lastSyncedAt: text("last_synced_at"),
     syncIssuesJson: text("sync_issues_json"),

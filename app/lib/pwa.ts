@@ -1,12 +1,8 @@
+import { PALETTE_COLORS, isDarkPalette, type Palette } from "./design";
 import type { GalleryData } from "./server/gallery";
 
 type MetaTag = Record<string, string>;
-type Theme = "light" | "dark";
-
-export const THEME_COLORS: Record<Theme, string> = {
-  light: "#FAFAF8",
-  dark: "#0B0B0B",
-};
+export const THEME_COLORS = PALETTE_COLORS;
 export const GENERIC_MANIFEST = "/manifest.webmanifest";
 export const galleryManifestPath = (slug: string) =>
   `/api/g/${encodeURIComponent(slug)}/manifest.webmanifest`;
@@ -48,10 +44,10 @@ export function shortName(name: string, fallback = "381 Studios"): string {
 export function buildManifest(o: {
   studio: string;
   /** `title` omitted (PIN gallery): generic name, slug-specific scope. */
-  gallery?: { slug: string; title?: string; theme: Theme };
+  gallery?: { slug: string; title?: string; palette: Palette };
 }) {
   const g = o.gallery;
-  const color = THEME_COLORS[g?.theme ?? "light"];
+  const color = THEME_COLORS[g?.palette ?? "claro"];
   const path = g ? `/${encodeURIComponent(g.slug)}` : "/";
   return {
     ...(g ? { id: path } : {}),
@@ -76,12 +72,12 @@ export function pwaMeta(
   o: { studio: string },
 ): MetaTag[] {
   const pub = data?.state === "open" && data.og ? data : undefined;
-  const theme: Theme =
+  const palette: Palette =
     data?.state === "open"
-      ? data.gallery.theme
+      ? data.gallery.palette
       : data?.state === "locked"
-        ? data.theme
-        : "light";
+        ? data.palette
+        : "claro";
   // Locked/PIN pages still follow their theme for the status bar.
   const title = pub ? pub.gallery.title : o.studio;
   const slug = pub
@@ -95,12 +91,12 @@ export function pwaMeta(
       rel: "manifest",
       href: slug ? galleryManifestPath(slug) : GENERIC_MANIFEST,
     },
-    { name: "theme-color", content: THEME_COLORS[theme] },
+    { name: "theme-color", content: THEME_COLORS[palette] },
     { name: "mobile-web-app-capable", content: "yes" },
     { name: "apple-mobile-web-app-capable", content: "yes" },
     {
       name: "apple-mobile-web-app-status-bar-style",
-      content: theme === "dark" ? "black-translucent" : "default",
+      content: isDarkPalette(palette) ? "black-translucent" : "default",
     },
     { name: "apple-mobile-web-app-title", content: shortName(title, o.studio) },
   ];

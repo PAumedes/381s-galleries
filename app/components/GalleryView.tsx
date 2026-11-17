@@ -8,6 +8,7 @@ import { AddToHomeHint } from "./AddToHomeHint";
 import { DownloadMenu, enabledSizes } from "./DownloadMenu";
 import { EmailGate } from "./EmailGate";
 import { Grid } from "./Grid";
+import { GAP_PX, isDarkPalette } from "../lib/design";
 import { formatEventDate } from "../lib/event-date";
 import { SiteFooter } from "./SiteFooter";
 import { LanguageToggle } from "./LanguageToggle";
@@ -173,7 +174,8 @@ export function GalleryView({
 
   return (
     <div
-      data-theme={gallery.theme === "dark" ? "dark" : undefined}
+      data-page=""
+      data-theme={gallery.palette}
       className="bg-paper text-ink min-h-dvh"
     >
       <CoverHero
@@ -198,6 +200,8 @@ export function GalleryView({
         })()}
         scrollLabel={t("gallery.view")}
         onScroll={scrollToGrid}
+        layout={gallery.coverLayout}
+        palette={gallery.palette}
       />
 
       <nav
@@ -206,7 +210,7 @@ export function GalleryView({
         }`}
       >
         <Logo
-          variant={gallery.theme === "dark" ? "light" : "dark"}
+          variant={isDarkPalette(gallery.palette) ? "light" : "dark"}
           className="hidden h-7 justify-self-start sm:block"
         />
         {tabs.length === 0 ? (
@@ -286,7 +290,16 @@ export function GalleryView({
         </div>
       </nav>
 
-      <main ref={gridRef} id="grid" className="scroll-mt-12 px-1 py-1">
+      <main
+        ref={gridRef}
+        id="grid"
+        className="scroll-mt-12 px-1 py-1"
+        style={
+          GAP_PX[gallery.gridGap] > 6
+            ? { padding: GAP_PX[gallery.gridGap] }
+            : undefined
+        }
+      >
         {active === FAV && visible.length === 0 ? (
           <p className="text-body text-grey-600 py-section text-center">
             {t("favorites.empty")}
@@ -300,6 +313,8 @@ export function GalleryView({
             onDownload={openSingle}
             isFavorite={isFavorite}
             protect={proofing}
+            layout={gallery.gridStyle}
+            gap={GAP_PX[gallery.gridGap]}
           />
         )}
       </main>

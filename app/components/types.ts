@@ -1,3 +1,5 @@
+import type { CoverLayout, GridGap, GridStyle, Palette } from "../lib/design";
+
 export type GalleryPhoto = {
   id: string;
   width: number | null;
@@ -29,6 +31,9 @@ export type OpenGallery = {
   allowIg: boolean;
   /** 'proofing' (Prueba): watermarked images, no downloads, protected images. */
   mode: "proofing" | "delivery";
-  theme: "light" | "dark";
+  palette: Palette;
+  coverLayout: CoverLayout;
+  gridStyle: GridStyle;
+  gridGap: GridGap;
   sets: { name: string; count: number }[];
 };

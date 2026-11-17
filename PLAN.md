@@ -72,7 +72,9 @@ galleries     (id PK, drive_folder_id UNIQUE, slug UNIQUE, title, client_name?, 
                pin_hash?, expires_at?, status: 'draft'|'published'|'archived' default 'draft',
                cover_photo_id?, allow_highres bool=1, allow_web bool=1, allow_ig bool=1, allow_bulk bool=1,
                require_email bool=1, mode: 'proofing'|'delivery' default 'delivery' [0013; replaces use_watermark_preview, which stays in the table, unused: existing 1 -> proofing, else delivery; set to proofing when sync first sees preview-wm],
-               theme: 'light'|'dark' default 'light' [0010],
+               theme: 'light'|'dark' default 'light' [0010; LEGACY since 0015, unused: its CHECK cannot be relaxed without rebuilding `galleries` (FKs cascade from it), so it stays],
+               palette: 'claro'|'oscuro'|'arena'|'gris' default 'claro', cover_layout: 'completa'|'dividida'|'centrada'|'minima' default 'completa',
+               grid_style: 'filas'|'cuadricula'|'columnas' default 'filas', grid_gap: 'compacto'|'normal'|'amplio' default 'normal' [0015_design; each with a CHECK; palette backfilled from theme: dark -> oscuro, else claro],
                drive_modified_at?, last_synced_at?, sync_issues_json?,
                folder_missing_since?, archived_prev_status? ('draft'|'published'),
                archived_by_sync bool=0 (1 = archived by sync's folder-removal rule; only those are auto-restored), created_at)
@@ -178,7 +180,12 @@ Simple, elegant, minimal, **Pixieset-inspired**: the photos are the interface.
 - **Cover:** full-viewport hero with the cover photo, album title in Montserrat (light weight, wide tracking, uppercase), date + studio name small and spaced, a subtle "View gallery" scroll cue. Optional cover layouts later (centered / left / split).
 - **Typography:** **Montserrat only** (self-hosted via `@fontsource-variable/montserrat`). Titles: weight 300, uppercase, letter-spacing ~0.2em. UI: weight 400/500, small sizes, uppercase micro-labels with generous tracking.
 - **Logos:** black-and-white only. `public/brand/logo-black.svg` on light backgrounds, `public/brand/logo-white.svg` on dark ones and over the cover photo. The palette stays monochrome (black, white, warm greys); no accent colour.
-- **Colour:** near-white background (#FAFAF8-ish), near-black text, monochrome (no accent colour). Dark lightbox. Dark gallery theme per album (`galleries.theme`, admin Opciones "Tema"): `data-theme="dark"` on the gallery root swaps paper/ink/greys in `app.css`, top-bar logo becomes the white one; cover and lightbox unchanged; PIN screen follows the theme.
+- **Colour:** near-white background (#FAFAF8-ish), near-black text, monochrome (no accent colour). Dark lightbox. Per-album palette (`galleries.palette`, see "Design panel (T6.5)" below): `data-theme` on the gallery root swaps paper/ink/greys in `app.css`; PIN screen follows it.
+- **Design panel (T6.5):** per gallery, admin "Diseño" section (visual radio cards with CSS/SVG schematics; saved with intent `design`, enums only, absent key keeps the value; the CoverHero preview follows the choices live). Typography is always Montserrat (no font option). Public payload and the locked (PIN) payload carry `palette`; open payload also `coverLayout`, `gridStyle`, `gridGap` (the old `theme` is gone from payloads).
+  - **Palettes** = token sets under `[data-theme="claro|oscuro|arena|gris"]` in `app/app.css` (Claro = the old light, Oscuro = the old dark, Arena = warm off-white `#F4EFE8` with warm brown-grey text and a warm cover scrim, Gris = cool light grey `#EDEEF0`). Every text pair (ink and grey-600..900 on paper and grey-50; paper on ink/grey-800) is >= 4.5:1, enforced by `test/dom/palettes.test.tsx` which parses app.css. Page roots (gallery, PIN, unavailable) carry `data-page` + `data-theme` so `html:has([data-page][data-theme=...])` also paints html/body; the lightbox is always `oscuro` (no `data-page`). Logo is white only on Oscuro; PWA theme-color = palette paper.
+  - **Cover layouts** (`CoverHero`, `data-cover-layout`): Completa (full-viewport photo, white text over the scrim), Dividida (image 3/5 + title pane on the palette background; stacked on narrow containers via a container query so the admin preview's mobile frame is right), Centrada (photo framed with margins, title centered below), Minima (no photo, no scroll cue: title + date, grid starts right after).
+  - **Grid styles** (`Grid`, `app/lib/grid-layout.ts`): Filas = justified rows; Cuadricula = uniform squares (object-cover), 4/3/2 columns at >=1024 / >=640 / narrower; Columnas = masonry (each photo into the shortest column, leftmost on ties, whole-pixel heights so ties are exact). In all three, photo order == (top, left) reading order, so the lightbox order always matches what is seen. **Gap** Compacto 2px / Normal 6px / Amplio 16px (page padding follows when > 6).
+
 - **Grid:** justified rows (Flickr-style) with thin gutters (4–8px), lazy-loaded, fade-in on load, no borders/shadows/rounded cards.
 - **Top bar:** appears after the cover, sticky, translucent with blur: studio logo left, set names centered as text tabs, icon buttons right (favorites, download all, share). Hides on scroll down, shows on scroll up.
 - **Hover/tap on a photo:** discreet heart + download icons in a corner, nothing else.
@@ -262,6 +269,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 
 - [x] **T6.3 Gallery mode: Prueba (proofing) / Entrega (delivery).** See §3 (`thumb-wm`), §4 (`mode`, `drive_thumb_wm_id`), §5.3 (mode policy, protections). Migration 0013_gallery_mode (maps `use_watermark_preview`, recreates the warm triggers on `mode`). Replaces the old per-gallery watermark flag; downloads are refused and download UI hidden in proofing.
 - [x] **T6.4 Gallery editor: one Fotos grid, live cover preview, focal point, client search.** See §5.7 "T6.4 decisions". Migration 0014_cover_focus; shared `CoverHero`; admin-only `view-sm-wm`; `?q=` search on the list.
+- [x] **T6.5 Design panel.** Per-gallery palette (Claro/Oscuro/Arena/Gris, AA-tested), cover layout, grid style, spacing, live in the cover preview. Migration 0015_design (new columns; `theme` kept, unused). See §5.8 "Design panel (T6.5)".
 
 ### Backlog (not now)
 - Email notifications (Resend / Gmail SMTP)

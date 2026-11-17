@@ -22,7 +22,10 @@ const base: GalleryEditData = {
     allowBulk: true,
     requireEmail: true,
     mode: "delivery" as const,
-    theme: "light" as const,
+    palette: "claro" as const,
+    coverLayout: "completa" as const,
+    gridStyle: "filas" as const,
+    gridGap: "normal" as const,
     hasPin: false,
     coverPhotoId: "p2",
     coverFocus: null,
@@ -148,7 +151,7 @@ describe("cover preview", () => {
     expect(within(el).getByText(/1 de noviembre de 2026/)).toBeTruthy();
     expect(within(el).getByText("381 Studios")).toBeTruthy();
     expect(previewImg(el).getAttribute("src")).toBe("/admin/img/p2/view-sm");
-    expect(el.querySelector("[data-theme]")).toBeNull();
+    expect(el.querySelector('[data-theme="claro"]')).toBeTruthy();
   });
   it("Prueba uses the watermarked variant; switching the mode radio updates it live", async () => {
     show({ mode: "proofing" });
@@ -165,12 +168,12 @@ describe("cover preview", () => {
       "/admin/img/p1/view-sm",
     );
   });
-  it("dark theme and live title/date edits", async () => {
-    show({ theme: "dark" });
+  it("oscuro palette and live title/date edits", async () => {
+    show({ palette: "oscuro" });
     const el = await preview();
-    expect(el.querySelector('[data-theme="dark"]')).toBeTruthy();
-    await userEvent.selectOptions(screen.getByLabelText("Tema"), "light");
-    expect(el.querySelector("[data-theme]")).toBeNull();
+    expect(el.querySelector('[data-theme="oscuro"]')).toBeTruthy();
+    await userEvent.click(screen.getByLabelText("Claro"));
+    expect(el.querySelector('[data-theme="claro"]')).toBeTruthy();
     const title = screen.getByLabelText("Título");
     await userEvent.clear(title);
     await userEvent.type(title, "Nuevo");

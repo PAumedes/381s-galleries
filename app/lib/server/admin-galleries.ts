@@ -10,6 +10,7 @@ import {
   utcIsoToBaLocal,
 } from "../admin-gallery";
 import type { Filter } from "../admin-gallery";
+import { isCoverLayout, isGridGap, isGridStyle, isPalette } from "../design";
 import { adminAction } from "./admin";
 import { hashPin } from "./crypto";
 import { RESERVED_SLUGS } from "./slug";
@@ -191,7 +192,10 @@ export async function loadGalleryEdit(env: Env, id: string) {
       allowBulk: g.allowBulk,
       requireEmail: g.requireEmail,
       mode: g.mode,
-      theme: g.theme,
+      palette: g.palette,
+      coverLayout: g.coverLayout,
+      gridStyle: g.gridStyle,
+      gridGap: g.gridGap,
       hasPin: g.pinHash !== null,
       coverPhotoId: ps.some((p) => p.id === g.coverPhotoId)
         ? g.coverPhotoId
@@ -265,6 +269,8 @@ export async function galleryAction(
   switch (intent) {
     case "details":
       return saveDetails(env, g, form);
+    case "design":
+      return saveDesign(env, g, form);
     case "flags":
       return saveFlags(env, g, form);
     case "status":
@@ -381,12 +387,6 @@ async function saveFlags(env: Env, g: GalleryRow, f: FormData) {
       mode: "Modo inválido.",
     });
   const mode: "proofing" | "delivery" = modeRaw ?? g.mode;
-  const themeRaw = f.get("theme");
-  if (themeRaw !== null && themeRaw !== "light" && themeRaw !== "dark")
-    return fail(intent, "Revisá los campos marcados.", {
-      theme: "Tema inválido.",
-    });
-  const theme = themeRaw ?? g.theme;
   await getDb(env)
     .update(schema.galleries)
     .set({
@@ -402,10 +402,63 @@ async function saveFlags(env: Env, g: GalleryRow, f: FormData) {
           }),
       requireEmail: on("requireEmail"),
       mode,
-      theme,
     })
     .where(eq(schema.galleries.id, g.id));
   return done(intent, "Opciones guardadas.");
+}
+
+/** Design (T6.5): enums only; an absent key keeps the stored value. */
+async function saveDesign(env: Env, g: GalleryRow, f: FormData) {
+  const intent = "design";
+  const pick = <T extends string>(
+    key: string,
+    ok: (v: unknown) => v is T,
+    current: T,
+    msg: string,
+    errors: Record<string, string>,
+  ): T => {
+    const raw = f.get(key);
+    if (raw === null) return current;
+    if (typeof raw === "string" && ok(raw)) return raw;
+    errors[key] = msg;
+    return current;
+  };
+  const errors: Record<string, string> = {};
+  const palette = pick(
+    "palette",
+    isPalette,
+    g.palette,
+    "Paleta inválida.",
+    errors,
+  );
+  const coverLayout = pick(
+    "coverLayout",
+    isCoverLayout,
+    g.coverLayout,
+    "Diseño de portada inválido.",
+    errors,
+  );
+  const gridStyle = pick(
+    "gridStyle",
+    isGridStyle,
+    g.gridStyle,
+    "Estilo de grilla inválido.",
+    errors,
+  );
+  const gridGap = pick(
+    "gridGap",
+    isGridGap,
+    g.gridGap,
+    "Espaciado inválido.",
+    errors,
+  );
+  if (Object.keys(errors).length)
+    return fail(intent, "Revisá los campos marcados.", errors);
+  await getDb(env)
+    .update(schema.galleries)
+    .set({ palette, coverLayout, gridStyle, gridGap })
+    .where(eq(schema.galleries.id, g.id));
+  return done(intent, "Diseño guardado.");
 }
 
 async function changeStatus(env: Env, g: GalleryRow, to: string) {

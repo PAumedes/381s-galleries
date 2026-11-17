@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import type { Ref } from "react";
 
 import { coverObjectPosition, type Focus } from "../lib/cover-focus";
+import { isDarkPalette, type CoverLayout, type Palette } from "../lib/design";
 
 import { Logo } from "./Logo";
 import { ChevronDown } from "./icons";
@@ -24,6 +25,8 @@ export function CoverHero({
   onScroll,
   embedded = false,
   headerRef,
+  layout = "completa",
+  palette = "claro",
 }: {
   title: string;
   date: string | null;
@@ -39,6 +42,10 @@ export function CoverHero({
   onScroll?: () => void;
   embedded?: boolean;
   headerRef?: Ref<HTMLElement>;
+  /** Cover layout (T6.5). Default: Completa (full-bleed photo). */
+  layout?: CoverLayout;
+  /** Palette: only the layouts that sit on the page background (not on the photo) use it. */
+  palette?: Palette;
 }) {
   const Title = embedded ? "p" : "h1";
   const imgRef = useRef<HTMLImageElement>(null);
@@ -59,68 +66,174 @@ export function CoverHero({
     const ro = new ResizeObserver(measure);
     ro.observe(node);
     return () => ro.disconnect();
-  }, [src]);
+  }, [src, layout]);
   const pos = coverObjectPosition(focus, aspect, frame);
+  const shield = proofing && src && (
+    <span
+      data-testid="cover-shield"
+      aria-hidden="true"
+      className="absolute inset-0"
+      onContextMenu={(e) => e.preventDefault()}
+    />
+  );
+  const photo = src && (
+    <img
+      ref={imgRef}
+      data-cover-img=""
+      src={src}
+      alt=""
+      fetchPriority={embedded ? undefined : "high"}
+      draggable={false}
+      style={{ objectPosition: `${pos.x}% ${pos.y}%` }}
+      className="absolute inset-0 size-full object-cover"
+    />
+  );
+  const protect = proofing && layout !== "minima" ? " img-protect" : "";
+  const noMenu = proofing
+    ? (e: React.MouseEvent) => e.preventDefault()
+    : undefined;
+  const logo = (
+    <Logo
+      variant={isDarkPalette(palette) ? "light" : "dark"}
+      className="h-12"
+    />
+  );
+  const cue = (
+    <ScrollCue
+      embedded={embedded}
+      label={scrollLabel}
+      onScroll={onScroll}
+      className="text-grey-600 hover:text-ink"
+    />
+  );
+  const titleBlock = (
+    <>
+      <Title className="text-display font-light uppercase">{title}</Title>
+      {date && (
+        <p className="text-body -mt-3 font-light tracking-wide">{date}</p>
+      )}
+      <p className="text-micro-label uppercase">{studio}</p>
+    </>
+  );
+  const box = embedded ? "h-full" : "h-dvh min-h-96";
+
+  if (layout === "dividida") {
+    return (
+      <header
+        ref={headerRef}
+        data-cover-layout="dividida"
+        className={`@container bg-paper text-ink relative w-full overflow-hidden ${box}${protect}`}
+        onContextMenu={noMenu}
+      >
+        <div className="flex size-full flex-col @3xl:flex-row">
+          <div
+            data-cover-pane="image"
+            className="bg-night relative min-h-0 flex-3 overflow-hidden"
+          >
+            {photo}
+            {shield}
+          </div>
+          <div
+            data-cover-pane="text"
+            className="bg-paper text-ink flex min-h-0 flex-2 flex-col items-center justify-between gap-6 px-6 py-6 text-center"
+          >
+            {logo}
+            <div className="flex flex-col items-center gap-6">{titleBlock}</div>
+            {cue}
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  if (layout === "centrada") {
+    return (
+      <header
+        ref={headerRef}
+        data-cover-layout="centrada"
+        className={`bg-paper text-ink relative flex w-full flex-col items-center gap-6 px-6 py-6 text-center sm:px-16 ${box}${protect}`}
+        onContextMenu={noMenu}
+      >
+        {logo}
+        <div
+          data-cover-frame=""
+          className="bg-grey-100 relative min-h-0 w-full max-w-6xl flex-1 overflow-hidden"
+        >
+          {photo}
+          {shield}
+        </div>
+        <div className="flex flex-col items-center gap-4">
+          {titleBlock}
+          {cue}
+        </div>
+      </header>
+    );
+  }
+
+  if (layout === "minima") {
+    return (
+      <header
+        ref={headerRef}
+        data-cover-layout="minima"
+        className={`bg-paper text-ink relative flex w-full flex-col items-center gap-6 px-6 pt-8 pb-12 text-center ${embedded ? "h-full justify-center" : ""}`}
+      >
+        {logo}
+        {titleBlock}
+      </header>
+    );
+  }
+
   return (
     <header
       ref={headerRef}
-      className={`on-dark relative flex w-full flex-col justify-between overflow-hidden bg-night text-white ${embedded ? "h-full" : "h-dvh min-h-96"}${proofing ? " img-protect" : ""}`}
-      onContextMenu={proofing ? (e) => e.preventDefault() : undefined}
+      data-cover-layout="completa"
+      className={`on-dark relative flex w-full flex-col justify-between overflow-hidden bg-night text-white ${box}${protect}`}
+      onContextMenu={noMenu}
     >
-      {src && (
-        <img
-          ref={imgRef}
-          data-cover-img=""
-          src={src}
-          alt=""
-          fetchPriority={embedded ? undefined : "high"}
-          draggable={false}
-          style={{
-            objectPosition: `${pos.x}% ${pos.y}%`,
-          }}
-          className="absolute inset-0 size-full object-cover"
-        />
-      )}
-      {proofing && src && (
-        <span
-          data-testid="cover-shield"
-          aria-hidden="true"
-          className="absolute inset-0"
-          onContextMenu={(e) => e.preventDefault()}
-        />
-      )}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/20"
-      />
+      {photo}
+      {shield}
+      <div aria-hidden="true" className="cover-scrim absolute inset-0" />
       <div className="relative p-6">
         <Logo variant="light" className="h-12" />
       </div>
       <div className="relative flex flex-col items-center gap-6 px-6 pb-10 text-center">
-        <Title className="text-display font-light uppercase">{title}</Title>
-        {date && (
-          <p className="text-body -mt-3 font-light tracking-wide">{date}</p>
-        )}
-        <p className="text-micro-label uppercase">{studio}</p>
-        {embedded ? (
-          <span
-            aria-hidden="true"
-            className="text-micro-label flex min-h-11 flex-col items-center gap-1 uppercase text-white/80"
-          >
-            {scrollLabel}
-            <ChevronDown className="size-5" />
-          </span>
-        ) : (
-          <button
-            type="button"
-            onClick={onScroll}
-            className="text-micro-label duration-base ease-out-soft flex min-h-11 flex-col items-center gap-1 uppercase text-white/80 transition-colors hover:text-white"
-          >
-            {scrollLabel}
-            <ChevronDown className="size-5" aria-hidden="true" />
-          </button>
-        )}
+        {titleBlock}
+        <ScrollCue
+          embedded={embedded}
+          label={scrollLabel}
+          onScroll={onScroll}
+          className="text-white/80 hover:text-white"
+        />
       </div>
     </header>
+  );
+}
+
+function ScrollCue({
+  embedded,
+  label,
+  onScroll,
+  className,
+}: {
+  embedded: boolean;
+  label: string;
+  onScroll?: () => void;
+  className: string;
+}) {
+  const cls = `text-micro-label flex min-h-11 flex-col items-center gap-1 uppercase ${className}`;
+  return embedded ? (
+    <span aria-hidden="true" className={cls}>
+      {label}
+      <ChevronDown className="size-5" />
+    </span>
+  ) : (
+    <button
+      type="button"
+      onClick={onScroll}
+      className={`${cls} duration-base ease-out-soft transition-colors`}
+    >
+      {label}
+      <ChevronDown className="size-5" aria-hidden="true" />
+    </button>
   );
 }

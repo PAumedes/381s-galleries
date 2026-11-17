@@ -1,24 +1,29 @@
 import { Form } from "react-router";
 
 import { useT } from "../i18n/use-t";
+import { isDarkPalette, type Palette } from "../lib/design";
 import { Logo } from "./Logo";
 
 export function PinScreen({
   title,
   error,
-  theme = "light",
+  palette = "claro",
 }: {
   title: string;
   error?: string;
-  theme?: "light" | "dark";
+  palette?: Palette;
 }) {
   const t = useT();
   return (
     <main
-      data-theme={theme === "dark" ? "dark" : undefined}
+      data-page=""
+      data-theme={palette}
       className="bg-paper text-ink flex min-h-dvh flex-col items-center justify-center gap-10 px-6 text-center"
     >
-      <Logo variant={theme === "dark" ? "light" : "dark"} className="h-16" />
+      <Logo
+        variant={isDarkPalette(palette) ? "light" : "dark"}
+        className="h-16"
+      />
       <h1 className="text-display text-ink">{title}</h1>
       <Form
         method="post"

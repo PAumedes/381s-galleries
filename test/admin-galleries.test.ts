@@ -634,25 +634,6 @@ describe("flags action", () => {
       true,
     ]);
   });
-  it("theme: saves light/dark, rejects others, absent keeps the current value", async () => {
-    const g = await gallery();
-    expect((await row(g))!.theme).toBe("light");
-    expect((await act(g, { ...flags, theme: "dark" })).ok).toBe(true);
-    expect((await row(g))!.theme).toBe("dark");
-    expect((await act(g, flags)).ok).toBe(true);
-    expect((await row(g))!.theme).toBe("dark");
-    const bad = await act(g, { ...flags, theme: "neon", allowIg: "" });
-    expect(bad.ok).toBe(false);
-    expect(bad.fieldErrors?.theme).toBeTruthy();
-    expect((await row(g))!.theme).toBe("dark");
-    expect((await act(g, { ...flags, theme: "light" })).ok).toBe(true);
-    expect((await row(g))!.theme).toBe("light");
-  });
-  it("loadGalleryEdit payload includes theme", async () => {
-    const g = await gallery();
-    await act(g, { ...flags, theme: "dark" });
-    expect((await loadGalleryEdit(env, g))!.gallery.theme).toBe("dark");
-  });
   it("proofing can be chosen without preview-wm files (the UI warns)", async () => {
     const g = await gallery();
     await photos(g, 2);

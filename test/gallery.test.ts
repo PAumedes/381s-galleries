@@ -130,7 +130,7 @@ describe("loadGallery: states", () => {
       state: "locked",
       slug: "boda-ana",
       title: "Boda Ana",
-      theme: "light",
+      palette: "claro",
     });
     expect(r.setCookie).toBeUndefined();
     expect(await db.select().from(schema.galleryViews)).toHaveLength(0);

@@ -7,6 +7,8 @@ import {
   type MouseEvent,
 } from "react";
 
+import type { GridStyle } from "../lib/design";
+import { columnsLayout, squareLayout } from "../lib/grid-layout";
 import { justify } from "../lib/justify";
 import type { TFunction } from "../i18n/t";
 import { Download, Heart, HeartFilled, Retry } from "./icons";
@@ -14,6 +16,7 @@ import { imgUrl, type GalleryPhoto } from "./types";
 
 /** Width used for server rendering and before the first measurement. */
 export const DEFAULT_GRID_WIDTH = 1200;
+/** Default gutter (Normal). */
 const GAP = 6;
 
 export type GridProps = {
@@ -24,6 +27,10 @@ export type GridProps = {
   onDownload?: (id: string) => void;
   isFavorite?: (id: string) => boolean;
   initialWidth?: number;
+  /** Filas (justified rows, default), Cuadricula (squares) or Columnas (masonry). */
+  layout?: GridStyle;
+  /** Gutter in px (2 / 6 / 16). */
+  gap?: number;
   /** Proofing: block "Save image" (overlay above each photo, no context menu). */
   protect?: boolean;
 };
@@ -39,6 +46,8 @@ export function Grid({
   onDownload,
   isFavorite,
   initialWidth = DEFAULT_GRID_WIDTH,
+  layout: style = "filas",
+  gap = GAP,
   protect = false,
 }: GridProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -61,9 +70,17 @@ export function Grid({
     return () => ro.disconnect();
   }, []);
 
+  // Every layout lists tiles in photo order and places them so that
+  // (top, left) reading order equals that order: the lightbox (which walks
+  // `photos`) always matches what the visitor sees.
   const layout = useMemo(
-    () => justify(photos, { containerWidth: width, gap: GAP }),
-    [photos, width],
+    () =>
+      style === "cuadricula"
+        ? squareLayout(photos.length, { containerWidth: width, gap })
+        : style === "columnas"
+          ? columnsLayout(photos, { containerWidth: width, gap })
+          : justify(photos, { containerWidth: width, gap }),
+    [photos, width, style, gap],
   );
 
   return (
