@@ -62,10 +62,10 @@ describe("getAdminLang", () => {
 });
 
 describe("adminLangCookie", () => {
-  it("is Path=/admin, Lax, one year", () => {
+  it("is Path=/, Lax, one year", () => {
     const c = adminLangCookie("en");
     expect(c).toContain(`${ADMIN_LANG_COOKIE}=en`);
-    expect(c).toContain("Path=/admin");
+    expect(c).toContain("Path=/;");
     expect(c).toContain("SameSite=Lax");
     expect(c).toContain("Max-Age=31536000");
     expect(c).not.toContain("Secure");

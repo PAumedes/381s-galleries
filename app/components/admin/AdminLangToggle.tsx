@@ -1,6 +1,10 @@
 import { useRevalidator } from "react-router";
 
-import { adminLangCookie, type Lang } from "../../i18n/lang";
+import {
+  adminLangCookie,
+  legacyAdminLangCookieExpiry,
+  type Lang,
+} from "../../i18n/lang";
 import { useLang, useT } from "../../i18n/use-t";
 
 const OPTIONS: { code: Lang; label: string }[] = [
@@ -9,10 +13,9 @@ const OPTIONS: { code: Lang; label: string }[] = [
 ];
 
 function storeAdminLang(lang: Lang) {
-  document.cookie = adminLangCookie(
-    lang,
-    window.location.protocol === "https:",
-  );
+  const secure = window.location.protocol === "https:";
+  document.cookie = legacyAdminLangCookieExpiry(secure);
+  document.cookie = adminLangCookie(lang, secure);
 }
 
 /**

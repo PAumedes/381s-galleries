@@ -71,7 +71,14 @@ export function asAdminLang(value: string | null | undefined): Lang | null {
 
 /** `/admin` and below, also for single-fetch `.data` requests. */
 export function isAdminPath(pathname: string): boolean {
-  const p = pathname.replace(/\.data$/, "");
+  // React Router matches case-insensitively (and percent-decodes), so do we.
+  let p = pathname;
+  try {
+    p = decodeURIComponent(p);
+  } catch {
+    // keep the raw path
+  }
+  p = p.toLowerCase().replace(/\.data$/, "");
   return p === "/admin" || p.startsWith("/admin/");
 }
 
@@ -80,11 +87,23 @@ export function isAdminPath(pathname: string): boolean {
  * missing cookie) is Spanish; Accept-Language and `?lang=` are ignored.
  */
 export function getAdminLang(request: Request): Lang {
-  return (
-    asAdminLang(
-      cookieValue(request.headers.get("cookie"), ADMIN_LANG_COOKIE),
-    ) ?? DEFAULT_LANG
-  );
+  // A legacy Path=/admin cookie may coexist with the Path=/ one. Browsers send
+  // the more specific path first, so the first valid value wins.
+  const header = request.headers.get("cookie");
+  if (header) {
+    for (const part of header.split(";")) {
+      const i = part.indexOf("=");
+      if (i < 0 || part.slice(0, i).trim() !== ADMIN_LANG_COOKIE) continue;
+      const lang = asAdminLang(
+        part
+          .slice(i + 1)
+          .trim()
+          .replace(/^"(.*)"$/, "$1"),
+      );
+      if (lang) return lang;
+    }
+  }
+  return DEFAULT_LANG;
 }
 
 /** Language of the page being rendered: admin cookie under /admin, else the public rules. */
@@ -94,7 +113,15 @@ export function getRequestLang(request: Request): Lang {
     : getLang(request);
 }
 
-/** Cookie for the admin toggle; scoped to /admin so public pages never see it. */
+/**
+ * Cookie for the admin toggle. Path=/ so it is also sent on `/admin.data`
+ * (not under the `/admin/` path prefix); public pages never read it.
+ */
 export function adminLangCookie(lang: Lang, secure = false): string {
-  return `${ADMIN_LANG_COOKIE}=${lang}; Max-Age=31536000; Path=/admin; SameSite=Lax${secure ? "; Secure" : ""}`;
+  return `${ADMIN_LANG_COOKIE}=${lang}; Max-Age=31536000; Path=/; SameSite=Lax${secure ? "; Secure" : ""}`;
+}
+
+/** Expires the old Path=/admin cookie; set alongside the new one. */
+export function legacyAdminLangCookieExpiry(secure = false): string {
+  return `${ADMIN_LANG_COOKIE}=; Max-Age=0; Path=/admin; SameSite=Lax${secure ? "; Secure" : ""}`;
 }
