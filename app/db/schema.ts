@@ -5,6 +5,7 @@ import {
   index,
   integer,
   primaryKey,
+  real,
   sqliteTable,
   text,
   unique,
@@ -49,6 +50,9 @@ export const galleries = sqliteTable(
       .notNull()
       .default("draft"),
     coverPhotoId: text("cover_photo_id"),
+    /** Cover focal point, percent 0-100 (object-position); null = centered. */
+    coverFocusX: real("cover_focus_x"),
+    coverFocusY: real("cover_focus_y"),
     allowHighres: integer("allow_highres", { mode: "boolean" })
       .notNull()
       .default(true),

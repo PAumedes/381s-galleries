@@ -196,8 +196,11 @@ export async function loadGallery(
         requireEmail: g.requireEmail,
         title: g.title,
         eventDate: g.eventDate,
-        clientName: g.clientName,
         coverPhotoId: cover,
+        coverFocus:
+          g.coverFocusX !== null && g.coverFocusY !== null
+            ? { x: g.coverFocusX, y: g.coverFocusY }
+            : null,
         mode: g.mode,
         // Proofing: no downloads at all (the server refuses them too).
         allowBulk: !proofing && g.allowBulk,

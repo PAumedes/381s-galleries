@@ -157,3 +157,8 @@ export function moveTo(
   out.splice(Math.max(0, Math.min(out.length, to)), 0, x);
   return out;
 }
+
+/** Search key: accents stripped (NFD), lowercased, trimmed. */
+export function normalizeSearch(s: string): string {
+  return s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
+}
