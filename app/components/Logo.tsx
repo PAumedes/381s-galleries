@@ -1,17 +1,9 @@
 import { useStudioName } from "../lib/use-studio-name";
 
 /**
- * Placeholder wordmark rendered as inline text so it can use the web font
- * (SVG text inside <img> cannot).
- *
- * TODO(real logo): when the real SVG files arrive, put them in public/brand/
- * (logo-black.svg, logo-white.svg; the placeholders are still there) and
- * replace the <span> below with:
- *   <img
- *     src={variant === "dark" ? "/brand/logo-black.svg" : "/brand/logo-white.svg"}
- *     alt={label} width={240} height={32} className={className} draggable={false}
- *   />
- * then give callers `h-6 w-auto`-style heights again (they pass text sizes now).
+ * Studio mark ("38 / 1S"). Vector files in public/brand/:
+ * logo-black.svg for light backgrounds, logo-white.svg for dark ones.
+ * Size it with a height class (e.g. `h-8`); width follows the aspect ratio.
  */
 export function Logo({
   variant = "dark",
@@ -26,10 +18,15 @@ export function Logo({
   const studio = useStudioName();
   const label = name ?? studio;
   return (
-    <span
-      className={`${variant === "dark" ? "text-ink" : "text-white"} font-light tracking-[0.4em] whitespace-nowrap uppercase select-none ${className}`}
-    >
-      {label}
-    </span>
+    <img
+      src={
+        variant === "dark" ? "/brand/logo-black.svg" : "/brand/logo-white.svg"
+      }
+      alt={label}
+      width={462}
+      height={632}
+      className={`w-auto select-none ${className}`}
+      draggable={false}
+    />
   );
 }

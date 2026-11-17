@@ -7,7 +7,7 @@ export function PinScreen({ title, error }: { title: string; error?: string }) {
   const t = useT();
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-10 px-6 text-center">
-      <Logo variant="dark" className="text-sm" />
+      <Logo variant="dark" className="h-16" />
       <h1 className="text-display text-ink">{title}</h1>
       <Form
         method="post"

@@ -196,7 +196,7 @@ export function GalleryView({
           className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/20"
         />
         <div className="relative p-6">
-          <Logo variant="light" className="text-sm" />
+          <Logo variant="light" className="h-12" />
         </div>
         <div className="relative flex flex-col items-center gap-6 px-6 pb-10 text-center">
           <h1 className="text-display font-light uppercase">{gallery.title}</h1>
@@ -222,7 +222,7 @@ export function GalleryView({
       >
         <Logo
           variant="dark"
-          className="hidden justify-self-start text-xs sm:block"
+          className="hidden h-7 justify-self-start sm:block"
         />
         {tabs.length === 0 ? (
           <div aria-hidden="true" />

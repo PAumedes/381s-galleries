@@ -15,11 +15,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <main className="flex min-h-dvh items-center justify-center px-6">
       <h1>
-        <Logo
-          variant="dark"
-          name={loaderData.studioName}
-          className="text-base"
-        />
+        <Logo variant="dark" name={loaderData.studioName} className="h-24" />
       </h1>
     </main>
   );
