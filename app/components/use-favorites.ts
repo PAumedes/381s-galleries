@@ -9,7 +9,12 @@ const JSON_HEADERS = { "Content-Type": "application/json" };
  * toggled optimistically with rollback. The email gate comes from
  * `useVisitor`: a favourite that needs an email completes after `submitGate`.
  */
-export function useFavorites(slug: string, requireEmail: boolean) {
+/** `onError` is called when a favourite could not be saved (the change is rolled back). */
+export function useFavorites(
+  slug: string,
+  requireEmail: boolean,
+  onError?: () => void,
+) {
   const base = `/api/g/${encodeURIComponent(slug)}`;
   const [ids, setIds] = useState<ReadonlySet<string>>(new Set());
   const {
@@ -21,16 +26,11 @@ export function useFavorites(slug: string, requireEmail: boolean) {
     submitGate,
     closeGate,
   } = useVisitor(slug, requireEmail);
-  const [failed, setFailed] = useState(false);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
-  const flashError = useCallback(() => {
-    setFailed(true);
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setFailed(false), 3000);
-  }, []);
+  const onErrorRef = useRef(onError);
+  useEffect(() => {
+    onErrorRef.current = onError;
+  });
+  const flashError = useCallback(() => onErrorRef.current?.(), []);
   const touched = useRef(new Set<string>());
 
   useEffect(() => {
@@ -116,5 +116,13 @@ export function useFavorites(slug: string, requireEmail: boolean) {
     [ids, ensure, send, flashError],
   );
 
-  return { ids, visitor, gateOpen, failed, toggle, submitGate, closeGate };
+  return {
+    ids,
+    visitor,
+    gateOpen,
+    toggle,
+    submitGate,
+    closeGate,
+    ensure,
+  };
 }

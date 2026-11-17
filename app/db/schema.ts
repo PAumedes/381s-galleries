@@ -194,12 +194,15 @@ export const downloads = sqliteTable(
     visitorId: text("visitor_id"),
     variant: text("variant", { enum: ["highres", "web", "ig"] }).notNull(),
     kind: text("kind", { enum: ["single", "bulk"] }).notNull(),
+    /** Download token id (jti): a retried/resumed token logs only once. */
+    tokenId: text("token_id"),
     country: text("country"),
     ua: text("ua"),
     createdAt: createdAt(),
   },
   (t) => [
     index("downloads_gallery_created_idx").on(t.galleryId, t.createdAt),
+    uniqueIndex("downloads_token_id_idx").on(t.tokenId),
     check(
       "downloads_variant_check",
       sql`${t.variant} IN ('highres','web','ig')`,

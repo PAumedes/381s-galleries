@@ -136,6 +136,11 @@ function LightboxView({
   // Keyboard + focus trap.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // A sheet/modal opened above the lightbox owns the keyboard.
+      const other =
+        (e.target as Element | null)?.closest?.('[role="dialog"]') ??
+        document.activeElement?.closest?.('[role="dialog"]');
+      if (other && other !== dialogRef.current) return;
       if (e.key === "Escape") {
         e.preventDefault();
         latest.current.onClose();

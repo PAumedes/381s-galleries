@@ -173,8 +173,9 @@ function Tile({
           <Retry className="size-5" aria-hidden="true" />
         </button>
       )}
+      {/* Touch devices: actions live in the lightbox to keep the grid clean. */}
       {hasActions && (
-        <div className="absolute top-0 right-0 flex bg-linear-to-bl from-black/40 to-transparent transition-opacity duration-base ease-out-soft pointer-fine:opacity-0 pointer-fine:group-focus-within:opacity-100 pointer-fine:group-hover:opacity-100">
+        <div className="absolute top-0 right-0 flex pointer-coarse:hidden bg-linear-to-bl from-black/40 to-transparent transition-opacity duration-base ease-out-soft pointer-fine:opacity-0 pointer-fine:group-focus-within:opacity-100 pointer-fine:group-hover:opacity-100">
           {onFavorite && (
             <button
               type="button"
