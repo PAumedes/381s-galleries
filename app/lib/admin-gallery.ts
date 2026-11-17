@@ -42,6 +42,7 @@ export const ISSUE_LABELS: Record<string, string> = {
   missing_web: "Falta la versión web",
   missing_thumb: "Falta la miniatura (thumb)",
   highres_empty: "La carpeta high-res está vacía o no existe",
+  missing_wm: "Falta preview-wm",
 };
 
 export interface IssueGroup {

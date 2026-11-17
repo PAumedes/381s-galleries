@@ -20,12 +20,13 @@ const base: GalleryEditData = {
     allowIg: false,
     allowBulk: true,
     requireEmail: true,
-    useWatermarkPreview: false,
+    mode: "delivery" as const,
     theme: "light" as const,
     hasPin: false,
     coverPhotoId: "p1",
   },
   hasWmFiles: false,
+  hasThumbWmFiles: false,
   photos: [
     { id: "p1", set: "Highlights", name: "IMG_1", takenAt: null },
     { id: "p2", set: "Highlights", name: "IMG_2", takenAt: null },
@@ -164,20 +165,87 @@ describe("GalleryEditView", () => {
     expect(screen.getByRole("button", { name: "Guardar PIN" })).toBeTruthy();
   });
 
-  it("watermark flag disabled with explanation when there are no preview-wm files", async () => {
+  it("Modo selector: Prueba / Entrega with a one-line explanation each", async () => {
     show();
-    const cb = (await screen.findByLabelText(
-      /marca de agua/i,
+    const entrega = (await screen.findByLabelText(
+      /Entrega/,
     )) as HTMLInputElement;
-    expect(cb.disabled).toBe(true);
-    expect(screen.getByText(/no tiene archivos preview-wm/)).toBeTruthy();
+    const prueba = screen.getByLabelText(/Prueba/) as HTMLInputElement;
+    expect(entrega.name).toBe("mode");
+    expect(prueba.name).toBe("mode");
+    expect(entrega.value).toBe("delivery");
+    expect(prueba.value).toBe("proofing");
+    expect(entrega.checked).toBe(true);
+    expect(prueba.checked).toBe(false);
+    expect(screen.getByText(/con marca de agua y sin descargas/i)).toBeTruthy();
+    expect(
+      screen.getByText(/sin marca de agua y con las descargas/i),
+    ).toBeTruthy();
   });
-  it("watermark flag enabled with files", async () => {
-    show({ hasWmFiles: true });
-    const cb = (await screen.findByLabelText(
-      /marca de agua/i,
-    )) as HTMLInputElement;
-    expect(cb.disabled).toBe(false);
+  it("Entrega: size/download checkboxes enabled, no note", async () => {
+    show();
+    expect(
+      ((await screen.findByLabelText(/Alta resolución/)) as HTMLInputElement)
+        .disabled,
+    ).toBe(false);
+    expect(screen.queryByText(/En modo Prueba no hay descargas/)).toBeNull();
+  });
+  it("Prueba: size/download checkboxes disabled with a note; email stays enabled", async () => {
+    show({
+      gallery: { ...base.gallery, mode: "proofing" },
+      hasWmFiles: true,
+      hasThumbWmFiles: true,
+    });
+    for (const re of [
+      /Alta resolución/,
+      /Web \(1200/,
+      /Instagram/,
+      /descargar todo/,
+    ]) {
+      expect(
+        ((await screen.findByLabelText(re)) as HTMLInputElement).disabled,
+      ).toBe(true);
+    }
+    expect(screen.getByText(/En modo Prueba no hay descargas/)).toBeTruthy();
+    expect(
+      (screen.getByLabelText(/Pedir email/) as HTMLInputElement).disabled,
+    ).toBe(false);
+    expect((screen.getByLabelText(/Prueba/) as HTMLInputElement).checked).toBe(
+      true,
+    );
+  });
+  it("Prueba without preview-wm warns", async () => {
+    show({ gallery: { ...base.gallery, mode: "proofing" }, hasWmFiles: false });
+    const alert = await screen.findByText(/no tiene archivos preview-wm/);
+    expect(alert.getAttribute("role")).toBe("alert");
+  });
+  it("Prueba with preview-wm but no thumb-wm warns about the heavier grid", async () => {
+    show({
+      gallery: { ...base.gallery, mode: "proofing" },
+      hasWmFiles: true,
+      hasThumbWmFiles: false,
+    });
+    expect(
+      await screen.findByText(
+        /la grilla usará la vista de 2048 px, más pesada/,
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/no tiene archivos preview-wm/)).toBeNull();
+  });
+  it("Prueba with both recipes: no warnings", async () => {
+    show({
+      gallery: { ...base.gallery, mode: "proofing" },
+      hasWmFiles: true,
+      hasThumbWmFiles: true,
+    });
+    await screen.findByLabelText(/Prueba/);
+    expect(screen.queryByText(/no tiene archivos preview-wm/)).toBeNull();
+    expect(screen.queryByText(/más pesada/)).toBeNull();
+  });
+  it("Entrega never shows the wm warnings", async () => {
+    show({ hasWmFiles: false });
+    await screen.findByLabelText(/Entrega/);
+    expect(screen.queryByText(/no tiene archivos preview-wm/)).toBeNull();
   });
   it("flag checkboxes reflect state", async () => {
     show();

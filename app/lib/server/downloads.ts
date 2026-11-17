@@ -70,6 +70,8 @@ async function readJson(
 }
 
 function variantAllowed(g: GalleryRow, v: DlVariant): boolean {
+  // Proofing (Prueba): nothing is downloadable, whatever the allow_* flags say.
+  if (g.mode === "proofing") return false;
   return v === "highres"
     ? g.allowHighres
     : v === "web"
@@ -135,6 +137,7 @@ async function gate(
   const open = await openGallery(request, await findGallery(env, slug), env);
   if (!open) return notFound();
   const { g, session } = open;
+  if (g.mode === "proofing") return reply({ error: "proofing" }, 403);
   const body = await readJson(request);
   if (!body || !isVariant(body.variant)) return bad();
   const variant = body.variant;

@@ -782,8 +782,8 @@ describe("GET /dl/:token", () => {
     expect((await dl(single, drive)).status).toBe(410);
   });
 
-  it("with the watermark on, still serves the clean file, never the wm file", async () => {
-    await addGallery({ useWatermarkPreview: true });
+  it("a delivery gallery that also has wm files serves the clean file, never the wm file", async () => {
+    await addGallery({ mode: "delivery" });
     await addPhoto("p1", { driveWmId: "wm-p1" });
     const { drive, calls } = fakeDrive();
     for (const v of ["highres", "web", "ig"])

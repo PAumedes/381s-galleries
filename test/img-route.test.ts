@@ -235,14 +235,14 @@ describe("fallbacks and watermark", () => {
       await env.CACHE.delete(o.key);
     expect((await fileFor("view-sm")).calls).toEqual(["DRIVE-HI"]);
   });
-  it("watermark on: view-* use wm, thumb unaffected", async () => {
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+  it("proofing: view-* use wm and so does thumb (never the clean thumb)", async () => {
+    await db.update(schema.galleries).set({ mode: "proofing" });
     expect((await fileFor("view-sm")).calls).toEqual(["DRIVE-WM"]);
     expect((await fileFor("view-lg")).calls).toEqual(["DRIVE-WM"]);
-    expect((await fileFor("thumb")).calls).toEqual(["DRIVE-THUMB"]);
+    expect((await fileFor("thumb")).calls).toEqual(["DRIVE-WM"]);
   });
   it("watermark on but no wm file: 404, no clean leak", async () => {
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+    await db.update(schema.galleries).set({ mode: "proofing" });
     await db.update(schema.photos).set({ driveWmId: null });
     const f = fakeDrive();
     await expectGeneric404(await get("view-lg", { drive: f.drive }));
@@ -271,7 +271,7 @@ describe("mock mode", () => {
     expect((await env.CACHE.list()).objects).toHaveLength(0);
   });
   it("uses wm variant when watermark is on", async () => {
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+    await db.update(schema.galleries).set({ mode: "proofing" });
     const res = await get("view-lg", { e: mockEnv });
     expect(res.headers.get("Location")).toBe(mockImageUrl(P, "wm", 3000, 2000));
   });
@@ -280,7 +280,7 @@ describe("mock mode", () => {
     expect((await get("thumb", { e: mockEnv })).status).toBe(404);
   });
   it("watermark on without wm: 404", async () => {
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+    await db.update(schema.galleries).set({ mode: "proofing" });
     await db.update(schema.photos).set({ driveWmId: null });
     expect((await get("view-lg", { e: mockEnv })).status).toBe(404);
   });

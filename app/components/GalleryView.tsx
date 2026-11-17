@@ -146,7 +146,9 @@ export function GalleryView({
     }
   }, [showToast]);
 
-  const canDownload = enabledSizes(gallery).length > 0;
+  const proofing = gallery.mode === "proofing";
+  // Proofing never offers downloads, whatever the payload's allow_* say.
+  const canDownload = !proofing && enabledSizes(gallery).length > 0;
   const openSingle = canDownload
     ? (id: string) => setSheet({ kind: "single", id })
     : undefined;
@@ -175,7 +177,8 @@ export function GalleryView({
     >
       <header
         ref={coverRef}
-        className="on-dark relative flex h-dvh min-h-96 w-full flex-col justify-between overflow-hidden bg-night text-white"
+        className={`on-dark relative flex h-dvh min-h-96 w-full flex-col justify-between overflow-hidden bg-night text-white${proofing ? " img-protect" : ""}`}
+        onContextMenu={proofing ? (e) => e.preventDefault() : undefined}
       >
         {gallery.coverPhotoId && (
           <img
@@ -186,7 +189,16 @@ export function GalleryView({
             )}
             alt=""
             fetchPriority="high"
+            draggable={false}
             className="absolute inset-0 size-full object-cover"
+          />
+        )}
+        {proofing && gallery.coverPhotoId && (
+          <span
+            data-testid="cover-shield"
+            aria-hidden="true"
+            className="absolute inset-0"
+            onContextMenu={(e) => e.preventDefault()}
           />
         )}
         <div
@@ -312,6 +324,7 @@ export function GalleryView({
             onFavorite={toggleFav}
             onDownload={openSingle}
             isFavorite={isFavorite}
+            protect={proofing}
           />
         )}
       </main>
@@ -346,6 +359,7 @@ export function GalleryView({
           onFavorite={toggleFav}
           onDownload={openSingle}
           isFavorite={isFavorite}
+          protect={proofing}
         />
       )}
 

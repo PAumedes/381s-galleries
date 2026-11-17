@@ -88,6 +88,7 @@ function sourceVersion(photo: SourcePhoto, fileId: string): string {
     ig: photo.driveIgId,
     thumb: photo.driveThumbId,
     wm: photo.driveWmId,
+    thumbWm: photo.driveThumbWmId,
   } as const;
   const name = (Object.keys(ids) as (keyof typeof ids)[]).find(
     (k) => ids[k] === fileId,
@@ -115,39 +116,43 @@ export type SourcePhoto = Pick<
   | "driveThumbId"
   | "driveWmId"
   | "variantVersions"
->;
+> & {
+  /** Optional watermarked 600px thumb (`thumb-wm`); absent on older rows. */
+  driveThumbWmId?: string | null;
+};
 
 export interface Source {
   fileId: string;
-  /** true when the file is the watermarked preview served as view-*. */
+  /** true when the file is a watermarked one (proofing mode). */
   watermark: boolean;
   /** Drive modifiedTime of the file ("" if unknown: then it is never cached). */
   version: string;
 }
 
 /**
- * Which Drive file serves `variant` of `photo` (PLAN 5.3 watermark policy and
+ * Which Drive file serves `variant` of `photo` (PLAN 5.3 mode policy and
  * fallbacks), or null when none exists (404). Shared by /img and cache warming.
+ *
+ * `proofing` (gallery mode Prueba): everything public is watermarked:
+ * thumb = thumb-wm ?? preview-wm, view-* = preview-wm; never a clean file.
+ * Delivery: thumb ?? web ?? high-res, web ?? high-res, high-res (never wm).
  */
 export function resolveSource(
   photo: SourcePhoto,
-  useWatermarkPreview: boolean,
+  proofing: boolean,
   variant: Variant,
 ): Source | null {
-  const watermark = variant !== "thumb" && useWatermarkPreview;
-  if (watermark && !photo.driveWmId) return null;
-  const fileId =
-    variant === "thumb"
-      ? useWatermarkPreview
-        ? (photo.driveThumbId ?? photo.driveWmId)
-        : (photo.driveThumbId ?? photo.driveWebId ?? photo.driveHighresId)
-      : watermark
-        ? photo.driveWmId
-        : variant === "view-sm"
-          ? (photo.driveWebId ?? photo.driveHighresId)
-          : photo.driveHighresId;
+  const fileId = proofing
+    ? variant === "thumb"
+      ? (photo.driveThumbWmId ?? photo.driveWmId)
+      : photo.driveWmId
+    : variant === "thumb"
+      ? (photo.driveThumbId ?? photo.driveWebId ?? photo.driveHighresId)
+      : variant === "view-sm"
+        ? (photo.driveWebId ?? photo.driveHighresId)
+        : photo.driveHighresId;
   if (!fileId) return null;
-  return { fileId, watermark, version: sourceVersion(photo, fileId) };
+  return { fileId, watermark: proofing, version: sourceVersion(photo, fileId) };
 }
 
 /**
@@ -160,11 +165,11 @@ export function resolveSource(
 export async function imageVersionToken(
   env: Pick<Env, "SESSION_SECRET">,
   photo: SourcePhoto,
-  useWatermarkPreview: boolean,
+  proofing: boolean,
 ): Promise<string | null> {
   const parts: string[] = [];
   for (const variant of VARIANTS) {
-    const s = resolveSource(photo, useWatermarkPreview, variant);
+    const s = resolveSource(photo, proofing, variant);
     if (!s) {
       parts.push("-");
       continue;
@@ -213,11 +218,11 @@ export type FillResult = "cached" | "filled" | "skipped";
  */
 export async function fillCache(
   env: Pick<Env, "CACHE">,
-  photo: SourcePhoto & { useWatermarkPreview: boolean },
+  photo: SourcePhoto & { proofing: boolean },
   variant: Variant,
   drive: DriveClient,
 ): Promise<FillResult> {
-  const src = resolveSource(photo, photo.useWatermarkPreview, variant);
+  const src = resolveSource(photo, photo.proofing, variant);
   if (!src || !src.version) return "skipped";
   const key = `${photo.id}/${variant}`;
   const head = await env.CACHE.head(key);
@@ -256,9 +261,11 @@ export interface ImageOptions {
 /**
  * Core of GET /img/:photoId/:variant (PLAN 5.3), independent of React Router.
  *
- * Watermark policy: when the gallery has use_watermark_preview on, view-* only
- * ever serve the preview-wm file. If that file does not exist the request is
- * a 404 rather than falling back to the clean image (no leak).
+ * Mode policy: in a proofing gallery every public variant is a watermarked
+ * file (thumb-wm / preview-wm); if none exists the request is a 404 rather
+ * than a clean fallback (no leak). Admin previews (`opts.admin`) always show
+ * the clean files and skip R2 for proofing galleries (the keys are shared
+ * with the public, watermarked objects).
  *
  * R2 caching: R2 needs a known length to store a stream, so the Drive
  * Content-Length is used with FixedLengthStream; if Drive sends none the
@@ -298,7 +305,11 @@ export async function serveImage(
   if (!opts.admin && !(await openGallery(request, gallery, env)))
     return notFound();
 
-  const src = resolveSource(photo, gallery.useWatermarkPreview, v);
+  const proofing = gallery.mode === "proofing";
+  // Admin sees clean previews; those must not share R2 keys with the
+  // watermarked public objects, so they bypass the cache entirely.
+  const adminClean = !!opts.admin && proofing;
+  const src = resolveSource(photo, proofing && !opts.admin, v);
   if (!src) return notFound();
   const { fileId, watermark, version } = src;
 
@@ -309,7 +320,7 @@ export async function serveImage(
         ...BASE_HEADERS,
         Location: mockImageUrl(
           photo.id,
-          watermark ? "wm" : MOCK_KIND[v],
+          watermark && v !== "thumb" ? "wm" : MOCK_KIND[v],
           photo.width ?? 0,
           photo.height ?? 0,
         ),
@@ -324,12 +335,11 @@ export async function serveImage(
   // Otherwise <=10 min browser staleness is accepted (PLAN 5.3).
   const asked = new URL(request.url).searchParams.get("v");
   const cacheControl =
-    asked &&
-    asked === (await imageVersionToken(env, photo, gallery.useWatermarkPreview))
+    asked && asked === (await imageVersionToken(env, photo, proofing))
       ? IMMUTABLE_CACHE_CONTROL
       : "private, max-age=600";
   const wmFlag = watermark ? "1" : "0";
-  let hit = await env.CACHE.get(key);
+  let hit = adminClean ? null : await env.CACHE.get(key);
   if (hit && !isValidHit(hit, src)) {
     await hit.body.cancel();
     hit = null;
@@ -400,7 +410,7 @@ export async function serveImage(
     return badGateway();
   }
   // Without a known source version a cached copy could never be validated.
-  if (!hasLength || !version)
+  if (!hasLength || !version || adminClean)
     return new Response(upstream.body, { status: 200, headers });
 
   headers["Content-Length"] = String(length);

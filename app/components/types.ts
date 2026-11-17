@@ -26,6 +26,8 @@ export type OpenGallery = {
   allowHighres: boolean;
   allowWeb: boolean;
   allowIg: boolean;
+  /** 'proofing' (Prueba): watermarked images, no downloads, protected images. */
+  mode: "proofing" | "delivery";
   theme: "light" | "dark";
   sets: { name: string; count: number }[];
 };

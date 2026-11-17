@@ -19,22 +19,26 @@ const post = (id: string, f: Record<string, string>) =>
   );
 
 describe("T4.2 sync undoes admin decisions", () => {
-  it("a rescan does not reset use_watermark_preview the admin turned off", async () => {
+  it("a rescan does not reset the gallery mode the admin switched to delivery", async () => {
     const drive = createMockDrive();
     await runSync(e, { drive });
     const [wm] = await db
       .select()
       .from(schema.galleries)
-      .where(eq(schema.galleries.useWatermarkPreview, true));
+      .where(eq(schema.galleries.mode, "proofing"));
     expect(wm).toBeTruthy();
-    const r = await post(wm.id, { intent: "flags", allowWeb: "1" });
+    const r = await post(wm.id, {
+      intent: "flags",
+      allowWeb: "1",
+      mode: "delivery",
+    });
     expect(r.ok).toBe(true);
     await runSync(e, { drive, force: true });
     const [after] = await db
       .select()
       .from(schema.galleries)
       .where(eq(schema.galleries.id, wm.id));
-    expect(after.useWatermarkPreview).toBe(false);
+    expect(after.mode).toBe("delivery");
   });
 
   it("a rescan does not un-archive a gallery the admin archived", async () => {

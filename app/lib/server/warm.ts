@@ -52,10 +52,10 @@ const empty = (): WarmResult => ({ stale: 0, warmed: 0, failed: 0 });
 /** Hash of what a fully warmed `photo` looks like (16 hex chars). */
 export async function expectedWarmKey(
   photo: Photo,
-  useWatermarkPreview: boolean,
+  proofing: boolean,
 ): Promise<string> {
   const parts = WARM_VARIANTS.map((v) => {
-    const s = resolveSource(photo, useWatermarkPreview, v);
+    const s = resolveSource(photo, proofing, v);
     return s
       ? `${v}|${s.fileId}|${s.watermark ? 1 : 0}|${s.version}`
       : v + "|-";
@@ -93,12 +93,13 @@ async function staleRows(env: Env): Promise<{
         driveIgId: P.driveIgId,
         driveThumbId: P.driveThumbId,
         driveWmId: P.driveWmId,
+        driveThumbWmId: P.driveThumbWmId,
         variantVersions: P.variantVersions,
       },
       warmKey: P.cacheWarmKey,
       expected: P.cacheExpectedKey,
       fails: P.cacheWarmFailCount,
-      wm: G.useWatermarkPreview,
+      mode: G.mode,
     })
     .from(P)
     .innerJoin(G, eq(G.id, P.galleryId))
@@ -126,7 +127,7 @@ async function staleRows(env: Env): Promise<{
   for (const r of found) {
     let key = r.expected;
     if (key === null) {
-      key = await expectedWarmKey(r.photo, r.wm);
+      key = await expectedWarmKey(r.photo, r.mode === "proofing");
       writes++;
       await db
         .update(P)
@@ -134,7 +135,12 @@ async function staleRows(env: Env): Promise<{
         .where(and(eq(P.id, r.photo.id), isNull(P.cacheExpectedKey)));
       if (r.warmKey === key) continue;
     }
-    rows.push({ photo: r.photo, wm: r.wm, key, fails: r.fails });
+    rows.push({
+      photo: r.photo,
+      wm: r.mode === "proofing",
+      key,
+      fails: r.fails,
+    });
   }
   return { rows, writes };
 }
@@ -180,12 +186,12 @@ export async function warmBatch(
     // Visibility / watermark flag may have changed since the selection.
     cf += 1;
     const [now] = await db
-      .select({ wm: G.useWatermarkPreview })
+      .select({ mode: G.mode })
       .from(P)
       .innerJoin(G, eq(G.id, P.galleryId))
       .where(and(eq(P.id, photo.id), eligible))
       .limit(1);
-    if (!now || now.wm !== wm) continue;
+    if (!now || (now.mode === "proofing") !== wm) continue;
 
     let ok = true;
     for (const variant of WARM_VARIANTS) {
@@ -197,12 +203,8 @@ export async function warmBatch(
         cf += 2;
         // "skipped" (nothing cacheable) is a failure: the marker must not move.
         if (
-          (await fillCache(
-            env,
-            { ...photo, useWatermarkPreview: wm },
-            variant,
-            drive,
-          )) === "skipped"
+          (await fillCache(env, { ...photo, proofing: wm }, variant, drive)) ===
+          "skipped"
         ) {
           ok = false;
           break;

@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import { Form, Link, useNavigation } from "react-router";
 
 import type {
@@ -152,7 +152,8 @@ export function GalleryEditView({
   const de = errs("details");
   const pe = errs("pin");
   const fe = errs("flags");
-  const wmDisabled = !data.hasWmFiles;
+  const [mode, setMode] = useState<"proofing" | "delivery">(g.mode);
+  const proofing = mode === "proofing";
 
   return (
     <div className="flex flex-col gap-8">
@@ -385,48 +386,109 @@ export function GalleryEditView({
           <Section title="Opciones">
             <Form method="post" className="flex flex-col gap-3">
               <input type="hidden" name="intent" value="flags" />
+              <fieldset className="flex flex-col gap-2">
+                <legend className="text-small font-medium">Modo</legend>
+                <div className="flex items-start gap-2">
+                  <input
+                    id="mode-delivery"
+                    type="radio"
+                    name="mode"
+                    value="delivery"
+                    checked={!proofing}
+                    onChange={() => setMode("delivery")}
+                    aria-describedby="mode-delivery-note"
+                    className="mt-1 size-4"
+                  />
+                  <div>
+                    <label htmlFor="mode-delivery" className="text-small">
+                      Entrega
+                    </label>
+                    <p
+                      id="mode-delivery-note"
+                      className="text-small text-grey-600"
+                    >
+                      Fotos sin marca de agua y con las descargas habilitadas.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <input
+                    id="mode-proofing"
+                    type="radio"
+                    name="mode"
+                    value="proofing"
+                    checked={proofing}
+                    onChange={() => setMode("proofing")}
+                    aria-describedby="mode-proofing-note"
+                    className="mt-1 size-4"
+                  />
+                  <div>
+                    <label htmlFor="mode-proofing" className="text-small">
+                      Prueba
+                    </label>
+                    <p
+                      id="mode-proofing-note"
+                      className="text-small text-grey-600"
+                    >
+                      Todo con marca de agua y sin descargas: el cliente solo
+                      elige favoritas.
+                    </p>
+                  </div>
+                </div>
+              </fieldset>
+              {fe.mode && (
+                <p role="alert" className="text-small text-ink font-medium">
+                  {fe.mode}
+                </p>
+              )}
+              {proofing && !data.hasWmFiles && (
+                <p role="alert" className="text-small text-ink font-medium">
+                  Esta galería no tiene archivos preview-wm: en modo Prueba los
+                  clientes no verán ninguna foto. Exportá esa receta desde
+                  Capture One.
+                </p>
+              )}
+              {proofing && data.hasWmFiles && !data.hasThumbWmFiles && (
+                <p role="status" className="text-small text-grey-700">
+                  No hay miniaturas thumb-wm: la grilla usará la vista de 2048
+                  px, más pesada.
+                </p>
+              )}
               <Check
                 name="allowHighres"
                 label="Alta resolución (2048 px)"
                 checked={g.allowHighres}
+                disabled={proofing}
               />
               <Check
                 name="allowWeb"
                 label="Web (1200 px)"
                 checked={g.allowWeb}
+                disabled={proofing}
               />
               <Check
                 name="allowIg"
                 label="Instagram (1080 px)"
                 checked={g.allowIg}
+                disabled={proofing}
               />
               <Check
                 name="allowBulk"
                 label="Permitir descargar todo / por set"
                 checked={g.allowBulk}
+                disabled={proofing}
               />
+              {proofing && (
+                <p className="text-small text-grey-600">
+                  En modo Prueba no hay descargas: las opciones de tamaño quedan
+                  desactivadas (se conservan para el modo Entrega).
+                </p>
+              )}
               <Check
                 name="requireEmail"
                 label="Pedir email para descargar y marcar favoritas"
                 checked={g.requireEmail}
               />
-              <Check
-                name="useWatermarkPreview"
-                label="Ver con marca de agua (preview-wm)"
-                checked={g.useWatermarkPreview && !wmDisabled}
-                disabled={wmDisabled}
-                describedBy="wm-note"
-              />
-              <p id="wm-note" className="text-small text-grey-600">
-                {wmDisabled
-                  ? "Esta galería no tiene archivos preview-wm: exportá esa receta desde Capture One para poder activarla."
-                  : "Las descargas siempre entregan los archivos sin marca de agua."}
-              </p>
-              {fe.useWatermarkPreview && (
-                <p role="alert" className="text-small text-ink font-medium">
-                  {fe.useWatermarkPreview}
-                </p>
-              )}
               <label className="flex items-center gap-2 text-small">
                 <span>Tema</span>
                 <select
@@ -444,8 +506,8 @@ export function GalleryEditView({
                 </p>
               )}
               <p className="text-small text-grey-600">
-                Desactivar un tamaño anula de inmediato los enlaces de descarga
-                ya emitidos.
+                Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato
+                los enlaces de descarga ya emitidos.
               </p>
               <div>
                 <button type="submit" className={btnPrimary} disabled={busy}>
