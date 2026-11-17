@@ -33,6 +33,7 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Bulk download | Browser-side zip with `client-zip` | No server zipping |
 | Image processing | **None.** Never resize, re-encode or watermark in code | Capture One does all of it |
 | URLs | Public: `https://session.381studios.ar/<slug>`. Admin: `/admin`. Reserved slugs (rejected by sync, suffixed with `-2`): `admin, api, img, dl, assets, brand, favicon.ico, robots.txt, manifest.webmanifest` | |
+| Public origin | `PUBLIC_ORIGIN` var (wrangler.jsonc; `.dev.vars` locally). Share panel/QR/print card build links via `publicGalleryUrl` (`app/lib/server/public-url.ts`): must be https (http only for localhost), else falls back to the request origin | Links never depend on the Host header |
 | i18n | **Spanish (default) + English**. Strings in `app/i18n/{es,en}.ts` with a typed key set; language from `?lang=` → cookie → `Accept-Language` → `es`. Small ES/EN toggle in the footer. Admin UI in Spanish only | |
 | Branding | Studio name "381 Studios", black/white logos (see §5.8), Montserrat, monochrome palette (no accent colour) | |
 | Max image size | **2048px is the largest file delivered.** Web sharing only, no prints, no full-size originals | |
@@ -216,7 +217,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 ### Phase 4 — Admin UI
 - [x] **T4.1 ∥ Setup page** (connect Google, root folder, branding). Layout route `admin.tsx` (requireAdmin for all children, sidebar/top bar, status), `admin.setup.tsx`, `adminAction()` in `app/lib/server/admin.ts`. See §5.7.
 - [x] **T4.2 ∥ Galleries list + gallery edit** (incl. reorder, cover, sync issues, publish).
-- [ ] **T4.3 ∥ Share panel + QR + print card.**
+- [x] **T4.3 ∥ Share panel + QR + print card.**
 - [ ] **T4.4 ∥ Activity + favorites views, CSV, "Copy for Capture One".**
 
 ### Phase 5 — Polish & deploy
@@ -246,7 +247,7 @@ See `.claude/WORKFLOW.md`.
 ## 10. (reserved)
 
 ## 11. Manual steps for the photographer
-1. Cloudflare: add custom domain `session.381studios.ar` to the Worker (DNS already on Cloudflare). Worker has workers.dev and preview URLs disabled; only the custom domain serves it.
+1. Cloudflare: add custom domain `session.381studios.ar` to the Worker (DNS already on Cloudflare). Worker has workers.dev and preview URLs disabled; only the custom domain serves it. If the domain changes, update the `PUBLIC_ORIGIN` var in `wrangler.jsonc` (used for share links, QR and the print card).
 2. Google Cloud project → enable Drive API → OAuth **Web** client with redirect `https://<domain>/admin/google/callback` → consent screen **In production**.
 3. Cloudflare Zero Trust → Access application for `/admin*` and `/api/admin*` allowing your email. Copy the application's **Audience (AUD) tag** (Access > Applications > your app > Overview) into `ACCESS_AUD`, and your team domain (`<team>.cloudflareaccess.com`, Zero Trust > Settings > Custom Pages) into `ACCESS_TEAM_DOMAIN`.
 4. `wrangler secret put`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`, `ADMIN_EMAIL`, `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`. Secrets must be >= 32 chars (`openssl rand -base64 32`).

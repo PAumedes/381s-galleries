@@ -16,6 +16,8 @@
   "vars": {
     "DRIVE_MODE": "google",
     "STUDIO_NAME": "381 Studios",
+    // Canonical origin for public links/QR (never derived from the Host header).
+    "PUBLIC_ORIGIN": "https://session.381studios.ar",
   },
   "d1_databases": [
     {

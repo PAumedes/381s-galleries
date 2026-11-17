@@ -8,6 +8,8 @@ export default [
     "admin/img/:photoId/:variant",
     "routes/admin.img.$photoId.$variant.tsx",
   ),
+  // Outside the admin layout: the print card must not carry the shell.
+  route("admin/g/:id/card", "routes/admin.g.$id.card.tsx"),
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
     route("setup", "routes/admin.setup.tsx"),

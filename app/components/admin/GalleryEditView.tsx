@@ -7,6 +7,7 @@ import type {
 } from "../../lib/server/admin-galleries";
 import { StatusPill } from "./GalleryList";
 import { PhotoReorder } from "./PhotoReorder";
+import { SharePanel } from "./SharePanel";
 
 export type GalleryEditData = NonNullable<
   Awaited<ReturnType<typeof loadGalleryEdit>>
@@ -133,9 +134,11 @@ function Check({
 
 export function GalleryEditView({
   data,
+  origin,
   actionData,
 }: {
   data: GalleryEditData;
+  origin?: string;
   actionData: GalleryActionResult | undefined;
 }) {
   const nav = useNavigation();
@@ -285,6 +288,16 @@ export function GalleryEditView({
               </div>
               <Feedback data={actionData} intent="details" />
             </Form>
+          </Section>
+
+          <Section title="Compartir">
+            <SharePanel
+              url={`${origin ?? window.location.origin}/${g.slug}`}
+              slug={g.slug}
+              status={g.status}
+              hasPin={g.hasPin}
+              cardHref={`/admin/g/${g.id}/card`}
+            />
           </Section>
 
           <Section title="Estado">

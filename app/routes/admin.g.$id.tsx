@@ -5,6 +5,7 @@ import { GalleryEditView } from "../components/admin/GalleryEditView";
 import { adminHeaders } from "../lib/server/admin";
 import { galleryAction, loadGalleryEdit } from "../lib/server/admin-galleries";
 import { requireAdmin } from "../lib/server/auth";
+import { publicOrigin } from "../lib/server/public-url";
 import type { Route } from "./+types/admin.g.$id";
 
 export const headers = () => adminHeaders();
@@ -16,7 +17,7 @@ export async function editData(request: Request, e: Env, id: string) {
   await requireAdmin(request, e);
   const data = await loadGalleryEdit(e, id);
   if (!data) throw new Response("Not found", { status: 404 });
-  return data;
+  return { ...data, origin: publicOrigin(e, request) };
 }
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -29,5 +30,11 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 export default function AdminGalleryEdit({ loaderData }: Route.ComponentProps) {
   const actionData = useActionData<typeof action>();
-  return <GalleryEditView data={loaderData} actionData={actionData} />;
+  return (
+    <GalleryEditView
+      data={loaderData}
+      origin={loaderData.origin}
+      actionData={actionData}
+    />
+  );
 }
