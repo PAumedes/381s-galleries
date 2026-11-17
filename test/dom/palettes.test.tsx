@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { PALETTES, PALETTE_COLORS } from "../../app/lib/design";
 
@@ -71,4 +71,41 @@ describe("palette identity", () => {
   it("cover overlay is defined per palette (warm for Arena)", () => {
     expect(css).toMatch(/\[data-theme="arena"\][^{]*\{[^}]*--cover-scrim/);
   });
+});
+
+/** Every `text-grey-N` class used under app/ must be AA on paper in all palettes. */
+describe("text-grey-* classes used in app/ sources", () => {
+  const files: string[] = [];
+  const walk = (d: string) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (/\.tsx?$/.test(e.name)) files.push(p);
+    }
+  };
+  walk(path.resolve("app"));
+  // Truly non-text uses (icon glyphs, >= 3:1 non-text contrast), by file.
+  const DECORATIVE: Record<string, string[]> = {
+    "Grid.tsx": ["text-grey-500"], // favourite-heart icon button, no text
+  };
+  const used = new Map<string, Set<string>>();
+  for (const f of files) {
+    const src = readFileSync(f, "utf8");
+    for (const m of src.matchAll(/(?<![\w-])text-grey-(\d{2,3})(?![\w-])/g)) {
+      const cls = `text-grey-${m[1]}`;
+      if (DECORATIVE[path.basename(f)]?.includes(cls)) continue;
+      if (!used.has(cls)) used.set(cls, new Set());
+      used.get(cls)!.add(path.relative(process.cwd(), f));
+    }
+  }
+  it("finds some usages", () => expect(used.size).toBeGreaterThan(0));
+  for (const p of PALETTES)
+    it(`${p}: all text-grey-* used as text are >= 4.5 on paper`, () => {
+      const t = tokens(p);
+      for (const [cls, where] of used)
+        expect(
+          ratio(t[cls.replace("text-", "")], t.paper),
+          `${p} ${cls} in ${[...where].join(", ")}`,
+        ).toBeGreaterThanOrEqual(4.5);
+    });
 });

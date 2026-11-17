@@ -18,7 +18,8 @@ function setup(o: GridLayoutOptions) {
   const gap = Number.isFinite(o.gap) ? Math.max(0, o.gap) : 0;
   const cols = gridColumns(W);
   const col = (W - gap * (cols - 1)) / cols;
-  return col > 0 ? { gap, cols, col } : null;
+  // Never drop photos in very narrow containers: clamp to a 1px column.
+  return { gap, cols, col: Math.max(1, col) };
 }
 
 /** Cuadricula: uniform squares, row-major (index order is visual order). */
