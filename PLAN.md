@@ -266,9 +266,6 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 ### Phase 6 — Feedback round (after first real use)
 - [x] **T6.1 Lightbox rapid navigation** — fast prev/next clicks or key repeats leave the lightbox in a broken state; fix races (stale loads, fades, preloads).
 - [x] **T6.2 Image speed** — cache warming + versioned image URLs. See §5.3 (warming, versioned URLs, why no edge cache). Migration 0012 adds `photos.cache_warm_key`; second cron `* * * * *`; "Fotos en caché: N / M" on the setup page.
-- [ ] **T6.3 Prueba / Entrega mode** — one switch per gallery. Prueba: watermarked cover, grid (optional `thumb-wm` recipe, fallback `preview-wm`) and lightbox, downloads off, image protection (no right-click/drag/long-press save, images behind a transparent layer). Entrega: clean images, downloads per size flags.
-- [ ] **T6.4 Gallery editor rework** — one Photos panel (order + "Usar como portada"), live cover preview with focal point, client name shown/searchable in the list.
-- [ ] **T6.5 Themes** — theme presets (Claro, Oscuro, Arena, Gris), cover layouts, grid styles, spacing; Pixieset-like design panel.
 - [x] **T6.6 Public portfolio home** — per-gallery "Mostrar en la portada" (published, no PIN only); home shows a cover grid. See §5.8 "Public home (T6.6)". Migration 0016_show_on_home.
 - [x] **T6.7 Admin in English** — ES/EN toggle in the admin. See §5.7 "T6.7 decisions".
 - [ ] **T6.8 Subdomain rename** — new public hostname; old one 301-redirects. The new public hostname is `gallery.381studios.ar` (confirmed). `share.381studios.ar` is taken by the owner's Pixieset and must not be used.
