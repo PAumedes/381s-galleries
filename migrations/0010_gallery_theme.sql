@@ -1,0 +1,1 @@
+ALTER TABLE `galleries` ADD `theme` text DEFAULT 'light' NOT NULL;

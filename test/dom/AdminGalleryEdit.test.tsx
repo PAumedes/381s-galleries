@@ -21,6 +21,7 @@ const base: GalleryEditData = {
     allowBulk: true,
     requireEmail: true,
     useWatermarkPreview: false,
+    theme: "light" as const,
     hasPin: false,
     coverPhotoId: "p1",
   },
@@ -190,6 +191,17 @@ describe("GalleryEditView", () => {
     expect(
       (screen.getByLabelText(/Pedir email/) as HTMLInputElement).checked,
     ).toBe(true);
+  });
+
+  it("theme select: Claro/Oscuro in Opciones, prefilled", async () => {
+    show(gal({ theme: "dark" }));
+    const sel = (await screen.findByLabelText("Tema")) as HTMLSelectElement;
+    expect(sel.name).toBe("theme");
+    expect(sel.value).toBe("dark");
+    expect(Array.from(sel.options).map((o) => o.textContent)).toEqual([
+      "Claro",
+      "Oscuro",
+    ]);
   });
 
   it("cover picker lists visible photos via the admin image route", async () => {

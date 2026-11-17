@@ -71,6 +71,7 @@ galleries     (id PK, drive_folder_id UNIQUE, slug UNIQUE, title, client_name?, 
                pin_hash?, expires_at?, status: 'draft'|'published'|'archived' default 'draft',
                cover_photo_id?, allow_highres bool=1, allow_web bool=1, allow_ig bool=1, allow_bulk bool=1,
                require_email bool=1, use_watermark_preview bool (auto true if preview-wm exists),
+               theme: 'light'|'dark' default 'light' [0010],
                drive_modified_at?, last_synced_at?, sync_issues_json?,
                folder_missing_since?, archived_prev_status? ('draft'|'published'),
                archived_by_sync bool=0 (1 = archived by sync's folder-removal rule; only those are auto-restored), created_at)
@@ -115,7 +116,7 @@ Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in
 7. **Mock auto-publish:** when `DRIVE_MODE=mock`, new galleries are created `published` (instead of `draft`) so the seeded galleries are viewable immediately.
 
 ### 5.2 Client views gallery
-`/:slug` → PIN form if needed → cookie. Draft/expired/archived → "gallery unavailable" page. Justified grid of thumbs (using width/height), sets as tabs, lightbox showing `web` (or `preview-wm` when watermark is on), keyboard + swipe, preload next. Log one `gallery_views` row per session; skipped for HEAD, prefetch (`Purpose`/`Sec-Purpose`) and bot UAs, and cookieless views are deduped per (gallery, hashed IP) within 30 min. Unlock redirects to `/` + `encodeURIComponent(slug)` (+ `?lang=` if valid), never the raw pathname; missing `CF-Connecting-IP` is "local" in mock mode and otherwise null (`clientIpHash`): PIN/visitor endpoints answer 429, views are logged with `ip_hash` NULL (no dedupe bucket); unknown-slug POSTs share a per-IP limiter (pseudo-gallery `unknown`). The locked screen shows the gallery title (accepted studio choice). **All client queries filter `photos.missing_since IS NULL`, via the shared `photoVisible` predicate (`app/db/index.ts`)** (photos in their sync grace period are hidden from clients).
+`/:slug` → PIN form if needed → cookie. Draft/expired/archived → "gallery unavailable" page. Justified grid of thumbs (using width/height), sets as tabs, lightbox showing `web` (or `preview-wm` when watermark is on), keyboard + swipe, preload next. Log one `gallery_views` row per session; skipped for HEAD, prefetch (`Purpose`/`Sec-Purpose`) and bot UAs, and cookieless views are deduped per (gallery, hashed IP) within 30 min. Unlock redirects to `/` + `encodeURIComponent(slug)` (+ `?lang=` if valid), never the raw pathname; missing `CF-Connecting-IP` is "local" in mock mode and otherwise null (`clientIpHash`): PIN/visitor endpoints answer 429, views are logged with `ip_hash` NULL (no dedupe bucket); unknown-slug POSTs share a per-IP limiter (pseudo-gallery `unknown`). The locked screen shows the gallery title (accepted studio choice). **Link previews (Open Graph, `galleryMeta` in `app/lib/og.ts`):** published, unexpired, no-PIN galleries emit og:type/site_name/title (gallery title)/description (`<localized date> · <studio>`)/url (`publicOrigin`+slug)/twitter:card, plus og:image = `${publicOrigin}/img/<coverId>/view-sm` (watermarked file when watermark is on; cookieless works for public galleries) with width/height at a 1200 long edge and alt = title. PIN, locked, unavailable and unknown galleries get generic meta (studio name only, no image, no title leak; locked == unavailable). Preview bots are never logged as views. **All client queries filter `photos.missing_since IS NULL`, via the shared `photoVisible` predicate (`app/db/index.ts`)** (photos in their sync grace period are hidden from clients).
 
 ### 5.3 Images route — `/img/:photoId/:variant` (`thumb` | `view-sm` | `view-lg`)
 Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` → on miss, stream from Drive (`files/<id>?alt=media`), `tee()` the body into R2 and the response. `Cache-Control: private, max-age=600`, ETag/304. A blank/unparseable Drive Content-Length counts as absent (streamed uncached). Accepted: browsers may keep a stale image up to 10 min after a watermark toggle or re-export.
@@ -167,7 +168,7 @@ Simple, elegant, minimal, **Pixieset-inspired**: the photos are the interface.
 - **Cover:** full-viewport hero with the cover photo, album title in Montserrat (light weight, wide tracking, uppercase), date + studio name small and spaced, a subtle "View gallery" scroll cue. Optional cover layouts later (centered / left / split).
 - **Typography:** **Montserrat only** (self-hosted via `@fontsource-variable/montserrat`). Titles: weight 300, uppercase, letter-spacing ~0.2em. UI: weight 400/500, small sizes, uppercase micro-labels with generous tracking.
 - **Logos:** black-and-white only. `public/brand/logo-black.svg` on light backgrounds, `public/brand/logo-white.svg` on dark ones and over the cover photo. The palette stays monochrome (black, white, warm greys); no accent colour.
-- **Colour:** near-white background (#FAFAF8-ish), near-black text, monochrome (no accent colour). Dark lightbox. Optional dark gallery theme per album.
+- **Colour:** near-white background (#FAFAF8-ish), near-black text, monochrome (no accent colour). Dark lightbox. Dark gallery theme per album (`galleries.theme`, admin Opciones "Tema"): `data-theme="dark"` on the gallery root swaps paper/ink/greys in `app.css`, top-bar logo becomes the white one; cover and lightbox unchanged; PIN screen follows the theme.
 - **Grid:** justified rows (Flickr-style) with thin gutters (4–8px), lazy-loaded, fade-in on load, no borders/shadows/rounded cards.
 - **Top bar:** appears after the cover, sticky, translucent with blur: studio logo left, set names centered as text tabs, icon buttons right (favorites, download all, share). Hides on scroll down, shows on scroll up.
 - **Hover/tap on a photo:** discreet heart + download icons in a corner, nothing else.
@@ -229,7 +230,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T4.4 ∥ Activity + favorites views, CSV, "Copy for Capture One".**
 
 ### Phase 5 — Polish & deploy
-- [ ] **T5.1 Branding/theme**, dark/light, OG image (cover via `/img`), full i18n per §2 (es + en).
+- [x] **T5.1 Branding/theme**, dark/light, OG image (cover via `/img`), full i18n per §2 (es + en).
 - [ ] **T5.2 PWA** manifest + "add to home screen".
 - [ ] **T5.3 `DEPLOY.md`:** Cloudflare (D1, R2, secrets, Access app, custom domain), Google Cloud (Drive API, OAuth web client, redirect URI, In production), Capture One recipe setup.
 - [ ] **T5.4 Final review** against §6 (security review).

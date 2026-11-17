@@ -63,6 +63,10 @@ export const galleries = sqliteTable(
     useWatermarkPreview: integer("use_watermark_preview", { mode: "boolean" })
       .notNull()
       .default(false),
+    // Client gallery appearance (§5.8): "light" (default) or "dark".
+    theme: text("theme", { enum: ["light", "dark"] })
+      .notNull()
+      .default("light"),
     driveModifiedAt: text("drive_modified_at"),
     lastSyncedAt: text("last_synced_at"),
     syncIssuesJson: text("sync_issues_json"),

@@ -8,8 +8,10 @@ import { en } from "../i18n/en";
 import { es } from "../i18n/es";
 import { getLang, langCookie } from "../i18n/lang";
 import { makeT } from "../i18n/t";
+import { galleryMeta } from "../lib/og";
 import { DEFAULT_STUDIO_NAME } from "../lib/use-studio-name";
 import { loadGallery, unlockGallery } from "../lib/server/gallery";
+import { publicOrigin } from "../lib/server/public-url";
 import type { Route } from "./+types/$slug";
 
 const SECURITY_HEADERS = {
@@ -31,7 +33,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const result = await loadGallery(request, params.slug, env);
   const headers = baseHeaders(request);
   if (result.setCookie) headers.append("Set-Cookie", result.setCookie);
-  return data(result.data, { status: result.status, headers });
+  return data(
+    { ...result.data, origin: publicOrigin(env, request) },
+    { status: result.status, headers },
+  );
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -64,17 +69,12 @@ export function headers({ loaderHeaders, actionHeaders }: Route.HeadersArgs) {
 
 export function meta({ loaderData: d, matches }: Route.MetaArgs) {
   const root = matches.find((m) => m?.id === "root")?.loaderData as
-    { studioName?: string } | undefined;
-  const studio = root?.studioName ?? DEFAULT_STUDIO_NAME;
-  const title =
-    d && d.state !== "unavailable"
-      ? `${d.state === "open" ? d.gallery.title : d.title} · ${studio}`
-      : studio;
-  return [
-    { title },
-    { name: "robots", content: "noindex,nofollow" },
-    { property: "og:title", content: title },
-  ];
+    { studioName?: string; lang?: string } | undefined;
+  return galleryMeta(d, {
+    studio: root?.studioName ?? DEFAULT_STUDIO_NAME,
+    lang: root?.lang ?? "es",
+    origin: d?.origin ?? "",
+  });
 }
 
 export default function GalleryPage({
@@ -87,7 +87,13 @@ export default function GalleryPage({
         <GalleryView gallery={loaderData.gallery} photos={loaderData.photos} />
       );
     case "locked":
-      return <PinScreen title={loaderData.title} error={actionData?.error} />;
+      return (
+        <PinScreen
+          title={loaderData.title}
+          theme={loaderData.theme}
+          error={actionData?.error}
+        />
+      );
     default:
       return <UnavailableScreen />;
   }

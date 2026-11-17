@@ -427,6 +427,22 @@ export function GalleryEditView({
                   {fe.useWatermarkPreview}
                 </p>
               )}
+              <label className="flex items-center gap-2 text-small">
+                <span>Tema</span>
+                <select
+                  name="theme"
+                  defaultValue={g.theme}
+                  className="border-grey-300 h-9 border bg-transparent px-2"
+                >
+                  <option value="light">Claro</option>
+                  <option value="dark">Oscuro</option>
+                </select>
+              </label>
+              {fe.theme && (
+                <p role="alert" className="text-small text-ink font-medium">
+                  {fe.theme}
+                </p>
+              )}
               <p className="text-small text-grey-600">
                 Desactivar un tamaño anula de inmediato los enlaces de descarga
                 ya emitidos.

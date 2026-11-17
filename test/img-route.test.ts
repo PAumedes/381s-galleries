@@ -139,6 +139,12 @@ describe("visibility", () => {
     expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(new Uint8Array(await res.arrayBuffer())).toEqual(JPEG);
   });
+  it("view-sm (the og:image variant) works cookieless for a public gallery", async () => {
+    const res = await get("view-sm");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("image/jpeg");
+    expect(new Uint8Array(await res.arrayBuffer())).toEqual(JPEG);
+  });
   it.each(["draft", "archived"])("404 for %s gallery", async (status) => {
     await db.update(schema.galleries).set({ status: status as "draft" });
     await expectGeneric404(await get("thumb"));

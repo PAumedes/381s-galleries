@@ -60,7 +60,10 @@ beforeEach(async () => {
 });
 
 const get = (url = URL_, headers: Record<string, string> = {}, cf?: object) =>
-  new Request(url, { headers, ...(cf ? { cf } : {}) } as RequestInit);
+  new Request(url, {
+    headers: { "Sec-Fetch-Mode": "navigate", ...headers },
+    ...(cf ? { cf } : {}),
+  } as RequestInit);
 
 async function cookieFor(
   session: { unlocked: boolean; viewed?: boolean },
@@ -123,7 +126,11 @@ describe("loadGallery: states", () => {
     await db.update(schema.galleries).set({ coverPhotoId: "p1" });
     const r = await loadGallery(get(), "boda-ana", env);
     expect(r.status).toBe(200);
-    expect(r.data).toEqual({ state: "locked", title: "Boda Ana" });
+    expect(r.data).toEqual({
+      state: "locked",
+      title: "Boda Ana",
+      theme: "light",
+    });
     expect(r.setCookie).toBeUndefined();
     expect(await db.select().from(schema.galleryViews)).toHaveLength(0);
   });

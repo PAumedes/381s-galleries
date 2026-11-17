@@ -167,7 +167,10 @@ export function GalleryView({
   ];
 
   return (
-    <div className="bg-paper text-ink">
+    <div
+      data-theme={gallery.theme === "dark" ? "dark" : undefined}
+      className="bg-paper text-ink min-h-dvh"
+    >
       <header
         ref={coverRef}
         className="on-dark relative flex h-dvh min-h-96 w-full flex-col justify-between overflow-hidden bg-night text-white"
@@ -210,7 +213,7 @@ export function GalleryView({
         }`}
       >
         <Logo
-          variant="dark"
+          variant={gallery.theme === "dark" ? "light" : "dark"}
           className="hidden h-7 justify-self-start sm:block"
         />
         {tabs.length === 0 ? (
