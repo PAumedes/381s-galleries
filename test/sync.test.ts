@@ -188,9 +188,9 @@ describe("first sync on fixtures", () => {
   });
 
   it("detects the watermark folder", async () => {
-    expect((await galleryBy("retrato-sofia")).useWatermarkPreview).toBe(true);
+    expect((await galleryBy("retrato-sofia")).mode).toBe("proofing");
     const b = await galleryBy("2026-11-14-boda-ana-y-juan");
-    expect(b.useWatermarkPreview).toBe(false);
+    expect(b.mode).toBe("delivery");
     const ps = await photosOf(b.id);
     expect(ps.every((p) => p.driveWmId === null)).toBe(true);
     const s = await photosOf((await galleryBy("retrato-sofia")).id);
@@ -343,6 +343,7 @@ describe("first sync on fixtures", () => {
       "highres",
       "ig",
       "thumb",
+      "thumbWm",
       "web",
       "wm",
     ]);
@@ -548,7 +549,7 @@ describe("determinism", () => {
         slug: g.slug,
         title: g.title,
         issues: g.syncIssuesJson,
-        wm: g.useWatermarkPreview,
+        wm: g.mode,
         photos: ps
           .map(({ id: _i, galleryId: _g, ...p }) => p)
           .sort((a, b) =>
@@ -1092,7 +1093,7 @@ describe("review fixes", () => {
   });
 });
 
-describe("use_watermark_preview transitions", () => {
+describe("gallery mode transitions", () => {
   const mk = (wm: boolean) =>
     tree({
       Boda: {
@@ -1103,7 +1104,7 @@ describe("use_watermark_preview transitions", () => {
   const setFlag = (id: string, v: boolean) =>
     db
       .update(schema.galleries)
-      .set({ useWatermarkPreview: v })
+      .set({ mode: v ? "proofing" : "delivery" })
       .where(eq(schema.galleries.id, id));
   const rescan = (d: MockDrive) =>
     runSync(e, { drive: d, force: true, now: later() });
@@ -1114,24 +1115,24 @@ describe("use_watermark_preview transitions", () => {
     const d = createMockDrive(fx);
     await runSync(e, { drive: d });
     const g = await galleryBy("boda");
-    expect(g.useWatermarkPreview).toBe(false);
+    expect(g.mode).toBe("delivery");
     await setFlag(g.id, true);
     await rescan(d);
-    expect((await galleryBy("boda")).useWatermarkPreview).toBe(true);
+    expect((await galleryBy("boda")).mode).toBe("proofing");
   });
 
-  it("(b) preview-wm appears: flag turns ON", async () => {
+  it("(b) preview-wm appears on an existing gallery: mode stays as the admin set it", async () => {
     const fx = mk(false);
     await setRoot(fx.rootId);
     const d = createMockDrive(fx);
     await runSync(e, { drive: d });
-    expect((await galleryBy("boda")).useWatermarkPreview).toBe(false);
+    expect((await galleryBy("boda")).mode).toBe("delivery");
     const album = await walk(d, fx.rootId, "Boda");
     const wm = d.addFile(album, { name: "preview-wm", mimeType: FOLDER_MIME });
     d.addFile(wm.id, { name: "a.jpg", width: 800, height: 600 });
     await rescan(d);
     const g = await galleryBy("boda");
-    expect(g.useWatermarkPreview).toBe(true);
+    expect(g.mode).toBe("delivery");
     expect((await photosOf(g.id)).some((p) => p.driveWmId !== null)).toBe(true);
   });
 
@@ -1141,18 +1142,18 @@ describe("use_watermark_preview transitions", () => {
     const d = createMockDrive(fx);
     await runSync(e, { drive: d });
     const g = await galleryBy("boda");
-    expect(g.useWatermarkPreview).toBe(true);
+    expect(g.mode).toBe("proofing");
     await setFlag(g.id, false);
     await rescan(d);
-    expect((await galleryBy("boda")).useWatermarkPreview).toBe(false);
+    expect((await galleryBy("boda")).mode).toBe("delivery");
   });
 
-  it("(d) all preview-wm files removed: flag turns OFF", async () => {
+  it("(d) all preview-wm files removed: mode stays (proofing then 404s, never leaks clean files)", async () => {
     const fx = mk(true);
     await setRoot(fx.rootId);
     const d = createMockDrive(fx);
     await runSync(e, { drive: d });
-    expect((await galleryBy("boda")).useWatermarkPreview).toBe(true);
+    expect((await galleryBy("boda")).mode).toBe("proofing");
     for (const f of await d.listChildren(
       await walk(d, fx.rootId, "Boda", "preview-wm"),
     ))
@@ -1160,7 +1161,69 @@ describe("use_watermark_preview transitions", () => {
     d.removeFile(await walk(d, fx.rootId, "Boda", "preview-wm"));
     await rescan(d);
     const g = await galleryBy("boda");
-    expect(g.useWatermarkPreview).toBe(false);
+    expect(g.mode).toBe("proofing");
     expect((await photosOf(g.id)).length).toBe(2);
+  });
+});
+
+describe("thumb-wm recipe", () => {
+  const mk = () =>
+    tree({
+      Boda: {
+        "high-res": { "": ["a.jpg", "b.jpg"] },
+        "preview-wm": { "": ["a.jpg", "b.jpg"] },
+        "thumb-wm": { "": ["a.jpg"] },
+      },
+    });
+  it("is stored as drive_thumb_wm_id with its version; optional per photo, no issue when absent", async () => {
+    const fx = mk();
+    await setRoot(fx.rootId);
+    await runSync(e, { drive: createMockDrive(fx) });
+    const g = await galleryBy("boda");
+    expect(g.mode).toBe("proofing");
+    const ps = await photosOf(g.id);
+    const a = ps.find((p) => p.baseName === "a")!;
+    const b = ps.find((p) => p.baseName === "b")!;
+    expect(a.driveThumbWmId).toBeTruthy();
+    expect(b.driveThumbWmId).toBeNull();
+    expect(JSON.parse(a.variantVersions!)).toHaveProperty(
+      "thumbWm",
+      "2026-01-01T00:00:00.000Z",
+    );
+    expect(issuesOf(g).some((i) => /wm/.test(i.type))).toBe(false);
+    expect(issuesOf(g).some((i) => i.type === "unknown_folder")).toBe(false);
+  });
+  it("a thumb-wm folder alone does not switch a gallery to proofing; a thumb-wm without high-res is a missing_highres issue", async () => {
+    const fx = tree({
+      Boda: {
+        "high-res": { "": ["a.jpg"] },
+        "thumb-wm": { "": ["a.jpg", "zz.jpg"] },
+      },
+    });
+    await setRoot(fx.rootId);
+    await runSync(e, { drive: createMockDrive(fx) });
+    const g = await galleryBy("boda");
+    expect(g.mode).toBe("delivery");
+    expect(issuesOf(g)).toContainEqual({
+      type: "missing_highres",
+      set: "Highlights",
+      name: "zz",
+    });
+  });
+  it("re-exporting thumb-wm updates the id/version", async () => {
+    const fx = mk();
+    await setRoot(fx.rootId);
+    const d = createMockDrive(fx);
+    await runSync(e, { drive: d });
+    const g = await galleryBy("boda");
+    const before = (await photosOf(g.id)).find((p) => p.baseName === "a")!;
+    const folder = await walk(d, fx.rootId, "Boda", "thumb-wm");
+    const f = await findChild(d, folder, "a.jpg");
+    d.removeFile(f.id);
+    d.addFile(folder, { name: "a.jpg", width: 600, height: 400 });
+    await runSync(e, { drive: d, force: true, now: later() });
+    const after = (await photosOf(g.id)).find((p) => p.baseName === "a")!;
+    expect(after.driveThumbWmId).toBeTruthy();
+    expect(after.driveThumbWmId).not.toBe(before.driveThumbWmId);
   });
 });

@@ -19,7 +19,14 @@ const LOCK_KEY = SETTINGS_KEYS.syncLock;
 const TOKEN_KEY = SETTINGS_KEYS.driveChangesToken;
 const LOCK_MS = 5 * 60_000;
 const DEFAULT_SET = "Highlights";
-const RECIPES = ["high-res", "web", "ig", "thumb", "preview-wm"] as const;
+const RECIPES = [
+  "high-res",
+  "web",
+  "ig",
+  "thumb",
+  "preview-wm",
+  "thumb-wm",
+] as const;
 type Recipe = (typeof RECIPES)[number];
 /** A photo/folder must be missing for longer than this before it is deleted/archived. */
 export const SYNC_DELETE_GRACE_MS = 60 * 60_000;
@@ -147,6 +154,7 @@ interface PhotoDraft {
   ig?: DriveFile;
   thumb?: DriveFile;
   wm?: DriveFile;
+  thumbWm?: DriveFile;
   width: number | null;
   height: number | null;
 }
@@ -206,11 +214,14 @@ function buildAlbum(
     const ig = pick("ig");
     const thumb = pick("thumb");
     const wm = pick("preview-wm");
+    const thumbWm = pick("thumb-wm");
     let width = h.file.width ?? null;
     let height = h.file.height ?? null;
     if (!(width && height)) {
       width = height = null;
-      const alt = [web, ig, thumb, wm].find((f) => f?.width && f?.height);
+      const alt = [web, ig, thumb, wm, thumbWm].find(
+        (f) => f?.width && f?.height,
+      );
       if (alt) {
         const k = 2048 / Math.max(alt.width!, alt.height!);
         width = Math.round(alt.width! * k);
@@ -228,6 +239,7 @@ function buildAlbum(
       ig,
       thumb,
       wm,
+      thumbWm,
       width,
       height,
     });
@@ -364,6 +376,7 @@ const photoFields = (p: PhotoDraft) => ({
   driveIgId: p.ig?.id ?? null,
   driveThumbId: p.thumb?.id ?? null,
   driveWmId: p.wm?.id ?? null,
+  driveThumbWmId: p.thumbWm?.id ?? null,
   highresBytes: p.highres.size ?? null,
   variantVersions: JSON.stringify({
     highres: p.highres.modifiedTime,
@@ -371,6 +384,7 @@ const photoFields = (p: PhotoDraft) => ({
     ig: p.ig?.modifiedTime ?? null,
     thumb: p.thumb?.modifiedTime ?? null,
     wm: p.wm?.modifiedTime ?? null,
+    thumbWm: p.thumbWm?.modifiedTime ?? null,
   }),
   width: p.width,
   height: p.height,
@@ -642,14 +656,12 @@ export async function runSync(
           ex.archivedBySync && ex.status === "archived"
             ? (ex.archivedPrevStatus ?? "draft")
             : undefined;
-        // The admin owns use_watermark_preview: sync only follows transitions
-        // of preview-wm availability.
-        const hadWm = rows.some((r) => r.driveWmId !== null);
-        const wmSet =
-          a.hasWm !== hadWm ? { useWatermarkPreview: a.hasWm } : undefined;
+        // The admin owns the gallery mode: sync never changes it for an
+        // existing gallery (switching to proofing would silently disable a
+        // client's downloads). Only new galleries get a default from the
+        // presence of preview-wm. A proofing gallery that loses its
+        // preview-wm files 404s (admin sees "falta preview-wm").
         const changed =
-          (wmSet !== undefined &&
-            ex.useWatermarkPreview !== wmSet.useWatermarkPreview) ||
           ex.syncIssuesJson !== issuesJson ||
           ex.driveModifiedAt !== a.folder.modifiedTime ||
           restore !== undefined;
@@ -659,7 +671,6 @@ export async function runSync(
             db
               .update(schema.galleries)
               .set({
-                ...wmSet,
                 syncIssuesJson: issuesJson,
                 driveModifiedAt: a.folder.modifiedTime,
                 lastSyncedAt: syncedAt,
@@ -686,7 +697,7 @@ export async function runSync(
             title,
             eventDate,
             status: env.DRIVE_MODE === "mock" ? "published" : "draft",
-            useWatermarkPreview: a.hasWm,
+            mode: a.hasWm ? "proofing" : "delivery",
             syncIssuesJson: issuesJson,
             driveModifiedAt: a.folder.modifiedTime,
             lastSyncedAt: syncedAt,
@@ -775,7 +786,8 @@ export async function runSync(
             cmp(x.setName, y.setName),
         );
         let sort = rows.reduce((m, r) => Math.max(m, r.sort), -1) + 1;
-        for (const part of chunk(fresh, 6))
+        // D1 allows 100 bound parameters per statement; a photo row binds ~18.
+        for (const part of chunk(fresh, 5))
           stmts.push(
             db.insert(schema.photos).values(
               part.map((p) => ({

@@ -190,19 +190,43 @@ describe("warmBatch", () => {
     expect(drive.subrequests()).toBeLessThanOrEqual(12);
   });
 
-  it("watermark mode warms wm view-sm and thumb ?? wm, never clean files", async () => {
-    await gallery("g1", { useWatermarkPreview: true });
+  it("proofing warms preview-wm view-sm and thumb-wm ?? preview-wm thumb, never clean files", async () => {
+    await gallery("g1", { mode: "proofing" });
     await photo("a", "g1");
     await photo("b", "g1", { driveThumbId: null });
     await photo("c", "g1", { driveWmId: null });
+    await photo("d", "g1", {
+      driveThumbWmId: "TWM-d",
+      variantVersions: JSON.stringify({
+        highres: "2026-01-01T00:00:01Z",
+        web: "2026-01-01T00:00:02Z",
+        thumb: "2026-01-01T00:00:03Z",
+        wm: "2026-01-01T00:00:04Z",
+        thumbWm: "2026-01-01T00:00:05Z",
+      }),
+    });
     const { drive, calls } = fakeDrive();
     await warmBatch(e, { drive });
-    expect(calls.sort()).toEqual(["TH-a", "TH-c", "WM-a", "WM-b", "WM-b"]);
+    expect(calls.sort()).toEqual([
+      "TWM-d",
+      "WM-a",
+      "WM-a",
+      "WM-b",
+      "WM-b",
+      "WM-d",
+    ]);
     expect((await env.CACHE.head("a/view-sm"))?.customMetadata).toMatchObject({
       fileId: "WM-a",
       wm: "1",
     });
-    expect((await env.CACHE.head("a/thumb"))?.customMetadata?.wm).toBe("0");
+    expect((await env.CACHE.head("a/thumb"))?.customMetadata).toMatchObject({
+      fileId: "WM-a",
+      wm: "1",
+    });
+    expect((await env.CACHE.head("d/thumb"))?.customMetadata).toMatchObject({
+      fileId: "TWM-d",
+      wm: "1",
+    });
     expect((await env.CACHE.head("b/thumb"))?.customMetadata).toMatchObject({
       fileId: "WM-b",
     });
@@ -213,7 +237,7 @@ describe("warmBatch", () => {
     await gallery("g1");
     await photo("p1", "g1");
     await warmBatch(e, { drive: fakeDrive().drive });
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+    await db.update(schema.galleries).set({ mode: "proofing" });
     const b = fakeDrive();
     await warmBatch(e, { drive: b.drive });
     expect(b.calls).toContain("WM-p1");
@@ -490,7 +514,7 @@ describe("per-photo back-off (T6.2 fixes)", () => {
         cacheWarmRetryAt: "2999-01-01T00:00:00.000Z",
       })
       .where(eq(schema.photos.id, "p1"));
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+    await db.update(schema.galleries).set({ mode: "proofing" });
     expect((await row("p1")).cacheWarmFailCount).toBe(0);
   });
 });
@@ -540,7 +564,7 @@ describe("re-check before each fill", () => {
           .where(eq(schema.photos.id, "b"));
         await db
           .update(schema.galleries)
-          .set({ useWatermarkPreview: true })
+          .set({ mode: "proofing" })
           .where(eq(schema.galleries.id, "g1"));
       }
       return orig(id, o);
@@ -561,7 +585,7 @@ describe("warm_idle invalidation", () => {
     await gallery("g1");
     await photo("p1", "g1");
     await putSetting(e, "warm_idle", idleFuture());
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+    await db.update(schema.galleries).set({ mode: "proofing" });
     expect(await getSetting(e, "warm_idle")).toBeUndefined();
     await putSetting(e, "warm_idle", idleFuture());
     await photo("p2", "g1");
@@ -599,9 +623,7 @@ describe("warm_idle invalidation", () => {
               (k === "all" || k === "raw")
             ) {
               armed = false;
-              await db
-                .update(schema.galleries)
-                .set({ useWatermarkPreview: true });
+              await db.update(schema.galleries).set({ mode: "proofing" });
             }
             return out;
           };

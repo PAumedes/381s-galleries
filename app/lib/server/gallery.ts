@@ -130,9 +130,10 @@ export async function loadGallery(
       ? g.coverPhotoId
       : (rows[0]?.id ?? null);
 
-  // With the watermark on, crawlers only get /view-sm of a photo that has a
+  // In proofing, crawlers only get /view-sm of a photo that has a
   // preview-wm; otherwise the og:image URL would 404.
-  const ogCover = g.useWatermarkPreview
+  const proofing = g.mode === "proofing";
+  const ogCover = proofing
     ? rows.find((p) => p.id === cover && p.driveWmId) ||
       rows.find((p) => p.driveWmId)
     : rows.find((p) => p.id === cover);
@@ -197,10 +198,12 @@ export async function loadGallery(
         eventDate: g.eventDate,
         clientName: g.clientName,
         coverPhotoId: cover,
-        allowBulk: g.allowBulk,
-        allowHighres: g.allowHighres,
-        allowWeb: g.allowWeb,
-        allowIg: g.allowIg,
+        mode: g.mode,
+        // Proofing: no downloads at all (the server refuses them too).
+        allowBulk: !proofing && g.allowBulk,
+        allowHighres: !proofing && g.allowHighres,
+        allowWeb: !proofing && g.allowWeb,
+        allowIg: !proofing && g.allowIg,
         theme: g.theme,
         sets,
       },
@@ -210,7 +213,7 @@ export async function loadGallery(
             ...p,
             variants: { web: !!driveWebId, ig: !!driveIgId },
             // Opaque cache-busting token for the image URLs (never a Drive id).
-            ...(await versionField(env as Env, full[i], g.useWatermarkPreview)),
+            ...(await versionField(env as Env, full[i], proofing)),
           }),
         ),
       ),

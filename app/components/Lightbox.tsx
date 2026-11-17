@@ -33,6 +33,8 @@ export type LightboxProps = {
   onFavorite?: (id: string) => void;
   onDownload?: (id: string) => void;
   isFavorite?: (id: string) => boolean;
+  /** Proofing: block "Save image" (overlay above the photo, no context menu). */
+  protect?: boolean;
 };
 
 const srcSet = (id: string, v?: string) =>
@@ -77,6 +79,7 @@ function LightboxView({
   onFavorite,
   onDownload,
   isFavorite,
+  protect = false,
 }: LightboxProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -326,8 +329,9 @@ function LightboxView({
       onPointerMove={wake}
       onFocus={onFocusWake}
       onKeyDown={onKeyWake}
-      className={`on-dark fixed inset-0 bg-night text-white ${visible ? "" : "cursor-none"}`}
+      className={`on-dark fixed inset-0 bg-night text-white ${visible ? "" : "cursor-none"}${protect ? " img-protect" : ""}`}
       style={{ zIndex: "var(--z-lightbox)" }}
+      onContextMenu={protect ? (e) => e.preventDefault() : undefined}
     >
       <div
         data-testid="lightbox-stage"
@@ -407,6 +411,17 @@ function LightboxView({
                 transform: dragX ? `translateX(${dragX}px)` : undefined,
               }}
             />
+            {protect && (
+              <span
+                data-testid="lightbox-shield"
+                aria-hidden="true"
+                className="col-start-1 row-start-1 block h-full w-full"
+                style={{
+                  transform: dragX ? `translateX(${dragX}px)` : undefined,
+                }}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            )}
           </>
         )}
       </div>

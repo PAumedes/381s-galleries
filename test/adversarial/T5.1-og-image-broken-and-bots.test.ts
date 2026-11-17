@@ -35,7 +35,7 @@ describe("T5.1 og:image must be fetchable by a cookieless crawler", () => {
       slug: "wm",
       title: "WM",
       status: "published",
-      useWatermarkPreview: true,
+      mode: "proofing",
     });
     await db.insert(schema.photos).values([
       {

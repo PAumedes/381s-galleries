@@ -24,6 +24,8 @@ export type GridProps = {
   onDownload?: (id: string) => void;
   isFavorite?: (id: string) => boolean;
   initialWidth?: number;
+  /** Proofing: block "Save image" (overlay above each photo, no context menu). */
+  protect?: boolean;
 };
 
 const ACTION =
@@ -37,6 +39,7 @@ export function Grid({
   onDownload,
   isFavorite,
   initialWidth = DEFAULT_GRID_WIDTH,
+  protect = false,
 }: GridProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(initialWidth);
@@ -66,8 +69,9 @@ export function Grid({
   return (
     <div
       ref={ref}
-      className="relative w-full"
+      className={`relative w-full${protect ? " img-protect" : ""}`}
       style={{ height: `${layout.height}px` }}
+      onContextMenu={protect ? (e) => e.preventDefault() : undefined}
     >
       {layout.tiles.map((tile) => {
         const photo = photos[tile.index];
@@ -82,6 +86,7 @@ export function Grid({
             onFavorite={onFavorite}
             onDownload={onDownload}
             favorite={isFavorite?.(photo.id) ?? false}
+            protect={protect}
           />
         );
       })}
@@ -98,6 +103,7 @@ type TileProps = {
   onFavorite?: (id: string) => void;
   onDownload?: (id: string) => void;
   favorite: boolean;
+  protect: boolean;
 };
 
 function Tile({
@@ -109,6 +115,7 @@ function Tile({
   onFavorite,
   onDownload,
   favorite,
+  protect,
 }: TileProps) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -158,6 +165,14 @@ function Tile({
             loaded ? "opacity-100" : "opacity-0"
           }`}
         />
+        {protect && (
+          <span
+            data-testid={`shield-${index}`}
+            aria-hidden="true"
+            className="absolute inset-0"
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        )}
       </button>
       {failed && (
         <button

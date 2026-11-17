@@ -172,7 +172,7 @@ describe("gallery payload", () => {
     expect(json).not.toContain("variantVersions");
   });
   it("v follows the watermark flag", async () => {
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+    await db.update(schema.galleries).set({ mode: "proofing" });
     const r = await loadGallery(new Request("https://x.test/pub"), "pub", e);
     if (r.data.state !== "open") throw new Error("not open");
     const [p] = await db.select().from(schema.photos);

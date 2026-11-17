@@ -158,6 +158,13 @@
   }
 }
 
+/* Proofing (Prueba): no long-press "Save image" menu, no text/image selection. */
+.img-protect {
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 @layer utilities {
   .text-micro-label {
     font-size: var(--text-micro);

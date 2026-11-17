@@ -96,7 +96,7 @@ Por qué: la app envía una política de seguridad (CSP) que solo permite sus pr
 ## 7. Capture One y Drive para escritorio
 
 
-Creá cinco recetas de proceso (Process Recipes), todas habilitadas, formato **JPEG**, perfil **sRGB**:
+Creá hasta seis recetas de proceso (las dos con marca de agua son opcionales) (Process Recipes), todas habilitadas, formato **JPEG**, perfil **sRGB**:
 
 | Receta (carpeta) | Tamaño | Calidad sugerida | Notas |
 |---|---|---|---|
@@ -104,7 +104,8 @@ Creá cinco recetas de proceso (Process Recipes), todas habilitadas, formato **J
 | `web` | 1200 px lado largo | 85 | |
 | `ig` | 1080 px lado largo | 85 | opcional (sin ella no hay descarga Instagram) |
 | `thumb` | 600 px lado largo | 75 | grilla |
-| `preview-wm` | 2048 px lado largo | 90 | con marca de agua; opcional, solo se usa para ver |
+| `preview-wm` | 2048 px lado largo | 90 | con marca de agua; opcional, es lo que se ve en galerías en modo Prueba |
+| `thumb-wm` | 600 px lado largo | 75 | con marca de agua; opcional, grilla de las galerías en modo Prueba (sin ella la grilla usa `preview-wm`, más pesada) |
 
 **Ubicación de salida (Output Location)** de cada receta: elegí la carpeta `381studios` dentro de Drive para escritorio, y en **Sub Folder** escribí `[Session Name]` seguido de `/` y el nombre de la receta, por ejemplo `[Session Name]/high-res`. En Capture One el token se inserta con el botón de tokens (**Formatear**) junto al campo. Resultado: `…/381studios/<Sesión>/high-res`, `…/381studios/<Sesión>/web`, etc.
 

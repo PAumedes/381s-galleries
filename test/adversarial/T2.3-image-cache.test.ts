@@ -62,7 +62,7 @@ beforeEach(async () => {
     slug: "s",
     title: "T",
     status: "published",
-    useWatermarkPreview: false,
+    mode: "delivery",
   });
   await db.insert(schema.photos).values({
     id: P,
@@ -86,14 +86,14 @@ const files = {
 describe("T2.3 cache vs state changes", () => {
   it("turning watermark ON must not serve previously cached clean view-sm", async () => {
     await get("view-sm", drive(files));
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+    await db.update(schema.galleries).set({ mode: "proofing" });
     const { text } = await get("view-sm", drive(files));
     expect(text).toBe("WATERMARKED");
   });
   it("turning watermark OFF must not keep serving the watermarked view-sm", async () => {
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+    await db.update(schema.galleries).set({ mode: "proofing" });
     await get("view-sm", drive(files));
-    await db.update(schema.galleries).set({ useWatermarkPreview: false });
+    await db.update(schema.galleries).set({ mode: "delivery" });
     const { text } = await get("view-sm", drive(files));
     expect(text).toBe("CLEAN-WEB");
   });
@@ -107,7 +107,7 @@ describe("T2.3 cache vs state changes", () => {
 
 describe("T2.3 watermark thumb fallback", () => {
   it("watermark on and no thumb file: thumb must not serve clean web/high-res", async () => {
-    await db.update(schema.galleries).set({ useWatermarkPreview: true });
+    await db.update(schema.galleries).set({ mode: "proofing" });
     const { res, text } = await get("thumb", drive(files));
     expect(text).not.toBe("CLEAN-WEB");
     expect(text).not.toBe("CLEAN-HI");

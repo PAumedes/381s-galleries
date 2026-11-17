@@ -653,33 +653,59 @@ describe("flags action", () => {
     await act(g, { ...flags, theme: "dark" });
     expect((await loadGalleryEdit(env, g))!.gallery.theme).toBe("dark");
   });
-  it("watermark preview refused when the gallery has no preview-wm files", async () => {
+  it("proofing can be chosen without preview-wm files (the UI warns)", async () => {
     const g = await gallery();
     await photos(g, 2);
-    const r = await act(g, { ...flags, useWatermarkPreview: "1" });
-    expect(r.ok).toBe(false);
-    expect(r.fieldErrors?.useWatermarkPreview).toMatch(/preview-wm/);
-    expect((await row(g))!.useWatermarkPreview).toBe(false);
-    expect((await row(g))!.allowHighres).toBe(true); // nothing saved
+    const r = await act(g, { ...flags, mode: "proofing" });
+    expect(r.ok).toBe(true);
+    expect((await row(g))!.mode).toBe("proofing");
   });
-  it("a missing photo's wm file does not count", async () => {
-    const g = await gallery();
-    await photos(g, 1, {
-      driveWmId: "w",
-      missingSince: "2026-01-01T00:00:00Z",
-    });
-    const r = await act(g, { ...flags, useWatermarkPreview: "1" });
-    expect(r.ok).toBe(false);
-  });
-  it("watermark preview allowed with wm files; can be turned off", async () => {
+  it("mode switches both ways; a missing mode field keeps the current one", async () => {
     const g = await gallery();
     await photos(g, 1, { driveWmId: "w" });
-    expect((await act(g, { ...flags, useWatermarkPreview: "1" })).ok).toBe(
-      true,
-    );
-    expect((await row(g))!.useWatermarkPreview).toBe(true);
+    expect((await act(g, { ...flags, mode: "proofing" })).ok).toBe(true);
+    expect((await row(g))!.mode).toBe("proofing");
     expect((await act(g, flags)).ok).toBe(true);
-    expect((await row(g))!.useWatermarkPreview).toBe(false);
+    expect((await row(g))!.mode).toBe("proofing");
+    expect((await act(g, { ...flags, mode: "delivery" })).ok).toBe(true);
+    expect((await row(g))!.mode).toBe("delivery");
+  });
+  it("an invalid mode is rejected and nothing is saved", async () => {
+    const g = await gallery();
+    const r = await act(g, { ...flags, mode: "yes", allowHighres: "" });
+    expect(r.ok).toBe(false);
+    expect(r.fieldErrors?.mode).toBeTruthy();
+    expect((await row(g))!.allowHighres).toBe(true);
+  });
+  it("in proofing the allow_* flags are preserved even though the form disables (omits) them", async () => {
+    const g = await gallery();
+    await act(g, { ...flags, allowIg: "", mode: "delivery" });
+    expect((await row(g))!.allowIg).toBe(false);
+    const r = await act(g, { intent: "flags", mode: "proofing" });
+    expect(r.ok).toBe(true);
+    const after = (await row(g))!;
+    expect(after.allowHighres).toBe(true);
+    expect(after.allowWeb).toBe(true);
+    expect(after.allowBulk).toBe(true);
+    expect(after.allowIg).toBe(false);
+  });
+  it("loadGalleryEdit reports mode, wm/thumb-wm coverage and a 'falta preview-wm' issue in proofing", async () => {
+    const g = await gallery();
+    await photos(g, 2, {});
+    await act(g, { ...flags, mode: "proofing" });
+    const d = (await loadGalleryEdit(env, g))!;
+    expect(d.gallery.mode).toBe("proofing");
+    expect(d.hasWmFiles).toBe(false);
+    expect(d.hasThumbWmFiles).toBe(false);
+    const grp = d.issues.groups.find((x) => x.type === "missing_wm");
+    expect(grp?.label).toBe("Falta preview-wm");
+    expect(grp?.items).toHaveLength(2);
+    await act(g, { ...flags, mode: "delivery" });
+    expect(
+      (await loadGalleryEdit(env, g))!.issues.groups.some(
+        (x) => x.type === "missing_wm",
+      ),
+    ).toBe(false);
   });
 });
 

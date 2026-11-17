@@ -4,6 +4,7 @@ import type { Db } from "../../db";
 import {
   baLocalToUtcIso,
   groupIssues,
+  ISSUE_LABELS,
   isValidDate,
   utcIsoToBaLocal,
 } from "../admin-gallery";
@@ -134,6 +135,7 @@ export async function loadGalleryEdit(env: Env, id: string) {
       name: schema.photos.baseName,
       takenAt: schema.photos.takenAt,
       hasWm: sql<number>`(${schema.photos.driveWmId} IS NOT NULL)`,
+      hasThumbWm: sql<number>`(${schema.photos.driveThumbWmId} IS NOT NULL)`,
     })
     .from(schema.photos)
     .where(and(eq(schema.photos.galleryId, id), photoVisible))
@@ -142,7 +144,20 @@ export async function loadGalleryEdit(env: Env, id: string) {
       asc(schema.photos.sort),
       asc(schema.photos.baseName),
     );
-  const photos: EditPhoto[] = ps.map(({ hasWm: _w, ...p }) => p);
+  const photos: EditPhoto[] = ps.map(
+    ({ hasWm: _w, hasThumbWm: _t, ...p }) => p,
+  );
+  // Proofing serves only preview-wm: photos without it 404 for clients.
+  const noWm = ps.filter((p) => !p.hasWm);
+  const issues = groupIssues(g.syncIssuesJson);
+  if (g.mode === "proofing" && noWm.length > 0) {
+    issues.groups.push({
+      type: "missing_wm",
+      label: ISSUE_LABELS.missing_wm,
+      items: noWm.map((p) => ({ set: p.set, name: p.name })),
+    });
+    issues.total += noWm.length;
+  }
   return {
     gallery: {
       id: g.id,
@@ -157,7 +172,7 @@ export async function loadGalleryEdit(env: Env, id: string) {
       allowIg: g.allowIg,
       allowBulk: g.allowBulk,
       requireEmail: g.requireEmail,
-      useWatermarkPreview: g.useWatermarkPreview,
+      mode: g.mode,
       theme: g.theme,
       hasPin: g.pinHash !== null,
       coverPhotoId: ps.some((p) => p.id === g.coverPhotoId)
@@ -165,9 +180,10 @@ export async function loadGalleryEdit(env: Env, id: string) {
         : null,
     },
     hasWmFiles: ps.some((p) => p.hasWm),
+    hasThumbWmFiles: ps.some((p) => p.hasThumbWm),
     photos,
     version: await photoSetVersion(photos.map((p) => p.id)),
-    issues: groupIssues(g.syncIssuesJson),
+    issues,
   };
 }
 
@@ -335,39 +351,33 @@ async function slugTaken(env: Env, slug: string, selfId: string) {
 async function saveFlags(env: Env, g: GalleryRow, f: FormData) {
   const intent = "flags";
   const on = (k: string) => f.get(k) === "1";
-  const wm = on("useWatermarkPreview");
+  const modeRaw = f.get("mode");
+  if (modeRaw !== null && modeRaw !== "proofing" && modeRaw !== "delivery")
+    return fail(intent, "Revisá los campos marcados.", {
+      mode: "Modo inválido.",
+    });
+  const mode: "proofing" | "delivery" = modeRaw ?? g.mode;
   const themeRaw = f.get("theme");
   if (themeRaw !== null && themeRaw !== "light" && themeRaw !== "dark")
     return fail(intent, "Revisá los campos marcados.", {
       theme: "Tema inválido.",
     });
   const theme = themeRaw ?? g.theme;
-  if (wm) {
-    const [r] = await getDb(env)
-      .select({ n: sql<number>`count(*)` })
-      .from(schema.photos)
-      .where(
-        and(
-          eq(schema.photos.galleryId, g.id),
-          photoVisible,
-          sql`${schema.photos.driveWmId} IS NOT NULL`,
-        ),
-      );
-    if (!r?.n)
-      return fail(intent, "Revisá los campos marcados.", {
-        useWatermarkPreview:
-          "Esta galería no tiene archivos preview-wm: no se puede activar la marca de agua.",
-      });
-  }
   await getDb(env)
     .update(schema.galleries)
     .set({
-      allowHighres: on("allowHighres"),
-      allowWeb: on("allowWeb"),
-      allowIg: on("allowIg"),
-      allowBulk: on("allowBulk"),
+      // Prueba: the form disables the download boxes (not submitted), so keep
+      // the stored values for when the gallery goes back to Entrega.
+      ...(mode === "proofing"
+        ? {}
+        : {
+            allowHighres: on("allowHighres"),
+            allowWeb: on("allowWeb"),
+            allowIg: on("allowIg"),
+            allowBulk: on("allowBulk"),
+          }),
       requireEmail: on("requireEmail"),
-      useWatermarkPreview: wm,
+      mode,
       theme,
     })
     .where(eq(schema.galleries.id, g.id));

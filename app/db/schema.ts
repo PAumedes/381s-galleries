@@ -60,9 +60,16 @@ export const galleries = sqliteTable(
     requireEmail: integer("require_email", { mode: "boolean" })
       .notNull()
       .default(true),
+    // Legacy (pre-0013): replaced by `mode`. Kept to avoid a table rebuild;
+    // nothing reads or writes it any more.
     useWatermarkPreview: integer("use_watermark_preview", { mode: "boolean" })
       .notNull()
       .default(false),
+    // 'proofing' (Prueba): every public image watermarked, downloads refused.
+    // 'delivery' (Entrega): clean images, downloads per allow_* flags.
+    mode: text("mode", { enum: ["proofing", "delivery"] })
+      .notNull()
+      .default("delivery"),
     // Client gallery appearance (§5.8): "light" (default) or "dark".
     theme: text("theme", { enum: ["light", "dark"] })
       .notNull()
@@ -101,6 +108,7 @@ export const galleries = sqliteTable(
         ["use_watermark_preview", t.useWatermarkPreview],
       ] as const
     ).map(([n, c]) => check(`galleries_${n}_bool_check`, sql`${c} IN (0,1)`)),
+    check("galleries_mode_check", sql`${t.mode} IN ('proofing','delivery')`),
     check(
       "galleries_status_check",
       sql`${t.status} IN ('draft','published','archived')`,
@@ -122,8 +130,10 @@ export const photos = sqliteTable(
     driveIgId: text("drive_ig_id"),
     driveThumbId: text("drive_thumb_id"),
     driveWmId: text("drive_wm_id"),
+    // Optional 600px watermarked thumb (recipe `thumb-wm`): proofing grid.
+    driveThumbWmId: text("drive_thumb_wm_id"),
     highresBytes: integer("highres_bytes"),
-    // JSON {highres,web,ig,thumb,wm}: each variant's Drive modifiedTime (cache validation).
+    // JSON {highres,web,ig,thumb,wm,thumbWm}: each variant's Drive modifiedTime (cache validation).
     variantVersions: text("variant_versions"),
     width: integer("width"),
     height: integer("height"),
