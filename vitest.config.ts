@@ -45,6 +45,14 @@ export default defineConfig(async () => {
           },
         },
         {
+          // Node scripts (setup-cloudflare.mjs): plain Node, no Workers runtime.
+          test: {
+            name: "scripts",
+            environment: "node",
+            include: ["test/scripts/**/*.test.mjs"],
+          },
+        },
+        {
           // Client components: DOM tests.
           oxc: { jsx: { runtime: "automatic" } },
           test: {

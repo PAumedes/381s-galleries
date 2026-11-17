@@ -86,4 +86,28 @@ export const es = {
   "footer.langEn": "EN",
   "footer.language": "Idioma",
   "footer.copyright": "© {year} {studio}",
+
+  "footer.privacy": "Privacidad",
+  "privacy.title": "Privacidad",
+  "privacy.back": "Volver al inicio",
+  "privacy.who.title": "Quién está a cargo",
+  "privacy.who.body":
+    "Esta aplicación la gestiona {studio} para entregar fotos a sus clientes.",
+  "privacy.access.title": "A qué accede la aplicación",
+  "privacy.access.body":
+    "Solo lee (acceso de solo lectura) la carpeta de Google Drive del propio estudio donde están las fotos. No accede a datos de Google de los clientes ni de los visitantes.",
+  "privacy.stored.title": "Qué guardamos sobre quienes visitan una galería",
+  "privacy.stored.body":
+    "El email y el nombre que ingreses de forma opcional para usar favoritas o descargas, tus favoritas, y registros de descargas y visitas con el país y una versión cifrada (hash) de la IP. Usamos cookies para el acceso a la galería y para recordar el idioma.",
+  "privacy.purpose.title": "Para qué lo usamos",
+  "privacy.purpose.body":
+    "Para entregar las fotos y para que el estudio vea la actividad de cada galería.",
+  "privacy.retention.title": "Cuánto tiempo",
+  "privacy.retention.body": "Hasta que el estudio elimine la galería.",
+  "privacy.sharing.title": "Venta y terceros",
+  "privacy.sharing.body": "No vendemos ni compartimos tus datos.",
+  "privacy.contact.title": "Contacto",
+  "privacy.contact.generic":
+    "Para consultas, contactá al estudio por los medios habituales.",
+  "privacy.contact.lead": "Para consultas, escribí a",
 } as const;

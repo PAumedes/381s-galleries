@@ -9,6 +9,7 @@ import { DownloadMenu, enabledSizes } from "./DownloadMenu";
 import { EmailGate } from "./EmailGate";
 import { Grid } from "./Grid";
 import { formatEventDate } from "../lib/event-date";
+import { SiteFooter } from "./SiteFooter";
 import { LanguageToggle } from "./LanguageToggle";
 import { Lightbox } from "./Lightbox";
 import { Logo } from "./Logo";
@@ -315,6 +316,7 @@ export function GalleryView({
         <p className="text-micro-label text-grey-600 uppercase">
           {t("footer.copyright", { year: new Date().getFullYear(), studio })}
         </p>
+        <SiteFooter />
         <LanguageToggle className="text-grey-600" />
       </footer>
 

@@ -1,116 +1,76 @@
 # Guía de despliegue — 381 Studios Galerías
 
-Seguí los pasos en orden. Cada paso dice qué hacer y cómo comprobar que funcionó.
-
-> **Importante:** el comando es `pnpm run deploy` (con `run`). Solo `pnpm deploy` es un comando propio de pnpm y no hace lo que necesitás.
+Todo se hace desde el navegador: **nunca necesitás compilar ni instalar nada en tu PC**. El despliegue lo hace GitHub Actions.
 
 ## 0. Qué vas a necesitar
 
 - Cuenta de **Cloudflare** con el dominio `381studios.ar` (el DNS ya está ahí).
-- Cuenta de **Google** (la misma donde está tu Drive).
-- **Node 22** y **pnpm** en tu PC, y `git`.
-- **Google Drive para escritorio** instalado.
-- **Capture One**.
+- Cuenta de **Google** (la misma donde está tu Drive) y cuenta de **GitHub** con este repositorio.
+- **Google Drive para escritorio** y **Capture One** (solo para el paso 7).
 
-**Costo:** todo es gratis (Cloudflare Workers, D1, R2, Access hasta 50 usuarios, Google Cloud sin facturación). Lo único que podría costar es el almacenamiento de Google One si tu Drive se llena. **Workers Paid (USD 5/mes)** solo hace falta si la sincronización choca con los límites del plan gratis (ver sección 10).
+**Costo:** todo es gratis (Cloudflare Workers, D1, R2, Access hasta 50 usuarios, Google Cloud sin facturación). **Workers Paid (USD 5/mes)** solo hace falta si la sincronización choca con los límites del plan gratis (ver Problemas comunes).
 
-## 1. Clonar e instalar
+Los valores se guardan como **secrets de GitHub**: en el repositorio, **Settings → Secrets and variables → Actions → New repository secret**. Nunca los pegues en el código.
 
-```sh
-git clone <URL-del-repositorio> 381s-galleries
-cd 381s-galleries
-pnpm install
-npx wrangler login
-```
-
-Se abre el navegador: aceptá el acceso. **Verificá:** `npx wrangler whoami` muestra tu cuenta.
-
-## 2. Crear D1 y R2
-
-```sh
-npx wrangler d1 create 381s-galleries
-npx wrangler r2 bucket create 381s-galleries-cache
-```
-
-El primer comando imprime un `database_id`. Copialo en `wrangler.jsonc`, en `d1_databases`, reemplazando `00000000-0000-0000-0000-000000000000`.
-
-**Verificá:** `npx wrangler d1 list` y `npx wrangler r2 bucket list` muestran ambos.
-
-## 3. Google Cloud (acceso a Drive)
+## 1. Google Cloud (acceso a Drive)
 
 1. Entrá a <https://console.cloud.google.com> y creá un proyecto (por ej. "381studios").
-2. **APIs y servicios → Biblioteca** → buscá **Google Drive API** → **Habilitar**.
-3. **APIs y servicios → Pantalla de consentimiento de OAuth**:
-   - Tipo de usuario: **Externo**. Nombre de la app: `381 Studios Galerías`. Tu email como contacto.
-   - Permisos (scopes): agregá `https://www.googleapis.com/auth/drive.readonly`.
-   - Publicá la app: **Publicar aplicación → En producción**. (Sin verificar: Google va a mostrar un aviso de "app no verificada". Es normal para uso personal.)
-4. **Credenciales → Crear credenciales → ID de cliente de OAuth** → tipo **Aplicación web**. En **URI de redireccionamiento autorizados** poné exactamente:
-   `https://session.381studios.ar/admin/google/callback`
-5. Guardá el **ID de cliente** y el **Secreto** (los vas a usar en el paso 5).
+2. **APIs y servicios → Biblioteca** → **Google Drive API** → **Habilitar**.
+3. Abrí **Google Auth Platform** (menú ☰ → Google Auth Platform) y completá:
+   - **Branding:** nombre de la app `381 Studios Galerías`, tu email de soporte y de contacto.
+   - **Audience (Público):** tipo **External**. Tocá **Publish app → In production**. (Sin verificar: Google muestra el aviso "app no verificada". Es normal para uso personal.)
+   - **Data Access (Acceso a los datos):** **Add or remove scopes** → agregá `https://www.googleapis.com/auth/drive.readonly` y guardá.
+   - **Clients (Clientes):** **Create client** → tipo **Web application**. En **Authorized redirect URIs** poné exactamente:
+     `https://session.381studios.ar/admin/google/callback`
+4. Copiá el **Client ID** y el **Client secret**.
+5. En GitHub, creá los secrets `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
 
-**Verificá:** la app figura "En producción" y el cliente tiene la URI de redirección.
+**Verificá:** la app figura "In production" y el cliente tiene la URI de redirección.
 
-## 4. Cloudflare Access (login del admin)
+## 2. Cloudflare Access (login del admin)
 
-1. Cloudflare → **Zero Trust**. Si no tenés equipo, creá uno (plan **Free**, hasta 50 usuarios). Anotá el nombre: tu **team domain** es `<equipo>.cloudflareaccess.com`.
-2. **Settings → Authentication → Login methods**: asegurate de que esté **One-time PIN** (te llega un código por email).
-3. **Access → Applications → Add an application → Self-hosted**:
-   - Nombre: `381 Galerías admin`.
-   - Dominio `session.381studios.ar`, con dos rutas: `admin` y `api/admin` (podés crear una sola aplicación con las dos rutas, o dos aplicaciones).
-   - **Policy**: acción **Allow**, regla **Emails** = tu email.
-4. Abrí la aplicación → **Overview** y copiá el **Application Audience (AUD) Tag**.
+1. Cloudflare → **Zero Trust** → **Access controls** → **Applications**. Si es la primera vez, te pide un **team name** (por ejemplo `381studios`) y un plan: elegí **Free** (hasta 50 usuarios). Tu **team domain** es `<equipo>.cloudflareaccess.com`.
+2. **Create new application** → **Self-hosted and private**. Nombre: `381 Galerías Admin`.
+3. **Add public hostname**: subdominio `session`, dominio `381studios.ar` (desplegable), path `admin`. Volvé a tocar **Add public hostname** para un segundo: `session` / `381studios.ar` / path `api/admin`. Las dos en **la misma aplicación**.
+4. **Access policies** → crear una nueva: nombre `Solo yo`, acción **Allow**, regla **Include → Emails** = tu email. (Todo lo demás queda denegado por defecto.)
+5. Autenticación: las organizaciones nuevas usan **Cloudflare** como método de login (entrás con tu cuenta de Cloudflare); no hace falta configurar nada más. Usá en la policy (paso 4) y en `ADMIN_EMAIL` el **mismo email de tu cuenta de Cloudflare**. Opcional: para entrar con un código por email, agregá **One-time PIN** en **Zero Trust → Integrations → Identity providers → Add new identity provider**.
+6. **Session Duration**: 24 horas → **Create**.
+7. En la lista, **Configure** en `381 Galerías Admin` → pestaña **Basic information** → copiá el **Application Audience (AUD) Tag**.
+8. En GitHub, creá los secrets:
+   - `ADMIN_EMAIL`: tu email (el mismo de la policy).
+   - `ACCESS_TEAM_DOMAIN`: `<equipo>.cloudflareaccess.com` (sin `https://`).
+   - `ACCESS_AUD`: el AUD tag.
 
-Si hiciste dos aplicaciones, cada una tiene su AUD. Usá el de la aplicación de `admin` y verificá que el de `api/admin` sea el mismo; si no, usá una sola aplicación con las dos rutas.
+> **Nunca** cargues `ALLOW_DEV_ADMIN` (desactiva el login del admin). Si existiera en producción, el workflow Setup lo borra y avisa.
 
-Guardá: **AUD tag** y **team domain**.
+## 3. Token de API de Cloudflare
 
-## 5. Secrets
+1. Cloudflare → ícono de perfil → **My Profile → API Tokens → Create Token → Create Custom Token**.
+2. Permisos exactos:
+   - **Account → Workers Scripts → Edit**
+   - **Account → D1 → Edit**
+   - **Account → Workers R2 Storage → Edit**
+   - **Account → Account Settings → Read**
+   - **Zone → Workers Routes → Edit**
+   - **Zone → DNS → Edit**
+   - **Zone → Zone → Read**
+3. **Account Resources:** Include → tu cuenta. **Zone Resources:** Include → Specific zone → `381studios.ar`.
+4. Creá el token y copialo (se muestra una sola vez).
+5. **Account ID:** Cloudflare → **Workers & Pages** → **Account details** (o la barra lateral derecha) → copiá el Account ID.
+6. En GitHub, creá los secrets `CLOUDFLARE_API_TOKEN` y `CLOUDFLARE_ACCOUNT_ID`.
 
-Los tres secretos aleatorios (mínimo 32 caracteres) se generan con este comando, que funciona en Windows, Mac y Linux. Corrélo **tres veces** y usá un valor distinto para cada uno:
+## 4. Ejecutar Setup
 
-```sh
-node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-```
+1. En GitHub, pestaña **Actions → Setup → Run workflow** (rama `main`).
+2. El workflow: corre las verificaciones, crea la base D1 y el bucket R2 si faltan, escribe el `database_id` en `wrangler.jsonc` (commit "Set D1 database id" del bot), despliega (migraciones + build) y recién después carga los secrets.
+3. Abrí la ejecución y leé el **resumen de secrets** (solo nombres): `present`, `created`, `uploaded` o `MISSING`. Si falta alguno, agregalo como secret de GitHub y **volvé a ejecutar Setup**.
 
-Cargá cada secreto (el comando te pide el valor; pegalo y Enter):
+Es seguro repetirlo: los secretos aleatorios (`SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`) se generan solo la primera vez y nunca se regeneran (hacerlo cerraría las sesiones y obligaría a reconectar Google). Los de los pasos 1–2 se vuelven a cargar en cada Setup si están definidos en GitHub.
 
-```sh
-npx wrangler secret put SESSION_SECRET
-npx wrangler secret put DOWNLOAD_SECRET
-npx wrangler secret put TOKEN_KEY
-npx wrangler secret put GOOGLE_CLIENT_ID
-npx wrangler secret put GOOGLE_CLIENT_SECRET
-npx wrangler secret put ADMIN_EMAIL
-npx wrangler secret put ACCESS_TEAM_DOMAIN
-npx wrangler secret put ACCESS_AUD
-```
+**Verificá:** abrí <https://session.381studios.ar>: debe verse la página con el logo. El Worker no responde en `workers.dev` a propósito.
 
-| Nombre | Qué es | Tipo |
-|---|---|---|
-| `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY` | aleatorios de `node -e ...` (distintos entre sí) | secret |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | del paso 3 | secret |
-| `ADMIN_EMAIL` | tu email (el mismo de la policy de Access) | secret |
-| `ACCESS_TEAM_DOMAIN` | `<equipo>.cloudflareaccess.com` | secret |
-| `ACCESS_AUD` | AUD tag del paso 4 | secret |
-| `DRIVE_MODE`, `STUDIO_NAME`, `PUBLIC_ORIGIN` | ya están en `wrangler.jsonc` (var) | var |
+## 5. Ajustes de seguridad del dominio (una sola vez)
 
-> Si `wrangler secret put` dice que el Worker no existe, ejecutá primero `pnpm run deploy` (paso 6) y volvé a cargar los secretos.
-
-> **Nunca** cargues `ALLOW_DEV_ADMIN` (ni como secret ni como var): desactiva el login del admin. Es solo para desarrollo local.
-
-**Verificá:** `pnpm secrets:check`. Debe listar los 8 como `OK` y terminar con "Todo en orden". Si aparece `ALLOW_DEV_ADMIN`, borralo con `npx wrangler secret delete ALLOW_DEV_ADMIN`.
-
-## 6. Desplegar
-
-```sh
-pnpm run deploy
-```
-
-Esto aplica las migraciones de la base remota, compila y publica el Worker. El `wrangler.jsonc` ya declara el dominio personalizado `session.381studios.ar`: Cloudflare crea el registro DNS solo durante el despliegue (puede tardar un minuto). El Worker no responde en `workers.dev` a propósito.
-
-**Verificá:** abrí <https://session.381studios.ar>: debe verse la página con el logo.
-
-### Ajustes de seguridad del dominio (una sola vez)
 
 En el panel de Cloudflare, dominio `381studios.ar`:
 
@@ -123,7 +83,7 @@ En el panel de Cloudflare, dominio `381studios.ar`:
 
 Por qué: la app envía una política de seguridad (CSP) que solo permite sus propios scripts. Rocket Loader, la ofuscación de emails, Zaraz y la analítica automática inyectan scripts propios de Cloudflare y el navegador los bloquearía (la galería podría no funcionar bien).
 
-## 7. Primer uso
+## 6. Primer uso
 
 1. Abrí `https://session.381studios.ar/admin`. Cloudflare Access te pide tu email y te manda un código; ingresalo.
 2. **Ajustes → Conectar Google**. Va a aparecer "Google no verificó esta app": tocá **Avanzado → Ir a 381 Studios Galerías (no seguro)** y aceptá el permiso de solo lectura.
@@ -133,7 +93,8 @@ Por qué: la app envía una política de seguridad (CSP) que solo permite sus pr
 
 **Verificá:** el link público (`https://session.381studios.ar/<slug>`) abre la galería en una ventana de incógnito.
 
-## 8. Capture One
+## 7. Capture One y Drive para escritorio
+
 
 Creá cinco recetas de proceso (Process Recipes), todas habilitadas, formato **JPEG**, perfil **sRGB**:
 
@@ -153,31 +114,32 @@ Creá cinco recetas de proceso (Process Recipes), todas habilitadas, formato **J
 
 **Drive para escritorio:** sincronizá `Mi unidad/381studios` (modo espejo o streaming, ambos sirven). **Verificá:** la carpeta de la sesión aparece en drive.google.com con las subcarpetas de las recetas.
 
-## 9. Actualizar la app
+## 8. Actualizar la app
 
-```sh
-git pull
-pnpm install
-pnpm run deploy
-```
+- **Cambios de código:** al hacer merge a `main`, el workflow **Deploy** despliega solo (corre lint, tipos y tests; aplica migraciones nuevas; publica). Si todavía no corriste Setup, Deploy avisa "Run the Setup workflow first" y no hace nada.
+- **Cambiar un secret** (por ej. rotar el secreto de Google): actualizalo en GitHub y volvé a ejecutar **Setup**.
 
-Las migraciones nuevas se aplican solas dentro de `pnpm run deploy`.
-
-**Opcional, automático:** en Cloudflare → Workers & Pages → tu Worker → **Settings → Builds**, conectá el repositorio de GitHub. Como comando de despliegue poné `pnpm run deploy`. El token de la build necesita permisos para aplicar migraciones D1 remotas (en el token de API: **Account → D1 → Edit**, además de Workers Scripts → Edit). Los secretos ya cargados se conservan.
-
-## 10. Problemas comunes
+## 9. Problemas comunes
 
 | Síntoma | Causa y solución |
 |---|---|
-| "Google no verificó esta app" | Es normal. **Avanzado → Ir a…**. Confirmá que la pantalla de consentimiento esté "En producción". |
+| Setup/Deploy falla con "Authentication error" o error 10000 | Al token le falta algún permiso. Revisá los siete del paso 3 (en especial **D1 Edit**, **Workers R2 Storage Edit** y **Account Settings Read**) y que el Account ID sea el correcto. |
+| Error de dominio personalizado / "DNS record already exists" / "already has externally managed DNS records" | Ya hay un registro DNS para `session`. En Cloudflare → DNS → Records de `381studios.ar`, borrá el registro `session` y volvé a ejecutar Setup o Deploy. Comprobá también que el token tenga **Workers Routes Edit** y **DNS Edit** sobre la zona. |
+| Deploy muestra "Run the Setup workflow first" | Todavía no se ejecutó Setup (el `database_id` es el de relleno). Actions → Setup → Run workflow. |
+| Setup termina con secrets `MISSING` | Faltan secrets de GitHub (pasos 1 y 2). Agregalos y volvé a ejecutar Setup. |
+| "Google no verificó esta app" | Es normal. **Avanzado → Ir a…**. Confirmá que la app esté "In production". |
 | La sincronización dice "no root folder" / "Primero elegí una carpeta raíz" | Falta pegar el link de la carpeta `381studios` en Ajustes y guardar. Comprobá que sea la carpeta de tu cuenta conectada. |
-| Access entra en bucle o da 403 | `ACCESS_AUD` o `ACCESS_TEAM_DOMAIN` incorrectos, o `ADMIN_EMAIL` distinto del email de la policy. Revisá con `pnpm secrets:check` y volvé a cargar el valor. Las rutas `admin` y `api/admin` deben estar bajo Access. |
-| Las imágenes no se ven | Falta el bucket R2 (`381s-galleries-cache`) o el binding `CACHE` en `wrangler.jsonc`. Corré `npx wrangler r2 bucket list` y mirá `npx wrangler tail`. |
+| Access entra en bucle o da 403 | `ACCESS_AUD`, `ACCESS_TEAM_DOMAIN` o `ADMIN_EMAIL` incorrectos (o email distinto al de la policy). Corregí el secret de GitHub y ejecutá Setup. Las rutas `admin` y `api/admin` deben estar bajo Access. |
+| Las imágenes no se ven | Falta el bucket R2 (`381s-galleries-cache`): ejecutá Setup de nuevo. |
 | Error 429 / "rate limit" | Google limita las llamadas a Drive; esperá unos minutos y volvé a sincronizar. |
 | Error de CPU o "too many subrequests" al sincronizar | Biblioteca muy grande para el plan gratis: pasá a **Workers Paid (USD 5/mes)**. La sincronización aborta sin dañar datos. |
-| Ver logs en vivo | `npx wrangler tail` |
+| Setup falla en "Commit database id" (push rechazado) | Volvé a ejecutar Setup. Si sigue fallando, la protección de rama de `main` bloquea al bot: permití que `github-actions` haga push a `main` (o agregalo como excepción) y ejecutá Setup de nuevo. |
+| Setup aparece como "cancelled" | Setup y Deploy comparten una cola (concurrency) y GitHub puede cancelar una ejecución pendiente cuando entra otra. Volvé a ejecutarlo. |
+| Ver logs | Cloudflare → **Workers & Pages → 381s-galleries → Logs / Observability**. |
 
-## 11. Copias de seguridad
+**Seguridad del repo:** los secrets de GitHub los pueden usar los workflows, así que solo vos deberías tener acceso de escritura al repositorio (cualquiera con escritura podría crear un workflow que los lea). Como refuerzo opcional, podés guardar los secrets en un **GitHub Environment** (Settings → Environments) con revisores requeridos y referenciarlo desde los workflows.
+
+## 10. Copias de seguridad
 
 - Los **originales y los tamaños** viven en tu Drive: la base solo guarda galerías, ajustes, visitas y favoritos.
 - **D1 Time Travel** permite volver la base a cualquier momento de los últimos 30 días: `npx wrangler d1 time-travel info DB`.
@@ -188,3 +150,23 @@ npx wrangler d1 export DB --remote --output backup.sql
 ```
 
 Guardá `backup.sql` fuera del repositorio.
+
+## Apéndice: desde tu PC (opcional)
+
+Solo si preferís no usar GitHub Actions. Requiere Node 22, pnpm y git.
+
+```sh
+git clone <URL-del-repositorio> 381s-galleries
+cd 381s-galleries
+pnpm install
+npx wrangler login
+npx wrangler d1 create 381s-galleries      # copiá el database_id en wrangler.jsonc
+npx wrangler r2 bucket create 381s-galleries-cache
+pnpm run deploy                            # con "run": `pnpm deploy` es un comando propio de pnpm
+# Después del primer deploy, cargá cada secret (SESSION_SECRET, DOWNLOAD_SECRET, TOKEN_KEY,
+# GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ADMIN_EMAIL, ACCESS_TEAM_DOMAIN, ACCESS_AUD):
+npx wrangler secret put SESSION_SECRET
+pnpm secrets:check                         # verifica los 8 secrets y que no exista ALLOW_DEV_ADMIN
+```
+
+Los tres secretos aleatorios se generan con `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` (uno distinto para cada uno). Para ver logs en vivo: `npx wrangler tail`.

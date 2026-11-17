@@ -9,6 +9,8 @@ export const RESERVED_SLUGS: readonly string[] = [
   "favicon.ico",
   "robots.txt",
   "manifest.webmanifest",
+  "privacidad",
+  "privacy",
 ];
 
 const SLUG_MAX = 60;

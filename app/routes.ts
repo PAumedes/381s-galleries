@@ -2,6 +2,8 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
   index("routes/home.tsx"),
+  route("privacy", "routes/privacy.tsx"),
+  route("privacidad", "routes/privacidad.tsx"),
   route("admin/google/connect", "routes/admin.google.connect.tsx"),
   route("admin/google/callback", "routes/admin.google.callback.tsx"),
   route(

@@ -15,6 +15,8 @@ interface __SecretEnv {
   GOOGLE_CLIENT_SECRET: string;
   /** Local dev only ("1" enables the header-less admin bypass in mock mode). */
   ALLOW_DEV_ADMIN?: string;
+  /** Optional public contact email shown on /privacy (unset by default). */
+  PUBLIC_CONTACT_EMAIL?: string;
 }
 declare namespace Cloudflare {
   interface Env extends __SecretEnv {

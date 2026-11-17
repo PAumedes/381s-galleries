@@ -6,7 +6,7 @@ Client photo galleries for **381 Studios** — a free, self-hosted Pixieset alte
 - The app reads that folder and serves branded galleries at `https://session.381studios.ar/<slug>`: PIN, expiry, QR sharing, favorites, multi-size downloads and download tracking.
 - Runs on Cloudflare Workers + D1 + R2 (cache). No servers.
 
-See [PLAN.md](PLAN.md) for the full spec and task list, and [DEPLOY.md](DEPLOY.md) (Spanish) for the step-by-step deployment guide.
+See [PLAN.md](PLAN.md) for the full spec and task list, and [DEPLOY.md](DEPLOY.md) (Spanish) for the step-by-step deployment guide (browser-only: GitHub Actions deploys; run the **Setup** workflow once, then merges to `main` deploy automatically).
 
 ## Local development
 
