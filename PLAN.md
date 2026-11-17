@@ -29,7 +29,7 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Admin auth | **Cloudflare Access** on `/admin*` and `/api/admin*`. App verifies the `Cf-Access-Jwt-Assertion` JWT (RS256 vs team JWKS, `aud` = `ACCESS_AUD`, `iss`, `exp`/`nbf`); its `email` claim must equal `ADMIN_EMAIL` (the header alone is never trusted). Needs `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` | No login code |
 | Client auth | Gallery slug + optional PIN → HMAC-signed cookie (Web Crypto, `SESSION_SECRET`), scoped per gallery | |
 | Download links | Short-lived HMAC tokens `/dl/<token>`, 10 min TTL, `DOWNLOAD_SECRET` | |
-| Sync | Cloudflare **Cron Trigger** every 15 min + "Sync now" button in admin | |
+| Sync | Cloudflare **Cron Trigger** every 15 min + "Sync now" button in admin. A second trigger every minute warms the R2 cache (§5.3) | |
 | Bulk download | Browser-side zip with `client-zip` | No server zipping |
 | Image processing | **None.** Never resize, re-encode or watermark in code | Capture One does all of it |
 | URLs | Public: `https://session.381studios.ar/<slug>`. Admin: `/admin`. Reserved slugs (rejected by sync, suffixed with `-2`): `admin, api, img, dl, assets, brand, favicon.ico, robots.txt, manifest.webmanifest, privacidad, privacy` | |
@@ -66,7 +66,7 @@ My Drive/
 
 ```ts
 settings      (key PK, value)                           // keys (constants in settings.ts): drive_root_id, google_refresh_token (encrypted), google_access_token (encrypted cache),
-               //   oauth_state_used:<nonce>, drive_changes_token, sync_lock (`<iso>|<uuid>`), r2_pending_deletes, sync_last_error; branding later
+               //   oauth_state_used:<nonce>, drive_changes_token, sync_lock (`<iso>|<uuid>`), r2_pending_deletes, sync_last_error, warm_lock, warm_idle; branding later
 galleries     (id PK, drive_folder_id UNIQUE, slug UNIQUE, title, client_name?, event_date?,
                pin_hash?, expires_at?, status: 'draft'|'published'|'archived' default 'draft',
                cover_photo_id?, allow_highres bool=1, allow_web bool=1, allow_ig bool=1, allow_bulk bool=1,
@@ -75,7 +75,7 @@ galleries     (id PK, drive_folder_id UNIQUE, slug UNIQUE, title, client_name?, 
                drive_modified_at?, last_synced_at?, sync_issues_json?,
                folder_missing_since?, archived_prev_status? ('draft'|'published'),
                archived_by_sync bool=0 (1 = archived by sync's folder-removal rule; only those are auto-restored), created_at)
-photos        (id PK, gallery_id FK cascade, set_name default 'Highlights', base_name,
+photos        (id PK, gallery_id FK cascade, cache_warm_key? [0012: hash of the thumb/view-sm versions warmed into R2, see 5.3], set_name default 'Highlights', base_name,
                drive_highres_id, drive_web_id?, drive_ig_id?, drive_thumb_id?, drive_wm_id?,
                highres_bytes?, variant_versions? (JSON {highres,web,ig,thumb,wm} = each variant's Drive modifiedTime), width?, height?, taken_at?, sort int,   // width/height of high-res
                missing_since?,                                         // set while the high-res file is absent (sync grace period)
@@ -125,6 +125,12 @@ Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` �
 - `view-lg` → high-res 2048 (lightbox on large/retina screens)
 - When watermark is on, both `view-*` serve `preview-wm`; `thumb` falls back to `thumb ?? preview-wm` (never clean web/high-res), 404 if neither.
 Cache rules (one paragraph): R2 objects carry `httpMetadata.contentType` and `customMetadata {fileId, wm: "0"|"1", v}` (server-side only, never in responses), where `v` is the resolved source file's Drive modifiedTime from `photos.variant_versions`. A hit is valid only if `fileId`, `wm` and `v` equal the current resolved file id, watermark flag and version; otherwise it is a miss and the object is overwritten, so re-exports and watermark toggles need no explicit invalidation (Drive for desktop overwrites in place and keeps the file id). Unknown `v` is never cached; only non-empty bodies (Content-Length > 0) are cached (length 0 → 502). Content-Type passes through if `image/jpeg|png|webp`, else `image/jpeg`.
+
+**Cache warming (T6.2), `app/lib/server/warm.ts`:** the first view of a photo streams from Drive (0.5-2 s, and a grid of thumbs hits Drive rate limits), so a second cron `* * * * *` (free; the 15-minute one still syncs; `dispatchScheduled` in `scheduled.ts` picks by `controller.cron`, unknown crons sync) runs `warmBatch`. It selects visible photos of non-archived galleries (newest gallery first) whose expected `photos.cache_warm_key` differs from the stored one. The key is a SHA-256 prefix over `thumb` and `view-sm` of (resolved file id, watermark flag, modifiedTime), so re-exports and watermark toggles make photos stale again by themselves. For each, `fillCache(env, photo, variant, drive)` (shared with `/img`: same `resolveSource`, validity check and R2 `put`/`customMetadata`) writes `thumb` and `view-sm` only (never `view-lg`; an already valid R2 object costs no Drive call) and then the marker is updated; a failure leaves the marker so the next minute retries, and does not stop the batch. Budgets: 40 external subrequests per run (counted with `drive.subrequests()`, so retries and the OAuth refresh count; the next call must fit before it is made) and 900 CF-service ops. `runScheduledWarm`: does nothing in mock mode; skipped while `sync_lock` is held; takes a `warm_lock` setting (`<iso>|<uuid>`, 3 min expiry) so runs never overlap; after a scan that finds nothing stale it sets `warm_idle` (5 min), so idle minutes cost one settings read and no subrequests (a sync that changed anything clears it). Setup page shows "Fotos en caché: N / M" = visible photos whose marker is current / visible photos.
+
+**Versioned URLs (T6.2):** every gallery photo carries `v` = `imageVersionToken(env, photo, useWatermarkPreview)`: HMAC-SHA256 (SESSION_SECRET) over what the three variants currently resolve to (file ids, wm flags, modifiedTimes), 16 hex chars, so Drive ids are not recoverable. The client appends `?v=<v>` to `/img` URLs (`imgUrl(id, variant, v)`). `/img` answers `Cache-Control: private, max-age=31536000, immutable` only when `?v=` equals the current token; missing or different `v` keeps `private, max-age=600`, so the old 10-minute staleness rule still covers un-versioned URLs (og:image, admin). Admin images stay `no-store`. Access checks run before any of this (a wrong `v` on a locked gallery is the same 404).
+
+**Why no edge cache (Cloudflare Cache API / `cf` cache):** `/img` responses are private and access-checked per request (PIN session cookie, expiry, draft state, watermark policy). A shared edge cache would serve them to anyone who knows the URL, bypassing those checks; keying it by cookie defeats the purpose. R2 (same region as the Worker, no egress fee) plus long browser caching gives the speed without weakening access control.
 
 R2 cache keys are exactly `<photoId>/thumb`, `<photoId>/view-sm` and `<photoId>/view-lg`. Image routes must not serve photos with `missing_since` set. When sync hard-deletes photos it removes those three keys per photo with ONE `CACHE.delete(keys[])` per <=1000 keys; on failure the ids stay in settings `r2_pending_deletes` (JSON, capped at 2000) and are retried first thing on the next run. The cron handler stores `sync_last_error` (`{at, message}`, generic text) for failures and for `no_root`/`empty_root` skips, and clears it on success; it rethrows so Cron shows the failure.
 
@@ -242,7 +248,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 
 ### Phase 6 — Feedback round (after first real use)
 - [x] **T6.1 Lightbox rapid navigation** — fast prev/next clicks or key repeats leave the lightbox in a broken state; fix races (stale loads, fades, preloads).
-- [ ] **T6.2 Image speed** — warm the R2 cache after sync (cron batches within the subrequest budget) + Cloudflare Cache API layer after access checks; avoid Drive on first view where possible.
+- [x] **T6.2 Image speed** — cache warming + versioned image URLs. See §5.3 (warming, versioned URLs, why no edge cache). Migration 0012 adds `photos.cache_warm_key`; second cron `* * * * *`; "Fotos en caché: N / M" on the setup page.
 - [ ] **T6.3 Prueba / Entrega mode** — one switch per gallery. Prueba: watermarked cover, grid (optional `thumb-wm` recipe, fallback `preview-wm`) and lightbox, downloads off, image protection (no right-click/drag/long-press save, images behind a transparent layer). Entrega: clean images, downloads per size flags.
 - [ ] **T6.4 Gallery editor rework** — one Photos panel (order + "Usar como portada"), live cover preview with focal point, client name shown/searchable in the list.
 - [ ] **T6.5 Themes** — theme presets (Claro, Oscuro, Arena, Gris), cover layouts, grid styles, spacing; Pixieset-like design panel.

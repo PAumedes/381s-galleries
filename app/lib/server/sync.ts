@@ -853,6 +853,8 @@ export async function runRecordedSync(
     const noop: Op = () => {};
     await dropSetting(env, LAST_ERROR_KEY, noop);
     await putSetting(env, SETTINGS_KEYS.syncLastOk, nowIso(), noop);
+    // New/changed photos may need warming: end the warm cron's idle back-off.
+    if (!r.skipped) await dropSetting(env, SETTINGS_KEYS.warmIdle, noop);
   }
   return r;
 }

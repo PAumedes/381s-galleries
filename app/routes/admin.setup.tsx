@@ -23,6 +23,7 @@ import {
 import { runRecordedSync, SyncBudgetError } from "../lib/server/sync";
 import type { SyncResult } from "../lib/server/sync";
 import { nowIso } from "../db";
+import { warmProgress } from "../lib/server/warm";
 import type { LastError } from "./admin";
 import type { Route } from "./+types/admin.setup";
 
@@ -46,6 +47,7 @@ export async function setupData(request: Request, e: Env) {
     rootName: (await getSetting(e, SETTINGS_KEYS.driveRootName)) ?? null,
     studioName: await getStudioName(e, request),
     lastSyncAt: (await getSetting(e, SETTINGS_KEYS.syncLastOk)) ?? null,
+    cacheWarm: await warmProgress(e),
     lastError,
   };
 }

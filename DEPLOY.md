@@ -132,6 +132,7 @@ Creá cinco recetas de proceso (Process Recipes), todas habilitadas, formato **J
 | Access entra en bucle o da 403 | `ACCESS_AUD`, `ACCESS_TEAM_DOMAIN` o `ADMIN_EMAIL` incorrectos (o email distinto al de la policy). Corregí el secret de GitHub y ejecutá Setup. Las rutas `admin` y `api/admin` deben estar bajo Access. |
 | Error al navegar entre páginas del admin pero no al recargar | Actualizá la app (ya se resolvió) / agregá el path `admin.data` en Access. |
 | Las imágenes no se ven | Falta el bucket R2 (`381s-galleries-cache`): ejecutá Setup de nuevo. |
+| "Fotos en caché: N / M" no llega a M | Es el precalentamiento: un cron de 1 minuto (gratis, no consume la cuota de Drive de los visitantes) copia miniaturas y vista chica de cada foto nueva a R2, hasta 20 fotos por minuto. Una galería nueva tarda unos minutos en quedar lista; mientras tanto la primera visita a cada foto carga desde Drive. Si no avanza, revisá que existan ambos crons (`*/15 * * * *` y `* * * * *`) en Workers > Triggers. |
 | Error 429 / "rate limit" | Google limita las llamadas a Drive; esperá unos minutos y volvé a sincronizar. |
 | Error de CPU o "too many subrequests" al sincronizar | Biblioteca muy grande para el plan gratis: pasá a **Workers Paid (USD 5/mes)**. La sincronización aborta sin dañar datos. |
 | Setup falla en "Commit database id" (push rechazado) | Volvé a ejecutar Setup. Si sigue fallando, la protección de rama de `main` bloquea al bot: permití que `github-actions` haga push a `main` (o agregalo como excepción) y ejecutá Setup de nuevo. |

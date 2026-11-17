@@ -35,8 +35,8 @@ export type LightboxProps = {
   isFavorite?: (id: string) => boolean;
 };
 
-const srcSet = (id: string) =>
-  `${imgUrl(id, "view-sm")} 1200w, ${imgUrl(id, "view-lg")} 2048w`;
+const srcSet = (id: string, v?: string) =>
+  `${imgUrl(id, "view-sm", v)} 1200w, ${imgUrl(id, "view-lg", v)} 2048w`;
 
 const BTN =
   "flex size-11 items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white disabled:pointer-events-none disabled:opacity-25";
@@ -191,8 +191,8 @@ function LightboxView({
       img.onload = done;
       img.onerror = done;
       img.sizes = "(min-width: 768px) 92vw, 100vw";
-      img.srcset = srcSet(p.id);
-      img.src = imgUrl(p.id, "view-sm");
+      img.srcset = srcSet(p.id, p.v);
+      img.src = imgUrl(p.id, "view-sm", p.v);
       inflight.push(img);
     }
     return () => {
@@ -367,8 +367,8 @@ function LightboxView({
             {behind && (
               <img
                 data-testid="lightbox-prev"
-                src={imgUrl(behind.id, "view-sm")}
-                srcSet={srcSet(behind.id)}
+                src={imgUrl(behind.id, "view-sm", behind.v)}
+                srcSet={srcSet(behind.id, behind.v)}
                 sizes="(min-width: 768px) 92vw, 100vw"
                 alt=""
                 aria-hidden="true"
@@ -387,8 +387,8 @@ function LightboxView({
                   setLoadedId(photo.id);
               }}
               data-testid="lightbox-img"
-              src={withRetry(imgUrl(photo.id, "view-sm"), retry)}
-              srcSet={retry ? undefined : srcSet(photo.id)}
+              src={withRetry(imgUrl(photo.id, "view-sm", photo.v), retry)}
+              srcSet={retry ? undefined : srcSet(photo.id, photo.v)}
               sizes="(min-width: 768px) 92vw, 100vw"
               alt={t("grid.photo", { n: index + 1 })}
               draggable={false}

@@ -9,6 +9,8 @@ export interface SetupViewData {
   rootName: string | null;
   studioName: string;
   lastSyncAt: string | null;
+  /** Photos whose R2 cache is warm vs visible photos. */
+  cacheWarm?: { warmed: number; total: number };
   lastError: { at: string; message: string } | null;
 }
 
@@ -207,6 +209,11 @@ export function SetupView({
             ? `Última sincronización: ${fmtTime(data.lastSyncAt)}`
             : "Sin sincronizar aún"}
         </p>
+        {data.cacheWarm && (
+          <p data-testid="cache-warm" className="text-small text-grey-700">
+            {`Fotos en caché: ${data.cacheWarm.warmed} / ${data.cacheWarm.total}`}
+          </p>
+        )}
         {data.lastError && (
           <p role="alert" className="text-small">
             Último error ({fmtTime(data.lastError.at)}):{" "}

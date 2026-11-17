@@ -13,6 +13,7 @@ import {
   type AccessEnv,
 } from "./access";
 import { verifyPin } from "./crypto";
+import { imageVersionToken } from "./images";
 import { asLang } from "../../i18n/lang";
 import { rateLimit, resetRateLimit } from "./rate-limit";
 
@@ -70,6 +71,15 @@ const unavailable = (): LoadResult => ({
   data: { state: "unavailable" },
 });
 
+async function versionField(
+  env: Env,
+  photo: typeof schema.photos.$inferSelect,
+  wm: boolean,
+): Promise<{ v?: string }> {
+  const v = await imageVersionToken(env, photo, wm);
+  return v ? { v } : {};
+}
+
 export async function loadGallery(
   request: Request,
   slug: string,
@@ -90,16 +100,8 @@ export async function loadGallery(
   const { session } = open;
 
   const db = getDb(env as Env);
-  const rows = await db
-    .select({
-      id: schema.photos.id,
-      width: schema.photos.width,
-      height: schema.photos.height,
-      set: schema.photos.setName,
-      driveWebId: schema.photos.driveWebId,
-      driveIgId: schema.photos.driveIgId,
-      driveWmId: schema.photos.driveWmId,
-    })
+  const full = await db
+    .select()
     .from(schema.photos)
     .where(and(eq(schema.photos.galleryId, g.id), photoVisible))
     .orderBy(
@@ -107,6 +109,15 @@ export async function loadGallery(
       asc(schema.photos.sort),
       asc(schema.photos.baseName),
     );
+  const rows = full.map((p) => ({
+    id: p.id,
+    width: p.width,
+    height: p.height,
+    set: p.setName,
+    driveWebId: p.driveWebId,
+    driveIgId: p.driveIgId,
+    driveWmId: p.driveWmId,
+  }));
 
   const sets: { name: string; count: number }[] = [];
   for (const p of rows) {
@@ -193,10 +204,16 @@ export async function loadGallery(
         theme: g.theme,
         sets,
       },
-      photos: rows.map(({ driveWebId, driveIgId, driveWmId: _wm, ...p }) => ({
-        ...p,
-        variants: { web: !!driveWebId, ig: !!driveIgId },
-      })),
+      photos: await Promise.all(
+        rows.map(
+          async ({ driveWebId, driveIgId, driveWmId: _wm, ...p }, i) => ({
+            ...p,
+            variants: { web: !!driveWebId, ig: !!driveIgId },
+            // Opaque cache-busting token for the image URLs (never a Drive id).
+            ...(await versionField(env as Env, full[i], g.useWatermarkPreview)),
+          }),
+        ),
+      ),
       og,
     },
     ...(setCookie ? { setCookie } : {}),
