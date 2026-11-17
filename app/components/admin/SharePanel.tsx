@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 
+import { useT } from "../../i18n/use-t";
 import { downloadBlob, qrPngBlob } from "../../lib/qr";
 import { QrCode } from "./QrCode";
 
@@ -19,6 +20,7 @@ export function SharePanel({
   hasPin: boolean;
   cardHref?: string;
 }) {
+  const t = useT();
   const id = useId();
   const [copied, setCopied] = useState<"ok" | "fail" | null>(null);
   const [svg, setSvg] = useState("");
@@ -38,7 +40,7 @@ export function SharePanel({
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <label htmlFor={id} className="text-small">
-          Enlace público
+          {t("admin.share.link")}
         </label>
         <div className="flex gap-2">
           <input
@@ -49,23 +51,21 @@ export function SharePanel({
             className="border-grey-300 bg-white w-full min-w-0 border px-3 py-2 text-body"
           />
           <button type="button" className={btn} onClick={copy}>
-            Copiar enlace
+            {t("admin.share.copy")}
           </button>
         </div>
         <p role="status" className="text-small text-grey-700 min-h-5">
-          {copied === "ok" && "Enlace copiado"}
-          {copied === "fail" && "No se pudo copiar: seleccioná el enlace."}
+          {copied === "ok" && t("admin.share.copied")}
+          {copied === "fail" && t("admin.share.copyFailed")}
         </p>
       </div>
       {status !== "published" && (
         <p className="text-small text-grey-700">
-          La galería no es visible hasta publicarla
+          {t("admin.share.notVisible")}
         </p>
       )}
       {hasPin && (
-        <p className="text-small text-grey-700">
-          Con PIN — compartilo por separado
-        </p>
+        <p className="text-small text-grey-700">{t("admin.share.pinned")}</p>
       )}
       <QrCode
         url={url}
@@ -84,7 +84,7 @@ export function SharePanel({
             )
           }
         >
-          Descargar QR (SVG)
+          {t("admin.share.qrSvg")}
         </button>
         <button
           type="button"
@@ -99,12 +99,12 @@ export function SharePanel({
             }
           }}
         >
-          Descargar QR (PNG 1024px)
+          {t("admin.share.qrPng")}
         </button>
       </div>
       {err && (
         <p role="alert" className="text-small text-ink font-medium">
-          No se pudo generar el PNG.
+          {t("admin.share.pngFailed")}
         </p>
       )}
       {cardHref && (
@@ -114,7 +114,7 @@ export function SharePanel({
           rel="noreferrer"
           className={`${btn} self-start`}
         >
-          Tarjeta imprimible (A6)
+          {t("admin.share.card")}
         </a>
       )}
     </div>

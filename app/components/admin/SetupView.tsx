@@ -1,7 +1,8 @@
 import { Form, useNavigation } from "react-router";
 
 import { Logo } from "../Logo";
-import { fmtTime } from "./AdminShell";
+import { useFormat } from "../../i18n/use-format";
+import { useT } from "../../i18n/use-t";
 
 export interface SetupViewData {
   connected: boolean;
@@ -74,35 +75,43 @@ function SyncSummary({
 }: {
   result: NonNullable<SetupActionData["result"]>;
 }) {
+  const t = useT();
+  const { number } = useFormat();
   if (result.skipped === "no_root")
     return (
       <p role="status" className="text-small">
-        Primero elegí una carpeta raíz.
+        {t("admin.setup.sync.noRoot")}
       </p>
     );
   if (result.skipped === "empty_root")
     return (
       <p role="status" className="text-small">
-        La carpeta raíz está vacía: no se modificó nada.
+        {t("admin.setup.sync.emptyRoot")}
       </p>
     );
   if (result.skipped === "locked")
     return (
       <p role="status" className="text-small">
-        Ya hay una sincronización en curso.
+        {t("admin.setup.sync.locked")}
       </p>
     );
   return (
     <ul role="status" className="text-small text-grey-700">
       <li>
-        Galerías: {result.galleries.created} nuevas, {result.galleries.updated}{" "}
-        actualizadas, {result.galleries.archived} archivadas
+        {t("admin.setup.sync.galleries", {
+          created: number(result.galleries.created),
+          updated: number(result.galleries.updated),
+          archived: number(result.galleries.archived),
+        })}
       </li>
       <li>
-        Fotos: {result.photos.added} fotos nuevas, {result.photos.updated}{" "}
-        actualizadas, {result.photos.removed} eliminadas
+        {t("admin.setup.sync.photos", {
+          added: number(result.photos.added),
+          updated: number(result.photos.updated),
+          removed: number(result.photos.removed),
+        })}
       </li>
-      <li>Avisos: {result.issues}</li>
+      <li>{t("admin.setup.sync.issues", { n: number(result.issues) })}</li>
     </ul>
   );
 }
@@ -114,38 +123,42 @@ export function SetupView({
   data: SetupViewData;
   actionData: SetupActionData | undefined;
 }) {
+  const t = useT();
+  const { dateTime, number } = useFormat();
   const nav = useNavigation();
   const busy = nav.state !== "idle";
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-title text-ink">Ajustes</h1>
+      <h1 className="text-title text-ink">{t("admin.setup.title")}</h1>
 
-      <Section title="Google Drive">
+      <Section title={t("admin.setup.section.drive")}>
         <p className="text-body">
           {data.mock
-            ? "Modo demo (Drive simulado)"
+            ? t("admin.setup.drive.demo")
             : data.connected
-              ? "Conectado"
-              : "No conectado"}
+              ? t("admin.setup.drive.connected")
+              : t("admin.setup.drive.notConnected")}
         </p>
         <div className="flex flex-wrap gap-2">
           {data.mock ? (
             <button type="button" className={btn} disabled>
-              Conectar
+              {t("admin.setup.connect")}
             </button>
           ) : (
             <a
               href="/admin/google/connect"
               className={`${btnPrimary} inline-block`}
             >
-              {data.connected ? "Reconectar" : "Conectar"}
+              {data.connected
+                ? t("admin.setup.reconnect")
+                : t("admin.setup.connect")}
             </a>
           )}
           {data.connected && !data.mock && (
             <Form method="post">
               <input type="hidden" name="intent" value="disconnect" />
               <button type="submit" className={btn} disabled={busy}>
-                Desconectar
+                {t("admin.setup.disconnect")}
               </button>
             </Form>
           )}
@@ -153,33 +166,28 @@ export function SetupView({
         <Feedback data={actionData} intent="disconnect" />
       </Section>
 
-      <Section title="Carpeta raíz">
+      <Section title={t("admin.setup.section.root")}>
         <p className="text-body">
           {data.rootName ? (
             <>
-              Carpeta actual: <strong>{data.rootName}</strong>
+              {t("admin.setup.root.current")} <strong>{data.rootName}</strong>
             </>
           ) : (
-            "Sin carpeta elegida"
+            t("admin.setup.root.none")
           )}
         </p>
         <Form
           method="post"
           className="flex flex-col gap-3"
           onSubmit={(ev) => {
-            if (
-              data.rootName &&
-              !window.confirm(
-                "Las galerías que no estén en la nueva carpeta se archivarán después del período de gracia. ¿Continuar?",
-              )
-            )
+            if (data.rootName && !window.confirm(t("admin.setup.root.confirm")))
               ev.preventDefault();
           }}
         >
           <input type="hidden" name="intent" value="root" />
           {data.rootName && <input type="hidden" name="confirm" value="1" />}
           <label className="text-small flex flex-col gap-1">
-            Enlace o ID de la carpeta de Drive
+            {t("admin.setup.root.label")}
             <input
               name="folder"
               required
@@ -191,41 +199,45 @@ export function SetupView({
             />
           </label>
           <p className="text-small text-grey-600">
-            Al cambiar la carpeta raíz, las galerías que no estén en la nueva
-            carpeta se van a archivar después del período de gracia (1 hora).
+            {t("admin.setup.root.note")}
           </p>
           <div>
             <button type="submit" className={btnPrimary} disabled={busy}>
-              Guardar carpeta
+              {t("admin.setup.root.save")}
             </button>
           </div>
         </Form>
         <Feedback data={actionData} intent="root" />
       </Section>
 
-      <Section title="Sincronización">
+      <Section title={t("admin.setup.section.sync")}>
         <p className="text-small text-grey-700">
           {data.lastSyncAt
-            ? `Última sincronización: ${fmtTime(data.lastSyncAt)}`
-            : "Sin sincronizar aún"}
+            ? t("admin.status.lastSync", { time: dateTime(data.lastSyncAt) })
+            : t("admin.status.neverSynced")}
         </p>
         {data.cacheWarm && (
           <p data-testid="cache-warm" className="text-small text-grey-700">
-            {`Fotos en caché: ${data.cacheWarm.warmed} / ${data.cacheWarm.total}`}
+            {t("admin.setup.sync.cache", {
+              warmed: number(data.cacheWarm.warmed),
+              total: number(data.cacheWarm.total),
+            })}
           </p>
         )}
         {data.lastError && (
           <p role="alert" className="text-small">
-            Último error ({fmtTime(data.lastError.at)}):{" "}
-            {data.lastError.message}
+            {t("admin.setup.sync.lastError", {
+              time: dateTime(data.lastError.at),
+              message: data.lastError.message,
+            })}
           </p>
         )}
         <Form method="post">
           <input type="hidden" name="intent" value="sync" />
           <button type="submit" className={btnPrimary} disabled={busy}>
             {busy && nav.formData?.get("intent") === "sync"
-              ? "Sincronizando…"
-              : "Sincronizar ahora"}
+              ? t("admin.setup.sync.syncing")
+              : t("admin.setup.sync.now")}
           </button>
         </Form>
         <Feedback data={actionData} intent="sync" />
@@ -234,13 +246,15 @@ export function SetupView({
           actionData.result && <SyncSummary result={actionData.result} />}
       </Section>
 
-      <Section title="Marca">
+      <Section title={t("admin.setup.section.brand")}>
         <Logo variant="dark" className="h-16" name={data.studioName} />
-        <p className="text-small text-grey-600">El logo es fijo.</p>
+        <p className="text-small text-grey-600">
+          {t("admin.setup.brand.logoFixed")}
+        </p>
         <Form method="post" className="flex flex-col gap-3">
           <input type="hidden" name="intent" value="studio" />
           <label className="text-small flex flex-col gap-1">
-            Nombre del estudio
+            {t("admin.setup.brand.name")}
             <input
               name="studioName"
               required
@@ -252,7 +266,7 @@ export function SetupView({
           </label>
           <div>
             <button type="submit" className={btnPrimary} disabled={busy}>
-              Guardar nombre
+              {t("admin.setup.brand.save")}
             </button>
           </div>
         </Form>

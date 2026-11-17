@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Client components must take user-facing text from t(); admin/ is Spanish-only by decision.
+// Client components must take user-facing text from t(). components/admin/ is covered by AdminI18nAudit.test.tsx.
 const DIR = join(import.meta.dirname, "../../app/components");
 const files = readdirSync(DIR).filter((f) => f.endsWith(".tsx"));
 

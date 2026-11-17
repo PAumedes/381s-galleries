@@ -1,9 +1,11 @@
 import { Link } from "react-router";
 
+import { useT } from "../../i18n/use-t";
+
 const TABS = [
-  { key: "datos", label: "Datos", path: "" },
-  { key: "actividad", label: "Actividad", path: "/activity" },
-  { key: "favoritos", label: "Favoritos", path: "/favorites" },
+  { key: "datos", label: "admin.tabs.details", path: "" },
+  { key: "actividad", label: "admin.tabs.activity", path: "/activity" },
+  { key: "favoritos", label: "admin.tabs.favorites", path: "/favorites" },
 ] as const;
 
 export type GalleryTab = (typeof TABS)[number]["key"];
@@ -16,20 +18,21 @@ export function GalleryTabs({
   id: string;
   current: GalleryTab;
 }) {
+  const t = useT();
   return (
-    <nav aria-label="Secciones de la galería" className="flex gap-6">
-      {TABS.map((t) => (
+    <nav aria-label={t("admin.tabs.label")} className="flex gap-6">
+      {TABS.map((tab) => (
         <Link
-          key={t.key}
-          to={`/admin/g/${id}${t.path}`}
-          aria-current={t.key === current ? "page" : undefined}
+          key={tab.key}
+          to={`/admin/g/${id}${tab.path}`}
+          aria-current={tab.key === current ? "page" : undefined}
           className={`text-micro border-b pb-1 uppercase ${
-            t.key === current
+            tab.key === current
               ? "border-ink text-ink"
               : "text-grey-700 hover:text-ink border-transparent"
           }`}
         >
-          {t.label}
+          {t(tab.label)}
         </Link>
       ))}
     </nav>

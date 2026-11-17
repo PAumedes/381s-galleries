@@ -1,12 +1,15 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { Form, useNavigation } from "react-router";
 
-import { useLang } from "../../i18n/use-t";
+import { useLang, useT } from "../../i18n/use-t";
+import type { MessageKey } from "../../i18n/t";
+import { localeFor } from "../../i18n/format";
 import { formatEventDate } from "../../lib/event-date";
 import { useStudioName } from "../../lib/use-studio-name";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
 import type { CoverLayout, Palette } from "../../lib/design";
 import { CoverHero } from "../CoverHero";
+import { paletteKey } from "./DesignPanel";
 
 type Focus = { x: number; y: number };
 type Size = { w: number; h: number };
@@ -14,9 +17,17 @@ type Size = { w: number; h: number };
 const STEP = 5;
 /** Virtual viewports the real cover is laid out in, then scaled down. */
 const FRAMES = {
-  desktop: { w: 1280, h: 720, ratio: "16 / 9", label: "Escritorio" },
-  mobile: { w: 390, h: 823, ratio: "9 / 19", label: "Móvil" },
-} as const;
+  desktop: {
+    w: 1280,
+    h: 720,
+    ratio: "16 / 9",
+    label: "admin.cover.desktop",
+  },
+  mobile: { w: 390, h: 823, ratio: "9 / 19", label: "admin.cover.mobile" },
+} as const satisfies Record<
+  string,
+  { w: number; h: number; ratio: string; label: MessageKey }
+>;
 
 const clamp = (n: number) => Math.min(100, Math.max(0, n));
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -57,8 +68,9 @@ export function CoverPreview({
   actionData?: GalleryActionResult;
 }) {
   const studio = useStudioName();
-  // TODO(admin i18n): the admin has no language switch yet; this reads the same
-  // source the ES/EN admin will use (root loader lang, default "es").
+  const t = useT();
+  // The admin language (admin_lang cookie, via the root loader): dates in the
+  // preview follow it.
   const lang = useLang();
   const busy = useNavigation().state !== "idle";
   const [view, setView] = useState<keyof typeof FRAMES>("desktop");
@@ -156,7 +168,7 @@ export function CoverPreview({
     : null;
   const fx = focus?.x ?? 50;
   const fy = focus?.y ?? 50;
-  const valueText = `Punto focal: ${fx}% horizontal, ${fy}% vertical`;
+  const valueText = t("admin.cover.focalValue", { x: fx, y: fy });
 
   return (
     <div data-testid="cover-preview" className="flex flex-col gap-3">
@@ -170,7 +182,7 @@ export function CoverPreview({
             role="application"
             tabIndex={0}
             data-testid="focus-picker"
-            aria-label="Punto focal de la portada: hacé clic en la foto o usá las flechas"
+            aria-label={t("admin.cover.pickerLabel")}
             aria-valuetext={valueText}
             onClick={onClick}
             onKeyDown={onKeyDown}
@@ -211,7 +223,7 @@ export function CoverPreview({
             onClick={() => setView(k)}
             className={`${btn} ${view === k ? "bg-ink text-paper" : ""}`}
           >
-            {FRAMES[k].label}
+            {t(FRAMES[k].label)}
           </button>
         ))}
       </div>
@@ -236,13 +248,13 @@ export function CoverPreview({
               layout={coverLayout}
               palette={palette}
               title={title}
-              date={formatEventDate(eventDate, lang)}
+              date={formatEventDate(eventDate, localeFor(lang))}
               studio={studio}
               src={src}
               proofing={false}
               focus={focus}
               aspect={aspect}
-              scrollLabel="Ver galería"
+              scrollLabel={t("gallery.view")}
             />
           </div>
         </div>
@@ -251,15 +263,15 @@ export function CoverPreview({
         data-theme={palette}
         className="bg-paper text-ink text-micro border-grey-300 flex items-center justify-between border px-3 py-2 uppercase"
       >
-        <span>Paleta {palette}</span>
         <span>
-          {proofing ? "Prueba: con marca de agua" : "Entrega: sin marca"}
+          {t("admin.cover.palette", { name: t(paletteKey(palette)) })}
+        </span>
+        <span>
+          {proofing ? t("admin.cover.proofing") : t("admin.cover.delivery")}
         </span>
       </div>
       <p className="text-small text-grey-600">
-        {coverId
-          ? "Así se ve la portada. Hacé clic en la foto (o usá las flechas con el selector enfocado) para marcar lo que no debe quedar fuera del recorte."
-          : "Todavía no hay fotos para la portada."}
+        {coverId ? t("admin.cover.help") : t("admin.cover.noPhotos")}
       </p>
       <Form method="post" className="flex flex-wrap items-center gap-2">
         <input type="hidden" name="intent" value="focus" />
@@ -278,7 +290,7 @@ export function CoverPreview({
           className={`${btn} bg-ink text-paper`}
           disabled={busy || !coverId}
         >
-          Guardar punto focal
+          {t("admin.cover.save")}
         </button>
         <button
           type="button"
@@ -286,7 +298,7 @@ export function CoverPreview({
           disabled={!focus}
           onClick={() => setFocus(null)}
         >
-          Centrar
+          {t("admin.cover.center")}
         </button>
       </Form>
       {fb && !fb.ok && (

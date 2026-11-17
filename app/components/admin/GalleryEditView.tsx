@@ -1,6 +1,9 @@
 import { useId, useState } from "react";
 import { Form, Link, useNavigation } from "react-router";
 
+import { useT } from "../../i18n/use-t";
+import type { MessageKey } from "../../i18n/t";
+import { ISSUE_KEYS } from "../../lib/admin-gallery";
 import type {
   GalleryActionResult,
   loadGalleryEdit,
@@ -145,6 +148,7 @@ export function GalleryEditView({
   origin?: string;
   actionData: GalleryActionResult | undefined;
 }) {
+  const t = useT();
   const nav = useNavigation();
   const busy = nav.state !== "idle";
   const g = data.gallery;
@@ -178,7 +182,7 @@ export function GalleryEditView({
           to="/admin"
           className="text-micro text-grey-700 uppercase hover:text-ink"
         >
-          ← Galerías
+          {t("admin.backToGalleries")}
         </Link>
         <h1 className="text-title text-ink">{g.title}</h1>
         <StatusPill status={g.status} />
@@ -187,7 +191,7 @@ export function GalleryEditView({
 
       <div className="grid gap-10 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
         <div className="flex flex-col gap-8">
-          <Section title="Datos">
+          <Section title={t("admin.edit.section.details")}>
             <CoverPreview
               key={coverId ?? "none"}
               title={title}
@@ -214,15 +218,13 @@ export function GalleryEditView({
                   .toLowerCase();
                 if (
                   slug !== g.slug &&
-                  !window.confirm(
-                    "Cambiar el slug rompe los enlaces y códigos QR ya compartidos. ¿Continuar?",
-                  )
+                  !window.confirm(t("admin.edit.confirmSlug"))
                 )
                   ev.preventDefault();
               }}
             >
               <input type="hidden" name="intent" value="details" />
-              <Field label="Título" error={de.title}>
+              <Field label={t("admin.edit.field.title")} error={de.title}>
                 {(p) => (
                   <input
                     {...p}
@@ -236,9 +238,9 @@ export function GalleryEditView({
                 )}
               </Field>
               <Field
-                label="Slug"
+                label={t("admin.edit.field.slug")}
                 error={de.slug}
-                hint="Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar."
+                hint={t("admin.edit.hint.slug")}
               >
                 {(p) => (
                   <input
@@ -254,9 +256,9 @@ export function GalleryEditView({
                 )}
               </Field>
               <Field
-                label="Cliente (solo para vos)"
+                label={t("admin.edit.field.client")}
                 error={de.clientName}
-                hint="Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería."
+                hint={t("admin.edit.hint.client")}
               >
                 {(p) => (
                   <input
@@ -268,7 +270,10 @@ export function GalleryEditView({
                   />
                 )}
               </Field>
-              <Field label="Fecha del evento" error={de.eventDate}>
+              <Field
+                label={t("admin.edit.field.eventDate")}
+                error={de.eventDate}
+              >
                 {(p) => (
                   <input
                     {...p}
@@ -282,7 +287,7 @@ export function GalleryEditView({
               </Field>
               <div className="flex flex-col gap-1">
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Vence (fecha)">
+                  <Field label={t("admin.edit.field.expiresDate")}>
                     {(p) => (
                       <input
                         {...p}
@@ -295,7 +300,7 @@ export function GalleryEditView({
                       />
                     )}
                   </Field>
-                  <Field label="Vence (hora)">
+                  <Field label={t("admin.edit.field.expiresTime")}>
                     {(p) => (
                       <input
                         {...p}
@@ -310,8 +315,7 @@ export function GalleryEditView({
                   </Field>
                 </div>
                 <p id="expires-note" className="text-small text-grey-600">
-                  Hora de Buenos Aires. Vacío = nunca vence. Sin hora, vence al
-                  final del día.
+                  {t("admin.edit.hint.expires")}
                 </p>
                 {de.expires && (
                   <p role="alert" className="text-small text-ink font-medium">
@@ -321,31 +325,30 @@ export function GalleryEditView({
               </div>
               <div>
                 <button type="submit" className={btnPrimary} disabled={busy}>
-                  Guardar datos
+                  {t("admin.edit.saveDetails")}
                 </button>
               </div>
               <Feedback data={actionData} intent="details" />
             </Form>
           </Section>
 
-          <Section title="Diseño">
+          <Section title={t("admin.edit.section.design")}>
             <Form method="post" className="flex flex-col gap-4">
               <input type="hidden" name="intent" value="design" />
               <DesignPanel design={design} onChange={setDesign} errors={ge} />
               <p className="text-small text-grey-600">
-                La tipografía es siempre Montserrat. La portada de arriba
-                muestra los cambios al instante; se aplican al guardar.
+                {t("admin.edit.designNote")}
               </p>
               <div>
                 <button type="submit" className={btnPrimary} disabled={busy}>
-                  Guardar diseño
+                  {t("admin.edit.saveDesign")}
                 </button>
               </div>
               <Feedback data={actionData} intent="design" />
             </Form>
           </Section>
 
-          <Section title="Compartir">
+          <Section title={t("admin.edit.section.share")}>
             <SharePanel
               url={`${origin ?? window.location.origin}/${g.slug}`}
               slug={g.slug}
@@ -355,24 +358,26 @@ export function GalleryEditView({
             />
           </Section>
 
-          <Section title="Estado">
+          <Section title={t("admin.edit.section.status")}>
             <p className="text-small text-grey-700">
-              Solo las galerías publicadas y sin vencer son visibles para los
-              clientes.
+              {t("admin.edit.statusNote")}
             </p>
             <div className="flex flex-wrap gap-2">
               {(
                 {
                   draft: [
-                    ["publish", "Publicar"],
-                    ["archive", "Archivar"],
+                    ["publish", "admin.edit.action.publish"],
+                    ["archive", "admin.edit.action.archive"],
                   ],
                   published: [
-                    ["draft", "Pasar a borrador"],
-                    ["archive", "Archivar"],
+                    ["draft", "admin.edit.action.draft"],
+                    ["archive", "admin.edit.action.archive"],
                   ],
-                  archived: [["restore", "Restaurar"]],
-                } as const
+                  archived: [["restore", "admin.edit.action.restore"]],
+                } as const satisfies Record<
+                  string,
+                  readonly (readonly [string, MessageKey])[]
+                >
               )[g.status].map(([to, label]) => (
                 <Form method="post" key={to}>
                   <input type="hidden" name="intent" value="status" />
@@ -382,7 +387,7 @@ export function GalleryEditView({
                     className={to === "publish" ? btnPrimary : btn}
                     disabled={busy}
                   >
-                    {label}
+                    {t(label)}
                   </button>
                 </Form>
               ))}
@@ -390,19 +395,20 @@ export function GalleryEditView({
             <Feedback data={actionData} intent="status" />
           </Section>
 
-          <Section title="PIN de acceso">
-            <p className="text-body">{g.hasPin ? "PIN activo" : "Sin PIN"}</p>
+          <Section title={t("admin.edit.section.pin")}>
+            <p className="text-body">
+              {g.hasPin ? t("admin.edit.pin.active") : t("admin.edit.pin.none")}
+            </p>
             <p className="text-small text-grey-600">
-              Cambiar o quitar el PIN cierra las sesiones de los clientes y
-              anula los enlaces de descarga ya emitidos.
+              {t("admin.edit.pin.note")}
             </p>
             <Form method="post" className="flex flex-col gap-3">
               <input type="hidden" name="intent" value="pin" />
               <input type="hidden" name="mode" value="set" />
               <Field
-                label="Nuevo PIN"
+                label={t("admin.edit.pin.new")}
                 error={pe.pin}
-                hint="De 6 a 32 caracteres."
+                hint={t("admin.edit.pin.hint")}
               >
                 {(p) => (
                   <input
@@ -419,7 +425,9 @@ export function GalleryEditView({
               </Field>
               <div>
                 <button type="submit" className={btnPrimary} disabled={busy}>
-                  {g.hasPin ? "Cambiar PIN" : "Guardar PIN"}
+                  {g.hasPin
+                    ? t("admin.edit.pin.change")
+                    : t("admin.edit.pin.save")}
                 </button>
               </div>
             </Form>
@@ -428,14 +436,14 @@ export function GalleryEditView({
                 <input type="hidden" name="intent" value="pin" />
                 <input type="hidden" name="mode" value="remove" />
                 <button type="submit" className={btn} disabled={busy}>
-                  Quitar PIN
+                  {t("admin.edit.pin.remove")}
                 </button>
               </Form>
             )}
             <Feedback data={actionData} intent="pin" />
           </Section>
 
-          <Section title="Portada pública">
+          <Section title={t("admin.edit.section.home")}>
             <Form method="post" className="flex flex-col gap-3">
               <input type="hidden" name="intent" value="home" />
               {/* A checkbox submits nothing when off: the hidden 0 comes first. */}
@@ -453,17 +461,17 @@ export function GalleryEditView({
                 />
                 <div>
                   <label htmlFor="show-on-home" className="text-small">
-                    Mostrar en la portada
+                    {t("admin.edit.home.label")}
                   </label>
                   <p
                     id="show-on-home-hint"
                     className="text-small text-grey-600"
                   >
                     {g.hasPin
-                      ? "No disponible: la galería tiene PIN."
+                      ? t("admin.edit.home.hintPin")
                       : g.status !== "published"
-                        ? "No disponible: la galería no está publicada."
-                        : "Aparece en la página de inicio con su portada. Con PIN o sin publicar se oculta sola."}
+                        ? t("admin.edit.home.hintUnpublished")
+                        : t("admin.edit.home.hint")}
                   </p>
                 </div>
               </div>
@@ -473,18 +481,20 @@ export function GalleryEditView({
                   className={btnPrimary}
                   disabled={busy || homeBlocked}
                 >
-                  Guardar portada pública
+                  {t("admin.edit.home.save")}
                 </button>
               </div>
               <Feedback data={actionData} intent="home" />
             </Form>
           </Section>
 
-          <Section title="Opciones">
+          <Section title={t("admin.edit.section.options")}>
             <Form method="post" className="flex flex-col gap-3">
               <input type="hidden" name="intent" value="flags" />
               <fieldset className="flex flex-col gap-2">
-                <legend className="text-small font-medium">Modo</legend>
+                <legend className="text-small font-medium">
+                  {t("admin.edit.mode.legend")}
+                </legend>
                 <div className="flex items-start gap-2">
                   <input
                     id="mode-delivery"
@@ -498,13 +508,13 @@ export function GalleryEditView({
                   />
                   <div>
                     <label htmlFor="mode-delivery" className="text-small">
-                      Entrega
+                      {t("admin.mode.delivery")}
                     </label>
                     <p
                       id="mode-delivery-note"
                       className="text-small text-grey-600"
                     >
-                      Fotos sin marca de agua y con las descargas habilitadas.
+                      {t("admin.edit.mode.deliveryNote")}
                     </p>
                   </div>
                 </div>
@@ -521,14 +531,13 @@ export function GalleryEditView({
                   />
                   <div>
                     <label htmlFor="mode-proofing" className="text-small">
-                      Prueba
+                      {t("admin.mode.proofing")}
                     </label>
                     <p
                       id="mode-proofing-note"
                       className="text-small text-grey-600"
                     >
-                      Todo con marca de agua y sin descargas: el cliente solo
-                      elige favoritas.
+                      {t("admin.edit.mode.proofingNote")}
                     </p>
                   </div>
                 </div>
@@ -540,59 +549,54 @@ export function GalleryEditView({
               )}
               {proofing && !data.hasWmFiles && (
                 <p role="alert" className="text-small text-ink font-medium">
-                  Esta galería no tiene archivos preview-wm: en modo Prueba los
-                  clientes no verán ninguna foto. Exportá esa receta desde
-                  Capture One.
+                  {t("admin.edit.mode.noWm")}
                 </p>
               )}
               {proofing && data.hasWmFiles && !data.hasThumbWmFiles && (
                 <p role="status" className="text-small text-grey-700">
-                  No hay miniaturas thumb-wm: la grilla usará la vista de 2048
-                  px, más pesada.
+                  {t("admin.edit.mode.noThumbWm")}
                 </p>
               )}
               <Check
                 name="allowHighres"
-                label="Alta resolución (2048 px)"
+                label={t("admin.edit.opt.highres")}
                 checked={g.allowHighres}
                 disabled={proofing}
               />
               <Check
                 name="allowWeb"
-                label="Web (1200 px)"
+                label={t("admin.edit.opt.web")}
                 checked={g.allowWeb}
                 disabled={proofing}
               />
               <Check
                 name="allowIg"
-                label="Instagram (1080 px)"
+                label={t("admin.edit.opt.ig")}
                 checked={g.allowIg}
                 disabled={proofing}
               />
               <Check
                 name="allowBulk"
-                label="Permitir descargar todo / por set"
+                label={t("admin.edit.opt.bulk")}
                 checked={g.allowBulk}
                 disabled={proofing}
               />
               {proofing && (
                 <p className="text-small text-grey-600">
-                  En modo Prueba no hay descargas: las opciones de tamaño quedan
-                  desactivadas (se conservan para el modo Entrega).
+                  {t("admin.edit.opt.proofingNote")}
                 </p>
               )}
               <Check
                 name="requireEmail"
-                label="Pedir email para descargar y marcar favoritas"
+                label={t("admin.edit.opt.requireEmail")}
                 checked={g.requireEmail}
               />
               <p className="text-small text-grey-600">
-                Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato
-                los enlaces de descarga ya emitidos.
+                {t("admin.edit.opt.revokeNote")}
               </p>
               <div>
                 <button type="submit" className={btnPrimary} disabled={busy}>
-                  Guardar opciones
+                  {t("admin.edit.opt.save")}
                 </button>
               </div>
               <Feedback data={actionData} intent="flags" />
@@ -601,10 +605,10 @@ export function GalleryEditView({
         </div>
 
         <div className="flex min-w-0 flex-col gap-8">
-          <Section title="Fotos">
+          <Section title={t("admin.edit.section.photos")}>
             {data.photos.length === 0 ? (
               <p className="text-small text-grey-600">
-                Esta galería todavía no tiene fotos visibles.
+                {t("admin.edit.photos.empty")}
               </p>
             ) : (
               <>
@@ -620,7 +624,7 @@ export function GalleryEditView({
                   <input type="hidden" name="intent" value="cover" />
                   <input type="hidden" name="photoId" value="" />
                   <button type="submit" className={btn} disabled={busy}>
-                    Usar la primera foto
+                    {t("admin.edit.photos.useFirst")}
                   </button>
                 </Form>
                 <Feedback data={actionData} intent="cover" />
@@ -628,15 +632,20 @@ export function GalleryEditView({
             )}
           </Section>
 
-          <Section title="Avisos de sincronización">
+          <Section title={t("admin.edit.section.issues")}>
             {data.issues.total === 0 ? (
-              <p className="text-small text-grey-600">Sin avisos.</p>
+              <p className="text-small text-grey-600">
+                {t("admin.edit.issues.none")}
+              </p>
             ) : (
               <div className="flex flex-col gap-4">
                 {data.issues.groups.map((grp) => (
                   <div key={grp.type}>
                     <h3 className="text-small font-medium">
-                      {grp.label} ({grp.items.length})
+                      {Object.hasOwn(ISSUE_KEYS, grp.type)
+                        ? t(ISSUE_KEYS[grp.type]!)
+                        : t("admin.issue.other")}{" "}
+                      ({grp.items.length})
                     </h3>
                     <ul className="text-small text-grey-700 mt-1 list-disc pl-5">
                       {grp.items.map((it, i) => (
@@ -650,7 +659,9 @@ export function GalleryEditView({
                 ))}
                 {data.issues.truncated > 0 && (
                   <p className="text-small text-grey-600">
-                    …y {data.issues.truncated} avisos más.
+                    {t("admin.edit.issues.more", {
+                      count: data.issues.truncated,
+                    })}
                   </p>
                 )}
               </div>

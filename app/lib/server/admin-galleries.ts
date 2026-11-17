@@ -11,6 +11,8 @@ import {
 } from "../admin-gallery";
 import type { Filter } from "../admin-gallery";
 import { isCoverLayout, isGridGap, isGridStyle, isPalette } from "../design";
+import { requestT } from "../../i18n/dictionaries";
+import type { TFunction } from "../../i18n/t";
 import { adminAction } from "./admin";
 import { hashPin } from "./crypto";
 import { RESERVED_SLUGS } from "./slug";
@@ -254,6 +256,7 @@ export async function galleryAction(
   id: string,
 ): Promise<GalleryActionResult> {
   await adminAction(request, env);
+  const t = requestT(request);
   const db = getDb(env);
   const [g] = await db
     .select()
@@ -264,56 +267,55 @@ export async function galleryAction(
   try {
     form = await request.formData();
   } catch {
-    return fail("", "Solicitud inválida.");
+    return fail("", t("admin.msg.invalidRequest"));
   }
   const intent = str(form, "intent");
   switch (intent) {
     case "details":
-      return saveDetails(env, g, form);
+      return saveDetails(env, g, form, t);
     case "design":
-      return saveDesign(env, g, form);
+      return saveDesign(env, g, form, t);
     case "flags":
-      return saveFlags(env, g, form);
+      return saveFlags(env, g, form, t);
     case "home":
-      return saveHome(env, g, form);
+      return saveHome(env, g, form, t);
     case "status":
-      return changeStatus(env, g, str(form, "to"));
+      return changeStatus(env, g, str(form, "to"), t);
     case "pin":
-      return savePin(env, g, form);
+      return savePin(env, g, form, t);
     case "cover":
-      return saveCover(env, g, str(form, "photoId"));
+      return saveCover(env, g, str(form, "photoId"), t);
     case "focus":
-      return saveFocus(env, g, form);
+      return saveFocus(env, g, form, t);
     case "reorder":
-      return reorder(env, g, form);
+      return reorder(env, g, form, t);
     default:
-      return fail(intent, "Acción desconocida.");
+      return fail(intent, t("admin.msg.unknownAction"));
   }
 }
 
 type GalleryRow = typeof schema.galleries.$inferSelect;
 
-async function saveDetails(env: Env, g: GalleryRow, f: FormData) {
+async function saveDetails(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   const intent = "details";
   const errors: Record<string, string> = {};
 
   const title = str(f, "title").trim();
   if (title.length < 1 || title.length > TITLE_MAX || CONTROL_RE.test(title))
-    errors.title = `El título debe tener entre 1 y ${TITLE_MAX} caracteres.`;
+    errors.title = t("admin.msg.titleLength", { max: TITLE_MAX });
 
   const clientRaw = str(f, "clientName").trim();
   if (clientRaw.length > CLIENT_MAX || CONTROL_RE.test(clientRaw))
-    errors.clientName = `El nombre del cliente no puede superar los ${CLIENT_MAX} caracteres.`;
+    errors.clientName = t("admin.msg.clientLength", { max: CLIENT_MAX });
 
   const slug = str(f, "slug").trim().toLowerCase();
-  if (RESERVED_SLUGS.includes(slug))
-    errors.slug = "Ese slug está reservado. Elegí otro.";
+  if (RESERVED_SLUGS.includes(slug)) errors.slug = t("admin.msg.slugReserved");
   else if (!slug || slug.length > SLUG_MAX || !SLUG_RE.test(slug))
-    errors.slug = `Usá solo letras minúsculas, números y guiones (1 a ${SLUG_MAX} caracteres, sin guiones al inicio, al final ni repetidos).`;
+    errors.slug = t("admin.msg.slugFormat", { max: SLUG_MAX });
 
   const eventDate = str(f, "eventDate").trim();
   if (eventDate && !isValidDate(eventDate))
-    errors.eventDate = "La fecha del evento no es válida.";
+    errors.eventDate = t("admin.msg.eventDateInvalid");
 
   const expDate = str(f, "expiresDate").trim();
   const expTime = str(f, "expiresTime").trim();
@@ -321,14 +323,17 @@ async function saveDetails(env: Env, g: GalleryRow, f: FormData) {
   if (expDate || expTime) {
     const yr = Number(expDate.slice(0, 4));
     if (expDate && (yr < EXPIRY_YEAR_MIN || yr > EXPIRY_YEAR_MAX))
-      errors.expires = `El año de vencimiento debe estar entre ${EXPIRY_YEAR_MIN} y ${EXPIRY_YEAR_MAX}.`;
+      errors.expires = t("admin.msg.expiryYear", {
+        min: EXPIRY_YEAR_MIN,
+        max: EXPIRY_YEAR_MAX,
+      });
     else {
       // A date without a time means "until the end of that day" (Buenos Aires).
       expiresAt = expDate ? baLocalToUtcIso(expDate, expTime || "23:59") : null;
       if (!expiresAt)
         errors.expires = expDate
-          ? "La fecha de vencimiento no es válida."
-          : "Indicá también la fecha de vencimiento.";
+          ? t("admin.msg.expiryInvalid")
+          : t("admin.msg.expiryNeedsDate");
     }
   }
 
@@ -337,10 +342,10 @@ async function saveDetails(env: Env, g: GalleryRow, f: FormData) {
     slug !== g.slug.toLowerCase() &&
     (await slugTaken(env, slug, g.id))
   )
-    errors.slug = "Ese slug ya está en uso por otra galería.";
+    errors.slug = t("admin.msg.slugTaken");
 
   if (Object.keys(errors).length)
-    return fail(intent, "Revisá los campos marcados.", errors);
+    return fail(intent, t("admin.msg.checkFields"), errors);
 
   try {
     await getDb(env)
@@ -357,12 +362,12 @@ async function saveDetails(env: Env, g: GalleryRow, f: FormData) {
       .where(eq(schema.galleries.id, g.id));
   } catch (err) {
     if (isConstraintError(err))
-      return fail(intent, "Revisá los campos marcados.", {
-        slug: "Ese slug ya está en uso por otra galería.",
+      return fail(intent, t("admin.msg.checkFields"), {
+        slug: t("admin.msg.slugTaken"),
       });
     throw err;
   }
-  return done(intent, "Datos guardados.");
+  return done(intent, t("admin.msg.detailsSaved"));
 }
 
 /** drizzle wraps driver errors ("Failed query"); the SQLite text is in err.cause. */
@@ -383,13 +388,13 @@ async function slugTaken(env: Env, slug: string, selfId: string) {
   return rows.some((r) => r.id !== selfId);
 }
 
-async function saveFlags(env: Env, g: GalleryRow, f: FormData) {
+async function saveFlags(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   const intent = "flags";
   const on = (k: string) => f.get(k) === "1";
   const modeRaw = f.get("mode");
   if (modeRaw !== null && modeRaw !== "proofing" && modeRaw !== "delivery")
-    return fail(intent, "Revisá los campos marcados.", {
-      mode: "Modo inválido.",
+    return fail(intent, t("admin.msg.checkFields"), {
+      mode: t("admin.msg.modeInvalid"),
     });
   const mode: "proofing" | "delivery" = modeRaw ?? g.mode;
   await getDb(env)
@@ -409,7 +414,7 @@ async function saveFlags(env: Env, g: GalleryRow, f: FormData) {
       mode,
     })
     .where(eq(schema.galleries.id, g.id));
-  return done(intent, "Opciones guardadas.");
+  return done(intent, t("admin.msg.optionsSaved"));
 }
 
 /**
@@ -417,34 +422,34 @@ async function saveFlags(env: Env, g: GalleryRow, f: FormData) {
  * gallery without PIN (the home query enforces the same, this keeps the stored
  * flag honest); disabling always works.
  */
-async function saveHome(env: Env, g: GalleryRow, f: FormData) {
+async function saveHome(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   const intent = "home";
   const raw = f.get("showOnHome");
   if (raw !== "1" && raw !== "0")
-    return fail(intent, "Revisá los campos marcados.", {
-      showOnHome: "Valor inválido.",
+    return fail(intent, t("admin.msg.checkFields"), {
+      showOnHome: t("admin.msg.valueInvalid"),
     });
   const on = raw === "1";
   if (on && isExpired(g.expiresAt, Date.now()))
-    return fail(intent, "Revisá los campos marcados.", {
-      showOnHome: "Una galería vencida no puede estar en la portada.",
+    return fail(intent, t("admin.msg.checkFields"), {
+      showOnHome: t("admin.msg.homeExpired"),
     });
   if (on && (g.pinHash !== null || g.status !== "published"))
-    return fail(intent, "Revisá los campos marcados.", {
+    return fail(intent, t("admin.msg.checkFields"), {
       showOnHome:
         g.pinHash !== null
-          ? "Una galería con PIN no puede estar en la portada."
-          : "Solo las galerías publicadas pueden estar en la portada.",
+          ? t("admin.msg.homePin")
+          : t("admin.msg.homeUnpublished"),
     });
   await getDb(env)
     .update(schema.galleries)
     .set({ showOnHome: on })
     .where(eq(schema.galleries.id, g.id));
-  return done(intent, on ? "Visible en la portada." : "Fuera de la portada.");
+  return done(intent, on ? t("admin.msg.homeOn") : t("admin.msg.homeOff"));
 }
 
 /** Design (T6.5): enums only; an absent key keeps the stored value. */
-async function saveDesign(env: Env, g: GalleryRow, f: FormData) {
+async function saveDesign(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   const intent = "design";
   const pick = <T extends string>(
     key: string,
@@ -464,40 +469,40 @@ async function saveDesign(env: Env, g: GalleryRow, f: FormData) {
     "palette",
     isPalette,
     g.palette,
-    "Paleta inválida.",
+    t("admin.msg.paletteInvalid"),
     errors,
   );
   const coverLayout = pick(
     "coverLayout",
     isCoverLayout,
     g.coverLayout,
-    "Diseño de portada inválido.",
+    t("admin.msg.coverLayoutInvalid"),
     errors,
   );
   const gridStyle = pick(
     "gridStyle",
     isGridStyle,
     g.gridStyle,
-    "Estilo de grilla inválido.",
+    t("admin.msg.gridStyleInvalid"),
     errors,
   );
   const gridGap = pick(
     "gridGap",
     isGridGap,
     g.gridGap,
-    "Espaciado inválido.",
+    t("admin.msg.gridGapInvalid"),
     errors,
   );
   if (Object.keys(errors).length)
-    return fail(intent, "Revisá los campos marcados.", errors);
+    return fail(intent, t("admin.msg.checkFields"), errors);
   await getDb(env)
     .update(schema.galleries)
     .set({ palette, coverLayout, gridStyle, gridGap })
     .where(eq(schema.galleries.id, g.id));
-  return done(intent, "Diseño guardado.");
+  return done(intent, t("admin.msg.designSaved"));
 }
 
-async function changeStatus(env: Env, g: GalleryRow, to: string) {
+async function changeStatus(env: Env, g: GalleryRow, to: string, t: TFunction) {
   const intent = "status";
   const db = getDb(env);
   let from: GalleryRow["status"];
@@ -507,12 +512,12 @@ async function changeStatus(env: Env, g: GalleryRow, to: string) {
     case "publish":
       from = "draft";
       set = { status: "published" }; // show_on_home stays 0: needs a new opt-in
-      message = "Galería publicada.";
+      message = t("admin.msg.published");
       break;
     case "draft":
       from = "published";
       set = { status: "draft", showOnHome: false };
-      message = "La galería pasó a borrador.";
+      message = t("admin.msg.movedToDraft");
       break;
     case "archive":
       if (g.status === "archived") return stale();
@@ -523,7 +528,7 @@ async function changeStatus(env: Env, g: GalleryRow, to: string) {
         archivedPrevStatus: g.status,
         archivedBySync: false,
       };
-      message = "Galería archivada.";
+      message = t("admin.msg.archived");
       break;
     case "restore":
       from = "archived";
@@ -532,16 +537,13 @@ async function changeStatus(env: Env, g: GalleryRow, to: string) {
         archivedPrevStatus: null,
         archivedBySync: false,
       };
-      message = "Galería restaurada.";
+      message = t("admin.msg.restored");
       break;
     default:
-      return fail(intent, "Acción desconocida.");
+      return fail(intent, t("admin.msg.unknownAction"));
   }
   function stale() {
-    return fail(
-      intent,
-      "Ese cambio no es posible desde el estado actual. Recargá la página.",
-    );
+    return fail(intent, t("admin.msg.stale"));
   }
   if (g.status !== from) return stale();
   // Compare-and-set: a concurrent change makes this a no-op instead of a clobber.
@@ -555,7 +557,7 @@ async function changeStatus(env: Env, g: GalleryRow, to: string) {
   return res.length ? done(intent, message) : stale();
 }
 
-async function savePin(env: Env, g: GalleryRow, f: FormData) {
+async function savePin(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   const intent = "pin";
   const mode = str(f, "mode");
   const db = getDb(env);
@@ -564,16 +566,13 @@ async function savePin(env: Env, g: GalleryRow, f: FormData) {
       .update(schema.galleries)
       .set({ pinHash: null })
       .where(eq(schema.galleries.id, g.id));
-    return done(
-      intent,
-      "PIN eliminado. Las sesiones y enlaces de descarga anteriores quedaron sin efecto.",
-    );
+    return done(intent, t("admin.msg.pinRemoved"));
   }
-  if (mode !== "set") return fail(intent, "Acción desconocida.");
+  if (mode !== "set") return fail(intent, t("admin.msg.unknownAction"));
   const pin = str(f, "pin");
   if (pin.length < PIN_MIN || pin.length > PIN_MAX || CONTROL_RE.test(pin))
-    return fail(intent, "Revisá el PIN.", {
-      pin: `El PIN debe tener entre ${PIN_MIN} y ${PIN_MAX} caracteres.`,
+    return fail(intent, t("admin.msg.pinCheck"), {
+      pin: t("admin.msg.pinLength", { min: PIN_MIN, max: PIN_MAX }),
     });
   const pinHash = await hashPin(pin);
   // Sessions and download tokens carry pinFingerprint(pin_hash): they die with the old hash.
@@ -581,13 +580,15 @@ async function savePin(env: Env, g: GalleryRow, f: FormData) {
     .update(schema.galleries)
     .set({ pinHash, showOnHome: false })
     .where(eq(schema.galleries.id, g.id));
-  return done(
-    intent,
-    "PIN guardado. Las sesiones y enlaces de descarga anteriores quedaron sin efecto.",
-  );
+  return done(intent, t("admin.msg.pinSaved"));
 }
 
-async function saveCover(env: Env, g: GalleryRow, photoId: string) {
+async function saveCover(
+  env: Env,
+  g: GalleryRow,
+  photoId: string,
+  t: TFunction,
+) {
   const intent = "cover";
   const db = getDb(env);
   if (photoId === "") {
@@ -595,7 +596,7 @@ async function saveCover(env: Env, g: GalleryRow, photoId: string) {
       .update(schema.galleries)
       .set({ coverPhotoId: null, coverFocusX: null, coverFocusY: null })
       .where(eq(schema.galleries.id, g.id));
-    return done(intent, "Portada automática (primera foto).");
+    return done(intent, t("admin.msg.coverAuto"));
   }
   const [p] = await db
     .select({ id: schema.photos.id })
@@ -607,16 +608,12 @@ async function saveCover(env: Env, g: GalleryRow, photoId: string) {
         photoVisible,
       ),
     );
-  if (!p)
-    return fail(
-      intent,
-      "Esa foto no pertenece a la galería o no está visible.",
-    );
+  if (!p) return fail(intent, t("admin.msg.coverNotInGallery"));
   await db
     .update(schema.galleries)
     .set({ coverPhotoId: p.id, coverFocusX: null, coverFocusY: null })
     .where(eq(schema.galleries.id, g.id));
-  return done(intent, "Portada guardada.");
+  return done(intent, t("admin.msg.coverSaved"));
 }
 
 // A plain decimal (optional sign/exponent); no hex, no Infinity/NaN words.
@@ -628,7 +625,12 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
  * and height. Both empty = automatic (null); else any finite number 0-100,
  * rounded to one decimal.
  */
-async function saveFocus(env: Env, g: GalleryRow, form: FormData) {
+async function saveFocus(
+  env: Env,
+  g: GalleryRow,
+  form: FormData,
+  t: TFunction,
+) {
   const intent = "focus";
   const rx = str(form, "focusX").trim();
   const ry = str(form, "focusY").trim();
@@ -641,7 +643,7 @@ async function saveFocus(env: Env, g: GalleryRow, form: FormData) {
       !(Number.isFinite(x) && Number.isFinite(y)) ||
       !(x >= 0 && x <= 100 && y >= 0 && y <= 100)
     )
-      return fail(intent, "El punto focal debe estar entre 0 y 100.");
+      return fail(intent, t("admin.msg.focusRange"));
     x = round1(x);
     y = round1(y);
   }
@@ -651,7 +653,7 @@ async function saveFocus(env: Env, g: GalleryRow, form: FormData) {
     .where(eq(schema.galleries.id, g.id));
   return done(
     intent,
-    x === null ? "Portada centrada." : "Punto focal guardado.",
+    x === null ? t("admin.msg.focusCentered") : t("admin.msg.focusSaved"),
   );
 }
 
@@ -673,11 +675,11 @@ function parseOrder(raw: string): Record<string, string[]> | null {
   return out;
 }
 
-async function reorder(env: Env, g: GalleryRow, f: FormData) {
+async function reorder(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   const intent = "reorder";
   const db = getDb(env);
   const order = parseOrder(str(f, "order"));
-  if (!order) return fail(intent, "El orden enviado no es válido.");
+  if (!order) return fail(intent, t("admin.msg.orderInvalid"));
   const current = await db
     .select({
       id: schema.photos.id,
@@ -687,12 +689,7 @@ async function reorder(env: Env, g: GalleryRow, f: FormData) {
     .from(schema.photos)
     .where(and(eq(schema.photos.galleryId, g.id), photoVisible));
   if ((await photoSetVersion(current.map((p) => p.id))) !== str(f, "version"))
-    return fail(
-      intent,
-      "Las fotos de la galería cambiaron desde que abriste esta página (por ejemplo, por una sincronización). Recargá la página y volvé a ordenar.",
-      undefined,
-      { stale: true },
-    );
+    return fail(intent, t("admin.msg.orderStale"), undefined, { stale: true });
   const byId = new Map(current.map((p) => [p.id, p]));
   const seen = new Set<string>();
   const writes: { id: string; sort: number }[] = [];
@@ -700,13 +697,12 @@ async function reorder(env: Env, g: GalleryRow, f: FormData) {
     for (const [i, pid] of ids.entries()) {
       const p = byId.get(pid);
       if (!p || p.set !== set || seen.has(pid))
-        return fail(intent, "El orden enviado no es válido.");
+        return fail(intent, t("admin.msg.orderInvalid"));
       seen.add(pid);
       if (p.sort !== i) writes.push({ id: pid, sort: i });
     }
   }
-  if (seen.size !== byId.size)
-    return fail(intent, "El orden enviado no es válido.");
+  if (seen.size !== byId.size) return fail(intent, t("admin.msg.orderInvalid"));
 
   // One CASE update per chunk, all chunks in a single batch (a D1 batch is a
   // transaction), so a failure never leaves a half-applied order.
@@ -735,5 +731,5 @@ async function reorder(env: Env, g: GalleryRow, f: FormData) {
     );
   }
   if (stmts.length) await db.batch(stmts as [BatchItem, ...BatchItem[]]);
-  return done(intent, "Orden guardado.");
+  return done(intent, t("admin.msg.orderSaved"));
 }

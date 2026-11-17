@@ -14,23 +14,27 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { nonceContext } from "./lib/server/context";
 import { getStudioName } from "./lib/server/admin";
-import { en } from "./i18n/en";
 import { es } from "./i18n/es";
-import { getLang, langCookie } from "./i18n/lang";
+import { messagesForRequest } from "./i18n/dictionaries";
+import { isAdminPath, langCookie } from "./i18n/lang";
 import { pwaMeta } from "./lib/pwa";
 import { makeT } from "./i18n/t";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const lang = getLang(request);
+  // /admin (and its .data requests) use the admin_lang cookie; the public
+  // site keeps ?lang= / lang cookie / Accept-Language. Public pages are not
+  // sent the admin strings.
+  const { lang, messages } = messagesForRequest(request);
+  const url = new URL(request.url);
   const payload = {
     lang,
-    messages: lang === "en" ? en : es,
+    messages,
     studioName: await getStudioName(env, request),
     // CSP nonce for the inline A2HS script (the browser hides it from the DOM
     // after parsing, and only the server render needs it).
     nonce: context.get(nonceContext),
   };
-  const explicit = new URL(request.url).searchParams.has("lang");
+  const explicit = !isAdminPath(url.pathname) && url.searchParams.has("lang");
   return data(
     payload,
     explicit ? { headers: { "Set-Cookie": langCookie(lang) } } : undefined,

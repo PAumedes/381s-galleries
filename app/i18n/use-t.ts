@@ -1,17 +1,28 @@
-import { useMemo } from "react";
-import { useRouteLoaderData } from "react-router";
+import { useContext, useMemo } from "react";
+import { UNSAFE_DataRouterDataContext } from "react-router";
 
-import type { loader as rootLoader } from "../root";
 import { es } from "./es";
-import { DEFAULT_LANG } from "./lang";
-import { makeT, type TFunction } from "./t";
+import { DEFAULT_LANG, type Lang } from "./lang";
+import { makeT, type Messages, type TFunction } from "./t";
 
-export function useLang() {
-  return useRouteLoaderData<typeof rootLoader>("root")?.lang ?? DEFAULT_LANG;
+type RootData = { lang?: Lang; messages?: Messages } | undefined;
+
+/**
+ * Root loader data, or undefined when rendered outside a data router (leaf
+ * components such as the QR code are unit-tested without one; they then fall
+ * back to Spanish). Same data `useRouteLoaderData("root")` returns.
+ */
+function useRootData(): RootData {
+  const data = useContext(UNSAFE_DataRouterDataContext);
+  return data?.loaderData?.root as RootData;
+}
+
+export function useLang(): Lang {
+  return useRootData()?.lang ?? DEFAULT_LANG;
 }
 
 export function useT(): TFunction {
-  const data = useRouteLoaderData<typeof rootLoader>("root");
+  const data = useRootData();
   const lang = data?.lang ?? DEFAULT_LANG;
   const messages = data?.messages ?? es;
   return useMemo(() => makeT(lang, messages), [lang, messages]);

@@ -9,6 +9,8 @@ import {
   parseDriveFolderId,
   validStudioName,
 } from "../lib/server/admin";
+import { requestT } from "../i18n/dictionaries";
+import type { TFunction } from "../i18n/t";
 import { requireAdmin } from "../lib/server/auth";
 import { getDrive } from "../lib/server/drive-factory";
 import { DriveError, FOLDER_MIME } from "../lib/server/drive-types";
@@ -71,50 +73,44 @@ async function saveRoot(
   drive: DriveClient,
   input: string,
   confirmed: boolean,
+  t: TFunction,
 ): Promise<SetupActionResult> {
   const id = parseDriveFolderId(input);
-  if (!id)
-    return fail(
-      "root",
-      "No reconocimos ese enlace. Pegá el enlace de la carpeta de Drive o su ID.",
-    );
+  if (!id) return fail("root", t("admin.msg.folderUnrecognized"));
   let meta;
   try {
     meta = await drive.getMeta(id);
   } catch (err) {
     if (err instanceof DriveError && (err.status === 404 || err.status === 403))
-      return fail(
-        "root",
-        "No se encontró la carpeta o la cuenta conectada no tiene acceso.",
-      );
+      return fail("root", t("admin.msg.folderNotFound"));
     console.error(
       "root folder check failed",
       err instanceof Error ? err.name : "error",
     );
-    return fail("root", "No se pudo consultar Google Drive. Intentá de nuevo.");
+    return fail("root", t("admin.msg.driveError"));
   }
-  if (meta.trashed)
-    return fail("root", "Esa carpeta está en la papelera de Drive.");
+  if (meta.trashed) return fail("root", t("admin.msg.folderTrashed"));
   if (meta.mimeType !== FOLDER_MIME)
-    return fail("root", "El enlace no corresponde a una carpeta.");
+    return fail("root", t("admin.msg.notFolder"));
   const current = await getSetting(e, SETTINGS_KEYS.driveRootId);
   if (current && current !== id && !confirmed)
-    return fail(
-      "root",
-      "Al cambiar la carpeta raíz, las galerías que no estén en la nueva carpeta se archivarán después de 1 hora. Confirmá el cambio para continuar.",
-    );
+    return fail("root", t("admin.msg.rootChangeConfirm"));
   await putSetting(e, SETTINGS_KEYS.driveRootId, id);
   if (current !== id) await deleteSetting(e, SETTINGS_KEYS.driveChangesToken);
   await putSetting(e, SETTINGS_KEYS.driveRootName, meta.name);
-  return { intent: "root", ok: true, message: "Carpeta raíz guardada." };
+  return { intent: "root", ok: true, message: t("admin.msg.rootSaved") };
 }
 
-async function syncNow(e: Env, drive: DriveClient): Promise<SetupActionResult> {
+async function syncNow(
+  e: Env,
+  drive: DriveClient,
+  t: TFunction,
+): Promise<SetupActionResult> {
   const last = Date.parse(
     (await getSetting(e, SETTINGS_KEYS.syncLastOk)) ?? "",
   );
   if (Number.isFinite(last) && Date.now() - last < 30_000)
-    return fail("sync", "Se sincronizó hace instantes");
+    return fail("sync", t("admin.msg.syncedRecently"));
   try {
     const result = await runRecordedSync(e, { drive, force: true });
     return { intent: "sync", ok: true, result };
@@ -130,10 +126,7 @@ async function syncNow(e: Env, drive: DriveClient): Promise<SetupActionResult> {
       SETTINGS_KEYS.syncLastError,
       JSON.stringify({ at: nowIso(), message }),
     ).catch(() => {});
-    return fail(
-      "sync",
-      "No se pudo sincronizar. Revisá la conexión e intentá de nuevo.",
-    );
+    return fail("sync", t("admin.msg.syncFailed"));
   }
 }
 
@@ -143,30 +136,31 @@ export async function setupAction(
   drive?: DriveClient,
 ): Promise<SetupActionResult> {
   await adminAction(request, e);
+  const t = requestT(request);
   const form = await request.formData();
   const intent = String(form.get("intent") ?? "");
   switch (intent) {
     case "disconnect":
       await disconnectGoogle(e);
-      return { intent, ok: true, message: "Google Drive desconectado." };
+      return { intent, ok: true, message: t("admin.msg.driveDisconnected") };
     case "root":
       return saveRoot(
         e,
         drive ?? getDrive(e),
         String(form.get("folder") ?? ""),
         form.get("confirm") === "1",
+        t,
       );
     case "sync":
-      return syncNow(e, drive ?? getDrive(e));
+      return syncNow(e, drive ?? getDrive(e), t);
     case "studio": {
       const name = validStudioName(String(form.get("studioName") ?? ""));
-      if (!name)
-        return fail("studio", "El nombre debe tener entre 1 y 60 caracteres.");
+      if (!name) return fail("studio", t("admin.msg.nameLength"));
       await putSetting(e, SETTINGS_KEYS.studioName, name);
-      return { intent, ok: true, message: "Nombre guardado." };
+      return { intent, ok: true, message: t("admin.msg.nameSaved") };
     }
     default:
-      return fail(intent, "Acción desconocida.");
+      return fail(intent, t("admin.msg.unknownAction"));
   }
 }
 

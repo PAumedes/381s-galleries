@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { Form, useNavigation } from "react-router";
 
+import { useT } from "../../i18n/use-t";
 import { movePhoto, moveTo, sortPhotos } from "../../lib/admin-gallery";
 import type { MoveDir } from "../../lib/admin-gallery";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
@@ -44,6 +45,7 @@ export function PhotoReorder({
   coverAuto?: boolean;
   actionData?: GalleryActionResult;
 }) {
+  const t = useT();
   const [initial] = useState<Orders>(() => groupBySet(photos));
   const [orders, setOrders] = useState<Orders>(initial);
   const [selected, setSelected] = useState<string | null>(null);
@@ -74,7 +76,11 @@ export function PhotoReorder({
     if (moved) {
       if (refocus) focusId.current = moved;
       setAnnounce(
-        `${byId.get(moved)?.name ?? ""} movida a la posición ${ids.indexOf(moved) + 1} de ${ids.length}.`,
+        t("admin.reorder.moved", {
+          name: byId.get(moved)?.name ?? "",
+          pos: ids.indexOf(moved) + 1,
+          total: ids.length,
+        }),
       );
     }
   }
@@ -90,7 +96,12 @@ export function PhotoReorder({
       sortPhotos(list, mode).map((p) => p.id),
     );
     setAnnounce(
-      `Fotos de ${set} ordenadas por ${mode === "date" ? "fecha de captura" : "nombre"}.`,
+      t(
+        mode === "date"
+          ? "admin.reorder.sortedDate"
+          : "admin.reorder.sortedName",
+        { set },
+      ),
     );
   }
 
@@ -122,11 +133,7 @@ export function PhotoReorder({
 
   return (
     <div ref={root} className="flex flex-col gap-6">
-      <p className="text-small text-grey-600">
-        Arrastrá las miniaturas, o elegí una (clic, Enter o Espacio) y movela
-        con las flechas, Inicio/Fin o los botones “Mover antes/después”. Escape
-        quita la selección. Los cambios se aplican al guardar.
-      </p>
+      <p className="text-small text-grey-600">{t("admin.reorder.help")}</p>
       <p role="status" className="sr-only">
         {announce}
       </p>
@@ -145,7 +152,7 @@ export function PhotoReorder({
                 disabled={idx <= 0}
                 onClick={() => selected && move(selected, "before", false)}
               >
-                Mover antes
+                {t("admin.reorder.before")}
               </button>
               <button
                 type="button"
@@ -153,21 +160,21 @@ export function PhotoReorder({
                 disabled={idx === -1 || idx === ids.length - 1}
                 onClick={() => selected && move(selected, "after", false)}
               >
-                Mover después
+                {t("admin.reorder.after")}
               </button>
               <button
                 type="button"
                 className={btn}
                 onClick={() => sortSet(set, "date")}
               >
-                Ordenar por fecha de captura
+                {t("admin.reorder.sortDate")}
               </button>
               <button
                 type="button"
                 className={btn}
                 onClick={() => sortSet(set, "name")}
               >
-                Ordenar por nombre
+                {t("admin.reorder.sortName")}
               </button>
             </div>
             <ul
@@ -237,7 +244,9 @@ export function PhotoReorder({
                       {coverPhotoId === id ? (
                         <>
                           <span className="text-micro bg-ink text-paper px-2 py-0.5 uppercase">
-                            {coverAuto ? "Portada (automática)" : "Portada"}
+                            {coverAuto
+                              ? t("admin.reorder.coverAuto")
+                              : t("admin.reorder.cover")}
                           </span>
                           {coverAuto && (
                             <Form method="post">
@@ -253,7 +262,7 @@ export function PhotoReorder({
                                 disabled={busy}
                                 className="text-micro text-grey-700 hover:text-ink focus-visible:outline-ink px-1 py-1 uppercase underline-offset-4 hover:underline focus-visible:outline-2 disabled:opacity-40"
                               >
-                                Fijar portada
+                                {t("admin.reorder.pinCover")}
                               </button>
                             </Form>
                           )}
@@ -268,7 +277,7 @@ export function PhotoReorder({
                             disabled={busy}
                             className="text-micro text-grey-700 hover:text-ink focus-visible:outline-ink px-1 py-1 uppercase underline-offset-4 hover:underline focus-visible:outline-2 disabled:opacity-40"
                           >
-                            Usar como portada
+                            {t("admin.reorder.useAsCover")}
                           </button>
                         </Form>
                       )}
@@ -290,7 +299,7 @@ export function PhotoReorder({
           className={`${btn} bg-ink text-paper`}
           disabled={!dirty || busy}
         >
-          Guardar orden
+          {t("admin.reorder.save")}
         </button>
         <button
           type="button"
@@ -299,10 +308,10 @@ export function PhotoReorder({
           onClick={() => {
             setOrders(initial);
             setSelected(null);
-            setAnnounce("Orden restablecido.");
+            setAnnounce(t("admin.reorder.wasReset"));
           }}
         >
-          Restablecer
+          {t("admin.reorder.reset")}
         </button>
       </Form>
       {feedback && !feedback.ok && (
@@ -310,7 +319,7 @@ export function PhotoReorder({
           {feedback.error}{" "}
           {feedback.stale && (
             <a href="?" className="underline">
-              Recargar
+              {t("admin.reorder.reload")}
             </a>
           )}
         </p>
