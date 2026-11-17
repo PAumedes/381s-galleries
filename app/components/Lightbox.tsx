@@ -100,6 +100,11 @@ function LightboxView({
   );
 
   const photo = photos[index];
+  // Events from images of other photos (out-of-order loads) are ignored.
+  const currentId = useRef(photo.id);
+  useEffect(() => {
+    currentId.current = photo.id;
+  });
   const total = photos.length;
   const hasPrev = index > 0;
   const hasNext = index < total - 1;
@@ -172,15 +177,32 @@ function LightboxView({
     return () => document.removeEventListener("keydown", onKey);
   }, [prev, next]);
 
-  // Preload neighbours.
+  // Preload neighbours. Stale ones (we navigated on) are cancelled so rapid
+  // navigation never piles up requests: at most the two current neighbours.
   useEffect(() => {
+    const inflight: HTMLImageElement[] = [];
     for (const p of [photos[index + 1], photos[index - 1]]) {
       if (!p) continue;
       const img = new Image();
+      const done = () => {
+        const at = inflight.indexOf(img);
+        if (at >= 0) inflight.splice(at, 1);
+      };
+      img.onload = done;
+      img.onerror = done;
       img.sizes = "(min-width: 768px) 92vw, 100vw";
       img.srcset = srcSet(p.id);
       img.src = imgUrl(p.id, "view-sm");
+      inflight.push(img);
     }
+    return () => {
+      for (const img of inflight) {
+        img.onload = null;
+        img.onerror = null;
+        img.removeAttribute?.("srcset");
+        img.src = "";
+      }
+    };
   }, [photos, index]);
 
   // Auto-hide controls on pointer devices.
@@ -275,9 +297,18 @@ function LightboxView({
     }
   };
 
+  // An error belongs to one photo; navigating away forgets it so coming back
+  // tries again.
+  if (failedId !== null && failedId !== photo.id) setFailedId(null);
+
   const favorite = isFavorite?.(photo.id) ?? false;
   const loaded = loadedId === photo.id;
   const failed = failedId === photo.id;
+  // Keep the last loaded photo on screen while the new one loads.
+  const behind =
+    !loaded && !failed && loadedId !== null
+      ? photos.find((p) => p.id === loadedId)
+      : undefined;
   const chrome = `transition-opacity duration-slow ease-out-soft ${
     visible ? "opacity-100" : "pointer-events-none opacity-0"
   }`;
@@ -300,7 +331,7 @@ function LightboxView({
     >
       <div
         data-testid="lightbox-stage"
-        className="absolute inset-0 flex touch-pan-y touch-pinch-zoom items-center justify-center select-none"
+        className="absolute inset-0 grid touch-pan-y touch-pinch-zoom place-items-center select-none"
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={endDrag}
@@ -332,26 +363,51 @@ function LightboxView({
             </button>
           </div>
         ) : (
-          <img
-            key={`${photo.id}:${retry}`}
-            ref={(img) => {
-              if (img?.complete && img.naturalWidth > 0) setLoadedId(photo.id);
-            }}
-            data-testid="lightbox-img"
-            src={withRetry(imgUrl(photo.id, "view-sm"), retry)}
-            srcSet={retry ? undefined : srcSet(photo.id)}
-            sizes="(min-width: 768px) 92vw, 100vw"
-            alt={t("grid.photo", { n: index + 1 })}
-            draggable={false}
-            onLoad={() => setLoadedId(photo.id)}
-            onError={() => setFailedId(photo.id)}
-            className={`block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] ${
-              dragX === 0
-                ? "transition-[opacity,transform] duration-slow ease-out-soft"
-                : "transition-opacity duration-slow"
-            } motion-reduce:transition-none ${loaded ? "opacity-100" : "opacity-0"}`}
-            style={{ transform: dragX ? `translateX(${dragX}px)` : undefined }}
-          />
+          <>
+            {behind && (
+              <img
+                data-testid="lightbox-prev"
+                src={imgUrl(behind.id, "view-sm")}
+                srcSet={srcSet(behind.id)}
+                sizes="(min-width: 768px) 92vw, 100vw"
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                className="pointer-events-none col-start-1 row-start-1 block h-[80vh] w-screen object-contain opacity-100 md:h-[86vh] md:w-[92vw]"
+              />
+            )}
+            <img
+              key={`${photo.id}:${retry}`}
+              ref={(img) => {
+                if (
+                  img?.complete &&
+                  img.naturalWidth > 0 &&
+                  currentId.current === photo.id
+                )
+                  setLoadedId(photo.id);
+              }}
+              data-testid="lightbox-img"
+              src={withRetry(imgUrl(photo.id, "view-sm"), retry)}
+              srcSet={retry ? undefined : srcSet(photo.id)}
+              sizes="(min-width: 768px) 92vw, 100vw"
+              alt={t("grid.photo", { n: index + 1 })}
+              draggable={false}
+              onLoad={() => {
+                if (currentId.current === photo.id) setLoadedId(photo.id);
+              }}
+              onError={() => {
+                if (currentId.current === photo.id) setFailedId(photo.id);
+              }}
+              className={`col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] ${
+                dragX === 0
+                  ? "transition-[opacity,transform] duration-slow ease-out-soft"
+                  : "transition-opacity duration-slow"
+              } motion-reduce:transition-none ${loaded ? "opacity-100" : "opacity-0"}`}
+              style={{
+                transform: dragX ? `translateX(${dragX}px)` : undefined,
+              }}
+            />
+          </>
         )}
       </div>
 

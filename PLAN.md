@@ -241,7 +241,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T5.6 Privacy page:** public `/privacy` (canonical, registered in the Google OAuth consent screen; es/en by lang; Logo, studio name from settings; optional `PUBLIC_CONTACT_EMAIL` var, unset by default, else a generic contact line); `/privacidad` 301-redirects to it (keeps `?lang`). Both reserved slugs. "Privacidad" footer link on gallery pages and home (`SiteFooter`).
 
 ### Phase 6 — Feedback round (after first real use)
-- [ ] **T6.1 Lightbox rapid navigation** — fast prev/next clicks or key repeats leave the lightbox in a broken state; fix races (stale loads, fades, preloads).
+- [x] **T6.1 Lightbox rapid navigation** — fast prev/next clicks or key repeats leave the lightbox in a broken state; fix races (stale loads, fades, preloads).
 - [ ] **T6.2 Image speed** — warm the R2 cache after sync (cron batches within the subrequest budget) + Cloudflare Cache API layer after access checks; avoid Drive on first view where possible.
 - [ ] **T6.3 Prueba / Entrega mode** — one switch per gallery. Prueba: watermarked cover, grid (optional `thumb-wm` recipe, fallback `preview-wm`) and lightbox, downloads off, image protection (no right-click/drag/long-press save, images behind a transparent layer). Entrega: clean images, downloads per size flags.
 - [ ] **T6.4 Gallery editor rework** — one Photos panel (order + "Usar como portada"), live cover preview with focal point, client name shown/searchable in the list.
