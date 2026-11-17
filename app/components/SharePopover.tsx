@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { useRouteLoaderData } from "react-router";
 
 import { useT } from "../i18n/use-t";
 import { nativeShare, whatsappHref } from "../lib/share";
@@ -8,8 +9,8 @@ const item =
   "text-small text-ink hover:bg-grey-100 flex min-h-11 w-full items-center px-4 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink";
 
 /** Canonical public URL: origin + path, never query, hash or session data. */
-function canonicalUrl(): string {
-  return `${window.location.origin}${window.location.pathname}`;
+function canonicalUrl(origin?: string): string {
+  return `${origin || window.location.origin}${window.location.pathname}`;
 }
 
 /**
@@ -28,6 +29,10 @@ export function SharePopover({
   const id = useId();
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
+  const [copyFailed, setCopyFailed] = useState(false);
+  const pending = useRef(false);
+  const root = useRouteLoaderData("root") as { origin?: string } | undefined;
+  const urlRef = useRef<HTMLInputElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const message = t("gallery.shareMessage", { title });
@@ -38,11 +43,19 @@ export function SharePopover({
   }
 
   async function onClick() {
+    if (pending.current) return;
     if (open) return close();
-    const link = canonicalUrl();
+    const link = canonicalUrl(root?.origin);
     setUrl(link);
+    setCopyFailed(false);
     if (typeof navigator.share === "function") {
-      const r = await nativeShare({ title, text: message, url: link });
+      pending.current = true;
+      let r: Awaited<ReturnType<typeof nativeShare>>;
+      try {
+        r = await nativeShare({ title, text: message, url: link });
+      } finally {
+        pending.current = false;
+      }
       if (r !== "failed") return;
     }
     setOpen(true);
@@ -57,16 +70,16 @@ export function SharePopover({
         close();
       }
     };
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: PointerEvent) => {
       const n = e.target as Node;
       if (!boxRef.current?.contains(n) && !btnRef.current?.contains(n))
         setOpen(false);
     };
     document.addEventListener("keydown", onKey, true);
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     return () => {
       document.removeEventListener("keydown", onKey, true);
-      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("pointerdown", onDown);
     };
   }, [open]);
 
@@ -74,11 +87,16 @@ export function SharePopover({
     try {
       await navigator.clipboard.writeText(url);
       onCopied();
+      close();
     } catch {
-      /* clipboard unavailable: nothing to confirm */
+      // Clipboard missing/denied: stay open so the user can copy by hand.
+      setCopyFailed(true);
     }
-    close();
   }
+
+  useEffect(() => {
+    if (copyFailed) urlRef.current?.select();
+  }, [copyFailed]);
 
   return (
     <div className="relative">
@@ -100,6 +118,15 @@ export function SharePopover({
           id={id}
           role="dialog"
           aria-label={t("gallery.share")}
+          onBlur={(e) => {
+            const to = e.relatedTarget as Node | null;
+            if (
+              to &&
+              !boxRef.current?.contains(to) &&
+              !btnRef.current?.contains(to)
+            )
+              setOpen(false);
+          }}
           className="bg-paper text-ink border-grey-300 absolute right-0 top-full z-(--z-toast) mt-1 flex w-56 flex-col border py-1 shadow-lg"
         >
           <a
@@ -114,6 +141,21 @@ export function SharePopover({
           <button type="button" onClick={copy} className={item}>
             {t("gallery.shareCopy")}
           </button>
+          {copyFailed && (
+            <>
+              <p role="status" className="text-small px-4 py-2">
+                {t("gallery.shareCopyFailed")}
+              </p>
+              <input
+                ref={urlRef}
+                readOnly
+                value={url}
+                aria-label={t("gallery.shareCopy")}
+                onFocus={(e) => e.currentTarget.select()}
+                className="border-grey-300 text-small mx-4 mb-2 border px-2 py-1"
+              />
+            </>
+          )}
           <button type="button" onClick={close} className={item}>
             {t("gallery.shareClose")}
           </button>

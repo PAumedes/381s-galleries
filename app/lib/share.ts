@@ -1,6 +1,8 @@
+import { wellFormed } from "./text";
+
 /** WhatsApp "share text" link. Plain link: no scripts, no SDK. */
 export function whatsappHref(message: string, url: string): string {
-  return `https://wa.me/?text=${encodeURIComponent(`${message} ${url}`)}`;
+  return `https://wa.me/?text=${encodeURIComponent(wellFormed(`${message} ${url}`))}`;
 }
 
 export function canNativeShare(): boolean {
@@ -20,10 +22,16 @@ export async function nativeShare(data: {
 }): Promise<"shared" | "cancelled" | "failed"> {
   if (!canNativeShare()) return "failed";
   try {
-    await navigator.share(data);
+    await navigator.share({
+      title: wellFormed(data.title),
+      text: wellFormed(data.text),
+      url: data.url,
+    });
     return "shared";
   } catch (e) {
-    return (e as { name?: string } | null)?.name === "AbortError"
+    // InvalidStateError: a share sheet is already open.
+    const name = (e as { name?: string } | null)?.name;
+    return name === "AbortError" || name === "InvalidStateError"
       ? "cancelled"
       : "failed";
   }

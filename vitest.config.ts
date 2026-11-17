@@ -58,7 +58,10 @@ export default defineConfig(async () => {
           test: {
             name: "dom",
             environment: "happy-dom",
-            include: ["test/dom/**/*.test.tsx"],
+            include: [
+              "test/dom/**/*.test.tsx",
+              "test/adversarial/**/*.test.tsx",
+            ],
             setupFiles: ["test/dom/setup.ts"],
           },
         },

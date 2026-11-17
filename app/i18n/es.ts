@@ -7,6 +7,7 @@ export const es = {
   "gallery.shareWhatsapp": "WhatsApp",
   "gallery.shareCopy": "Copiar enlace",
   "gallery.shareClose": "Cerrar",
+  "gallery.shareCopyFailed": "No se pudo copiar",
   "pwa.ios": "Tocá Compartir y luego 'Agregar a inicio'",
   "pwa.install": "Agregar a inicio",
   "pwa.dismiss": "Cerrar",

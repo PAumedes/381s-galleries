@@ -9,6 +9,7 @@ export const en = {
   "gallery.shareWhatsapp": "WhatsApp",
   "gallery.shareCopy": "Copy link",
   "gallery.shareClose": "Close",
+  "gallery.shareCopyFailed": "Couldn't copy",
   "pwa.ios": "Tap Share, then 'Add to Home Screen'",
   "pwa.install": "Add to Home Screen",
   "pwa.dismiss": "Close",

@@ -1,4 +1,4 @@
-import { useId, useState, useSyncExternalStore } from "react";
+import { useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { useT } from "../../i18n/use-t";
 import { downloadBlob, qrPngBlob } from "../../lib/qr";
@@ -24,8 +24,10 @@ export function SharePanel({
   cardHref?: string;
 }) {
   const t = useT();
+  const published = status === "published";
   const id = useId();
   const [copied, setCopied] = useState<"ok" | "fail" | null>(null);
+  const sharing = useRef(false);
   const [svg, setSvg] = useState("");
   const [err, setErr] = useState(false);
   const native = useSyncExternalStore(
@@ -69,21 +71,38 @@ export function SharePanel({
             <button
               type="button"
               className={btn}
-              onClick={() =>
-                void nativeShare({ title: title ?? slug, text: message, url })
-              }
+              disabled={!published}
+              onClick={async () => {
+                if (sharing.current) return;
+                sharing.current = true;
+                try {
+                  await nativeShare({
+                    title: title ?? slug,
+                    text: message,
+                    url,
+                  });
+                } finally {
+                  sharing.current = false;
+                }
+              }}
             >
               {t("admin.share.native")}
             </button>
           )}
-          <a
-            href={whatsappHref(message, url)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={btn}
-          >
-            {t("admin.share.whatsapp")}
-          </a>
+          {published ? (
+            <a
+              href={whatsappHref(message, url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={btn}
+            >
+              {t("admin.share.whatsapp")}
+            </a>
+          ) : (
+            <span aria-disabled="true" className={`${btn} opacity-40`}>
+              {t("admin.share.whatsapp")}
+            </span>
+          )}
         </div>
         <p role="status" className="text-small text-grey-700 min-h-5">
           {copied === "ok" && t("admin.share.copied")}

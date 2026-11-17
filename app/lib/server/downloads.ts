@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
+import { wellFormed } from "../text";
 import { getDb, photoVisible, schema } from "../../db";
 import {
   clientIpHash,
@@ -92,7 +93,7 @@ function fileIdFor(p: PhotoRow, v: DlVariant): string | null {
 /** Download file name: no path separators / control chars (unicode kept). */
 export function downloadFilename(baseName: string, v: DlVariant): string {
   const base =
-    baseName
+    wellFormed(baseName)
       // eslint-disable-next-line no-control-regex
       .replace(/[\u0000-\u001f\u007f-\u009f/\\]/g, "")
       .trim()
@@ -105,7 +106,7 @@ export function downloadFilename(baseName: string, v: DlVariant): string {
 
 function contentDisposition(filename: string): string {
   const ascii = filename.replace(/[^\x20-\x7e]|["\\%]/g, "_");
-  const star = encodeURIComponent(filename).replace(
+  const star = encodeURIComponent(wellFormed(filename)).replace(
     /['()*]/g,
     (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase(),
   );
