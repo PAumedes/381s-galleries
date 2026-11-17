@@ -19,7 +19,7 @@ import {
 import { GalleryList } from "../../app/components/admin/GalleryList";
 import { SetupView } from "../../app/components/admin/SetupView";
 import { allMessages } from "../../app/i18n/dictionaries";
-import { asAdminLang } from "../../app/i18n/lang";
+import { getAdminLang } from "../../app/i18n/lang";
 
 const status = {
   mock: false,
@@ -29,8 +29,9 @@ const status = {
 };
 
 function clearCookie() {
-  document.cookie = "admin_lang=; Max-Age=0; Path=/";
-  document.cookie = "admin_lang=; Max-Age=0; Path=/admin";
+  const past = "Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie = `admin_lang=; Max-Age=0; ${past}; Path=/`;
+  document.cookie = `admin_lang=; Max-Age=0; ${past}; Path=/admin`;
 }
 
 /** Root route whose loader mirrors app/root.tsx: language from the admin cookie. */
@@ -40,8 +41,12 @@ function app(children: ReactNode, path = "/admin") {
       id: "root",
       path: "/",
       loader: () => {
-        const m = /(?:^|; )admin_lang=([^;]*)/.exec(document.cookie);
-        const lang = asAdminLang(m?.[1]) ?? "es";
+        // Same parser the server uses (first valid value wins).
+        // (happy-dom's Request drops the forbidden `cookie` header, so pass a
+        // minimal stand-in.)
+        const lang = getAdminLang({
+          headers: new Map([["cookie", document.cookie]]),
+        } as unknown as Request);
         return { lang, messages: allMessages(lang), studioName: "Estudio" };
       },
       Component: () => <Outlet />,

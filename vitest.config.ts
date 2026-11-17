@@ -28,7 +28,7 @@ export default defineConfig(async () => {
                   TOKEN_KEY: "yogTK+cwJid8noG4Vt0xD2UnRFi5DXpIYNqlDl+l0HE=",
                   ADMIN_EMAIL: "Admin@Example.com",
                   STUDIO_NAME: "381 Studios",
-                  PUBLIC_ORIGIN: "https://session.381studios.ar",
+                  PUBLIC_ORIGIN: "https://gallery.381studios.ar",
                   ALLOW_DEV_ADMIN: "",
                   DRIVE_MODE: "mock",
                   ACCESS_TEAM_DOMAIN: "",

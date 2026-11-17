@@ -5,6 +5,7 @@ import {
   applySecurityHeaders,
   makeNonce,
 } from "../app/lib/server/security-headers";
+import { legacyRedirect } from "../app/lib/server/legacy-redirect";
 import { dispatchScheduled } from "../app/lib/server/scheduled";
 
 const requestHandler = createRequestHandler(
@@ -14,6 +15,9 @@ const requestHandler = createRequestHandler(
 
 export default {
   async fetch(request, env, ctx) {
+    // Old hostnames redirect before anything else (React Router, /img, API).
+    const moved = legacyRedirect(request, env);
+    if (moved) return moved;
     // Config error (reused secret): fail loudly rather than run with it.
     assertDistinctSecrets(env);
     const nonce = makeNonce();

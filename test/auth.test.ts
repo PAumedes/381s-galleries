@@ -335,7 +335,7 @@ describe("requireAdmin", () => {
   });
   it("401 in mock mode on a non-localhost host", async () => {
     await expect401(
-      requireAdmin(mk("https://session.381studios.ar/admin"), mock),
+      requireAdmin(mk("https://gallery.381studios.ar/admin"), mock),
     );
   });
 });

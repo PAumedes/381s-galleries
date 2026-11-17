@@ -1,6 +1,6 @@
 # 381s-galleries — client galleries for 381 Studios (Pixieset alternative)
 
-> Live at **https://session.381studios.ar/<slug>** · Repo: `PAumedes/381s-galleries`
+> Live at **https://gallery.381studios.ar/<slug>** · Repo: `PAumedes/381s-galleries`
 > This file is the single source of truth for the build. Every contributor reads the sections it needs before starting a task.
 > Work happens **one task at a time**: touch only the files listed for that task and stop when the acceptance criteria pass.
 
@@ -32,7 +32,7 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Sync | Cloudflare **Cron Trigger** every 15 min + "Sync now" button in admin. A second trigger every minute warms the R2 cache (§5.3) | |
 | Bulk download | Browser-side zip with `client-zip` | No server zipping |
 | Image processing | **None.** Never resize, re-encode or watermark in code | Capture One does all of it |
-| URLs | Public: `https://session.381studios.ar/<slug>`. Admin: `/admin`. Reserved slugs (rejected by sync, suffixed with `-2`): `admin, api, img, dl, assets, brand, favicon.ico, robots.txt, manifest.webmanifest, privacidad, privacy` | |
+| URLs | Public: `https://gallery.381studios.ar/<slug>` (old `session.` host 301-redirects, T6.8). Admin: `/admin`. Reserved slugs (rejected by sync, suffixed with `-2`): `admin, api, img, dl, assets, brand, favicon.ico, robots.txt, manifest.webmanifest, privacidad, privacy` | |
 | Public origin | `PUBLIC_ORIGIN` var (wrangler.jsonc; `.dev.vars` locally). Share panel/QR/print card build links via `publicGalleryUrl` (`app/lib/server/public-url.ts`): must be https (http only for localhost), else falls back to the request origin | Links never depend on the Host header |
 | i18n | **Spanish (default) + English**. Strings in `app/i18n/{es,en}.ts` with a typed key set; language from `?lang=` → cookie → `Accept-Language` → `es`. Small ES/EN toggle in the footer. Admin UI in Spanish only (the only exception: the printable A6 card, ES/EN via `?lang=`) | |
 | Branding | Studio name "381 Studios", black/white logos (see §5.8), Montserrat, monochrome palette (no accent colour) | |
@@ -268,7 +268,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T6.2 Image speed** — cache warming + versioned image URLs. See §5.3 (warming, versioned URLs, why no edge cache). Migration 0012 adds `photos.cache_warm_key`; second cron `* * * * *`; "Fotos en caché: N / M" on the setup page.
 - [x] **T6.6 Public portfolio home** — per-gallery "Mostrar en la portada" (published, no PIN only); home shows a cover grid. See §5.8 "Public home (T6.6)". Migration 0016_show_on_home.
 - [x] **T6.7 Admin in English** — ES/EN toggle in the admin. See §5.7 "T6.7 decisions".
-- [ ] **T6.8 Subdomain rename** — new public hostname; old one 301-redirects. The new public hostname is `gallery.381studios.ar` (confirmed). `share.381studios.ar` is taken by the owner's Pixieset and must not be used.
+- [x] **T6.8 Subdomain rename** — public host is now `gallery.381studios.ar`; `session.` stays a custom-domain route and 301-redirects (308 for non-GET/HEAD) via `legacyRedirect` (`app/lib/server/legacy-redirect.ts`), first thing in `workers/app.ts`, driven by var `LEGACY_HOSTS`. Target is always `PUBLIC_ORIGIN` + path + query. OAuth redirect URI: `https://gallery.381studios.ar/admin/google/callback`. DEPLOY.md §11. The new public hostname is `gallery.381studios.ar` (confirmed). `share.381studios.ar` is taken by the owner's Pixieset and must not be used.
 - [ ] **T6.9 Sharing** — in admin "Compartir" and in the client gallery, a share button. On devices with `navigator.share`, use it. Otherwise show a WhatsApp link (`https://wa.me/?text=<encoded title + url>`, opens WhatsApp Desktop or offers WhatsApp Web), "Copiar enlace" and the QR (admin).
 - [ ] **T6.10 Drive via service account (pending owner's OK)** — read Drive with a Google service account that the root folder is shared with as Viewer. JWT RS256 via WebCrypto, `drive.readonly`, no consent screen and no unverified-app warning. Key in a secret. The OAuth flow stays as a fallback until it is removed.
 - [ ] **T6.11 Admin mobile pass** — the admin screens are usable at 360px width.
@@ -298,6 +298,6 @@ See `.claude/WORKFLOW.md`.
 ## 10. (reserved)
 
 ## 11. Manual steps for the photographer
-The step-by-step guide (Spanish) is **[DEPLOY.md](DEPLOY.md)**; it is the single source of truth for setup, the environment table (which values are secrets vs `wrangler.jsonc` vars), deploy order, Capture One recipes and troubleshooting. Deployment is entirely from GitHub Actions: the manual **Setup** workflow (`scripts/setup-cloudflare.mjs`: ensures D1/R2, writes `database_id`, deploys, then uploads secrets; generated secrets are never regenerated) and the **Deploy** workflow on push to main (both use the `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` GitHub secrets; CI on PRs only). `pnpm run deploy` applies the remote migrations, builds and deploys (`pnpm deploy` without `run` is a pnpm built-in); `pnpm secrets:check` verifies the required secrets exist and that `ALLOW_DEV_ADMIN` does not. `ALLOW_DEV_ADMIN` is local only (`.dev.vars`) and must never be set in production.
+The step-by-step guide (Spanish) is **[DEPLOY.md](DEPLOY.md)** (§11 covers the `session.` → `gallery.` host change); it is the single source of truth for setup, the environment table (which values are secrets vs `wrangler.jsonc` vars), deploy order, Capture One recipes and troubleshooting. Deployment is entirely from GitHub Actions: the manual **Setup** workflow (`scripts/setup-cloudflare.mjs`: ensures D1/R2, writes `database_id`, deploys, then uploads secrets; generated secrets are never regenerated) and the **Deploy** workflow on push to main (both use the `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` GitHub secrets; CI on PRs only). `pnpm run deploy` applies the remote migrations, builds and deploys (`pnpm deploy` without `run` is a pnpm built-in); `pnpm secrets:check` verifies the required secrets exist and that `ALLOW_DEV_ADMIN` does not. `ALLOW_DEV_ADMIN` is local only (`.dev.vars`) and must never be set in production.
 
 If sync hits Free plan CPU (10 ms) or subrequest limits on very large libraries, Workers Paid ($5/month) lifts them; the sync aborts cleanly rather than corrupting data.

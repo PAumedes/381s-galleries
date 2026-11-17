@@ -27,7 +27,12 @@ const e = {
   GOOGLE_CLIENT_ID: "client-id-123",
   GOOGLE_CLIENT_SECRET: "client-secret-456",
 } as Env;
-const adminEnv = { ...e, DRIVE_MODE: "mock", ALLOW_DEV_ADMIN: "1" } as Env;
+const adminEnv = {
+  ...e,
+  DRIVE_MODE: "mock",
+  ALLOW_DEV_ADMIN: "1",
+  PUBLIC_ORIGIN: "http://localhost:5173",
+} as Env;
 const REDIRECT = "https://galleries.example.com/admin/google/callback";
 const SCOPE = "https://www.googleapis.com/auth/drive.readonly";
 
@@ -291,6 +296,17 @@ describe("connect route", () => {
     expect(r.status).toBe(401);
   });
 
+  it("builds redirect_uri from PUBLIC_ORIGIN, not request.url", async () => {
+    const r = await handleConnect(req("/admin/google/connect"), {
+      ...adminEnv,
+      PUBLIC_ORIGIN: "https://gallery.example.org",
+    } as Env);
+    const loc = new URL(r.headers.get("Location")!);
+    expect(loc.searchParams.get("redirect_uri")).toBe(
+      "https://gallery.example.org/admin/google/callback",
+    );
+  });
+
   it("rejects insecure non-localhost origin", async () => {
     const r = await handleConnect(
       new Request("http://evil.example.com/admin/google/connect", {
@@ -309,6 +325,19 @@ describe("callback route", () => {
       adminEnv,
       tokenFetch(good),
     );
+
+  it("token exchange uses the PUBLIC_ORIGIN redirect_uri", async () => {
+    const f = tokenFetch(good);
+    await handleCallback(
+      req("/admin/google/callback?code=c&state=sx", await stateCookie("sx")),
+      { ...adminEnv, PUBLIC_ORIGIN: "https://gallery.example.org" } as Env,
+      f,
+    );
+    const body = new URLSearchParams(String(f.mock.calls[0][1]?.body));
+    expect(body.get("redirect_uri")).toBe(
+      "https://gallery.example.org/admin/google/callback",
+    );
+  });
 
   it("non-admin gets 401", async () => {
     const r = await handleCallback(

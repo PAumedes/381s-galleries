@@ -21,7 +21,7 @@ Los valores se guardan como **secrets de GitHub**: en el repositorio, **Settings
    - **Audience (Público):** tipo **External**. Tocá **Publish app → In production**. (Sin verificar: Google muestra el aviso "app no verificada". Es normal para uso personal.)
    - **Data Access (Acceso a los datos):** **Add or remove scopes** → agregá `https://www.googleapis.com/auth/drive.readonly` y guardá.
    - **Clients (Clientes):** **Create client** → tipo **Web application**. En **Authorized redirect URIs** poné exactamente:
-     `https://session.381studios.ar/admin/google/callback`
+     `https://gallery.381studios.ar/admin/google/callback`
 4. Copiá el **Client ID** y el **Client secret**.
 5. En GitHub, creá los secrets `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
 
@@ -31,7 +31,7 @@ Los valores se guardan como **secrets de GitHub**: en el repositorio, **Settings
 
 1. Cloudflare → **Zero Trust** → **Access controls** → **Applications**. Si es la primera vez, te pide un **team name** (por ejemplo `381studios`) y un plan: elegí **Free** (hasta 50 usuarios). Tu **team domain** es `<equipo>.cloudflareaccess.com`.
 2. **Create new application** → **Self-hosted and private**. Nombre: `381 Galerías Admin`.
-3. **Add public hostname**: subdominio `session`, dominio `381studios.ar` (desplegable), path `admin`. Volvé a tocar **Add public hostname** para un segundo: `session` / `381studios.ar` / path `api/admin`. Agregá un tercero: `session` / `381studios.ar` / path `admin.data` (lo usa la app al navegar a "Galerías" sin recargar). Los tres en **la misma aplicación**.
+3. **Add public hostname**: subdominio `gallery`, dominio `381studios.ar` (desplegable), path `admin`. Volvé a tocar **Add public hostname** para un segundo: `gallery` / `381studios.ar` / path `api/admin`. Agregá un tercero: `gallery` / `381studios.ar` / path `admin.data` (lo usa la app al navegar a "Galerías" sin recargar). Los tres en **la misma aplicación**.
 4. **Access policies** → crear una nueva: nombre `Solo yo`, acción **Allow**, regla **Include → Emails** = tu email. (Todo lo demás queda denegado por defecto.)
 5. Autenticación: las organizaciones nuevas usan **Cloudflare** como método de login (entrás con tu cuenta de Cloudflare); no hace falta configurar nada más. Usá en la policy (paso 4) y en `ADMIN_EMAIL` el **mismo email de tu cuenta de Cloudflare**. Opcional: para entrar con un código por email, agregá **One-time PIN** en **Zero Trust → Integrations → Identity providers → Add new identity provider**.
 6. **Session Duration**: 24 horas → **Create**.
@@ -67,7 +67,7 @@ Los valores se guardan como **secrets de GitHub**: en el repositorio, **Settings
 
 Es seguro repetirlo: los secretos aleatorios (`SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`) se generan solo la primera vez y nunca se regeneran (hacerlo cerraría las sesiones y obligaría a reconectar Google). Los de los pasos 1–2 se vuelven a cargar en cada Setup si están definidos en GitHub.
 
-**Verificá:** abrí <https://session.381studios.ar>: debe verse la página con el logo. El Worker no responde en `workers.dev` a propósito.
+**Verificá:** abrí <https://gallery.381studios.ar>: debe verse la página con el logo. El Worker no responde en `workers.dev` a propósito.
 
 ## 5. Ajustes de seguridad del dominio (una sola vez)
 
@@ -85,13 +85,13 @@ Por qué: la app envía una política de seguridad (CSP) que solo permite sus pr
 
 ## 6. Primer uso
 
-1. Abrí `https://session.381studios.ar/admin`. Cloudflare Access te pide tu email y te manda un código; ingresalo.
+1. Abrí `https://gallery.381studios.ar/admin`. Cloudflare Access te pide tu email y te manda un código; ingresalo.
 2. **Ajustes → Conectar Google**. Va a aparecer "Google no verificó esta app": tocá **Avanzado → Ir a 381 Studios Galerías (no seguro)** y aceptá el permiso de solo lectura.
 3. Pegá el **link de la carpeta `381studios`** de Drive y **Guardar carpeta**.
 4. **Sincronizar ahora**. Las galerías aparecen como borradores.
 5. Abrí una galería → **Publicar** → en **Compartir** copiá el link o descargá/imprimí el QR.
 
-**Verificá:** el link público (`https://session.381studios.ar/<slug>`) abre la galería en una ventana de incógnito.
+**Verificá:** el link público (`https://gallery.381studios.ar/<slug>`) abre la galería en una ventana de incógnito.
 
 ## 7. Capture One y Drive para escritorio
 
@@ -153,6 +153,20 @@ npx wrangler d1 export DB --remote --output backup.sql
 ```
 
 Guardá `backup.sql` fuera del repositorio.
+
+## 11. Cambiar el subdominio
+
+La web pública vive en `gallery.381studios.ar`. El host viejo `session.381studios.ar` sigue apuntando al Worker solo para redirigir (301) los links ya compartidos al host nuevo. Si hacés este cambio en una instalación existente, seguí este orden:
+
+1. **Cloudflare Zero Trust → Access controls → Applications** → **Configure** en `381 Galerías Admin` → **Add public hostname** tres veces: `gallery` / `381studios.ar` con path `admin`, `api/admin` y `admin.data`. Dejá los de `session` hasta terminar el cambio; después los podés quitar.
+2. **Google Auth Platform → Clients (Clientes)** → tu cliente **Web application** → **Authorized redirect URIs** → **Add URI**:
+   `https://gallery.381studios.ar/admin/google/callback`
+   (podés dejar la vieja hasta terminar).
+3. **Google Auth Platform → Branding**: cambiá la página principal y el enlace de privacidad (`https://gallery.381studios.ar/privacy`) al host `gallery.`.
+4. **Mergeá** el cambio a `main` para que corra **Deploy**. Cloudflare crea el dominio personalizado `gallery.381studios.ar` solo (el DNS y el certificado también).
+5. Abrí `https://gallery.381studios.ar/admin`. Normalmente **no hace falta reconectar Drive**: el refresh token guardado no depende de la redirect URI (solo se usa al conectar). Si en **Ajustes** aparece "desconectado", tocá **Conectar Google** otra vez.
+
+**Verificá:** `https://session.381studios.ar/<slug>` te lleva a `https://gallery.381studios.ar/<slug>`.
 
 ## Apéndice: desde tu PC (opcional)
 

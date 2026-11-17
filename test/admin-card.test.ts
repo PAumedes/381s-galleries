@@ -47,7 +47,7 @@ describe("card route loader", () => {
   });
   it("returns public url from canonical origin, no pin hash, no drive id", async () => {
     const d = await cardData(req(), e, ID);
-    expect(d.url).toBe("https://session.381studios.ar/boda-ana");
+    expect(d.url).toBe("https://gallery.381studios.ar/boda-ana");
     expect(d.title).toBe("Boda Ana");
     expect(d.hasPin).toBe(true);
     expect(d.lang).toBe("es");
@@ -66,6 +66,6 @@ describe("card route loader", () => {
   });
   it("edit loader exposes the canonical origin for the share URL", async () => {
     const d = await editData(req(), e, ID);
-    expect(d.origin).toBe("https://session.381studios.ar");
+    expect(d.origin).toBe("https://gallery.381studios.ar");
   });
 });
