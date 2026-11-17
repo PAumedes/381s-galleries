@@ -46,3 +46,20 @@ export async function resetRateLimit(
     .bind(`${scope}:${key}`)
     .run();
 }
+
+/** Whole seconds (>= 1) until the counter's current window ends. */
+export async function retryAfterSeconds(
+  env: LimitEnv,
+  scope: string,
+  key: string,
+  windowMs: number,
+): Promise<number> {
+  const row = await env.DB.prepare(
+    "SELECT window_start FROM rate_limits WHERE key = ?1",
+  )
+    .bind(`${scope}:${key}`)
+    .first<{ window_start: string }>();
+  const start = row ? Date.parse(row.window_start) : NaN;
+  const left = Number.isNaN(start) ? windowMs : start + windowMs - Date.now();
+  return Math.max(1, Math.ceil(left / 1000));
+}

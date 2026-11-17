@@ -15,6 +15,7 @@ import {
   type GalleryRow,
   type VisitorRow,
 } from "./access";
+import { jsonReply } from "./http";
 import { rateLimit } from "./rate-limit";
 
 type FavEnv = AccessEnv;
@@ -27,19 +28,7 @@ export const DEFAULT_LIST = "Favoritos";
 // eslint-disable-next-line no-control-regex
 const CONTROL_RE = /[\u0000-\u001f\u007f-\u009f]/g;
 
-const JSON_HEADERS = { "Cache-Control": "no-store" };
-
-function reply(
-  body: unknown,
-  status = 200,
-  cookie?: string,
-  extra: Record<string, string> = {},
-): Response {
-  const h = new Headers({ ...JSON_HEADERS, ...extra });
-  h.set("Content-Type", "application/json");
-  if (cookie) h.append("Set-Cookie", cookie);
-  return new Response(JSON.stringify(body), { status, headers: h });
-}
+const reply = jsonReply;
 const notFound = () => reply({ error: "not_found" }, 404);
 const bad = () => reply({ error: "bad_request" }, 400);
 

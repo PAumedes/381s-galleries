@@ -3,6 +3,7 @@ import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../app/db";
+import { clientIpHash } from "../app/lib/server/access";
 import { pinFingerprint } from "../app/lib/server/auth";
 import { hashPin, signToken } from "../app/lib/server/crypto";
 import { mockImageUrl } from "../app/lib/server/drive-mock";
@@ -86,7 +87,7 @@ const post = (
     body: JSON.stringify(body),
   });
 type TokenBody = {
-  tokens: { photoId: string; url: string; filename: string; bytes?: number }[];
+  tokens: { photoId: string; url: string; filename: string }[];
   missing: string[];
   unavailable: string[];
   error?: string;
@@ -286,26 +287,50 @@ describe("POST download-tokens: gates", () => {
     ).toBe(200);
   });
 
-  it("429 after 120 token requests per 10 min (ip+gallery)", async () => {
+  it("429 after 300 token requests per 10 min (ip+gallery), with Retry-After", async () => {
     await addGallery();
     await addPhoto("p1");
-    let last = 0;
-    let cookie = "";
-    for (let i = 0; i < 121; i++) {
-      const res = await tokens(
-        { photoIds: ["p1"], variant: "highres" },
-        cookie ? { Cookie: cookie } : {},
-      );
-      cookie ||= cookieOf(res);
-      last = res.status;
-      if (i < 120) expect(res.status).toBe(200);
-    }
-    expect(last).toBe(429);
+    const key = `dl:${await clientIpHash(post("/", {}), env)}:${G}`;
+    const seed = (n: number) =>
+      env.DB.prepare(
+        "INSERT OR REPLACE INTO rate_limits (key, count, window_start) VALUES (?1, ?2, ?3)",
+      )
+        .bind(
+          key,
+          n,
+          new Date(Date.now() - 60_000).toISOString().replace(/\.\d{3}Z$/, "Z"),
+        )
+        .run();
+    await seed(299);
+    expect(
+      (await tokens({ photoIds: ["p1"], variant: "highres" })).status,
+    ).toBe(200);
+    const res = await tokens({ photoIds: ["p1"], variant: "highres" });
+    expect(res.status).toBe(429);
+    const ra = Number(res.headers.get("Retry-After"));
+    expect(Number.isInteger(ra)).toBe(true);
+    // window is 10 min and 60 s have elapsed
+    expect(ra).toBeGreaterThan(500);
+    expect(ra).toBeLessThanOrEqual(540);
+  });
+
+  it("allows well over the old 120 requests (large galleries refresh tokens)", async () => {
+    await addGallery();
+    await addPhoto("p1");
+    const key = `dl:${await clientIpHash(post("/", {}), env)}:${G}`;
+    await env.DB.prepare(
+      "INSERT INTO rate_limits (key, count, window_start) VALUES (?1, 150, ?2)",
+    )
+      .bind(key, new Date().toISOString().replace(/\.\d{3}Z$/, "Z"))
+      .run();
+    expect(
+      (await tokens({ photoIds: ["p1"], variant: "highres" })).status,
+    ).toBe(200);
   });
 });
 
 describe("POST download-tokens: photos", () => {
-  it("returns tokens with filenames and bytes; cross-gallery and invisible ids go to missing", async () => {
+  it("returns tokens with filenames (no per-token bytes); cross-gallery and invisible ids go to missing", async () => {
     await addGallery();
     await addGallery({}, G2, "otra");
     await addPhoto("p1", { baseName: "A001" });
@@ -323,14 +348,14 @@ describe("POST download-tokens: photos", () => {
     expect(body.tokens[0]).toMatchObject({
       photoId: "p1",
       filename: "A001.jpg",
-      bytes: 1000,
     });
+    expect(body.tokens[0]).not.toHaveProperty("bytes");
     expect(body.tokens[0].url).toMatch(/^\/dl\/[\w-]+\.[\w-]+$/);
     expect(body.missing.sort()).toEqual(["ghost", "p2", "q1"]);
     expect(body.unavailable).toEqual([]);
   });
 
-  it("filenames per variant, no bytes for web/ig; missing variant -> unavailable (no fallback)", async () => {
+  it("filenames per variant; missing variant -> unavailable (no fallback)", async () => {
     await addGallery();
     await addPhoto("p1", { baseName: "A001" });
     await addPhoto("p2", {
@@ -343,7 +368,6 @@ describe("POST download-tokens: photos", () => {
     ).json()) as TokenBody;
     expect(web.tokens).toHaveLength(1);
     expect(web.tokens[0].filename).toBe("A001-web.jpg");
-    expect(web.tokens[0].bytes).toBeUndefined();
     expect(web.unavailable).toEqual(["p2"]);
     const ig = (await (
       await tokens({ photoIds: ["p1", "p2"], variant: "ig" })
@@ -463,14 +487,16 @@ describe("POST bulk", () => {
     expect(await downloadRows()).toHaveLength(0);
     await db.update(schema.galleries).set({ pinHash: null });
     await env.DB.prepare(
-      "INSERT INTO rate_limits (key, count, window_start) VALUES (?1, 120, ?2)",
+      "INSERT INTO rate_limits (key, count, window_start) VALUES (?1, 300, ?2)",
     )
       .bind(
-        `dl:${await (await import("../app/lib/server/access")).clientIpHash(post("/", {}), env)}:${G}`,
+        `dl:${await clientIpHash(post("/", {}), env)}:${G}`,
         new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
       )
       .run();
-    expect((await bulk({ scope: "all", variant: "web" })).status).toBe(429);
+    const limited = await bulk({ scope: "all", variant: "web" });
+    expect(limited.status).toBe(429);
+    expect(Number(limited.headers.get("Retry-After"))).toBeGreaterThan(0);
   });
 
   it("a bulkId from /bulk is accepted by download-tokens and logged as bulk", async () => {
@@ -700,6 +726,31 @@ describe("GET /dl/:token", () => {
     await db.delete(schema.photos).where(eq(schema.photos.id, "p1"));
     expect((await dl(t, drive)).status).toBe(410);
     expect(calls).toHaveLength(1);
+  });
+
+  it("toggling allow_* revokes outstanding tokens; a bulk token stops when allow_bulk is off", async () => {
+    await addGallery();
+    await addPhoto("p1");
+    const { drive } = fakeDrive();
+    const bulkRes = (await (
+      await bulk({ scope: "all", variant: "highres" })
+    ).json()) as { bulkId: string };
+    const tb = await issue("p1", "highres", { bulkId: bulkRes.bulkId });
+    const single = await issue("p1", "highres");
+    const th = await issue("p1", "ig");
+    expect((await dl(tb, drive)).status).toBe(200);
+    await db.update(schema.galleries).set({ allowBulk: false });
+    expect((await dl(tb, drive)).status).toBe(410);
+    // A single-photo token is not a bulk token: still fine.
+    expect((await dl(single, drive)).status).toBe(200);
+    await db.update(schema.galleries).set({ allowBulk: true });
+    expect((await dl(tb, drive)).status).toBe(200);
+    await db.update(schema.galleries).set({ allowIg: false });
+    expect((await dl(th, drive)).status).toBe(410);
+    await db
+      .update(schema.galleries)
+      .set({ allowIg: true, allowHighres: false });
+    expect((await dl(single, drive)).status).toBe(410);
   });
 
   it("with the watermark on, still serves the clean file, never the wm file", async () => {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import type { TKey } from "../i18n/t";
 import { useLang, useT } from "../i18n/use-t";
 import { useStudioName } from "../lib/use-studio-name";
 import { DownloadMenu, enabledSizes } from "./DownloadMenu";
@@ -51,18 +52,24 @@ export function GalleryView({
     multi ? ALL : (gallery.sets[0]?.name ?? ALL),
   );
   const [open, setOpen] = useState<number | null>(null);
-  const [copied, setCopied] = useState(false);
+  // One toast slot: a newer message replaces the current one.
+  const [toast, setToast] = useState<{ key: TKey; n: number } | null>(null);
+  const showToast = useCallback(
+    (key: TKey) => setToast((cur) => ({ key, n: (cur?.n ?? 0) + 1 })),
+    [],
+  );
   const [sheet, setSheet] = useState<
     { kind: "single"; id: string } | { kind: "bulk" } | null
   >(null);
-  const [dlFailed, setDlFailed] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [edges, setEdges] = useState({ start: false, end: false });
   const tabsRef = useRef<HTMLElement>(null);
   const gridRef = useRef<HTMLElement>(null);
   const coverRef = useRef<HTMLElement>(null);
 
-  const favs = useFavorites(gallery.slug, gallery.requireEmail);
+  const favs = useFavorites(gallery.slug, gallery.requireEmail, () =>
+    showToast("favorites.error"),
+  );
   const favCount = useMemo(
     () => photos.filter((p) => favs.ids.has(p.id)).length,
     [photos, favs.ids],
@@ -122,16 +129,13 @@ export function GalleryView({
   }, [updateEdges]);
 
   useEffect(() => {
-    if (!dlFailed) return;
-    const id = setTimeout(() => setDlFailed(false), 3000);
+    if (!toast) return;
+    const id = setTimeout(
+      () => setToast(null),
+      toast.key === "gallery.linkCopied" ? 2000 : 3000,
+    );
     return () => clearTimeout(id);
-  }, [dlFailed]);
-
-  useEffect(() => {
-    if (!copied) return;
-    const id = setTimeout(() => setCopied(false), 2000);
-    return () => clearTimeout(id);
-  }, [copied]);
+  }, [toast]);
 
   const scrollToGrid = useCallback(() => {
     gridRef.current?.scrollIntoView?.({
@@ -145,11 +149,11 @@ export function GalleryView({
     const link = `${url.origin}${url.pathname}`;
     try {
       await navigator.clipboard.writeText(link);
-      setCopied(true);
+      showToast("gallery.linkCopied");
     } catch {
       /* clipboard unavailable: nothing to confirm */
     }
-  }, []);
+  }, [showToast]);
 
   const canDownload = enabledSizes(gallery).length > 0;
   const openSingle = canDownload
@@ -321,12 +325,13 @@ export function GalleryView({
         <LanguageToggle className="text-grey-600" />
       </footer>
 
-      {copied && (
+      {toast && (
         <p
+          key={toast.n}
           role="status"
           className="text-micro-label bg-ink text-paper fixed bottom-6 left-1/2 z-(--z-toast) -translate-x-1/2 px-5 py-3 uppercase"
         >
-          {t("gallery.linkCopied")}
+          {t(toast.key)}
         </p>
       )}
 
@@ -349,7 +354,7 @@ export function GalleryView({
           t={t}
           ensure={favs.ensure}
           onClose={() => setSheet(null)}
-          onError={() => setDlFailed(true)}
+          onError={() => showToast("download.error")}
           mode={
             sheet.kind === "bulk"
               ? {
@@ -361,24 +366,6 @@ export function GalleryView({
               : { kind: "single", photo: sheetPhoto! }
           }
         />
-      )}
-
-      {dlFailed && (
-        <p
-          role="status"
-          className="text-micro-label bg-ink text-paper fixed bottom-6 left-1/2 z-(--z-toast) -translate-x-1/2 px-5 py-3 uppercase"
-        >
-          {t("download.error")}
-        </p>
-      )}
-
-      {favs.failed && (
-        <p
-          role="status"
-          className="text-micro-label bg-ink text-paper fixed bottom-6 left-1/2 z-(--z-toast) -translate-x-1/2 px-5 py-3 uppercase"
-        >
-          {t("favorites.error")}
-        </p>
       )}
 
       {favs.gateOpen && (

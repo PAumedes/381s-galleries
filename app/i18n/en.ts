@@ -49,6 +49,7 @@ export const en = {
     "This download is large and your browser will hold it in memory. Download by section or use a computer.",
   "download.warnIos":
     "Large downloads can fail on iPhone and iPad. Download by section or use a computer.",
+  "download.pickerFailed": "Couldn't open the save dialog. Continue in memory?",
   "download.error": "Couldn't download. Please try again.",
   "download.confirmCancel": "Cancel the download?",
   "download.yes": "Yes",

@@ -26,7 +26,6 @@ export type Token = {
   photoId: string;
   url: string;
   filename: string;
-  bytes?: number;
 };
 export type TokenResult = {
   tokens: Token[];
@@ -63,7 +62,46 @@ const base = (slug: string) => `/api/g/${encodeURIComponent(slug)}`;
 const doFetch = (deps?: DownloadDeps) =>
   deps?.fetch ?? ((...a: Parameters<typeof fetch>) => globalThis.fetch(...a));
 
+/**
+ * POST a JSON body. With `retry` (bulk runs only) a 429 waits `Retry-After`
+ * (capped) and tries again, up to MAX_RATE_RETRIES times, instead of failing
+ * a run that is already under way.
+ */
 async function post(
+  slug: string,
+  path: string,
+  body: unknown,
+  deps?: DownloadDeps,
+  signal?: AbortSignal,
+  retry = false,
+): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await postOnce(slug, path, body, deps, signal);
+    } catch (err) {
+      if (
+        !retry ||
+        !(err instanceof RateLimitedError) ||
+        attempt >= MAX_RATE_RETRIES
+      )
+        throw err;
+      const wait = retryAfterMs(err.retryAfter, attempt);
+      await (deps?.sleep ?? defaultSleep)(wait);
+      if (signal?.aborted) throw abortError();
+    }
+  }
+}
+
+class RateLimitedError extends DownloadError {
+  constructor(readonly retryAfter: string | null) {
+    super("rate_limited", 429);
+  }
+}
+
+const defaultSleep = (ms: number) =>
+  new Promise<void>((r) => setTimeout(r, ms));
+
+async function postOnce(
   slug: string,
   path: string,
   body: unknown,
@@ -92,7 +130,8 @@ async function post(
     throw new DownloadError("variant_disabled", 403);
   if (res.status === 403 && err?.error === "bulk_disabled")
     throw new DownloadError("bulk_disabled", 403);
-  if (res.status === 429) throw new DownloadError("rate_limited", 429);
+  if (res.status === 429)
+    throw new RateLimitedError(res.headers.get("Retry-After"));
   throw new DownloadError("http", res.status);
 }
 
@@ -110,15 +149,15 @@ export async function requestTokens(
     { photoIds, variant, ...(bulkId ? { bulkId } : {}) },
     deps,
     signal,
+    Boolean(bulkId),
   );
   return (await res.json()) as TokenResult;
 }
 
-function clickAnchor(href: string, filename?: string, newTab = false) {
+function clickAnchor(href: string, filename?: string) {
   const a = document.createElement("a");
   a.href = href;
   if (filename !== undefined) a.download = filename;
-  if (newTab) a.target = "_blank";
   a.rel = "noopener";
   a.style.display = "none";
   document.body.appendChild(a);
@@ -144,8 +183,8 @@ export async function downloadSingle(
   );
   const token = tokens[0];
   if (!token) throw new DownloadError("unavailable");
-  // A cross-origin /dl (mock mode) ignores `download`; a new tab is harmless.
-  clickAnchor(token.url, token.filename, true);
+  // /dl answers with an attachment (mock mode: a 302 to the image, which just navigates).
+  clickAnchor(token.url, token.filename);
 }
 
 const isIos = (ua: string) => /iPhone|iPad/.test(ua);
@@ -215,6 +254,12 @@ export type BulkOptions = {
    * Without it the fallback happens silently.
    */
   confirmFallback?: () => Promise<boolean>;
+  /**
+   * Called after the plan when the run would be held in memory (no picker) and
+   * the server's byte total (else an estimate) is above ~1.5 GB. Resolve false
+   * to cancel. Not asked again after `confirmFallback` was already answered.
+   */
+  confirmLarge?: () => Promise<boolean>;
 };
 
 /** Name of the zip a bulk run produces (also the picker's suggestion). */
@@ -280,11 +325,12 @@ function uniqueName(used: Set<string>, path: string): string {
   return name;
 }
 
-const MAX_RATE_RETRIES = 4;
-const MAX_RETRY_AFTER_MS = 30_000;
+const MAX_RATE_RETRIES = 5;
+const MAX_RETRY_AFTER_MS = 60_000;
 
-function retryAfterMs(res: Response, attempt: number): number {
-  const h = res.headers.get("Retry-After")?.trim();
+/** Wait before retrying a 429: the `Retry-After` header (seconds or date), else exponential; capped. */
+function retryAfterMs(header: string | null, attempt: number): number {
+  const h = header?.trim();
   let ms = NaN;
   if (h) {
     if (/^\d+(\.\d+)?$/.test(h)) ms = Number(h) * 1000;
@@ -306,9 +352,7 @@ function defaultSaveBlob(blob: Blob, filename: string) {
 export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
   const { slug, scope, variant, signal, deps } = opts;
   const fetchFn = doFetch(deps);
-  const sleep =
-    deps?.sleep ??
-    ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  const sleep = deps?.sleep ?? defaultSleep;
   const progress: BulkProgress = { done: 0, total: 0, bytes: 0, failed: [] };
   const emit = () =>
     opts.onProgress?.({ ...progress, failed: [...progress.failed] });
@@ -363,6 +407,7 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
     { scope, ...(scope === "set" ? { set: opts.set } : {}), variant },
     deps,
     signal,
+    true,
   ).catch((e) => {
     if (signal?.aborted) return null;
     throw e;
@@ -379,6 +424,20 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
     return result("done", null);
   }
   const bulkId = plan.bulkId;
+
+  if (
+    !writable &&
+    !pickerFailed &&
+    opts.confirmLarge &&
+    estimateBytes(plan.photoIds.length, variant, plan.totalBytes) >
+      LARGE_BYTES &&
+    !(await opts.confirmLarge())
+  )
+    return result("cancelled", "blob");
+  if (signal?.aborted) {
+    await writable?.abort().catch(() => {});
+    return result("cancelled", null);
+  }
 
   const sink = writable ? "picker" : "blob";
 
@@ -448,7 +507,7 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
         }
         if (res.status === 429) {
           if (rateTries >= MAX_RATE_RETRIES) return { token, res: null };
-          startPause(retryAfterMs(res, rateTries++));
+          startPause(retryAfterMs(res.headers.get("Retry-After"), rateTries++));
           continue;
         }
         // Expired / revoked / missing: retrying cannot help.
@@ -475,7 +534,7 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
     }
   }
 
-  async function* entries() {
+  async function* innerEntries() {
     const source = tokenSource();
     const pending: Promise<Item>[] = [];
     let exhausted = false;
@@ -519,6 +578,17 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
     }
   }
 
+  // client-zip wraps what the generator throws; remember the original.
+  let fatal: unknown;
+  async function* entries() {
+    try {
+      yield* innerEntries();
+    } catch (e) {
+      fatal ??= e;
+      throw e;
+    }
+  }
+
   try {
     const zip = downloadZip(entries());
     if (writable) {
@@ -528,7 +598,8 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
       if (signal?.aborted) return result("cancelled", sink);
       (deps?.saveBlob ?? defaultSaveBlob)(blob, zipName);
     }
-  } catch (err) {
+  } catch (caught) {
+    const err = fatal ?? caught;
     if (signal?.aborted || isAbort(err)) {
       await writable?.abort().catch(() => {});
       return result("cancelled", sink);

@@ -46,6 +46,8 @@ export const es = {
     "Esta descarga es grande y tu navegador la guardará en memoria. Descargá por sección o usá una computadora.",
   "download.warnIos":
     "Las descargas grandes pueden fallar en iPhone y iPad. Descargá por sección o usá una computadora.",
+  "download.pickerFailed":
+    "No se pudo abrir el diálogo para guardar. ¿Continuar en memoria?",
   "download.error": "No se pudo descargar. Probá de nuevo.",
   "download.confirmCancel": "¿Cancelar descarga?",
   "download.yes": "Sí",

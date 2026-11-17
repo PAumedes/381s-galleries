@@ -84,6 +84,9 @@ export function DownloadMenu(props: DownloadMenuProps) {
       if (other && other !== dialogRef.current) return;
       if (e.key === "Escape") {
         e.preventDefault();
+        // The sheet owns Escape: nothing underneath (the lightbox) may see it.
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         closeRef.current();
       } else if (e.key === "Tab") {
         const nodes = Array.from(
@@ -105,9 +108,10 @@ export function DownloadMenu(props: DownloadMenuProps) {
         }
       }
     };
-    document.addEventListener("keydown", onKey);
+    // Capture phase so we run before (and can shield) listeners underneath.
+    document.addEventListener("keydown", onKey, true);
     return () => {
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("keydown", onKey, true);
       if (opener && opener !== document.body && opener.isConnected)
         opener.focus();
     };
@@ -221,10 +225,34 @@ function BulkBody({
   const ctl = useRef<AbortController | null>(null);
   const started = useRef(false);
   const live = useRef(false);
-  const [fallback, setFallback] = useState<((ok: boolean) => void) | null>(
-    null,
-  );
+  // A yes/no question to the visitor while running (save dialog failed / large in-memory zip).
+  const [fallback, setFallback] = useState<{
+    key: TKey;
+    answer: (ok: boolean) => void;
+  } | null>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const noRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const startRef = useRef<HTMLButtonElement>(null);
+  const moved = useRef(false);
   useEffect(() => () => ctl.current?.abort(), []);
+  // Keep focus on the primary control of the current phase.
+  useEffect(() => {
+    if (phase === "running") cancelRef.current?.focus();
+    else if (phase === "done") closeBtnRef.current?.focus();
+    else if (moved.current) startRef.current?.focus();
+    moved.current = true;
+  }, [phase]);
+  const askedConfirm = useRef(false);
+  useEffect(() => {
+    if (confirming) {
+      askedConfirm.current = true;
+      noRef.current?.focus();
+    } else if (askedConfirm.current) {
+      askedConfirm.current = false;
+      cancelRef.current?.focus();
+    }
+  }, [confirming]);
   useEffect(() => {
     runningRef.current = phase === "running";
   }, [phase, runningRef]);
@@ -260,6 +288,17 @@ function BulkBody({
     picker: Boolean(currentPicker()),
   });
 
+  const ask = (key: TKey) =>
+    new Promise<boolean>((resolve) =>
+      setFallback({
+        key,
+        answer: (ok: boolean) => {
+          setFallback(null);
+          resolve(ok);
+        },
+      }),
+    );
+
   const start = () => {
     if (started.current) return Promise.resolve();
     started.current = true;
@@ -286,13 +325,10 @@ function BulkBody({
           signal: c.signal,
           sets: new Map(photos.map((p) => [p.id, p.set])),
           onProgress: setProgress,
-          confirmFallback: () =>
-            new Promise<boolean>((resolve) =>
-              setFallback(() => (ok: boolean) => {
-                setFallback(null);
-                resolve(ok);
-              }),
-            ),
+          confirmFallback: () => ask("download.pickerFailed"),
+          ...(warning === "large"
+            ? {}
+            : { confirmLarge: () => ask("download.warnLarge") }),
         });
         setProgress({ ...r });
         setStatus(r.status);
@@ -338,19 +374,19 @@ function BulkBody({
             {fallback && (
               <div className="flex flex-col gap-2">
                 <p role="note" className="text-small text-grey-700">
-                  {t("download.warnLarge")}
+                  {t(fallback.key)}
                 </p>
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => fallback(true)}
+                    onClick={() => fallback.answer(true)}
                     className="text-micro-label bg-ink text-paper h-11 flex-1 uppercase"
                   >
                     {t("download.continue")}
                   </button>
                   <button
                     type="button"
-                    onClick={() => fallback(false)}
+                    onClick={() => fallback.answer(false)}
                     className="text-micro-label border-ink h-11 flex-1 border uppercase"
                   >
                     {t("download.cancel")}
@@ -359,7 +395,11 @@ function BulkBody({
               </div>
             )}
             {confirming ? (
-              <div role="alertdialog" className="flex flex-col gap-2">
+              <div
+                role="alertdialog"
+                aria-label={t("download.confirmCancel")}
+                className="flex flex-col gap-2"
+              >
                 <p className="text-small">{t("download.confirmCancel")}</p>
                 <div className="flex gap-2">
                   <button
@@ -367,7 +407,7 @@ function BulkBody({
                     onClick={() => {
                       setConfirming(false);
                       ctl.current?.abort();
-                      fallback?.(false);
+                      fallback?.answer(false);
                     }}
                     className="text-micro-label bg-ink text-paper h-11 flex-1 uppercase"
                   >
@@ -375,6 +415,7 @@ function BulkBody({
                   </button>
                   <button
                     type="button"
+                    ref={noRef}
                     onClick={() => setConfirming(false)}
                     className="text-micro-label border-ink h-11 flex-1 border uppercase"
                   >
@@ -385,6 +426,7 @@ function BulkBody({
             ) : (
               <button
                 type="button"
+                ref={cancelRef}
                 onClick={() => ctl.current?.abort()}
                 className="text-micro-label border-ink hover:bg-grey-50 h-11 border uppercase transition-colors duration-base ease-out-soft"
               >
@@ -394,7 +436,7 @@ function BulkBody({
           </>
         ) : (
           <>
-            <p className="text-small">
+            <p role="status" className="text-small">
               {t(
                 status === "cancelled" ? "download.cancelled" : "download.done",
               )}
@@ -409,6 +451,7 @@ function BulkBody({
             )}
             <button
               type="button"
+              ref={closeBtnRef}
               onClick={onClose}
               className="text-micro-label bg-ink text-paper hover:bg-grey-800 h-11 uppercase transition-colors duration-base ease-out-soft"
             >
@@ -485,6 +528,7 @@ function BulkBody({
       )}
       <button
         type="button"
+        ref={startRef}
         disabled={count === 0 || phase !== "choose"}
         onClick={() => void start().catch(() => setError(true))}
         className="text-micro-label bg-ink text-paper hover:bg-grey-800 h-11 uppercase transition-colors duration-base ease-out-soft disabled:opacity-60"

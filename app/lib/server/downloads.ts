@@ -1,10 +1,11 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
-import { isAvailable, openGallery } from "./access";
 import {
   clientIpHash,
   crossSite,
   findGallery,
+  isAvailable,
+  openGallery,
   requireVisitor,
   type AccessEnv,
   type GalleryRow,
@@ -20,10 +21,13 @@ import {
   createAnonVisitor,
   visibleFavoritesQuery,
 } from "./favorites";
-import { rateLimit } from "./rate-limit";
+import { jsonReply } from "./http";
+import { rateLimit, retryAfterSeconds } from "./rate-limit";
 
 export const DL_TOKEN_TTL_SECONDS = 10 * 60;
-export const DL_MAX_PER_WINDOW = 120;
+export const DL_WINDOW_MS = 10 * 60 * 1000;
+/** Token/bulk requests per ip+gallery per window (a big bulk run needs one per 50 files plus refreshes). */
+export const DL_MAX_PER_WINDOW = 300;
 export const DL_MAX_IDS = 50;
 const VARIANTS = ["highres", "web", "ig"] as const;
 type DlVariant = (typeof VARIANTS)[number];
@@ -44,14 +48,7 @@ interface DlToken {
 const isVariant = (v: unknown): v is DlVariant =>
   typeof v === "string" && (VARIANTS as readonly string[]).includes(v);
 
-function reply(body: unknown, status = 200, cookie?: string): Response {
-  const h = new Headers({
-    "Content-Type": "application/json",
-    "Cache-Control": "no-store",
-  });
-  if (cookie) h.append("Set-Cookie", cookie);
-  return new Response(JSON.stringify(body), { status, headers: h });
-}
+const reply = jsonReply;
 const notFound = () => reply({ error: "not_found" }, 404);
 const bad = () => reply({ error: "bad_request" }, 400);
 
@@ -158,6 +155,14 @@ async function finishGate(
   body: Record<string, unknown>,
 ): Promise<Gate | Response> {
   const ipHash = await clientIpHash(request, env);
+  const limitedReply = async (scope: string, windowMs: number) =>
+    reply({ error: "rate_limited" }, 429, undefined, {
+      "Retry-After": String(
+        ipHash
+          ? await retryAfterSeconds(env, scope, `${ipHash}:${g.id}`, windowMs)
+          : 60,
+      ),
+    });
   if (
     !ipHash ||
     !(await rateLimit(
@@ -165,15 +170,15 @@ async function finishGate(
       "dl",
       `${ipHash}:${g.id}`,
       DL_MAX_PER_WINDOW,
-      VISITOR_WINDOW_MS,
+      DL_WINDOW_MS,
     ))
   ) {
-    return reply({ error: "rate_limited" }, 429);
+    return limitedReply("dl", DL_WINDOW_MS);
   }
   let cookie: string | undefined;
   if (!visitor) {
     const anon = await createAnonVisitor(request, env, g);
-    if (!anon) return reply({ error: "rate_limited" }, 429);
+    if (!anon) return limitedReply("anon", VISITOR_WINDOW_MS);
     visitor = anon.visitor;
     cookie = anon.cookie;
   }
@@ -242,12 +247,7 @@ export async function handleDownloadTokens(
     );
   const byId = new Map(rows.map((p) => [p.id, p]));
   const pf = await pinFingerprint(g.pinHash, env);
-  const out: {
-    photoId: string;
-    url: string;
-    filename: string;
-    bytes?: number;
-  }[] = [];
+  const out: { photoId: string; url: string; filename: string }[] = [];
   const missing: string[] = [];
   const unavailable: string[] = [];
   for (const id of photoIds) {
@@ -274,9 +274,6 @@ export async function handleDownloadTokens(
         photoId: p.id,
         url: `/dl/${token}`,
         filename: downloadFilename(p.baseName, variant),
-        ...(variant === "highres" && p.highresBytes != null
-          ? { bytes: p.highresBytes }
-          : {}),
       });
     }
   }
@@ -413,6 +410,7 @@ export async function serveDownload(
   if (!isAvailable(gallery)) return gone();
   if (claims.pf !== (await pinFingerprint(gallery.pinHash, env))) return gone();
   if (!variantAllowed(gallery, variant)) return gone();
+  if (claims.b && !gallery.allowBulk) return gone();
   const fileId = fileIdFor(photo, variant);
   if (!fileId) return gone();
 

@@ -626,3 +626,169 @@ describe("bulkWarning", () => {
     ).toBeNull();
   });
 });
+
+describe("downloadSingle anchor", () => {
+  it("never opens a new tab (the /dl response is an attachment)", async () => {
+    const net = makeNet();
+    let target: string | null = "unset";
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      target = this.getAttribute("target");
+    });
+    await downloadSingle("boda", "p0", "highres", { fetch: net.fetch });
+    expect(target).toBeNull();
+  });
+});
+
+describe("429 handling in bulk requests", () => {
+  const limited = (after?: string) =>
+    new Response(JSON.stringify({ error: "rate_limited" }), {
+      status: 429,
+      headers: {
+        "Content-Type": "application/json",
+        ...(after ? { "Retry-After": after } : {}),
+      },
+    });
+  const run = (net: ReturnType<typeof makeNet>, sleeps: number[]) =>
+    downloadBulk({
+      slug: "boda",
+      scope: "all",
+      variant: "web",
+      deps: {
+        fetch: net.fetch,
+        saveBlob: () => {},
+        sleep: async (ms) => void sleeps.push(ms),
+      },
+    });
+  function withLimit(
+    net: ReturnType<typeof makeNet>,
+    path: string,
+    times: number,
+    after?: string,
+  ) {
+    let n = 0;
+    const inner = net.mock.getMockImplementation()!;
+    net.mock.mockImplementation(async (input, init) => {
+      if (String(input).endsWith(path) && n++ < times) return limited(after);
+      return inner(input, init);
+    });
+  }
+
+  it("retries a rate-limited token batch after Retry-After instead of failing the run", async () => {
+    const net = makeNet({ n: 2 });
+    withLimit(net, "/download-tokens", 1, "3");
+    const sleeps: number[] = [];
+    const r = await run(net, sleeps);
+    expect(r.status).toBe("done");
+    expect(r.failed).toEqual([]);
+    expect(sleeps).toContain(3000);
+  });
+
+  it("retries a rate-limited bulk plan too", async () => {
+    const net = makeNet({ n: 2 });
+    withLimit(net, "/bulk", 2, "2");
+    const sleeps: number[] = [];
+    const r = await run(net, sleeps);
+    expect(r.status).toBe("done");
+    expect(sleeps.filter((s) => s === 2000)).toHaveLength(2);
+  });
+
+  it("caps Retry-After at 60 s and gives up after 5 retries", async () => {
+    const net = makeNet({ n: 2 });
+    withLimit(net, "/download-tokens", 99, "600");
+    const sleeps: number[] = [];
+    await expect(run(net, sleeps)).rejects.toMatchObject({
+      code: "rate_limited",
+    });
+    expect(sleeps).toEqual([60_000, 60_000, 60_000, 60_000, 60_000]);
+  });
+
+  it("a single-photo request (no bulk run) still fails fast on 429", async () => {
+    const f = vi.fn(async () => limited("5"));
+    const sleep = vi.fn(async () => {});
+    await expect(
+      requestTokens("boda", ["p0"], "web", undefined, {
+        fetch: f as never,
+        sleep,
+      }),
+    ).rejects.toMatchObject({ code: "rate_limited" });
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
+  it("stops retrying when the run is cancelled", async () => {
+    const net = makeNet({ n: 2 });
+    withLimit(net, "/download-tokens", 99, "5");
+    const ctl = new AbortController();
+    const r = await downloadBulk({
+      slug: "boda",
+      scope: "all",
+      variant: "web",
+      signal: ctl.signal,
+      deps: {
+        fetch: net.fetch,
+        saveBlob: () => {},
+        sleep: async () => ctl.abort(),
+      },
+    });
+    expect(r.status).toBe("cancelled");
+  });
+});
+
+describe("server totalBytes in the bulk run", () => {
+  it("asks to confirm a large in-memory download once the plan's totalBytes is known", async () => {
+    const net = makeNet({ n: 2, totalBytes: 2 * 1024 ** 3 });
+    const confirmLarge = vi.fn(async () => false);
+    const r = await downloadBulk({
+      slug: "boda",
+      scope: "all",
+      variant: "web",
+      confirmLarge,
+      deps: { fetch: net.fetch, saveBlob: () => {}, sleep: noSleep },
+    });
+    expect(confirmLarge).toHaveBeenCalledTimes(1);
+    expect(r.status).toBe("cancelled");
+    expect(net.files()).toBe(0);
+  });
+
+  it("does not ask for small plans or when a picker streams to disk", async () => {
+    const small = makeNet({ n: 2, totalBytes: 1024 });
+    const confirmLarge = vi.fn(async () => false);
+    await downloadBulk({
+      slug: "boda",
+      scope: "all",
+      variant: "web",
+      confirmLarge,
+      deps: { fetch: small.fetch, saveBlob: () => {}, sleep: noSleep },
+    });
+    const big = makeNet({ n: 2, totalBytes: 5 * 1024 ** 3 });
+    const p = fakePicker();
+    await downloadBulk({
+      slug: "boda",
+      scope: "all",
+      variant: "web",
+      confirmLarge,
+      deps: {
+        fetch: big.fetch,
+        showSaveFilePicker: p.showSaveFilePicker,
+        sleep: noSleep,
+      },
+    });
+    expect(confirmLarge).not.toHaveBeenCalled();
+  });
+
+  it("continues when the visitor accepts", async () => {
+    const net = makeNet({ n: 2, totalBytes: 2 * 1024 ** 3 });
+    const saveBlob = vi.fn();
+    const r = await downloadBulk({
+      slug: "boda",
+      scope: "all",
+      variant: "web",
+      confirmLarge: async () => true,
+      deps: { fetch: net.fetch, saveBlob, sleep: noSleep },
+    });
+    expect(r.status).toBe("done");
+    expect(saveBlob).toHaveBeenCalled();
+  });
+});

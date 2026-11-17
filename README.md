@@ -33,6 +33,9 @@ After pulling: run `pnpm db:migrate:local` (new migrations are applied to the lo
 
 - `/:slug`: client gallery (PIN form, grid, lightbox); `?lang=es|en` switches language (also sets a cookie)
 - `/img/:id/:variant`: photo images (`thumb`, `view-sm`, `view-lg`), cached in R2
-- `/api/g/:slug/*`: client JSON API (`visitor`, `favorites`; downloads later)
+- `/api/g/:slug/*`: client JSON API (`visitor`, `favorites`, `download-tokens`, `bulk`)
+- `/dl/:token`: signed download of one photo (GET/HEAD; tokens from `download-tokens`, valid 10 min)
+- `/api/g/:slug/download-tokens`: POST, issues up to 50 `/dl` tokens
+- `/api/g/:slug/bulk`: POST, plans "download all / set / favorites" (the browser zips)
 - `/admin`: admin UI (Cloudflare Access)
 - `/api/admin/sync`: "Sync now" (POST, admin only)

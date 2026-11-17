@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { Lightbox } from "../../app/components/Lightbox";
 import { DownloadMenu } from "../../app/components/DownloadMenu";
 import type { GalleryPhoto, OpenGallery } from "../../app/components/types";
 import * as client from "../../app/lib/download-client";
@@ -368,5 +369,156 @@ describe("DownloadMenu bulk", () => {
     expect(screen.queryByLabelText("High resolution · 2048 px")).toBeNull();
     expect(screen.queryByLabelText("Instagram · 1080 px")).toBeNull();
     expect(screen.getByLabelText("Web · 1200 px")).toBeTruthy();
+  });
+});
+
+describe("DownloadMenu accessibility", () => {
+  const hangBulk = () =>
+    bulk.mockImplementation(
+      (o) =>
+        new Promise((resolve) => {
+          o.signal!.addEventListener("abort", () =>
+            resolve({
+              done: 0,
+              total: 4,
+              bytes: 0,
+              failed: [],
+              status: "cancelled",
+              sink: "blob",
+            }),
+          );
+        }),
+    );
+
+  it("moves focus to Cancel while running and to Close when done", async () => {
+    let finish!: (r: client.BulkResult) => void;
+    bulk.mockImplementation(() => new Promise((r) => (finish = r)));
+    bulkMenu();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Download" }));
+    });
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Cancel" }),
+    );
+    await act(async () =>
+      finish({
+        done: 4,
+        total: 4,
+        bytes: 1,
+        failed: [],
+        status: "done",
+        sink: "blob",
+      }),
+    );
+    const active = document.activeElement as HTMLElement;
+    expect(active.textContent).toBe("Close");
+    expect(screen.getByRole("dialog").contains(active)).toBe(true);
+  });
+
+  it("announces done and cancelled as status", async () => {
+    hangBulk();
+    bulkMenu();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Download" }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    });
+    expect(screen.getByRole("status").textContent).toBe("Download cancelled");
+  });
+
+  it("the cancel confirmation is a labelled alertdialog and takes focus", async () => {
+    hangBulk();
+    bulkMenu();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Download" }));
+    });
+    fireEvent.keyDown(document, { key: "Escape" });
+    const alert = screen.getByRole("alertdialog", {
+      name: "Cancel the download?",
+    });
+    expect(alert.contains(document.activeElement)).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "No" }));
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Cancel" }),
+    );
+  });
+
+  it("a failed save dialog asks with its own message and continues in memory on Continue", async () => {
+    let ask!: () => Promise<boolean>;
+    let result!: Promise<boolean>;
+    bulk.mockImplementation(async (o) => {
+      ask = o.confirmFallback!;
+      return new Promise(() => {});
+    });
+    bulkMenu();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Download" }));
+    });
+    await act(async () => {
+      result = ask();
+    });
+    expect(screen.getByRole("note").textContent).toBe(
+      "Couldn't open the save dialog. Continue in memory?",
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    });
+    expect(await result).toBe(true);
+  });
+
+  it("a large server-side total asks with the large warning", async () => {
+    let ask!: () => Promise<boolean>;
+    bulk.mockImplementation(async (o) => {
+      ask = o.confirmLarge!;
+      return new Promise(() => {});
+    });
+    vi.stubGlobal("showSaveFilePicker", undefined);
+    bulkMenu();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Download" }));
+    });
+    await act(async () => {
+      void ask();
+    });
+    expect(screen.getByRole("note").textContent).toMatch(/hold it in memory/);
+  });
+
+  it("Escape inside the sheet never reaches a Lightbox underneath", async () => {
+    hangBulk();
+    const onLightboxClose = vi.fn();
+    const onSheetClose = vi.fn();
+    render(
+      <>
+        <Lightbox
+          photos={mkPhotos(4)}
+          index={1}
+          t={t}
+          onClose={onLightboxClose}
+          onIndexChange={() => {}}
+        />
+        <DownloadMenu
+          gallery={gallery()}
+          t={t}
+          ensure={ensure}
+          onClose={onSheetClose}
+          mode={{
+            kind: "bulk",
+            photos: mkPhotos(4),
+            activeSet: null,
+            favoriteIds: new Set(),
+          }}
+        />
+      </>,
+    );
+    const inside = screen.getByLabelText("Entire gallery");
+    inside.focus();
+    fireEvent.keyDown(inside, { key: "Escape" });
+    expect(onSheetClose).toHaveBeenCalledTimes(1);
+    expect(onLightboxClose).not.toHaveBeenCalled();
+    // Event dispatched on the document while focus is inside the sheet.
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onLightboxClose).not.toHaveBeenCalled();
+    fireEvent.keyDown(document, { key: "ArrowRight" });
   });
 });
