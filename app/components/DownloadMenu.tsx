@@ -499,7 +499,7 @@ function BulkBody({
     <div className="flex flex-col gap-5">
       {
         <fieldset className="flex flex-col">
-          <legend className="text-micro-label text-grey-500 mb-1 uppercase">
+          <legend className="text-micro-label text-grey-600 mb-1 uppercase">
             {t("download.scope")}
           </legend>
           {scopes.map((s) =>
@@ -508,7 +508,7 @@ function BulkBody({
         </fieldset>
       }
       <fieldset className="flex flex-col">
-        <legend className="text-micro-label text-grey-500 mb-1 uppercase">
+        <legend className="text-micro-label text-grey-600 mb-1 uppercase">
           {t("download.size")}
         </legend>
         {sizes.map((s) =>

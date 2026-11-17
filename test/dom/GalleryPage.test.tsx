@@ -1,4 +1,11 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { createRoutesStub } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
@@ -49,7 +56,10 @@ const gallery = (over: Partial<OpenGallery> = {}): OpenGallery => ({
   eventDate: "2026-03-14",
   coverPhotoId: "Cer0",
   allowBulk: true,
-  theme: "light",
+  palette: "claro",
+  coverLayout: "completa",
+  gridStyle: "filas",
+  gridGap: "normal",
   sets: [
     { name: "Ceremonia", count: 3 },
     { name: "Fiesta", count: 2 },
@@ -112,32 +122,43 @@ describe("gallery theme", () => {
     ).map((i) => i.getAttribute("src"));
 
   it("dark: data-theme on the root and the light logo in the top bar", async () => {
-    stub(<GalleryView gallery={gallery({ theme: "dark" })} photos={photos} />);
+    stub(
+      <GalleryView gallery={gallery({ palette: "oscuro" })} photos={photos} />,
+    );
     await screen.findByRole("heading", { level: 1, name: "Boda Ana" });
-    expect(document.querySelector('[data-theme="dark"]')).toBeTruthy();
+    expect(document.querySelector('[data-theme="oscuro"]')).toBeTruthy();
     expect(logos().every((s) => s === "/brand/logo-white.svg")).toBe(true);
     // cover is unchanged
     expect(document.querySelector('img[src="/img/Cer0/view-lg"]')).toBeTruthy();
   });
 
-  it("light: no data-theme dark and the black logo in the top bar", async () => {
+  it("claro: data-theme claro and the black logo in the top bar", async () => {
     stub(<GalleryView gallery={gallery()} photos={photos} />);
     await screen.findByRole("heading", { level: 1, name: "Boda Ana" });
-    expect(document.querySelector('[data-theme="dark"]')).toBeNull();
+    expect(document.querySelector('[data-theme="claro"]')).toBeTruthy();
+    expect(document.querySelector("[data-page]")).toBeTruthy();
     expect(logos()).toContain("/brand/logo-black.svg");
   });
 
   it("PIN and unavailable screens follow the theme when known", async () => {
-    stub(<PinScreen title="Boda" theme="dark" />);
+    stub(<PinScreen title="Boda" palette="oscuro" />);
     await screen.findByRole("heading", { name: "Boda" });
-    expect(document.querySelector('[data-theme="dark"]')).toBeTruthy();
+    expect(
+      document.querySelector('[data-theme="oscuro"][data-page]'),
+    ).toBeTruthy();
     expect(logos()).toEqual(["/brand/logo-white.svg"]);
   });
 
-  it("PIN screen defaults to light", async () => {
+  it("PIN screen follows Arena / Gris and defaults to claro", async () => {
+    stub(<PinScreen title="Boda" palette="arena" />);
+    await screen.findByRole("heading", { name: "Boda" });
+    expect(
+      document.querySelector('[data-theme="arena"][data-page]'),
+    ).toBeTruthy();
+    cleanup();
     stub(<PinScreen title="Boda" />);
     await screen.findByRole("heading", { name: "Boda" });
-    expect(document.querySelector('[data-theme="dark"]')).toBeNull();
+    expect(document.querySelector('[data-theme="claro"]')).toBeTruthy();
     expect(logos()).toEqual(["/brand/logo-black.svg"]);
   });
 });

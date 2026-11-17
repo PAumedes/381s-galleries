@@ -97,7 +97,7 @@ export default function GalleryPage({
       return (
         <PinScreen
           title={loaderData.title}
-          theme={loaderData.theme}
+          palette={loaderData.palette}
           error={actionData?.error}
         />
       );

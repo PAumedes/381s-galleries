@@ -19,7 +19,10 @@ const gallery = (over: Partial<OpenGallery> = {}): OpenGallery => ({
   allowWeb: true,
   allowIg: true,
   mode: "delivery",
-  theme: "light",
+  palette: "claro",
+  coverLayout: "completa",
+  gridStyle: "filas",
+  gridGap: "normal",
   sets: [{ name: "A", count: 3 }],
   ...over,
 });

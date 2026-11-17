@@ -213,7 +213,7 @@ export function GalleryList({
                     {g.clientName && (
                       <div className="text-grey-600">{g.clientName}</div>
                     )}
-                    <div className="text-grey-500">/{g.slug}</div>
+                    <div className="text-grey-600">/{g.slug}</div>
                   </td>
                   <td className="py-2 pr-3">
                     {g.eventDate ? fmtDate(g.eventDate) : "—"}

@@ -46,7 +46,8 @@ function show(img = { w: 3000, h: 2000 }) {
         <CoverPreview
           title="T"
           eventDate={null}
-          theme="light"
+          palette="claro"
+          coverLayout="completa"
           proofing={false}
           coverId="p1"
           coverWidth={img.w}

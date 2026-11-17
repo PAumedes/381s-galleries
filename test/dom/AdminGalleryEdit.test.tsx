@@ -21,7 +21,10 @@ const base: GalleryEditData = {
     allowBulk: true,
     requireEmail: true,
     mode: "delivery" as const,
-    theme: "light" as const,
+    palette: "claro" as const,
+    coverLayout: "completa" as const,
+    gridStyle: "filas" as const,
+    gridGap: "normal" as const,
     hasPin: false,
     coverPhotoId: "p1",
     coverFocus: null,
@@ -261,17 +264,6 @@ describe("GalleryEditView", () => {
     expect(
       (screen.getByLabelText(/Pedir email/) as HTMLInputElement).checked,
     ).toBe(true);
-  });
-
-  it("theme select: Claro/Oscuro in Opciones, prefilled", async () => {
-    show(gal({ theme: "dark" }));
-    const sel = (await screen.findByLabelText("Tema")) as HTMLSelectElement;
-    expect(sel.name).toBe("theme");
-    expect(sel.value).toBe("dark");
-    expect(Array.from(sel.options).map((o) => o.textContent)).toEqual([
-      "Claro",
-      "Oscuro",
-    ]);
   });
 
   it("sync issues grouped with labels and file names", async () => {

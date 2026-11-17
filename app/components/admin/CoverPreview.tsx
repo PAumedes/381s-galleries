@@ -5,6 +5,7 @@ import { useLang } from "../../i18n/use-t";
 import { formatEventDate } from "../../lib/event-date";
 import { useStudioName } from "../../lib/use-studio-name";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
+import type { CoverLayout, Palette } from "../../lib/design";
 import { CoverHero } from "../CoverHero";
 
 type Focus = { x: number; y: number };
@@ -33,7 +34,8 @@ const btn =
 export function CoverPreview({
   title,
   eventDate,
-  theme,
+  palette,
+  coverLayout,
   proofing,
   coverId,
   coverWidth = null,
@@ -43,7 +45,8 @@ export function CoverPreview({
 }: {
   title: string;
   eventDate: string | null;
-  theme: "light" | "dark";
+  palette: Palette;
+  coverLayout: CoverLayout;
   proofing: boolean;
   /** Effective cover photo (chosen, else the first); null = no photos. */
   coverId: string | null;
@@ -227,24 +230,28 @@ export function CoverPreview({
             transform: `scale(${scale})`,
           }}
         >
-          <CoverHero
-            embedded
-            title={title}
-            date={formatEventDate(eventDate, lang)}
-            studio={studio}
-            src={src}
-            proofing={false}
-            focus={focus}
-            aspect={aspect}
-            scrollLabel="Ver galería"
-          />
+          <div data-theme={palette} className="bg-paper text-ink size-full">
+            <CoverHero
+              embedded
+              layout={coverLayout}
+              palette={palette}
+              title={title}
+              date={formatEventDate(eventDate, lang)}
+              studio={studio}
+              src={src}
+              proofing={false}
+              focus={focus}
+              aspect={aspect}
+              scrollLabel="Ver galería"
+            />
+          </div>
         </div>
       </div>
       <div
-        data-theme={theme === "dark" ? "dark" : undefined}
+        data-theme={palette}
         className="bg-paper text-ink text-micro border-grey-300 flex items-center justify-between border px-3 py-2 uppercase"
       >
-        <span>Tema {theme === "dark" ? "oscuro" : "claro"}</span>
+        <span>Paleta {palette}</span>
         <span>
           {proofing ? "Prueba: con marca de agua" : "Entrega: sin marca"}
         </span>

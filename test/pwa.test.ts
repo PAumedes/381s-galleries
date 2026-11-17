@@ -97,7 +97,7 @@ describe("per-gallery manifest", () => {
   });
 
   it("dark theme colours", async () => {
-    await addGallery({ theme: "dark" });
+    await addGallery({ palette: "oscuro" });
     const m = await json(await get("boda-ana"));
     expect(m.background_color).toBe("#0B0B0B");
     expect(m.theme_color).toBe("#0B0B0B");
@@ -203,7 +203,7 @@ describe("pwaMeta (head tags)", () => {
   });
 
   it("dark theme: black-translucent + dark theme-color", async () => {
-    await addGallery({ theme: "dark" });
+    await addGallery({ palette: "oscuro" });
     const tags = pwaMeta(await dataFor(), o);
     expect(find(tags, "theme-color")).toBe("#0B0B0B");
     expect(find(tags, "apple-mobile-web-app-status-bar-style")).toBe(
@@ -220,7 +220,7 @@ describe("pwaMeta (head tags)", () => {
   });
 
   it("PIN / unavailable: generic manifest link and no title leak", async () => {
-    await addGallery({ pinHash: await hashPin("1234"), theme: "dark" });
+    await addGallery({ pinHash: await hashPin("1234"), palette: "oscuro" });
     const locked = pwaMeta(await dataFor(), o);
     const unknown = pwaMeta(await dataFor("nope"), o);
     // PIN: slug-specific manifest (generic name/icons), so installs open the gate.

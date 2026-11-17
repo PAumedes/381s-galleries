@@ -26,7 +26,7 @@ export async function handleManifest(
     ? {
         slug: g.slug,
         title: g.pinHash ? undefined : g.title,
-        theme: g.theme,
+        palette: g.palette,
       }
     : undefined;
   return new Response(JSON.stringify(buildManifest({ studio, gallery })), {

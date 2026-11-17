@@ -61,10 +61,10 @@ describe("loadGallery: theme + og preview data", () => {
     await addGallery();
     await addPhoto(1);
     const light = (await loadGallery(req(), "boda-ana", env)).data;
-    expect(light.state === "open" && light.gallery.theme).toBe("light");
-    await db.update(schema.galleries).set({ theme: "dark" });
+    expect(light.state === "open" && light.gallery.palette).toBe("claro");
+    await db.update(schema.galleries).set({ palette: "oscuro" });
     const dark = (await loadGallery(req(), "boda-ana", env)).data;
-    expect(dark.state === "open" && dark.gallery.theme).toBe("dark");
+    expect(dark.state === "open" && dark.gallery.palette).toBe("oscuro");
   });
 
   it("og preview: cover id + 1200 long-edge size (landscape and portrait)", async () => {
@@ -113,14 +113,14 @@ describe("loadGallery: theme + og preview data", () => {
 
   it("PIN gallery: locked has theme and no og; unlocked open has og null", async () => {
     const pinHash = await hashPin("1234");
-    await addGallery({ pinHash, theme: "dark" });
+    await addGallery({ pinHash, palette: "oscuro" });
     await addPhoto(1);
     const locked = (await loadGallery(req(), "boda-ana", env)).data;
     expect(locked).toEqual({
       state: "locked",
       slug: "boda-ana",
       title: "Boda Ana",
-      theme: "dark",
+      palette: "oscuro",
     });
     const c = await gallerySessionCookie(
       { galleryId: G, unlocked: true, pf: await pinFingerprint(pinHash, env) },
@@ -236,7 +236,7 @@ describe("galleryMeta", () => {
   it.each([
     [
       "locked",
-      { state: "locked", slug: "s", title: "SECRET TITLE", theme: "light" },
+      { state: "locked", slug: "s", title: "SECRET TITLE", palette: "claro" },
     ],
     ["unavailable", { state: "unavailable" }],
     ["unknown/undefined", undefined],
@@ -255,7 +255,12 @@ describe("galleryMeta", () => {
     expect(
       JSON.stringify(
         galleryMeta(
-          { state: "locked", slug: "x", title: "x", theme: "dark" } as never,
+          {
+            state: "locked",
+            slug: "x",
+            title: "x",
+            palette: "oscuro",
+          } as never,
           base,
         ),
       ),

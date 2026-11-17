@@ -5,7 +5,9 @@ import type {
   GalleryActionResult,
   loadGalleryEdit,
 } from "../../lib/server/admin-galleries";
+import type { Design } from "../../lib/design";
 import { CoverPreview } from "./CoverPreview";
+import { DesignPanel } from "./DesignPanel";
 import { GalleryTabs } from "./GalleryTabs";
 import { StatusPill } from "./GalleryList";
 import { PhotoReorder } from "./PhotoReorder";
@@ -153,11 +155,17 @@ export function GalleryEditView({
   const de = errs("details");
   const pe = errs("pin");
   const fe = errs("flags");
+  const ge = errs("design");
   const [mode, setMode] = useState<"proofing" | "delivery">(g.mode);
   const proofing = mode === "proofing";
   const [title, setTitle] = useState(g.title);
   const [eventDate, setEventDate] = useState(g.eventDate ?? "");
-  const [theme, setTheme] = useState<"light" | "dark">(g.theme);
+  const [design, setDesign] = useState<Design>({
+    palette: g.palette,
+    coverLayout: g.coverLayout,
+    gridStyle: g.gridStyle,
+    gridGap: g.gridGap,
+  });
   const coverId = g.coverPhotoId ?? data.photos[0]?.id ?? null;
   const coverPhoto = data.photos.find((p) => p.id === coverId);
 
@@ -182,7 +190,8 @@ export function GalleryEditView({
               key={coverId ?? "none"}
               title={title}
               eventDate={eventDate || null}
-              theme={theme}
+              palette={design.palette}
+              coverLayout={design.coverLayout}
               proofing={proofing}
               coverId={coverId}
               coverWidth={coverPhoto?.width ?? null}
@@ -314,6 +323,23 @@ export function GalleryEditView({
                 </button>
               </div>
               <Feedback data={actionData} intent="details" />
+            </Form>
+          </Section>
+
+          <Section title="Diseño">
+            <Form method="post" className="flex flex-col gap-4">
+              <input type="hidden" name="intent" value="design" />
+              <DesignPanel design={design} onChange={setDesign} errors={ge} />
+              <p className="text-small text-grey-600">
+                La tipografía es siempre Montserrat. La portada de arriba
+                muestra los cambios al instante; se aplican al guardar.
+              </p>
+              <div>
+                <button type="submit" className={btnPrimary} disabled={busy}>
+                  Guardar diseño
+                </button>
+              </div>
+              <Feedback data={actionData} intent="design" />
             </Form>
           </Section>
 
@@ -513,25 +539,6 @@ export function GalleryEditView({
                 label="Pedir email para descargar y marcar favoritas"
                 checked={g.requireEmail}
               />
-              <label className="flex items-center gap-2 text-small">
-                <span>Tema</span>
-                <select
-                  name="theme"
-                  value={theme}
-                  onChange={(ev) =>
-                    setTheme(ev.target.value === "dark" ? "dark" : "light")
-                  }
-                  className="border-grey-300 h-9 border bg-transparent px-2"
-                >
-                  <option value="light">Claro</option>
-                  <option value="dark">Oscuro</option>
-                </select>
-              </label>
-              {fe.theme && (
-                <p role="alert" className="text-small text-ink font-medium">
-                  {fe.theme}
-                </p>
-              )}
               <p className="text-small text-grey-600">
                 Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato
                 los enlaces de descarga ya emitidos.
