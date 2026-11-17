@@ -123,6 +123,7 @@ export const en = {
   "admin.nav.label": "Administration",
   "admin.nav.galleries": "Galleries",
   "admin.nav.settings": "Settings",
+  "admin.nav.menu": "Menu",
   "admin.backToGalleries": "← Galleries",
   "admin.lang.label": "Language",
   "admin.status.demo": "Demo mode",

@@ -136,7 +136,7 @@ export function ActivityView({ data }: { data: ActivityViewData }) {
       <div className="flex flex-wrap items-center gap-4">
         <Link
           to="/admin"
-          className="text-micro text-grey-700 uppercase hover:text-ink"
+          className="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0"
         >
           {t("admin.backToGalleries")}
         </Link>
@@ -197,6 +197,7 @@ export function ActivityView({ data }: { data: ActivityViewData }) {
           </Form>
           <a
             href={`${base}/activity.csv`}
+            data-tap
             className="text-micro border-ink border px-4 py-2 uppercase"
           >
             {t("admin.activity.exportCsv")}

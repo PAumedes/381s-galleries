@@ -121,6 +121,7 @@ export const es = {
   "admin.nav.label": "Administración",
   "admin.nav.galleries": "Galerías",
   "admin.nav.settings": "Ajustes",
+  "admin.nav.menu": "Menú",
   "admin.backToGalleries": "← Galerías",
   "admin.lang.label": "Idioma",
   "admin.status.demo": "Modo demo",

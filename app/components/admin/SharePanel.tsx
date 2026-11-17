@@ -94,6 +94,7 @@ export function SharePanel({
               href={whatsappHref(message, url)}
               target="_blank"
               rel="noopener noreferrer"
+              data-tap
               className={btn}
             >
               {t("admin.share.whatsapp")}
@@ -162,6 +163,7 @@ export function SharePanel({
           href={cardHref}
           target="_blank"
           rel="noreferrer"
+          data-tap
           className={`${btn} self-start`}
         >
           {t("admin.share.card")}

@@ -30,6 +30,18 @@ Then open <http://localhost:5173/admin>.
 
 **After pulling, run `pnpm db:migrate:local`**: new migrations (currently up to `0009`) are applied to the local D1.
 
+## Admin on phones
+
+Every admin screen is designed for 360x740 first and must stay good at 768 and 1280: the sidebar becomes a top bar with a "Menú" toggle, the galleries list stacks as cards below 1280, tap targets are >= 44px and form fields 16px (no iOS zoom) below 768. To check all screens at 360, 768 and 1280 against a running dev server (mock mode, seeded):
+
+```sh
+pnpm dev                       # terminal 1
+pnpm seed                      # once
+node scripts/check-admin-mobile.mjs [--base http://localhost:5173] [--shots DIR]
+```
+
+It needs Playwright with a Chromium (`npm i -g playwright`; it uses Chrome if installed), is not part of `pnpm test`, exits non-zero on horizontal overflow, controls under 44px, form fields under 16px or dialogs that overflow, and with `--shots` saves one PNG per screen and width. Photos are faked in the browser, so it works offline.
+
 ## Routes
 
 - `/:slug`: client gallery (PIN form, grid, lightbox); `?lang=es|en` switches language (also sets a cookie)

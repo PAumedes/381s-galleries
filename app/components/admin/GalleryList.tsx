@@ -144,7 +144,7 @@ export function GalleryList({
             key={f}
             to={filterHref(f, q)}
             aria-current={f === filter ? "page" : undefined}
-            className={`text-micro px-3 py-2 uppercase ${f === filter ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`}
+            className={`text-micro flex min-h-tap items-center px-3 uppercase md:min-h-0 md:py-2 ${f === filter ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`}
           >
             {t(FILTER_KEYS[f])}
           </Link>
@@ -155,9 +155,9 @@ export function GalleryList({
           {q ? t("admin.list.noMatch") : t("admin.list.noneInFilter")}
         </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="text-small w-full min-w-[56rem] text-left">
-            <thead className="text-micro text-grey-600 uppercase">
+        <div className="xl:overflow-x-auto">
+          <table className="text-small block w-full text-left xl:table xl:min-w-[56rem]">
+            <thead className="text-micro text-grey-600 sr-only uppercase xl:not-sr-only xl:table-header-group">
               <tr className="border-grey-200 border-b">
                 <th scope="col" className="w-20 py-2 pr-3 font-medium">
                   <span className="sr-only">{t("admin.list.col.cover")}</span>
@@ -188,7 +188,7 @@ export function GalleryList({
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="block xl:table-row-group">
               {galleries.map((g) => (
                 <tr
                   key={g.id}
@@ -196,9 +196,9 @@ export function GalleryList({
                     if (!(ev.target as HTMLElement).closest("a"))
                       void navigate(`/admin/g/${g.id}`);
                   }}
-                  className="border-grey-100 hover:bg-grey-50 cursor-pointer border-b"
+                  className="border-grey-100 hover:bg-grey-50 grid cursor-pointer grid-cols-3 gap-x-3 gap-y-1 border-b py-3 xl:table-row xl:py-0"
                 >
-                  <td className="py-2 pr-3">
+                  <td className="xl:py-2 xl:pr-3">
                     {g.coverPhotoId ? (
                       <img
                         src={`/admin/img/${g.coverPhotoId}/thumb`}
@@ -213,10 +213,10 @@ export function GalleryList({
                       />
                     )}
                   </td>
-                  <td className="py-2 pr-3">
+                  <td className="col-span-2 min-w-0 xl:table-cell xl:py-2 xl:pr-3">
                     <Link
                       to={`/admin/g/${g.id}`}
-                      className="text-body text-ink font-medium underline-offset-4 hover:underline"
+                      className="text-body text-ink flex min-h-tap items-center font-medium underline-offset-4 hover:underline xl:inline xl:min-h-0"
                     >
                       {g.title}
                     </Link>
@@ -225,23 +225,43 @@ export function GalleryList({
                     )}
                     <div className="text-grey-600">/{g.slug}</div>
                   </td>
-                  <td className="py-2 pr-3">
+                  <td
+                    data-label={t("admin.list.col.date")}
+                    className={`row-start-2 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden xl:py-2 xl:pr-3`}
+                  >
                     {g.eventDate ? fmt.date(g.eventDate) : "—"}
                   </td>
-                  <td className="py-2 pr-3">
+                  <td
+                    data-label={t("admin.list.col.status")}
+                    className={`row-start-2 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden xl:py-2 xl:pr-3`}
+                  >
                     <StatusPill status={g.status} expired={g.expired} />
                   </td>
-                  <td className="py-2 pr-3 text-right tabular-nums">
+                  <td
+                    data-label={t("admin.list.col.photos")}
+                    className={`row-start-3 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden tabular-nums xl:py-2 xl:pr-3 xl:text-right`}
+                  >
                     {fmt.number(g.photoCount)}
                   </td>
-                  <td className="py-2 pr-3 text-right tabular-nums">
+                  <td
+                    data-label={t("admin.list.col.views")}
+                    className={`row-start-3 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden tabular-nums xl:py-2 xl:pr-3 xl:text-right`}
+                  >
                     {fmt.number(g.views)}
                   </td>
-                  <td className="py-2 pr-3 text-right tabular-nums">
+                  <td
+                    data-label={t("admin.list.col.downloads")}
+                    className={`row-start-3 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden tabular-nums xl:py-2 xl:pr-3 xl:text-right`}
+                  >
                     {fmt.number(g.downloads)}
                   </td>
-                  <td className="py-2 pr-3">{expiry(g.expiresAt)}</td>
-                  <td className="py-2">
+                  <td
+                    data-label={t("admin.list.col.expires")}
+                    className={`row-start-4 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden col-span-3 xl:py-2 xl:pr-3`}
+                  >
+                    {expiry(g.expiresAt)}
+                  </td>
+                  <td className="col-start-3 row-start-2 empty:hidden xl:py-2 xl:empty:table-cell">
                     {g.issueCount > 0 && (
                       <span
                         aria-label={t("admin.list.issueBadge", {
