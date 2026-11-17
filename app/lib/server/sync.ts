@@ -831,6 +831,7 @@ export async function runSync(
             .update(schema.galleries)
             .set({
               status: "archived",
+              showOnHome: false,
               archivedPrevStatus: prev,
               archivedBySync: true,
             })

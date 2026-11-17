@@ -63,3 +63,35 @@ export function galleryMeta(
   });
   return tags;
 }
+
+/**
+ * Head tags for the public home: studio name and the first cover only. The
+ * caller passes a cover id taken from `loadHome` (so only qualifying galleries).
+ */
+export function homeMeta(
+  first: { coverId: string } | null,
+  o: { studio: string; origin: string },
+): MetaTag[] {
+  const tags: MetaTag[] = [
+    { title: o.studio },
+    { property: "og:type", content: "website" },
+    { property: "og:site_name", content: o.studio },
+    { property: "og:title", content: o.studio },
+    { property: "og:description", content: o.studio },
+    { property: "og:url", content: `${o.origin}/` },
+  ];
+  if (first) {
+    tags.push(
+      {
+        property: "og:image",
+        content: `${o.origin}/img/${encodeURIComponent(first.coverId)}/view-sm`,
+      },
+      { property: "og:image:alt", content: o.studio },
+    );
+  }
+  tags.push({
+    name: "twitter:card",
+    content: first ? "summary_large_image" : "summary",
+  });
+  return tags;
+}

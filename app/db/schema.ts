@@ -107,6 +107,11 @@ export const galleries = sqliteTable(
     archivedBySync: integer("archived_by_sync", { mode: "boolean" })
       .notNull()
       .default(false),
+    // Public portfolio home (T6.6): "Mostrar en la portada". The 0/1 CHECK lives
+    // in migration 0016; the home query also needs published, unexpired, no PIN.
+    showOnHome: integer("show_on_home", { mode: "boolean" })
+      .notNull()
+      .default(false),
     createdAt: createdAt(),
   },
   (t) => [

@@ -1,25 +1,37 @@
 import { env } from "cloudflare:workers";
 
+import { HomePage } from "../components/HomePage";
 import { getStudioName } from "../lib/server/admin";
-import { Logo } from "../components/Logo";
-import { SiteFooter } from "../components/SiteFooter";
+import { loadHome } from "../lib/server/home";
+import { publicOrigin } from "../lib/server/public-url";
+import { homeMeta } from "../lib/og";
 import type { Route } from "./+types/home";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return [{ title: loaderData.studioName }];
+  return homeMeta(
+    loaderData.items[0] ? { coverId: loaderData.items[0].cover.id } : null,
+    { studio: loaderData.studioName, origin: loaderData.origin },
+  );
 }
 
-export async function loader() {
-  return { studioName: await getStudioName(env) };
+// The list depends on live gallery state (PIN, status): never cache it.
+export function headers() {
+  return { "Cache-Control": "private, no-store" };
+}
+
+// `args` is optional: tests (and no-request callers) call the loader bare.
+export async function loader(args?: Route.LoaderArgs) {
+  const [studioName, home] = await Promise.all([
+    getStudioName(env),
+    loadHome(env),
+  ]);
+  return {
+    studioName,
+    origin: args ? publicOrigin(env, args.request) : (env.PUBLIC_ORIGIN ?? ""),
+    items: home.items,
+  };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-10 px-6">
-      <h1>
-        <Logo variant="dark" name={loaderData.studioName} className="h-24" />
-      </h1>
-      <SiteFooter />
-    </main>
-  );
+  return <HomePage items={loaderData.items} />;
 }
