@@ -18,6 +18,12 @@ export const SETTINGS_KEYS = {
   driveRootName: "drive_root_name",
   /** Studio name override (admin setup); env STUDIO_NAME is the fallback. */
   studioName: "studio_name",
+  /** Cache-warm lock `<iso>|<uuid>` (expiry + owner), like sync_lock. */
+  warmLock: "warm_lock",
+  /** ISO time until which the warm cron skips its scan (nothing was stale). */
+  warmIdle: "warm_idle",
+  /** Random value bumped by DB triggers whenever photos/watermark change (see migration 0012). */
+  warmStamp: "warm_stamp",
 } as const;
 
 type SettingsEnv = Pick<Env, "DB">;

@@ -234,3 +234,28 @@ export async function hashIp(ip: string, secret: string): Promise<string> {
     b.toString(16).padStart(2, "0"),
   ).join("");
 }
+
+const macKeys = new Map<string, Promise<CryptoKey>>();
+
+/**
+ * Keyed, non-reversible 16-hex-char tag of `message` (HMAC-SHA256 truncated to
+ * 8 bytes). The imported key is cached per secret: callers tag thousands of
+ * values per request.
+ */
+export async function shortMac(
+  secret: string,
+  message: string,
+): Promise<string> {
+  let key = macKeys.get(secret);
+  if (!key) {
+    key = hmacKey(secret, ["sign"]);
+    macKeys.set(secret, key);
+    if (macKeys.size > 8) macKeys.delete(macKeys.keys().next().value!);
+  }
+  const sig = new Uint8Array(
+    await crypto.subtle.sign("HMAC", await key, enc.encode(`imgv:${message}`)),
+  );
+  return Array.from(sig.slice(0, 8), (b) =>
+    b.toString(16).padStart(2, "0"),
+  ).join("");
+}

@@ -132,6 +132,14 @@ export const photos = sqliteTable(
     // Set when sync first sees the photo's high-res file missing; hard-deleted
     // only after a grace period. Client queries MUST filter `missing_since IS NULL`.
     missingSince: text("missing_since"),
+    // Hash of the versions last warmed into R2 (thumb + view-sm); see warm.ts.
+    cacheWarmKey: text("cache_warm_key"),
+    // What cache_warm_key must equal for the photo to count as warmed. NULL =
+    // unknown (computed lazily by warm.ts); DB triggers null it on any change.
+    cacheExpectedKey: text("cache_expected_key"),
+    // Per-photo failure back-off (warm.ts); triggers reset it on changes.
+    cacheWarmFailCount: integer("cache_warm_fail_count").notNull().default(0),
+    cacheWarmRetryAt: text("cache_warm_retry_at"),
   },
   (t) => [
     // Target for favorites' composite FK (same-gallery guarantee).

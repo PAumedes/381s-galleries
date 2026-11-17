@@ -35,7 +35,8 @@
     },
   ],
   "triggers": {
-    "crons": ["*/15 * * * *"],
+    // 15 min: Drive sync. 1 min: R2 cache warming (cheap no-op when nothing is stale).
+    "crons": ["*/15 * * * *", "* * * * *"],
   },
   "observability": {
     "enabled": true,

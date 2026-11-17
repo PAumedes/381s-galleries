@@ -147,7 +147,7 @@ function Tile({
         <img
           ref={imgRef}
           key={retry}
-          src={`${imgUrl(photo.id, "thumb")}${retry ? `${imgUrl(photo.id, "thumb").includes("?") ? "&" : "?"}r=${retry}` : ""}`}
+          src={`${imgUrl(photo.id, "thumb", photo.v)}${retry ? `${imgUrl(photo.id, "thumb", photo.v).includes("?") ? "&" : "?"}r=${retry}` : ""}`}
           alt={label}
           loading="lazy"
           decoding="async"

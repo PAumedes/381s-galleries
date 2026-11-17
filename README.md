@@ -33,7 +33,7 @@ Then open <http://localhost:5173/admin>.
 ## Routes
 
 - `/:slug`: client gallery (PIN form, grid, lightbox); `?lang=es|en` switches language (also sets a cookie)
-- `/img/:id/:variant`: photo images (`thumb`, `view-sm`, `view-lg`), cached in R2
+- `/img/:id/:variant`: photo images (`thumb`, `view-sm`, `view-lg`), cached in R2 (a free 1-minute cron pre-fills `thumb` and `view-sm`; the admin setup page shows "Fotos en caché: N / M" = photos already warmed / visible photos; image URLs carry `?v=` so browsers keep them for a year)
 - `/api/g/:slug/*`: client JSON API (`visitor`, `favorites`, `download-tokens`, `bulk`)
 - `/dl/:token`: signed download of one photo (GET/HEAD; tokens from `download-tokens`, valid 10 min)
 - `/api/g/:slug/download-tokens`: POST, issues up to 50 `/dl` tokens

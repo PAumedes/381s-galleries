@@ -1,12 +1,11 @@
 import { RouterContextProvider, createRequestHandler } from "react-router";
 import { executionContext, nonceContext } from "../app/lib/server/context";
 import { assertDistinctSecrets } from "../app/lib/server/crypto";
-import { getDrive } from "../app/lib/server/drive-factory";
 import {
   applySecurityHeaders,
   makeNonce,
 } from "../app/lib/server/security-headers";
-import { runScheduledSync } from "../app/lib/server/sync";
+import { dispatchScheduled } from "../app/lib/server/scheduled";
 
 const requestHandler = createRequestHandler(
   () => import("virtual:react-router/server-build"),
@@ -27,10 +26,10 @@ export default {
       mock: env.DRIVE_MODE === "mock",
     });
   },
-  async scheduled(_controller, env, ctx) {
+  async scheduled(controller, env, ctx) {
     assertDistinctSecrets(env);
-    // Cron (every 15 minutes). The promise rejects on failure so the run is
-    // reported as failed; runScheduledSync stores a generic sync_last_error.
-    ctx.waitUntil(runScheduledSync(env, getDrive(env)));
+    // "*/15 * * * *" syncs Drive; "* * * * *" warms the R2 cache. The promise
+    // rejects on failure so the run is reported as failed.
+    ctx.waitUntil(dispatchScheduled(controller.cron, env));
   },
 } satisfies ExportedHandler<Env>;

@@ -1,14 +1,15 @@
 import { and, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
 import { clientIpHash, openGallery } from "./access";
+import { shortMac } from "./crypto";
 import { rateLimit, retryAfterSeconds } from "./rate-limit";
 import { mockImageUrl } from "./drive-mock";
 import type { MockVariant } from "./drive-mock";
 import { DriveError } from "./drive-types";
 import type { DriveClient } from "./drive-types";
 
-const VARIANTS = ["thumb", "view-sm", "view-lg"] as const;
-type Variant = (typeof VARIANTS)[number];
+export const VARIANTS = ["thumb", "view-sm", "view-lg"] as const;
+export type Variant = (typeof VARIANTS)[number];
 
 const MOCK_KIND: Record<Variant, MockVariant> = {
   thumb: "thumb",
@@ -80,10 +81,7 @@ async function pump(
 }
 
 /** Drive modifiedTime of the resolved source file, from photos.variant_versions ("" if unknown). */
-function sourceVersion(
-  photo: typeof schema.photos.$inferSelect,
-  fileId: string,
-): string {
+function sourceVersion(photo: SourcePhoto, fileId: string): string {
   const ids = {
     highres: photo.driveHighresId,
     web: photo.driveWebId,
@@ -102,6 +100,144 @@ function sourceVersion(
   } catch {
     return "";
   }
+}
+
+export const IMMUTABLE_CACHE_CONTROL = "private, max-age=31536000, immutable";
+
+type Photo = typeof schema.photos.$inferSelect;
+/** The columns that decide which Drive file serves a variant. */
+export type SourcePhoto = Pick<
+  Photo,
+  | "id"
+  | "driveHighresId"
+  | "driveWebId"
+  | "driveIgId"
+  | "driveThumbId"
+  | "driveWmId"
+  | "variantVersions"
+>;
+
+export interface Source {
+  fileId: string;
+  /** true when the file is the watermarked preview served as view-*. */
+  watermark: boolean;
+  /** Drive modifiedTime of the file ("" if unknown: then it is never cached). */
+  version: string;
+}
+
+/**
+ * Which Drive file serves `variant` of `photo` (PLAN 5.3 watermark policy and
+ * fallbacks), or null when none exists (404). Shared by /img and cache warming.
+ */
+export function resolveSource(
+  photo: SourcePhoto,
+  useWatermarkPreview: boolean,
+  variant: Variant,
+): Source | null {
+  const watermark = variant !== "thumb" && useWatermarkPreview;
+  if (watermark && !photo.driveWmId) return null;
+  const fileId =
+    variant === "thumb"
+      ? useWatermarkPreview
+        ? (photo.driveThumbId ?? photo.driveWmId)
+        : (photo.driveThumbId ?? photo.driveWebId ?? photo.driveHighresId)
+      : watermark
+        ? photo.driveWmId
+        : variant === "view-sm"
+          ? (photo.driveWebId ?? photo.driveHighresId)
+          : photo.driveHighresId;
+  if (!fileId) return null;
+  return { fileId, watermark, version: sourceVersion(photo, fileId) };
+}
+
+/**
+ * Short opaque token of what a photo's three image URLs currently resolve to
+ * (file ids, watermark flags, modified times). HMAC with SESSION_SECRET, so
+ * Drive ids are not recoverable from it. Used as `?v=` on image URLs.
+ * Null when any served variant has an unknown version: such a token could not
+ * change when the file does, so it must never enable immutable caching.
+ */
+export async function imageVersionToken(
+  env: Pick<Env, "SESSION_SECRET">,
+  photo: SourcePhoto,
+  useWatermarkPreview: boolean,
+): Promise<string | null> {
+  const parts: string[] = [];
+  for (const variant of VARIANTS) {
+    const s = resolveSource(photo, useWatermarkPreview, variant);
+    if (!s) {
+      parts.push("-");
+      continue;
+    }
+    if (!s.version) return null;
+    parts.push(`${s.fileId}|${s.watermark ? 1 : 0}|${s.version}`);
+  }
+  if (parts.every((x) => x === "-")) return null;
+  return shortMac(env.SESSION_SECRET, parts.join("\n"));
+}
+
+function isValidHit(hit: R2Object, src: Source): boolean {
+  return (
+    !!src.version &&
+    hit.customMetadata?.fileId === src.fileId &&
+    hit.customMetadata?.wm === (src.watermark ? "1" : "0") &&
+    hit.customMetadata?.v === src.version
+  );
+}
+
+async function storeInCache(
+  env: Pick<Env, "CACHE">,
+  key: string,
+  body: ReadableStream<Uint8Array>,
+  length: number,
+  contentType: string,
+  customMetadata: { fileId: string; wm: string; v: string },
+): Promise<void> {
+  const fixed = new FixedLengthStream(length);
+  await Promise.all([
+    pump(body, fixed.writable),
+    env.CACHE.put(key, fixed.readable, {
+      httpMetadata: { contentType },
+      customMetadata,
+    }),
+  ]);
+}
+
+export type FillResult = "cached" | "filled" | "skipped";
+
+/**
+ * Makes sure R2 holds the current `variant` of `photo` (same resolution,
+ * validation and put/customMetadata as /img). Costs one Drive call on a miss.
+ * "skipped": nothing to cache (no source file / unknown version / no length).
+ * Throws on Drive or R2 failure.
+ */
+export async function fillCache(
+  env: Pick<Env, "CACHE">,
+  photo: SourcePhoto & { useWatermarkPreview: boolean },
+  variant: Variant,
+  drive: DriveClient,
+): Promise<FillResult> {
+  const src = resolveSource(photo, photo.useWatermarkPreview, variant);
+  if (!src || !src.version) return "skipped";
+  const key = `${photo.id}/${variant}`;
+  const head = await env.CACHE.head(key);
+  if (head && isValidHit(head, src)) return "cached";
+  const upstream = await drive.streamFile(src.fileId);
+  const rawLength = upstream.headers.get("Content-Length")?.trim();
+  const length = rawLength ? Number(rawLength) : Number.NaN;
+  if (!upstream.body || !Number.isInteger(length) || length <= 0) {
+    await upstream.body?.cancel();
+    return "skipped";
+  }
+  await storeInCache(
+    env,
+    key,
+    upstream.body,
+    length,
+    safeType(upstream.headers.get("Content-Type")),
+    { fileId: src.fileId, wm: src.watermark ? "1" : "0", v: src.version },
+  );
+  return "filled";
 }
 
 export interface ImageDeps {
@@ -162,19 +298,9 @@ export async function serveImage(
   if (!opts.admin && !(await openGallery(request, gallery, env)))
     return notFound();
 
-  const watermark = v !== "thumb" && gallery.useWatermarkPreview;
-  if (watermark && !photo.driveWmId) return notFound();
-  const fileId =
-    v === "thumb"
-      ? gallery.useWatermarkPreview
-        ? (photo.driveThumbId ?? photo.driveWmId)
-        : (photo.driveThumbId ?? photo.driveWebId ?? photo.driveHighresId)
-      : watermark
-        ? photo.driveWmId
-        : v === "view-sm"
-          ? (photo.driveWebId ?? photo.driveHighresId)
-          : photo.driveHighresId;
-  if (!fileId) return notFound();
+  const src = resolveSource(photo, gallery.useWatermarkPreview, v);
+  if (!src) return notFound();
+  const { fileId, watermark, version } = src;
 
   if (env.DRIVE_MODE === "mock") {
     return new Response(null, {
@@ -193,18 +319,18 @@ export async function serveImage(
   }
 
   const key = `${photo.id}/${v}`;
-  // <=10 min browser staleness after a watermark toggle / re-export is accepted (PLAN 5.3).
-  const cacheControl = "private, max-age=600";
-  const version = sourceVersion(photo, fileId);
+  // A request whose ?v= equals the current version token may be cached for a
+  // year (the URL changes whenever the file, watermark flag or version does).
+  // Otherwise <=10 min browser staleness is accepted (PLAN 5.3).
+  const asked = new URL(request.url).searchParams.get("v");
+  const cacheControl =
+    asked &&
+    asked === (await imageVersionToken(env, photo, gallery.useWatermarkPreview))
+      ? IMMUTABLE_CACHE_CONTROL
+      : "private, max-age=600";
   const wmFlag = watermark ? "1" : "0";
   let hit = await env.CACHE.get(key);
-  if (
-    hit &&
-    (!version ||
-      hit.customMetadata?.fileId !== fileId ||
-      hit.customMetadata?.wm !== wmFlag ||
-      hit.customMetadata?.v !== version)
-  ) {
+  if (hit && !isValidHit(hit, src)) {
     await hit.body.cancel();
     hit = null;
   }
@@ -279,15 +405,12 @@ export async function serveImage(
 
   headers["Content-Length"] = String(length);
   const [toClient, toCache] = upstream.body.tee();
-  const fixed = new FixedLengthStream(length);
   ctx.waitUntil(
-    Promise.all([
-      pump(toCache, fixed.writable),
-      env.CACHE.put(key, fixed.readable, {
-        httpMetadata: { contentType },
-        customMetadata: { fileId, wm: wmFlag, v: version },
-      }),
-    ]).catch(() => {
+    storeInCache(env, key, toCache, length, contentType, {
+      fileId,
+      wm: wmFlag,
+      v: version,
+    }).catch(() => {
       // Caching is best-effort; the client already got the image.
     }),
   );

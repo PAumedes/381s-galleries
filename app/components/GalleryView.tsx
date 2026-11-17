@@ -179,7 +179,11 @@ export function GalleryView({
       >
         {gallery.coverPhotoId && (
           <img
-            src={imgUrl(gallery.coverPhotoId, "view-lg")}
+            src={imgUrl(
+              gallery.coverPhotoId,
+              "view-lg",
+              photos.find((p) => p.id === gallery.coverPhotoId)?.v,
+            )}
             alt=""
             fetchPriority="high"
             className="absolute inset-0 size-full object-cover"

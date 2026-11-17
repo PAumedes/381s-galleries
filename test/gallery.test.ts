@@ -195,6 +195,7 @@ describe("loadGallery: open data", () => {
       height: 2000,
       set: "Ceremonia",
       variants: { web: true, ig: false },
+      // No known Drive versions in this fixture: no token (no immutable caching).
     });
     expect(r.data.gallery).toMatchObject({
       title: "Boda Ana",
