@@ -806,6 +806,27 @@ describe("sync safety", () => {
     ]).toEqual(["draft", null, false, null]);
   });
 
+  it("sync auto-archive clears show_on_home; restore does not bring it back", async () => {
+    await setRoot(buildFixtures().rootId);
+    const inner = createMockDrive();
+    let hidden = false;
+    const d = hideAlbum(inner, "Retrato Sofía", () => hidden);
+    await runSync(e, { drive: d });
+    await db
+      .update(schema.galleries)
+      .set({ status: "published", showOnHome: true })
+      .where(eq(schema.galleries.slug, "retrato-sofia"));
+    hidden = true;
+    await runSync(e, { drive: d, force: true });
+    await runSync(e, { drive: d, force: true, now: later() });
+    let g = await galleryBy("retrato-sofia");
+    expect([g.status, g.showOnHome]).toEqual(["archived", false]);
+    hidden = false;
+    await runSync(e, { drive: d, force: true, now: later() });
+    g = await galleryBy("retrato-sofia");
+    expect([g.status, g.showOnHome]).toEqual(["published", false]);
+  });
+
   it("unchanged token still lets a pending grace period mature", async () => {
     await setRoot(buildFixtures().rootId);
     const d = createMockDrive();

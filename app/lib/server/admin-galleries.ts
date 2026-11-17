@@ -351,6 +351,8 @@ async function saveDetails(env: Env, g: GalleryRow, f: FormData) {
         clientName: clientRaw || null,
         eventDate: eventDate || null,
         expiresAt,
+        // An expired gallery stops qualifying: the opt-in does not survive.
+        ...(isExpired(expiresAt, Date.now()) ? { showOnHome: false } : {}),
       })
       .where(eq(schema.galleries.id, g.id));
   } catch (err) {
@@ -423,6 +425,10 @@ async function saveHome(env: Env, g: GalleryRow, f: FormData) {
       showOnHome: "Valor inválido.",
     });
   const on = raw === "1";
+  if (on && isExpired(g.expiresAt, Date.now()))
+    return fail(intent, "Revisá los campos marcados.", {
+      showOnHome: "Una galería vencida no puede estar en la portada.",
+    });
   if (on && (g.pinHash !== null || g.status !== "published"))
     return fail(intent, "Revisá los campos marcados.", {
       showOnHome:
@@ -500,12 +506,12 @@ async function changeStatus(env: Env, g: GalleryRow, to: string) {
   switch (to) {
     case "publish":
       from = "draft";
-      set = { status: "published" };
+      set = { status: "published" }; // show_on_home stays 0: needs a new opt-in
       message = "Galería publicada.";
       break;
     case "draft":
       from = "published";
-      set = { status: "draft" };
+      set = { status: "draft", showOnHome: false };
       message = "La galería pasó a borrador.";
       break;
     case "archive":
@@ -513,6 +519,7 @@ async function changeStatus(env: Env, g: GalleryRow, to: string) {
       from = g.status;
       set = {
         status: "archived",
+        showOnHome: false,
         archivedPrevStatus: g.status,
         archivedBySync: false,
       };
@@ -572,7 +579,7 @@ async function savePin(env: Env, g: GalleryRow, f: FormData) {
   // Sessions and download tokens carry pinFingerprint(pin_hash): they die with the old hash.
   await db
     .update(schema.galleries)
-    .set({ pinHash })
+    .set({ pinHash, showOnHome: false })
     .where(eq(schema.galleries.id, g.id));
   return done(
     intent,
