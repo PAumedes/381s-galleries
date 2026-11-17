@@ -3,6 +3,10 @@ export const es = {
   "gallery.all": "Todas",
   "gallery.sets": "Secciones",
   "gallery.share": "Compartir",
+  "pwa.ios": "Tocá Compartir y luego 'Agregar a inicio'",
+  "pwa.install": "Agregar a inicio",
+  "pwa.dismiss": "Cerrar",
+  "pwa.androidText": "Tené esta galería a un toque en tu pantalla de inicio",
   "gallery.linkCopied": "Enlace copiado",
 
   "pin.placeholder": "PIN",

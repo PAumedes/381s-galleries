@@ -21,6 +21,7 @@ const base: GalleryEditData = {
     allowBulk: true,
     requireEmail: true,
     useWatermarkPreview: false,
+    theme: "light" as const,
     hasPin: false,
     coverPhotoId: "p1",
   },
@@ -151,7 +152,7 @@ describe("GalleryEditView", () => {
     expect(screen.getByText(/cierra las sesiones/)).toBeTruthy();
     const pin = screen.getByLabelText("Nuevo PIN") as HTMLInputElement;
     expect(pin.value).toBe("");
-    expect(pin.minLength).toBe(4);
+    expect(pin.minLength).toBe(6);
     expect(pin.maxLength).toBe(32);
     expect(screen.getByRole("button", { name: "Cambiar PIN" })).toBeTruthy();
   });
@@ -190,6 +191,17 @@ describe("GalleryEditView", () => {
     expect(
       (screen.getByLabelText(/Pedir email/) as HTMLInputElement).checked,
     ).toBe(true);
+  });
+
+  it("theme select: Claro/Oscuro in Opciones, prefilled", async () => {
+    show(gal({ theme: "dark" }));
+    const sel = (await screen.findByLabelText("Tema")) as HTMLSelectElement;
+    expect(sel.name).toBe("theme");
+    expect(sel.value).toBe("dark");
+    expect(Array.from(sel.options).map((o) => o.textContent)).toEqual([
+      "Claro",
+      "Oscuro",
+    ]);
   });
 
   it("cover picker lists visible photos via the admin image route", async () => {

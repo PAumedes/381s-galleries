@@ -3,11 +3,22 @@ import { Form } from "react-router";
 import { useT } from "../i18n/use-t";
 import { Logo } from "./Logo";
 
-export function PinScreen({ title, error }: { title: string; error?: string }) {
+export function PinScreen({
+  title,
+  error,
+  theme = "light",
+}: {
+  title: string;
+  error?: string;
+  theme?: "light" | "dark";
+}) {
   const t = useT();
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-10 px-6 text-center">
-      <Logo variant="dark" className="h-16" />
+    <main
+      data-theme={theme === "dark" ? "dark" : undefined}
+      className="bg-paper text-ink flex min-h-dvh flex-col items-center justify-center gap-10 px-6 text-center"
+    >
+      <Logo variant={theme === "dark" ? "light" : "dark"} className="h-16" />
       <h1 className="text-display text-ink">{title}</h1>
       <Form
         method="post"

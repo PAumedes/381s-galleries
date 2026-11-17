@@ -6,7 +6,8 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "typecheck": "wrangler types --strict-vars=false && react-router typegen && tsc -b",
-    "deploy": "pnpm run build && wrangler deploy",
+    "deploy": "wrangler d1 migrations apply DB --remote && pnpm run build && wrangler deploy",
+    "secrets:check": "node scripts/check-secrets.mjs",
     "preview": "pnpm run build && vite preview",
     "cf-typegen": "wrangler types --strict-vars=false",
     "postinstall": "wrangler types --strict-vars=false",
@@ -15,7 +16,8 @@
     "format": "prettier --write .",
     "db:generate": "drizzle-kit generate",
     "seed": "node scripts/seed.mjs",
-    "db:migrate:local": "wrangler d1 migrations apply DB --local"
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote"
   },
   "dependencies": {
     "@fontsource-variable/montserrat": "^5.3.0",
@@ -32,6 +34,7 @@
     "@cloudflare/vitest-pool-workers": "^0.23.0",
     "@eslint/js": "^10.0.1",
     "@react-router/dev": "^8.5.1",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.2.2",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",

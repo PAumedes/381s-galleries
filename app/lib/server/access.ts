@@ -43,17 +43,68 @@ export function crossSite(request: Request): boolean {
 }
 
 /**
+ * First 64 bits of an IPv6 address as `xxxx:xxxx:xxxx:xxxx::/64` (one subscriber
+ * owns a whole /64, so per-address limits are meaningless). IPv4-mapped and
+ * NAT64 addresses collapse to their embedded IPv4; IPv4 and anything
+ * unparseable are returned unchanged.
+ */
+export function ipv6Prefix64(ip: string): string {
+  if (!ip.includes(":")) return ip;
+  let addr = ip.split("%")[0].toLowerCase();
+  const v4 = /(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(addr);
+  if (v4) {
+    const [a, b, c, d] = v4.slice(1).map(Number);
+    if ([a, b, c, d].some((n) => n > 255)) return ip;
+    const hex = (x: number, y: number) => ((x << 8) | y).toString(16);
+    addr = addr.slice(0, v4.index) + `${hex(a, b)}:${hex(c, d)}`;
+  }
+  const halves = addr.split("::");
+  if (halves.length > 2) return ip;
+  const head = halves[0] ? halves[0].split(":") : [];
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  let groups: string[];
+  if (halves.length === 2) {
+    const fill = 8 - head.length - tail.length;
+    if (fill < 1) return ip;
+    groups = [...head, ...Array<string>(fill).fill("0"), ...tail];
+  } else groups = head;
+  if (groups.length !== 8 || !groups.every((g) => /^[0-9a-f]{1,4}$/.test(g)))
+    return ip;
+  // IPv4-mapped (::ffff:0:0/96) and NAT64 (64:ff9b::/96): key by the embedded
+  // IPv4, otherwise every client behind the same gateway shares one /64.
+  const n = groups.map((g) => parseInt(g, 16));
+  const zeros = (from: number, to: number) =>
+    n.slice(from, to).every((x) => x === 0);
+  const mapped = zeros(0, 5) && n[5] === 0xffff;
+  const nat64 = n[0] === 0x64 && n[1] === 0xff9b && zeros(2, 6);
+  if (mapped || nat64)
+    return `${n[6] >> 8}.${n[6] & 255}.${n[7] >> 8}.${n[7] & 255}`;
+  return (
+    groups
+      .slice(0, 4)
+      .map((g) => g.padStart(4, "0"))
+      .join(":") + "::/64"
+  );
+}
+
+/**
  * Hashed client IP. Single policy for a missing `CF-Connecting-IP`: "local" in
  * mock mode (dev), otherwise null (callers decide: 429 or no dedupe bucket).
+ * `prefix64` collapses IPv6 addresses to their /64 (abuse limiters).
  */
 export async function clientIpHash(
   request: Request,
   env: AccessEnv,
+  opts: { prefix64?: boolean } = {},
 ): Promise<string | null> {
   const ip =
     request.headers.get("CF-Connecting-IP") ??
     (env.DRIVE_MODE === "mock" ? "local" : null);
-  return ip ? hashIp(ip, env.SESSION_SECRET) : null;
+  if (!ip) return null;
+  return hashIp(
+    opts.prefix64 ? ipv6Prefix64(ip.trim()) : ip,
+    env.SESSION_SECRET,
+  );
 }
 
 /**

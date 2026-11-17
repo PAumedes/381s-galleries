@@ -22,6 +22,14 @@ import {
 import { loader as layoutLoader, adminLayoutData } from "../app/routes/admin";
 import { setupAction, setupData } from "../app/routes/admin.setup";
 import { loader as rootLoader } from "../app/root";
+import { RouterContextProvider } from "react-router";
+import { nonceContext } from "../app/lib/server/context";
+
+function ctxWithNonce() {
+  const c = new RouterContextProvider();
+  c.set(nonceContext, "test-nonce");
+  return c;
+}
 
 const e = { ...env, DRIVE_MODE: "mock", ALLOW_DEV_ADMIN: "1" } as Env;
 const nonAdmin = { ...e, ALLOW_DEV_ADMIN: "0" } as Env;
@@ -361,6 +369,7 @@ describe("setup action: studio name + root loader", () => {
     expect(await getStudioName(e)).toBe("Estudio Ñandú");
     const rd = (await rootLoader({
       request: new Request("http://localhost/"),
+      context: ctxWithNonce(),
     } as never)) as { data?: unknown; studioName?: string };
     const payload = (rd.data ?? rd) as { studioName: string };
     expect(payload.studioName).toBe("Estudio Ñandú");

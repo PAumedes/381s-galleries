@@ -22,7 +22,7 @@ const EXPIRY_YEAR_MAX = 2100;
 export const TITLE_MAX = 120;
 export const CLIENT_MAX = 120;
 export const SLUG_MAX = 60;
-export const PIN_MIN = 4;
+export const PIN_MIN = 6;
 export const PIN_MAX = 32;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 // Control chars and bidi overrides/isolates only (ZWJ/ZWNJ are legitimate).
@@ -158,6 +158,7 @@ export async function loadGalleryEdit(env: Env, id: string) {
       allowBulk: g.allowBulk,
       requireEmail: g.requireEmail,
       useWatermarkPreview: g.useWatermarkPreview,
+      theme: g.theme,
       hasPin: g.pinHash !== null,
       coverPhotoId: ps.some((p) => p.id === g.coverPhotoId)
         ? g.coverPhotoId
@@ -335,6 +336,12 @@ async function saveFlags(env: Env, g: GalleryRow, f: FormData) {
   const intent = "flags";
   const on = (k: string) => f.get(k) === "1";
   const wm = on("useWatermarkPreview");
+  const themeRaw = f.get("theme");
+  if (themeRaw !== null && themeRaw !== "light" && themeRaw !== "dark")
+    return fail(intent, "Revisá los campos marcados.", {
+      theme: "Tema inválido.",
+    });
+  const theme = themeRaw ?? g.theme;
   if (wm) {
     const [r] = await getDb(env)
       .select({ n: sql<number>`count(*)` })
@@ -361,6 +368,7 @@ async function saveFlags(env: Env, g: GalleryRow, f: FormData) {
       allowBulk: on("allowBulk"),
       requireEmail: on("requireEmail"),
       useWatermarkPreview: wm,
+      theme,
     })
     .where(eq(schema.galleries.id, g.id));
   return done(intent, "Opciones guardadas.");

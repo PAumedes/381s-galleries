@@ -24,5 +24,6 @@ export type OpenGallery = {
   allowHighres: boolean;
   allowWeb: boolean;
   allowIg: boolean;
+  theme: "light" | "dark";
   sets: { name: string; count: number }[];
 };

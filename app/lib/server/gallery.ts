@@ -23,7 +23,7 @@ export { crossSite, findGallery, isAvailable, isSecure };
 
 export const VIEW_DEDUPE_MS = 30 * 60 * 1000;
 const BOT_RE =
-  /bot|crawl|spider|preview|facebookexternalhit|whatsapp|telegram|slack|discord|curl|wget/i;
+  /bot|crawl|spider|preview|facebookexternalhit|whatsapp|telegram|slack|discord|curl|wget|mastodon|embedly|iframely|http\.rb|signal|viber|line-poker|pinterest|skype/i;
 
 function shouldLogView(request: Request): boolean {
   if (request.method === "HEAD") return false;
@@ -31,13 +31,32 @@ function shouldLogView(request: Request): boolean {
   if (/prefetch/i.test(h.get("Purpose") ?? "")) return false;
   if (/prefetch/i.test(h.get("Sec-Purpose") ?? "")) return false;
   if (BOT_RE.test(h.get("User-Agent") ?? "")) return false;
+  // Real browsers send Sec-Fetch-*; a cookieless request without it is a bot.
+  if (!h.get("Sec-Fetch-Mode") && !h.get("Cookie")) return false;
   return true;
 }
 
 export type GalleryData =
   | { state: "unavailable" }
-  | { state: "locked"; title: string }
-  | { state: "open"; gallery: OpenGallery; photos: GalleryPhoto[] };
+  | { state: "locked"; slug: string; title: string; theme: "light" | "dark" }
+  | {
+      state: "open";
+      gallery: OpenGallery;
+      photos: GalleryPhoto[];
+      /**
+       * Link-preview data (Open Graph). null for PIN galleries: crawlers get
+       * generic meta only. For public ones, `coverId` is the visible cover
+       * (null when there are no photos); width/height = its aspect at a
+       * 1200px long edge (null when unknown).
+       */
+      og: {
+        coverId: string | null;
+        width: number | null;
+        height: number | null;
+      } | null;
+    };
+
+export const OG_LONG_EDGE = 1200;
 
 export type LoadResult = {
   status: 200 | 404;
@@ -63,7 +82,10 @@ export async function loadGallery(
 
   const open = await openGallery(request, g, env);
   if (!open) {
-    return { status: 200, data: { state: "locked", title: g.title } };
+    return {
+      status: 200,
+      data: { state: "locked", slug: g.slug, title: g.title, theme: g.theme },
+    };
   }
   const { session } = open;
 
@@ -76,6 +98,7 @@ export async function loadGallery(
       set: schema.photos.setName,
       driveWebId: schema.photos.driveWebId,
       driveIgId: schema.photos.driveIgId,
+      driveWmId: schema.photos.driveWmId,
     })
     .from(schema.photos)
     .where(and(eq(schema.photos.galleryId, g.id), photoVisible))
@@ -95,6 +118,27 @@ export async function loadGallery(
     g.coverPhotoId && rows.some((p) => p.id === g.coverPhotoId)
       ? g.coverPhotoId
       : (rows[0]?.id ?? null);
+
+  // With the watermark on, crawlers only get /view-sm of a photo that has a
+  // preview-wm; otherwise the og:image URL would 404.
+  const ogCover = g.useWatermarkPreview
+    ? rows.find((p) => p.id === cover && p.driveWmId) ||
+      rows.find((p) => p.driveWmId)
+    : rows.find((p) => p.id === cover);
+  const coverRow = ogCover;
+  const long = Math.max(coverRow?.width ?? 0, coverRow?.height ?? 0);
+  const scale = long > 0 ? OG_LONG_EDGE / long : 0;
+  const og = g.pinHash
+    ? null
+    : {
+        coverId: ogCover?.id ?? null,
+        width:
+          scale && coverRow?.width ? Math.round(coverRow.width * scale) : null,
+        height:
+          scale && coverRow?.height
+            ? Math.round(coverRow.height * scale)
+            : null,
+      };
 
   let setCookie: string | undefined;
   if (!session?.viewed) {
@@ -146,12 +190,14 @@ export async function loadGallery(
         allowHighres: g.allowHighres,
         allowWeb: g.allowWeb,
         allowIg: g.allowIg,
+        theme: g.theme,
         sets,
       },
-      photos: rows.map(({ driveWebId, driveIgId, ...p }) => ({
+      photos: rows.map(({ driveWebId, driveIgId, driveWmId: _wm, ...p }) => ({
         ...p,
         variants: { web: !!driveWebId, ig: !!driveIgId },
       })),
+      og,
     },
     ...(setCookie ? { setCookie } : {}),
   };
@@ -162,6 +208,8 @@ export async function loadGallery(
 const UNKNOWN_GALLERY = "unknown";
 export const PIN_MAX_ATTEMPTS = 5;
 export const PIN_WINDOW_MS = 10 * 60 * 1000;
+/** Per gallery, across all IPs (a 4-digit PIN is otherwise guessable by rotating IPs). */
+export const PIN_GALLERY_MAX_ATTEMPTS = 100;
 
 // Valid-format hash of nothing: unknown slugs still pay for one PBKDF2 run.
 const DUMMY_HASH = `pbkdf2$100000$${"A".repeat(22)}$${"A".repeat(43)}`;
@@ -187,7 +235,7 @@ export async function unlockGallery(
   }
 
   const g = await findGallery(env, slug);
-  const ipHash = await clientIpHash(request, env);
+  const ipHash = await clientIpHash(request, env, { prefix64: true });
   const pinLimit = (galleryId: string, ip: string) =>
     rateLimit(
       env,
@@ -207,12 +255,29 @@ export async function unlockGallery(
     "/" + encodeURIComponent(g.slug) + (lang ? `?lang=${lang}` : "");
   if (!g.pinHash) return { status: 303, location };
 
+  // Already unlocked: nothing to verify and never throttled.
+  if ((await openGallery(request, g, env)) !== null)
+    return { status: 303, location };
+
   if (!ipHash) return { status: 429 };
   if (!(await pinLimit(g.id, ipHash))) return { status: 429 };
+  if (
+    !(await rateLimit(
+      env,
+      "pinG",
+      g.id,
+      PIN_GALLERY_MAX_ATTEMPTS,
+      PIN_WINDOW_MS,
+    ))
+  )
+    return { status: 429 };
   const ok = await verifyPin(pin, g.pinHash);
   if (!ok || !pin) return { status: 400 };
 
   await resetRateLimit(env, "pin", `${ipHash}:${g.id}`);
+  // Only wrong guesses should exhaust the gallery budget: a correct PIN means
+  // the guests are legitimate (many unlock at once at an event).
+  await resetRateLimit(env, "pinG", g.id);
   const setCookie = await updateSession(request, g, { unlocked: true }, env);
   return { status: 303, location, setCookie };
 }

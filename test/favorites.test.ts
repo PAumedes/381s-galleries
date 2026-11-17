@@ -116,22 +116,33 @@ describe("POST visitor", () => {
     );
     expect(res.status).toBe(200);
     expect(res.headers.get("Cache-Control")).toBe("no-store");
-    expect(await res.json()).toEqual({
-      visitor: { email: "ana@example.com", name: "Ana B" },
-    });
+    expect(await res.json()).toEqual({ ok: true });
     const rows = await db.select().from(schema.visitors);
     expect(rows).toHaveLength(1);
     expect(rows[0].email).toBe("ana@example.com");
+    expect(rows[0].name).toBe("Ana B");
     const cookie = res.headers.getSetCookie()[0];
     expect(cookie).toContain("HttpOnly");
     const { body } = await list(cookieOf(res));
     expect(body.visitor).toEqual({ email: "ana@example.com", name: "Ana B" });
   });
 
-  it("is an upsert: same email (any case) yields the same visitor row", async () => {
+  it("per-device: the same email (any case) from another session gets its own row", async () => {
     await addGallery();
     await register("ana@example.com");
     await register("ANA@example.com");
+    expect(await db.select().from(schema.visitors)).toHaveLength(2);
+  });
+
+  it("the same session registering again updates its row", async () => {
+    await addGallery();
+    const c = await register("ana@example.com");
+    const res = await handleVisitor(
+      visitorReq({ email: "ANA@example.com" }, { Cookie: c }),
+      "boda",
+      env,
+    );
+    expect(res.status).toBe(200);
     expect(await db.select().from(schema.visitors)).toHaveLength(1);
   });
 
@@ -188,9 +199,12 @@ describe("POST visitor", () => {
       "boda",
       env,
     );
-    expect(
-      ((await res.json()) as { visitor: { name: string } }).visitor.name,
-    ).toHaveLength(80);
+    expect(await res.json()).toEqual({ ok: true });
+    const [row] = await db
+      .select()
+      .from(schema.visitors)
+      .where(eq(schema.visitors.email, "a@b.co"));
+    expect(row.name).toHaveLength(80);
   });
 
   it("unknown, draft, expired and PIN-locked all give an identical generic 404", async () => {

@@ -50,6 +50,7 @@ const gallery = (over: Partial<OpenGallery> = {}): OpenGallery => ({
   clientName: null,
   coverPhotoId: "Cer0",
   allowBulk: true,
+  theme: "light",
   sets: [
     { name: "Ceremonia", count: 3 },
     { name: "Fiesta", count: 2 },
@@ -102,6 +103,43 @@ describe("UnavailableScreen", () => {
     stub(<UnavailableScreen />, "es");
     expect(await screen.findByText(es["unavailable.title"])).toBeTruthy();
     expect(screen.getByText(es["unavailable.message"])).toBeTruthy();
+  });
+});
+
+describe("gallery theme", () => {
+  const logos = () =>
+    Array.from(
+      document.querySelectorAll<HTMLImageElement>('img[src^="/brand/logo"]'),
+    ).map((i) => i.getAttribute("src"));
+
+  it("dark: data-theme on the root and the light logo in the top bar", async () => {
+    stub(<GalleryView gallery={gallery({ theme: "dark" })} photos={photos} />);
+    await screen.findByRole("heading", { level: 1, name: "Boda Ana" });
+    expect(document.querySelector('[data-theme="dark"]')).toBeTruthy();
+    expect(logos().every((s) => s === "/brand/logo-white.svg")).toBe(true);
+    // cover is unchanged
+    expect(document.querySelector('img[src="/img/Cer0/view-lg"]')).toBeTruthy();
+  });
+
+  it("light: no data-theme dark and the black logo in the top bar", async () => {
+    stub(<GalleryView gallery={gallery()} photos={photos} />);
+    await screen.findByRole("heading", { level: 1, name: "Boda Ana" });
+    expect(document.querySelector('[data-theme="dark"]')).toBeNull();
+    expect(logos()).toContain("/brand/logo-black.svg");
+  });
+
+  it("PIN and unavailable screens follow the theme when known", async () => {
+    stub(<PinScreen title="Boda" theme="dark" />);
+    await screen.findByRole("heading", { name: "Boda" });
+    expect(document.querySelector('[data-theme="dark"]')).toBeTruthy();
+    expect(logos()).toEqual(["/brand/logo-white.svg"]);
+  });
+
+  it("PIN screen defaults to light", async () => {
+    stub(<PinScreen title="Boda" />);
+    await screen.findByRole("heading", { name: "Boda" });
+    expect(document.querySelector('[data-theme="dark"]')).toBeNull();
+    expect(logos()).toEqual(["/brand/logo-black.svg"]);
   });
 });
 

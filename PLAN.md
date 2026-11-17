@@ -71,6 +71,7 @@ galleries     (id PK, drive_folder_id UNIQUE, slug UNIQUE, title, client_name?, 
                pin_hash?, expires_at?, status: 'draft'|'published'|'archived' default 'draft',
                cover_photo_id?, allow_highres bool=1, allow_web bool=1, allow_ig bool=1, allow_bulk bool=1,
                require_email bool=1, use_watermark_preview bool (auto true if preview-wm exists),
+               theme: 'light'|'dark' default 'light' [0010],
                drive_modified_at?, last_synced_at?, sync_issues_json?,
                folder_missing_since?, archived_prev_status? ('draft'|'published'),
                archived_by_sync bool=0 (1 = archived by sync's folder-removal rule; only those are auto-restored), created_at)
@@ -115,7 +116,7 @@ Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in
 7. **Mock auto-publish:** when `DRIVE_MODE=mock`, new galleries are created `published` (instead of `draft`) so the seeded galleries are viewable immediately.
 
 ### 5.2 Client views gallery
-`/:slug` → PIN form if needed → cookie. Draft/expired/archived → "gallery unavailable" page. Justified grid of thumbs (using width/height), sets as tabs, lightbox showing `web` (or `preview-wm` when watermark is on), keyboard + swipe, preload next. Log one `gallery_views` row per session; skipped for HEAD, prefetch (`Purpose`/`Sec-Purpose`) and bot UAs, and cookieless views are deduped per (gallery, hashed IP) within 30 min. Unlock redirects to `/` + `encodeURIComponent(slug)` (+ `?lang=` if valid), never the raw pathname; missing `CF-Connecting-IP` is "local" in mock mode and otherwise null (`clientIpHash`): PIN/visitor endpoints answer 429, views are logged with `ip_hash` NULL (no dedupe bucket); unknown-slug POSTs share a per-IP limiter (pseudo-gallery `unknown`). The locked screen shows the gallery title (accepted studio choice). **All client queries filter `photos.missing_since IS NULL`, via the shared `photoVisible` predicate (`app/db/index.ts`)** (photos in their sync grace period are hidden from clients).
+`/:slug` → PIN form if needed → cookie. Draft/expired/archived → "gallery unavailable" page. Justified grid of thumbs (using width/height), sets as tabs, lightbox showing `web` (or `preview-wm` when watermark is on), keyboard + swipe, preload next. Log one `gallery_views` row per session; skipped for HEAD, prefetch (`Purpose`/`Sec-Purpose`) and bot UAs, and cookieless views are deduped per (gallery, hashed IP) within 30 min. Unlock redirects to `/` + `encodeURIComponent(slug)` (+ `?lang=` if valid), never the raw pathname; missing `CF-Connecting-IP` is "local" in mock mode and otherwise null (`clientIpHash`): PIN/visitor endpoints answer 429, views are logged with `ip_hash` NULL (no dedupe bucket); unknown-slug POSTs share a per-IP limiter (pseudo-gallery `unknown`). The locked screen shows the gallery title (accepted studio choice). **Link previews (Open Graph, `galleryMeta` in `app/lib/og.ts`):** published, unexpired, no-PIN galleries emit og:type/site_name/title (gallery title)/description (`<localized date> · <studio>`)/url (`publicOrigin`+slug)/twitter:card, plus og:image = `${publicOrigin}/img/<coverId>/view-sm` (watermarked file when watermark is on; cookieless works for public galleries) with width/height at a 1200 long edge and alt = title. PIN, locked, unavailable and unknown galleries get generic meta (studio name only, no image, no title leak; locked == unavailable). Preview bots are never logged as views. **All client queries filter `photos.missing_since IS NULL`, via the shared `photoVisible` predicate (`app/db/index.ts`)** (photos in their sync grace period are hidden from clients).
 
 ### 5.3 Images route — `/img/:photoId/:variant` (`thumb` | `view-sm` | `view-lg`)
 Check gallery cookie for that photo's gallery → try R2 `<photoId>/<variant>` → on miss, stream from Drive (`files/<id>?alt=media`), `tee()` the body into R2 and the response. `Cache-Control: private, max-age=600`, ETag/304. A blank/unparseable Drive Content-Length counts as absent (streamed uncached). Accepted: browsers may keep a stale image up to 10 min after a watermark toggle or re-export.
@@ -128,9 +129,9 @@ Cache rules (one paragraph): R2 objects carry `httpMetadata.contentType` and `cu
 R2 cache keys are exactly `<photoId>/thumb`, `<photoId>/view-sm` and `<photoId>/view-lg`. Image routes must not serve photos with `missing_since` set. When sync hard-deletes photos it removes those three keys per photo with ONE `CACHE.delete(keys[])` per <=1000 keys; on failure the ids stay in settings `r2_pending_deletes` (JSON, capped at 2000) and are retried first thing on the next run. The cron handler stores `sync_last_error` (`{at, message}`, generic text) for failures and for `no_root`/`empty_root` skips, and clears it on success; it rethrows so Cron shows the failure.
 
 ### 5.4 Email gate
-If `require_email`, the first download or favorite opens an email (+ optional name) form → upsert `visitors` (normalize email with trim + lowercase before insert/lookup; the DB unique index is also NOCASE; shared regex in `app/lib/email.ts`) → visitor id in the cookie. Server gate: `requireVisitor` (`app/lib/server/access.ts`): `require_email && (no visitor || anonymous)` → `403 email_required`.
+If `require_email`, the first download or favorite opens an email (+ optional name) form → a `visitors` row (normalize email with trim + lowercase; the NOCASE index on (gallery_id, email) is a plain lookup index; shared regex in `app/lib/email.ts`) → visitor id in the cookie. **Visitors are per device, with no email verification:** `POST /visitor` never binds a session to a row created by another session (that would let anyone type a client's email and inherit their name and favourites). Each session gets its own row; if the session already has a visitor, its email/name are updated instead. The same email may therefore appear on several rows. Favourites are per device. Admin views (activity, favourites, CSV, "visitantes con email") group by `lower(email)`, so the same email on two devices shows as one person. Server gate: `requireVisitor` (`app/lib/server/access.ts`): `require_email && (no visitor || anonymous)` → `403 email_required`.
 API (JSON, `Cache-Control: no-store`, cross-site POSTs rejected):
-- `POST /api/g/:slug/visitor {email, name?}` → registers the visitor and sets the session cookie (rate limit scope `visitor:`).
+- `POST /api/g/:slug/visitor {email, name?}` → `{ok:true}` in every case (never a stored name/email); sets the session cookie when a row is created (rate limit scope `visitor:`).
 - `GET /api/g/:slug/favorites` → `{visitor, favorites[]}`; `POST /api/g/:slug/favorites {photoId, on}` toggles one favourite (cap 2000 visible favourites; anonymous visitors, scope `anon:`, only when `require_email=0`).
 
 ### 5.5 Download
@@ -167,7 +168,7 @@ Simple, elegant, minimal, **Pixieset-inspired**: the photos are the interface.
 - **Cover:** full-viewport hero with the cover photo, album title in Montserrat (light weight, wide tracking, uppercase), date + studio name small and spaced, a subtle "View gallery" scroll cue. Optional cover layouts later (centered / left / split).
 - **Typography:** **Montserrat only** (self-hosted via `@fontsource-variable/montserrat`). Titles: weight 300, uppercase, letter-spacing ~0.2em. UI: weight 400/500, small sizes, uppercase micro-labels with generous tracking.
 - **Logos:** black-and-white only. `public/brand/logo-black.svg` on light backgrounds, `public/brand/logo-white.svg` on dark ones and over the cover photo. The palette stays monochrome (black, white, warm greys); no accent colour.
-- **Colour:** near-white background (#FAFAF8-ish), near-black text, monochrome (no accent colour). Dark lightbox. Optional dark gallery theme per album.
+- **Colour:** near-white background (#FAFAF8-ish), near-black text, monochrome (no accent colour). Dark lightbox. Dark gallery theme per album (`galleries.theme`, admin Opciones "Tema"): `data-theme="dark"` on the gallery root swaps paper/ink/greys in `app.css`, top-bar logo becomes the white one; cover and lightbox unchanged; PIN screen follows the theme.
 - **Grid:** justified rows (Flickr-style) with thin gutters (4–8px), lazy-loaded, fade-in on load, no borders/shadows/rounded cards.
 - **Top bar:** appears after the cover, sticky, translucent with blur: studio logo left, set names centered as text tabs, icon buttons right (favorites, download all, share). Hides on scroll down, shows on scroll up.
 - **Hover/tap on a photo:** discreet heart + download icons in a corner, nothing else.
@@ -188,7 +189,10 @@ Simple, elegant, minimal, **Pixieset-inspired**: the photos are the interface.
 ## 6. Security rules
 - Never expose Drive file IDs, R2 keys or tokens to the client.
 - Every client route checks the gallery cookie **and** that the photo belongs to that gallery **and** gallery is published + not expired.
-- PIN: PBKDF2-SHA256 (Web Crypto), 100k iterations, random salt; max 5 attempts / 10 min per IP+gallery, via the shared `rateLimit` helper (`pin:` scope in `rate_limits`, §4).
+- PIN: PBKDF2-SHA256 (Web Crypto), 100k iterations, random salt; max 5 attempts / 10 min per IP+gallery (IPv6 keyed on the /64) and 100 / 10 min per gallery across all IPs (`pinG:`; sessions already unlocked are never throttled and POST is a no-op redirect). Trade-off: a gallery-wide cap lets an attacker lock guests out for a window, but bounds brute force; with the 6-char minimum, 100 / 10 min means ~70 days worst case for a numeric 6-digit PIN (10^6 / 100 * 10 min), and a guest can still be locked out for up to 10 min under attack, via the shared `rateLimit` helper (`pin:` scope in `rate_limits`, §4). New PINs need >= 6 characters (older, shorter ones keep working).
+- Security headers on every response (`workers/app.ts` -> `applySecurityHeaders`): CSP with a per-request nonce (`app/entry.server.tsx`), X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy.
+- `/img` R2 misses: `img:<ipHash>:<gid>` 5000 / 10 min -> 429 before Drive is called.
+- `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY` must all differ (`assertDistinctSecrets`).
 - Constant-time comparison for HMACs.
 - Refresh token stored AES-GCM encrypted (`TOKEN_KEY`).
 - Secrets only via `wrangler secret put` / `.dev.vars` (gitignored).
@@ -229,10 +233,10 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T4.4 ∥ Activity + favorites views, CSV, "Copy for Capture One".**
 
 ### Phase 5 — Polish & deploy
-- [ ] **T5.1 Branding/theme**, dark/light, OG image (cover via `/img`), full i18n per §2 (es + en).
-- [ ] **T5.2 PWA** manifest + "add to home screen".
-- [ ] **T5.3 `DEPLOY.md`:** Cloudflare (D1, R2, secrets, Access app, custom domain), Google Cloud (Drive API, OAuth web client, redirect URI, In production), Capture One recipe setup.
-- [ ] **T5.4 Final review** against §6 (security review).
+- [x] **T5.1 Branding/theme**, dark/light, OG image (cover via `/img`), full i18n per §2 (es + en).
+- [x] **T5.2 PWA** manifest + "add to home screen". Per-gallery manifest at `/api/g/:slug/manifest.webmanifest` (`app/lib/server/manifest.ts`, `app/lib/pwa.ts`): same privacy rules as og (only published, unexpired, PIN-less galleries expose title/slug; everything else gets the generic studio manifest, start_url `/`), `private, max-age=300`. Generic `public/manifest.webmanifest` linked from root. Icons in `public/icons/` generated manually by `scripts/make-icons.mjs` (`@resvg/resvg-js`, dev only; no runtime image processing). iOS meta tags + theme-color per theme. **No service worker** (deliberate: keeps it simple; downloads use the File System Access API, nothing needs offline). `AddToHomeHint` (mobile/coarse pointer, not standalone, after scrolling into the grid, once per gallery via `localStorage a2hs:<slug>`): Android/Chrome button on the captured `beforeinstallprompt`, iOS Safari share instructions, other browsers nothing. Known limit: PIN galleries install as the generic studio app (start_url `/`), by design. The gallery cookie (SameSite=Lax, Path=/) survives in standalone mode.
+- [x] **T5.3 `DEPLOY.md`:** Cloudflare (D1, R2, secrets, Access app, custom domain), Google Cloud (Drive API, OAuth web client, redirect URI, In production), Capture One recipe setup.
+- [x] **T5.4 Final review** against §6 (security review).
 
 ### Backlog (not now)
 - Email notifications (Resend / Gmail SMTP)
@@ -255,25 +259,6 @@ See `.claude/WORKFLOW.md`.
 ## 10. (reserved)
 
 ## 11. Manual steps for the photographer
-1. Cloudflare: add custom domain `session.381studios.ar` to the Worker (DNS already on Cloudflare). Worker has workers.dev and preview URLs disabled; only the custom domain serves it. If the domain changes, update the `PUBLIC_ORIGIN` var in `wrangler.jsonc` (used for share links, QR and the print card).
-2. Google Cloud project → enable Drive API → OAuth **Web** client with redirect `https://<domain>/admin/google/callback` → consent screen **In production**.
-3. Cloudflare Zero Trust → Access application for `/admin*` and `/api/admin*` allowing your email. Copy the application's **Audience (AUD) tag** (Access > Applications > your app > Overview) into `ACCESS_AUD`, and your team domain (`<team>.cloudflareaccess.com`, Zero Trust > Settings > Custom Pages) into `ACCESS_TEAM_DOMAIN`.
-4. Environment (see the table below). Secrets must be >= 32 chars (`openssl rand -base64 32`).
-5. Deploy order: set the secrets -> apply the remote migrations `0000`-`0009` (`wrangler d1 migrations apply DB --remote`) -> `pnpm deploy` -> open `/admin/setup`, **Connect Google** -> paste the root folder.
-6. Drive for desktop syncing `My Drive/381studios`.
-7. Capture One: create the recipes from §3, all enabled, output to `…/381studios/[Session Name]/<recipe>`.
-8. After the first sync (Admin → Setup), publish the gallery and share the link/QR.
-
-**Environment**
-
-| Name | Kind | Notes |
-|---|---|---|
-| `DRIVE_MODE` | var (`wrangler.jsonc`) | `google` in production; `mock` only locally |
-| `STUDIO_NAME` | var | fallback studio name (admin setting overrides it) |
-| `PUBLIC_ORIGIN` | var | canonical https origin for share links, QR and the print card |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | secret | OAuth Web client |
-| `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY` | secret | >= 32 chars; `TOKEN_KEY` is base64 of 32 bytes |
-| `ADMIN_EMAIL`, `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` | secret | Cloudflare Access verification |
-| `ALLOW_DEV_ADMIN` | local only (`.dev.vars`) | lets `/admin` work without Access on localhost. **Never set it in production** (not as a var, not as a secret) |
+The step-by-step guide (Spanish) is **[DEPLOY.md](DEPLOY.md)**; it is the single source of truth for setup, the environment table (which values are secrets vs `wrangler.jsonc` vars), deploy order, Capture One recipes and troubleshooting. `pnpm run deploy` applies the remote migrations, builds and deploys (`pnpm deploy` without `run` is a pnpm built-in); `pnpm secrets:check` verifies the required secrets exist and that `ALLOW_DEV_ADMIN` does not. `ALLOW_DEV_ADMIN` is local only (`.dev.vars`) and must never be set in production.
 
 If sync hits Free plan CPU (10 ms) or subrequest limits on very large libraries, Workers Paid ($5/month) lifts them; the sync aborts cleanly rather than corrupting data.
