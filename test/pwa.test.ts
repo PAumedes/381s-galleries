@@ -38,7 +38,7 @@ async function addGallery(
 const get = (slug: string) =>
   handleManifest(
     new Request(
-      `https://session.381studios.ar/api/g/${slug}/manifest.webmanifest`,
+      `https://gallery.381studios.ar/api/g/${slug}/manifest.webmanifest`,
     ),
     slug,
     env,
@@ -175,7 +175,7 @@ describe("pwaMeta (head tags)", () => {
   async function dataFor(slug = "boda-ana") {
     return (
       await loadGallery(
-        new Request("https://session.381studios.ar/" + slug, {
+        new Request("https://gallery.381studios.ar/" + slug, {
           headers: { "Sec-Fetch-Mode": "navigate" },
         }),
         slug,

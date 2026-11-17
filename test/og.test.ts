@@ -54,7 +54,7 @@ async function addPhoto(
   });
 }
 const req = (headers: Record<string, string> = {}) =>
-  new Request("https://session.381studios.ar/boda-ana", { headers });
+  new Request("https://gallery.381studios.ar/boda-ana", { headers });
 
 describe("loadGallery: theme + og preview data", () => {
   it("theme defaults to light and follows the column", async () => {
@@ -159,7 +159,7 @@ describe("loadGallery: theme + og preview data", () => {
   });
 });
 
-const ORIGIN = "https://session.381studios.ar";
+const ORIGIN = "https://gallery.381studios.ar";
 const openData = (over = {}) =>
   ({
     state: "open",
