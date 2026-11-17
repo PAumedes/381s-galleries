@@ -1,6 +1,8 @@
 import { env } from "cloudflare:workers";
 import { Outlet } from "react-router";
 
+import { metaT, type MetaMatches } from "../i18n/meta";
+
 import { AdminShell } from "../components/admin/AdminShell";
 import { adminHeaders } from "../lib/server/admin";
 import { requireAdmin } from "../lib/server/auth";
@@ -9,8 +11,8 @@ import { getSetting, SETTINGS_KEYS } from "../lib/server/settings";
 import type { Route } from "./+types/admin";
 
 export const headers = () => adminHeaders();
-export const meta = () => [
-  { title: "Administración" },
+export const meta = ({ matches }: MetaMatches) => [
+  { title: metaT(matches)("admin.meta.admin") },
   { name: "robots", content: "noindex, nofollow" },
 ];
 

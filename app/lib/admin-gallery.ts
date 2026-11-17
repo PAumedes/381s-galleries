@@ -1,5 +1,10 @@
 // Pure helpers shared by the admin gallery list/edit pages (server and client).
 
+import { es } from "../i18n/es";
+import { fmtPlainDate } from "../i18n/format";
+import type { Lang } from "../i18n/lang";
+import type { MessageKey } from "../i18n/t";
+
 export const FILTERS = [
   "todas",
   "publicadas",
@@ -8,11 +13,12 @@ export const FILTERS = [
 ] as const;
 export type Filter = (typeof FILTERS)[number];
 
-export const FILTER_LABELS: Record<Filter, string> = {
-  todas: "Todas",
-  publicadas: "Publicadas",
-  borradores: "Borradores",
-  archivadas: "Archivadas",
+/** Message key of each filter tab (the URL values stay Spanish). */
+export const FILTER_KEYS: Record<Filter, MessageKey> = {
+  todas: "admin.filter.todas",
+  publicadas: "admin.filter.publicadas",
+  borradores: "admin.filter.borradores",
+  archivadas: "admin.filter.archivadas",
 };
 
 export function parseFilter(v: string | null | undefined): Filter {
@@ -24,26 +30,29 @@ export function parseFilter(v: string | null | undefined): Filter {
 // ----------------------------------------------------- Buenos Aires time
 export { baLocalToUtcIso, isValidDate, utcIsoToBaLocal } from "./ba-time";
 
-const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
-
-/** `2026-11-01` -> `01/11/2026` (unchanged when not a plain date). */
-export function fmtDate(date: string | null): string {
-  const m = date ? DATE_RE.exec(date) : null;
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : (date ?? "");
+/** `2026-11-01` -> `01/11/2026` (es) / `Nov 1, 2026` (en); unchanged when not a plain date. */
+export function fmtDate(date: string | null, lang: Lang = "es"): string {
+  return fmtPlainDate(lang, date);
 }
 
 // ----------------------------------------------------------- sync issues
-export const ISSUE_LABELS: Record<string, string> = {
-  unknown_folder: "Carpetas desconocidas",
-  stray_file: "Archivos sueltos fuera de las carpetas de recetas",
-  not_jpeg: "Archivos que no son JPEG",
-  duplicate: "Nombres duplicados",
-  missing_highres: "Archivos sin versión high-res",
-  missing_web: "Falta la versión web",
-  missing_thumb: "Falta la miniatura (thumb)",
-  highres_empty: "La carpeta high-res está vacía o no existe",
-  missing_wm: "Falta preview-wm",
+/** Message key of each sync issue type. */
+export const ISSUE_KEYS: Record<string, MessageKey> = {
+  unknown_folder: "admin.issue.unknown_folder",
+  stray_file: "admin.issue.stray_file",
+  not_jpeg: "admin.issue.not_jpeg",
+  duplicate: "admin.issue.duplicate",
+  missing_highres: "admin.issue.missing_highres",
+  missing_web: "admin.issue.missing_web",
+  missing_thumb: "admin.issue.missing_thumb",
+  highres_empty: "admin.issue.highres_empty",
+  missing_wm: "admin.issue.missing_wm",
 };
+
+/** Spanish default labels (the UI translates `type` through ISSUE_KEYS). */
+export const ISSUE_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(ISSUE_KEYS).map(([type, key]) => [type, es[key]]),
+);
 
 export interface IssueGroup {
   type: string;
@@ -82,7 +91,7 @@ export function groupIssues(json: string | null | undefined): GroupedIssues {
         type: o.type,
         label: Object.hasOwn(ISSUE_LABELS, o.type)
           ? ISSUE_LABELS[o.type]
-          : "Otros avisos",
+          : es["admin.issue.other"],
         items: [],
       };
       byType.set(o.type, g);

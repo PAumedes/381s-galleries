@@ -35,7 +35,7 @@ const data: FavoritesViewData = {
       ],
     },
     {
-      id: "va",
+      id: "abc123-0000",
       label: "Anónimo #abc123",
       anon: true,
       lists: [

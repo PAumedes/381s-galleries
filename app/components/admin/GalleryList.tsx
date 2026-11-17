@@ -1,31 +1,33 @@
 import { Form, Link, useNavigate } from "react-router";
 
-import {
-  FILTERS,
-  FILTER_LABELS,
-  fmtDate,
-  utcIsoToBaLocal,
-} from "../../lib/admin-gallery";
+import { useFormat } from "../../i18n/use-format";
+import { useT } from "../../i18n/use-t";
+import { withCode } from "../../i18n/rich";
+import type { MessageKey } from "../../i18n/t";
+import { FILTERS, FILTER_KEYS, utcIsoToBaLocal } from "../../lib/admin-gallery";
 import type { Filter } from "../../lib/admin-gallery";
 import type { GalleryListRow } from "../../lib/server/admin-galleries";
 
 export type GalleryListItem = GalleryListRow;
 
-const STATUS_LABEL = {
-  published: "Publicada",
-  draft: "Borrador",
-  archived: "Archivada",
-} as const;
+const STATUS_KEY = {
+  published: "admin.state.published",
+  draft: "admin.state.draft",
+  archived: "admin.state.archived",
+} as const satisfies Record<string, MessageKey>;
 
 export function StatusPill({
   status,
   expired = false,
 }: {
-  status: keyof typeof STATUS_LABEL;
+  status: keyof typeof STATUS_KEY;
   expired?: boolean;
 }) {
+  const t = useT();
   const label =
-    expired && status === "published" ? "Expirada" : STATUS_LABEL[status];
+    expired && status === "published"
+      ? t("admin.state.expired")
+      : t(STATUS_KEY[status]);
   const tone =
     status === "published" && !expired
       ? "bg-ink text-paper border-ink"
@@ -47,39 +49,39 @@ function filterHref(f: Filter, q: string): string {
   return qs ? `/admin?${qs}` : "/admin";
 }
 
-function fmtExpiry(iso: string | null): string {
-  if (!iso) return "Sin vencimiento";
-  const l = utcIsoToBaLocal(iso);
-  return l ? `${fmtDate(l.date)} ${l.time}` : "—";
+/** Folder layout shown to new users; folder names are literal, the notes are translated. */
+function folderTree(t: ReturnType<typeof useT>): string {
+  const rows: [string, string][] = [
+    ["381studios/", t("admin.list.empty.rootNote")],
+    [`└─ ${t("admin.list.empty.albumName")}/`, t("admin.list.empty.albumNote")],
+    ["   ├─ high-res/", t("admin.list.empty.highresNote")],
+    ["   ├─ web/", "1200 px"],
+    ["   ├─ ig/", t("admin.list.empty.igNote")],
+    ["   ├─ thumb/", "600 px"],
+    ["   └─ preview-wm/", t("admin.list.empty.wmNote")],
+  ];
+  return rows.map(([dir, note]) => `${dir.padEnd(29)}${note}`).join("\n");
 }
 
 function EmptyLibrary() {
+  const t = useT();
   return (
     <div className="border-grey-200 flex max-w-2xl flex-col gap-4 border p-6">
       <h2 className="text-micro text-grey-700 uppercase">
-        Todavía no hay galerías
+        {t("admin.list.empty.title")}
       </h2>
       <p className="text-body">
-        Las galerías se crean solas: cada carpeta de la carpeta raíz de Drive es
-        una galería. Exportá desde Capture One con todas las recetas y esperá la
-        sincronización (cada 15 minutos) o usá “Sincronizar ahora” en{" "}
+        {t("admin.list.empty.intro")}{" "}
         <Link to="/admin/setup" className="underline">
-          Ajustes
+          {t("admin.nav.settings")}
         </Link>
         .
       </p>
-      <pre className="bg-grey-50 text-small overflow-x-auto p-4 leading-6">{`381studios/                  carpeta raíz
-└─ nombre-del-album/         una carpeta = una galería
-   ├─ high-res/              2048 px, obligatoria
-   ├─ web/                   1200 px
-   ├─ ig/                    1080 px (opcional)
-   ├─ thumb/                 600 px
-   └─ preview-wm/            con marca de agua (opcional)`}</pre>
+      <pre className="bg-grey-50 text-small overflow-x-auto p-4 leading-6">
+        {folderTree(t)}
+      </pre>
       <p className="text-small text-grey-600">
-        Dentro de cada receta podés crear subcarpetas con el mismo nombre para
-        armar sets (por ejemplo, <code>high-res/Ceremonia</code> y{" "}
-        <code>web/Ceremonia</code>). Los archivos se vinculan por set y nombre
-        de archivo. Las galerías nuevas empiezan como borrador.
+        {withCode(t("admin.list.empty.sets"))}
       </p>
     </div>
   );
@@ -98,6 +100,13 @@ export function GalleryList({
   q?: string;
 }) {
   const navigate = useNavigate();
+  const t = useT();
+  const fmt = useFormat();
+  const expiry = (iso: string | null) => {
+    if (!iso) return t("admin.list.noExpiry");
+    const l = utcIsoToBaLocal(iso);
+    return l ? fmt.localDateTime(l.date, l.time) : "—";
+  };
   if (total === 0 && galleries.length === 0) return <EmptyLibrary />;
   return (
     <div className="flex flex-col gap-4">
@@ -115,18 +124,21 @@ export function GalleryList({
           name="q"
           defaultValue={q}
           maxLength={100}
-          placeholder="Buscar por título, slug o cliente"
-          aria-label="Buscar galerías"
+          placeholder={t("admin.list.search.placeholder")}
+          aria-label={t("admin.list.search.label")}
           className="border-grey-300 bg-white w-full border px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         />
         <button
           type="submit"
           className="text-micro border-ink border px-4 py-2 uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
-          Buscar
+          {t("admin.list.search.submit")}
         </button>
       </Form>
-      <nav aria-label="Filtrar galerías" className="flex flex-wrap gap-1">
+      <nav
+        aria-label={t("admin.filter.label")}
+        className="flex flex-wrap gap-1"
+      >
         {FILTERS.map((f) => (
           <Link
             key={f}
@@ -134,15 +146,13 @@ export function GalleryList({
             aria-current={f === filter ? "page" : undefined}
             className={`text-micro px-3 py-2 uppercase ${f === filter ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`}
           >
-            {FILTER_LABELS[f]}
+            {t(FILTER_KEYS[f])}
           </Link>
         ))}
       </nav>
       {galleries.length === 0 ? (
         <p className="text-body text-grey-600">
-          {q
-            ? "No hay galerías que coincidan con la búsqueda."
-            : "No hay galerías en este filtro."}
+          {q ? t("admin.list.noMatch") : t("admin.list.noneInFilter")}
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -150,31 +160,31 @@ export function GalleryList({
             <thead className="text-micro text-grey-600 uppercase">
               <tr className="border-grey-200 border-b">
                 <th scope="col" className="w-20 py-2 pr-3 font-medium">
-                  <span className="sr-only">Portada</span>
+                  <span className="sr-only">{t("admin.list.col.cover")}</span>
                 </th>
                 <th scope="col" className="py-2 pr-3 font-medium">
-                  Título
+                  {t("admin.list.col.title")}
                 </th>
                 <th scope="col" className="py-2 pr-3 font-medium">
-                  Fecha
+                  {t("admin.list.col.date")}
                 </th>
                 <th scope="col" className="py-2 pr-3 font-medium">
-                  Estado
+                  {t("admin.list.col.status")}
                 </th>
                 <th scope="col" className="py-2 pr-3 text-right font-medium">
-                  Fotos
+                  {t("admin.list.col.photos")}
                 </th>
                 <th scope="col" className="py-2 pr-3 text-right font-medium">
-                  Vistas
+                  {t("admin.list.col.views")}
                 </th>
                 <th scope="col" className="py-2 pr-3 text-right font-medium">
-                  Descargas
+                  {t("admin.list.col.downloads")}
                 </th>
                 <th scope="col" className="py-2 pr-3 font-medium">
-                  Vence
+                  {t("admin.list.col.expires")}
                 </th>
                 <th scope="col" className="py-2 font-medium">
-                  Avisos
+                  {t("admin.list.col.issues")}
                 </th>
               </tr>
             </thead>
@@ -216,28 +226,30 @@ export function GalleryList({
                     <div className="text-grey-600">/{g.slug}</div>
                   </td>
                   <td className="py-2 pr-3">
-                    {g.eventDate ? fmtDate(g.eventDate) : "—"}
+                    {g.eventDate ? fmt.date(g.eventDate) : "—"}
                   </td>
                   <td className="py-2 pr-3">
                     <StatusPill status={g.status} expired={g.expired} />
                   </td>
                   <td className="py-2 pr-3 text-right tabular-nums">
-                    {g.photoCount}
+                    {fmt.number(g.photoCount)}
                   </td>
                   <td className="py-2 pr-3 text-right tabular-nums">
-                    {g.views}
+                    {fmt.number(g.views)}
                   </td>
                   <td className="py-2 pr-3 text-right tabular-nums">
-                    {g.downloads}
+                    {fmt.number(g.downloads)}
                   </td>
-                  <td className="py-2 pr-3">{fmtExpiry(g.expiresAt)}</td>
+                  <td className="py-2 pr-3">{expiry(g.expiresAt)}</td>
                   <td className="py-2">
                     {g.issueCount > 0 && (
                       <span
-                        aria-label={`${g.issueCount} ${g.issueCount === 1 ? "aviso" : "avisos"} de sincronización`}
+                        aria-label={t("admin.list.issueBadge", {
+                          count: g.issueCount,
+                        })}
                         className="text-micro border-ink inline-block border px-2 py-0.5"
                       >
-                        {g.issueCount}
+                        {fmt.number(g.issueCount)}
                       </span>
                     )}
                   </td>

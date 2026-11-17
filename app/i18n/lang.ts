@@ -7,21 +7,23 @@ export function asLang(value: string | null | undefined): Lang | null {
   return v === "es" || v === "en" ? v : null;
 }
 
-function fromCookie(header: string | null): Lang | null {
+function cookieValue(header: string | null, name: string): string | null {
   if (!header) return null;
   for (const part of header.split(";")) {
     const i = part.indexOf("=");
     if (i < 0) continue;
-    if (part.slice(0, i).trim() === "lang") {
-      return asLang(
-        part
-          .slice(i + 1)
-          .trim()
-          .replace(/^"(.*)"$/, "$1"),
-      );
+    if (part.slice(0, i).trim() === name) {
+      return part
+        .slice(i + 1)
+        .trim()
+        .replace(/^"(.*)"$/, "$1");
     }
   }
   return null;
+}
+
+function fromCookie(header: string | null): Lang | null {
+  return asLang(cookieValue(header, "lang"));
 }
 
 function fromAcceptLanguage(header: string | null): Lang | null {
@@ -56,4 +58,70 @@ export function getLang(request: Request): Lang {
 
 export function langCookie(lang: Lang): string {
   return `lang=${lang}; Max-Age=31536000; Path=/; SameSite=Lax`;
+}
+
+// ------------------------------------------------------------------ admin
+
+export const ADMIN_LANG_COOKIE = "admin_lang";
+
+/** Strict: exactly "es" or "en" (no trimming, no case folding), else null. */
+export function asAdminLang(value: string | null | undefined): Lang | null {
+  return value === "es" || value === "en" ? value : null;
+}
+
+/** `/admin` and below, also for single-fetch `.data` requests. */
+export function isAdminPath(pathname: string): boolean {
+  // React Router matches case-insensitively (and percent-decodes), so do we.
+  let p = pathname;
+  try {
+    p = decodeURIComponent(p);
+  } catch {
+    // keep the raw path
+  }
+  p = p.toLowerCase().replace(/\.data$/, "");
+  return p === "/admin" || p.startsWith("/admin/");
+}
+
+/**
+ * Admin language: the `admin_lang` cookie only. Anything but "es"/"en" (and a
+ * missing cookie) is Spanish; Accept-Language and `?lang=` are ignored.
+ */
+export function getAdminLang(request: Request): Lang {
+  // A legacy Path=/admin cookie may coexist with the Path=/ one. Browsers send
+  // the more specific path first, so the first valid value wins.
+  const header = request.headers.get("cookie");
+  if (header) {
+    for (const part of header.split(";")) {
+      const i = part.indexOf("=");
+      if (i < 0 || part.slice(0, i).trim() !== ADMIN_LANG_COOKIE) continue;
+      const lang = asAdminLang(
+        part
+          .slice(i + 1)
+          .trim()
+          .replace(/^"(.*)"$/, "$1"),
+      );
+      if (lang) return lang;
+    }
+  }
+  return DEFAULT_LANG;
+}
+
+/** Language of the page being rendered: admin cookie under /admin, else the public rules. */
+export function getRequestLang(request: Request): Lang {
+  return isAdminPath(new URL(request.url).pathname)
+    ? getAdminLang(request)
+    : getLang(request);
+}
+
+/**
+ * Cookie for the admin toggle. Path=/ so it is also sent on `/admin.data`
+ * (not under the `/admin/` path prefix); public pages never read it.
+ */
+export function adminLangCookie(lang: Lang, secure = false): string {
+  return `${ADMIN_LANG_COOKIE}=${lang}; Max-Age=31536000; Path=/; SameSite=Lax${secure ? "; Secure" : ""}`;
+}
+
+/** Expires the old Path=/admin cookie; set alongside the new one. */
+export function legacyAdminLangCookieExpiry(secure = false): string {
+  return `${ADMIN_LANG_COOKIE}=; Max-Age=0; Path=/admin; SameSite=Lax${secure ? "; Secure" : ""}`;
 }

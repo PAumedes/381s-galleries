@@ -1,7 +1,9 @@
 import { useId, useState } from "react";
 import { Link } from "react-router";
 
-import { captureOneResult, fmtBa } from "../../lib/admin-activity";
+import { useFormat } from "../../i18n/use-format";
+import { useT } from "../../i18n/use-t";
+import { captureOneResult } from "../../lib/admin-activity";
 import type { loadFavoritesAdmin } from "../../lib/server/admin-activity";
 import { GalleryTabs } from "./GalleryTabs";
 
@@ -22,6 +24,7 @@ function Thumbs({
   photos: (Photo & { picks?: number })[];
   picks?: boolean;
 }) {
+  const t = useT();
   return (
     <ul className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-8">
       {photos.map((p) => (
@@ -41,11 +44,11 @@ function Thumbs({
           )}
           <span className="text-small break-all">
             {p.name}
-            {p.hidden ? " (oculta)" : ""}
+            {p.hidden ? ` ${t("admin.favorites.hidden")}` : ""}
           </span>
           {picks && p.picks !== undefined ? (
             <span className="text-micro text-grey-700">
-              {p.picks} {p.picks === 1 ? "visitante" : "visitantes"}
+              {t("admin.favorites.picks", { count: p.picks })}
             </span>
           ) : null}
         </li>
@@ -63,6 +66,7 @@ function Actions({
   comma: boolean;
   href: string;
 }) {
+  const t = useT();
   const [state, setState] = useState<"idle" | "ok" | "error">("idle");
   const [skipped, setSkipped] = useState<string[]>([]);
   const names = photos.filter((p) => !p.hidden).map((p) => p.name);
@@ -79,21 +83,24 @@ function Actions({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <button type="button" className={btn} onClick={copy}>
-        Copiar para Capture One
+        {t("admin.favorites.copyCapture")}
       </button>
       <a href={href} className={btn}>
-        Descargar .txt
+        {t("admin.favorites.downloadTxt")}
       </a>
       <span role="status" className="text-small text-grey-700">
         {state === "ok"
-          ? "Copiado"
+          ? t("admin.favorites.copied")
           : state === "error"
-            ? "No se pudo copiar"
+            ? t("admin.favorites.copyFailed")
             : ""}
       </span>
       {skipped.length > 0 ? (
         <p role="status" className="text-small text-grey-700 w-full break-all">
-          {skipped.length} nombres no se pudieron incluir: {skipped.join(", ")}
+          {t("admin.favorites.skipped", {
+            count: skipped.length,
+            names: skipped.join(", "),
+          })}
         </p>
       ) : null}
     </div>
@@ -110,30 +117,32 @@ function VisitorSection({
   comma: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useT();
+  const { dateTimeOrEmpty } = useFormat();
   const photos = v.lists.flatMap((l) => l.photos);
   const seen = new Set<string>();
   const unique = photos.filter((p) => !seen.has(p.id) && seen.add(p.id));
   return (
     <section className="border-grey-200 flex flex-col gap-3 border p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-body text-ink">{v.label}</h3>
+        <h3 className="text-body text-ink">
+          {v.anon ? t("admin.anonId", { id: v.id.slice(0, 6) }) : v.label}
+        </h3>
         <button
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
           className={btn}
         >
-          {open ? "Ocultar fotos" : "Ver fotos"}
+          {open ? t("admin.hidePhotos") : t("admin.showPhotos")}
         </button>
       </div>
       <ul className="flex flex-col gap-1">
         {v.lists.map((l) => (
           <li key={l.name} className="text-small flex flex-wrap gap-x-4">
             <span>{l.name}</span>
-            <span>
-              {l.count} {l.count === 1 ? "foto" : "fotos"}
-            </span>
-            <span className="text-grey-700">{fmtBa(l.last)}</span>
+            <span>{t("admin.count.photos", { count: l.count })}</span>
+            <span className="text-grey-700">{dateTimeOrEmpty(l.last)}</span>
           </li>
         ))}
       </ul>
@@ -160,6 +169,7 @@ export function FavoritesView({ data }: { data: FavoritesViewData }) {
   const base = `/admin/g/${data.gallery.id}`;
   const [comma, setComma] = useState(false);
   const allId = useId();
+  const t = useT();
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center gap-4">
@@ -167,16 +177,14 @@ export function FavoritesView({ data }: { data: FavoritesViewData }) {
           to="/admin"
           className="text-micro text-grey-700 uppercase hover:text-ink"
         >
-          ← Galerías
+          {t("admin.backToGalleries")}
         </Link>
         <h1 className="text-title text-ink">{data.gallery.title}</h1>
       </div>
       <GalleryTabs id={data.gallery.id} current="favoritos" />
 
       {data.visitors.length === 0 ? (
-        <p className="text-small text-grey-700">
-          Nadie marcó favoritos todavía.
-        </p>
+        <p className="text-small text-grey-700">{t("admin.favorites.none")}</p>
       ) : (
         <>
           <label className="text-small flex items-center gap-2">
@@ -185,11 +193,10 @@ export function FavoritesView({ data }: { data: FavoritesViewData }) {
               checked={comma}
               onChange={(e) => setComma(e.target.checked)}
             />
-            Separar con comas
+            {t("admin.favorites.comma")}
           </label>
           <p className="text-small text-grey-700">
-            Capture One: pegá el texto en el filtro de búsqueda del navegador
-            (por defecto separado con espacios).
+            {t("admin.favorites.captureNote")}
           </p>
 
           <section
@@ -197,11 +204,12 @@ export function FavoritesView({ data }: { data: FavoritesViewData }) {
             className="border-ink flex flex-col gap-3 border p-4"
           >
             <h2 id={allId} className="text-micro text-ink uppercase">
-              Todos los favoritos
+              {t("admin.favorites.all")}
             </h2>
             <p className="text-small text-grey-700">
-              {data.all.length} {data.all.length === 1 ? "foto" : "fotos"} en
-              total
+              {t("admin.favorites.total", {
+                photos: t("admin.count.photos", { count: data.all.length }),
+              })}
             </p>
             <Actions
               photos={data.all}

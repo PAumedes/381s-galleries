@@ -1,5 +1,8 @@
 import { useId } from "react";
 
+import { useT } from "../../i18n/use-t";
+import type { MessageKey } from "../../i18n/t";
+
 import {
   COVER_LAYOUTS,
   GRID_GAPS,
@@ -183,54 +186,66 @@ function GapThumb({ value }: { value: GridGap }) {
   );
 }
 
-type Option = { value: string; label: string };
+const PALETTE_KEYS: Record<Palette, MessageKey> = {
+  claro: "admin.design.palette.claro",
+  oscuro: "admin.design.palette.oscuro",
+  arena: "admin.design.palette.arena",
+  gris: "admin.design.palette.gris",
+};
+/** Message key of a palette name (also used by the cover preview). */
+export const paletteKey = (p: Palette): MessageKey => PALETTE_KEYS[p];
+const COVER_KEYS: Record<CoverLayout, MessageKey> = {
+  completa: "admin.design.cover.completa",
+  dividida: "admin.design.cover.dividida",
+  centrada: "admin.design.cover.centrada",
+  minima: "admin.design.cover.minima",
+};
+const GRID_KEYS: Record<GridStyle, MessageKey> = {
+  filas: "admin.design.grid.filas",
+  cuadricula: "admin.design.grid.cuadricula",
+  columnas: "admin.design.grid.columnas",
+};
+const GAP_KEYS: Record<GridGap, MessageKey> = {
+  compacto: "admin.design.gap.compacto",
+  normal: "admin.design.gap.normal",
+  amplio: "admin.design.gap.amplio",
+};
+
+type Option = { value: string; label: MessageKey };
 
 const GROUPS: {
   name: keyof Design;
-  title: string;
+  title: MessageKey;
   options: Option[];
   thumb: (v: string) => React.ReactNode;
   errKey: keyof Design;
 }[] = [
   {
     name: "palette",
-    title: "Paleta",
+    title: "admin.design.palette",
     errKey: "palette",
-    options: PALETTES.map((v) => ({
-      value: v,
-      label: v[0].toUpperCase() + v.slice(1),
-    })),
+    options: PALETTES.map((v) => ({ value: v, label: PALETTE_KEYS[v] })),
     thumb: (v) => <PaletteThumb value={v as Palette} />,
   },
   {
     name: "coverLayout",
-    title: "Portada",
+    title: "admin.design.coverLayout",
     errKey: "coverLayout",
-    options: COVER_LAYOUTS.map((v) => ({
-      value: v,
-      label: v === "minima" ? "Mínima" : v[0].toUpperCase() + v.slice(1),
-    })),
+    options: COVER_LAYOUTS.map((v) => ({ value: v, label: COVER_KEYS[v] })),
     thumb: (v) => <CoverThumb value={v as CoverLayout} />,
   },
   {
     name: "gridStyle",
-    title: "Grilla",
+    title: "admin.design.gridStyle",
     errKey: "gridStyle",
-    options: GRID_STYLES.map((v) => ({
-      value: v,
-      label:
-        v === "cuadricula" ? "Cuadrícula" : v[0].toUpperCase() + v.slice(1),
-    })),
+    options: GRID_STYLES.map((v) => ({ value: v, label: GRID_KEYS[v] })),
     thumb: (v) => <GridThumb value={v as GridStyle} />,
   },
   {
     name: "gridGap",
-    title: "Espaciado",
+    title: "admin.design.gridGap",
     errKey: "gridGap",
-    options: GRID_GAPS.map((v) => ({
-      value: v,
-      label: v[0].toUpperCase() + v.slice(1),
-    })),
+    options: GRID_GAPS.map((v) => ({ value: v, label: GAP_KEYS[v] })),
     thumb: (v) => <GapThumb value={v as GridGap} />,
   },
 ];
@@ -250,6 +265,7 @@ export function DesignPanel({
   errors: Record<string, string>;
 }) {
   const uid = useId();
+  const t = useT();
   return (
     <div className="flex flex-col gap-5">
       {GROUPS.map((grp) => {
@@ -257,11 +273,11 @@ export function DesignPanel({
         return (
           <div key={grp.name} className="flex flex-col gap-2">
             <p id={`${uid}-${grp.name}`} className="text-small">
-              {grp.title}
+              {t(grp.title)}
             </p>
             <div
               role="radiogroup"
-              aria-label={grp.title}
+              aria-label={t(grp.title)}
               className="grid grid-cols-2 gap-2 sm:grid-cols-4"
             >
               {grp.options.map((o) => {
@@ -284,7 +300,7 @@ export function DesignPanel({
                       className="sr-only"
                     />
                     {grp.thumb(o.value)}
-                    <span className="text-micro uppercase">{o.label}</span>
+                    <span className="text-micro uppercase">{t(o.label)}</span>
                   </label>
                 );
               })}

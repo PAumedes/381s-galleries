@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { useActionData } from "react-router";
 
 import { GalleryEditView } from "../components/admin/GalleryEditView";
+import { metaT, type MetaMatches } from "../i18n/meta";
 import { adminHeaders } from "../lib/server/admin";
 import { galleryAction, loadGalleryEdit } from "../lib/server/admin-galleries";
 import { requireAdmin } from "../lib/server/auth";
@@ -10,7 +11,9 @@ import type { Route } from "./+types/admin.g.$id";
 
 export const headers = () => adminHeaders();
 
-export const meta = () => [{ title: "Editar galería" }];
+export const meta = ({ matches }: MetaMatches) => [
+  { title: metaT(matches)("admin.meta.edit") },
+];
 
 /** Admin-guarded loader body: 401 for non-admins, 404 for an unknown gallery. */
 export async function editData(request: Request, e: Env, id: string) {

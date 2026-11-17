@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 
 import { FavoritesView } from "../components/admin/FavoritesView";
+import { metaT, type MetaMatches } from "../i18n/meta";
 import { adminHeaders } from "../lib/server/admin";
 import { loadFavoritesAdmin } from "../lib/server/admin-activity";
 import { requireAdmin } from "../lib/server/auth";
@@ -8,7 +9,9 @@ import type { Route } from "./+types/admin.g.$id.favorites";
 
 export const headers = () => adminHeaders();
 
-export const meta = () => [{ title: "Favoritos" }];
+export const meta = ({ matches }: MetaMatches) => [
+  { title: metaT(matches)("admin.meta.favorites") },
+];
 
 /** Admin-guarded loader body: 401 for non-admins, 404 for an unknown gallery. */
 export async function favoritesData(request: Request, e: Env, id: string) {

@@ -4,6 +4,7 @@ import { useLoaderData } from "react-router";
 
 import { getDb, schema } from "../db";
 import { CardView, type CardLang } from "../components/admin/CardView";
+import { metaT, type MetaMatches } from "../i18n/meta";
 import { adminHeaders, getStudioName } from "../lib/server/admin";
 import { requireAdmin } from "../lib/server/auth";
 import { publicGalleryUrl } from "../lib/server/public-url";
@@ -11,8 +12,8 @@ import type { Route } from "./+types/admin.g.$id.card";
 
 export const headers = () => adminHeaders();
 
-export const meta = () => [
-  { title: "Tarjeta" },
+export const meta = ({ matches }: MetaMatches) => [
+  { title: metaT(matches)("admin.meta.card") },
   { name: "robots", content: "noindex, nofollow" },
 ];
 

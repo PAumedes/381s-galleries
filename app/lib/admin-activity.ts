@@ -1,6 +1,8 @@
 // Pure helpers for the admin Activity / Favorites views and the CSV / txt
 // exports (safe to import from client components).
 
+import { es } from "../i18n/es";
+import { makeT, type MessageKey, type TFunction } from "../i18n/t";
 import { baParts } from "./ba-time";
 
 export { fmtBa } from "./ba-time";
@@ -65,24 +67,34 @@ export function namesTxt(names: readonly string[]): string {
   return uniq.length ? uniq.join("\n") + "\n" : "";
 }
 
+/** Spanish "Anónimo #abc123"; the admin UI builds it per language from `admin.anonId`. */
 export function anonLabel(visitorId: string): string {
-  return `Anónimo #${visitorId.slice(0, 6)}`;
+  return es["admin.anonId"].replace("{id}", visitorId.slice(0, 6));
 }
 
-export const SIZE_LABELS: Record<string, string> = {
-  highres: "Alta resolución",
-  web: "Web",
-  ig: "Instagram",
+/** Message key of each download size. */
+export const SIZE_KEYS: Record<string, MessageKey> = {
+  highres: "admin.size.highres",
+  web: "admin.size.web",
+  ig: "admin.size.ig",
 };
 
-export function bulkTitle(scope: string | null, count: number): string {
+/** "Descarga completa: Set X (3 fotos)" in the language of `t` (Spanish by default). */
+export function bulkTitle(
+  scope: string | null,
+  count: number,
+  t: TFunction = makeT("es", es),
+): string {
   const what =
     scope === "all"
-      ? "Todas"
+      ? t("admin.activity.bulkAll")
       : scope === "favorites"
-        ? "Favoritos"
+        ? t("admin.activity.bulkFavorites")
         : scope?.startsWith("set:")
-          ? `Set ${scope.slice(4)}`
-          : "sin detalle";
-  return `Descarga completa: ${what} (${count} ${count === 1 ? "foto" : "fotos"})`;
+          ? t("admin.activity.bulkSet", { name: scope.slice(4) })
+          : t("admin.activity.bulkNone");
+  return t("admin.activity.bulkTitle", {
+    what,
+    photos: t("admin.count.photos", { count }),
+  });
 }
