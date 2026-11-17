@@ -254,6 +254,9 @@ describe("GalleryView", () => {
     await act(async () => {
       fireEvent.click(btn);
     });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
+    });
     expect(writeText).toHaveBeenCalledTimes(1);
     const url = new URL(writeText.mock.calls[0][0] as string);
     expect(url.search).toBe("");

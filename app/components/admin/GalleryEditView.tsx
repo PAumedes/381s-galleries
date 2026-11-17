@@ -352,6 +352,7 @@ export function GalleryEditView({
             <SharePanel
               url={`${origin ?? window.location.origin}/${g.slug}`}
               slug={g.slug}
+              title={g.title}
               status={g.status}
               hasPin={g.hasPin}
               cardHref={`/admin/g/${g.id}/card`}
