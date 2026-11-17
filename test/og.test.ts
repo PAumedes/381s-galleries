@@ -6,7 +6,7 @@ import { getDb, schema } from "../app/db";
 import { gallerySessionCookie, pinFingerprint } from "../app/lib/server/auth";
 import { hashPin } from "../app/lib/server/crypto";
 import { loadGallery } from "../app/lib/server/gallery";
-import { galleryMeta } from "../app/lib/og";
+import { galleryMeta, homeMeta } from "../app/lib/og";
 
 const db = getDb(env);
 const G = "gggggggg-0000-0000-0000-000000000001";
@@ -267,5 +267,27 @@ describe("galleryMeta", () => {
     ).toBe(
       JSON.stringify(galleryMeta({ state: "unavailable" } as never, base)),
     );
+  });
+});
+
+describe("homeMeta", () => {
+  const o = { studio: "Estudio", origin: "https://g.example" };
+  it("uses the studio name and the first cover", () => {
+    const tags = homeMeta({ coverId: "p1" }, o);
+    expect(tags).toContainEqual({ title: "Estudio" });
+    expect(tags).toContainEqual({ property: "og:title", content: "Estudio" });
+    expect(tags).toContainEqual({
+      property: "og:image",
+      content: "https://g.example/img/p1/view-sm",
+    });
+    expect(tags).toContainEqual({
+      name: "twitter:card",
+      content: "summary_large_image",
+    });
+  });
+  it("has no image without a cover", () => {
+    const tags = homeMeta(null, o);
+    expect(JSON.stringify(tags)).not.toContain("og:image");
+    expect(tags).toContainEqual({ name: "twitter:card", content: "summary" });
   });
 });

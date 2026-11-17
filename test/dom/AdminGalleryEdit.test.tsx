@@ -26,6 +26,7 @@ const base: GalleryEditData = {
     gridStyle: "filas" as const,
     gridGap: "normal" as const,
     hasPin: false,
+    showOnHome: false,
     coverPhotoId: "p1",
     coverFocus: null,
   },
@@ -280,5 +281,33 @@ describe("GalleryEditView", () => {
   it("shows feedback for ok actions", async () => {
     show({}, { intent: "pin", ok: true, message: "PIN guardado." });
     expect(await screen.findByText("PIN guardado.")).toBeTruthy();
+  });
+});
+
+describe("GalleryEditView: Mostrar en la portada", () => {
+  const box = async () =>
+    (await screen.findByRole("checkbox", {
+      name: "Mostrar en la portada",
+    })) as HTMLInputElement;
+  it("is enabled for a published gallery without PIN", async () => {
+    show(gal({ status: "published", showOnHome: true }));
+    const b = await box();
+    expect(b.disabled).toBe(false);
+    expect(b.checked).toBe(true);
+    expect(
+      b.form!.querySelector('input[name="intent"]')!.getAttribute("value"),
+    ).toBe("home");
+  });
+  it("is disabled with a hint when there is a PIN", async () => {
+    show(gal({ status: "published", hasPin: true }));
+    const b = await box();
+    expect(b.disabled).toBe(true);
+    expect(document.body.textContent).toContain("PIN");
+    expect(b.getAttribute("aria-describedby")).toBeTruthy();
+  });
+  it("is disabled with a hint when not published", async () => {
+    show(gal({ status: "draft" }));
+    expect((await box()).disabled).toBe(true);
+    expect(document.body.textContent).toContain("publicada");
   });
 });

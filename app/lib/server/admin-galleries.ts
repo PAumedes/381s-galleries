@@ -197,6 +197,7 @@ export async function loadGalleryEdit(env: Env, id: string) {
       gridStyle: g.gridStyle,
       gridGap: g.gridGap,
       hasPin: g.pinHash !== null,
+      showOnHome: g.showOnHome,
       coverPhotoId: ps.some((p) => p.id === g.coverPhotoId)
         ? g.coverPhotoId
         : null,
@@ -273,6 +274,8 @@ export async function galleryAction(
       return saveDesign(env, g, form);
     case "flags":
       return saveFlags(env, g, form);
+    case "home":
+      return saveHome(env, g, form);
     case "status":
       return changeStatus(env, g, str(form, "to"));
     case "pin":
@@ -405,6 +408,33 @@ async function saveFlags(env: Env, g: GalleryRow, f: FormData) {
     })
     .where(eq(schema.galleries.id, g.id));
   return done(intent, "Opciones guardadas.");
+}
+
+/**
+ * "Mostrar en la portada" (T6.6). Only "1"/"0". Enabling needs a published
+ * gallery without PIN (the home query enforces the same, this keeps the stored
+ * flag honest); disabling always works.
+ */
+async function saveHome(env: Env, g: GalleryRow, f: FormData) {
+  const intent = "home";
+  const raw = f.get("showOnHome");
+  if (raw !== "1" && raw !== "0")
+    return fail(intent, "Revisá los campos marcados.", {
+      showOnHome: "Valor inválido.",
+    });
+  const on = raw === "1";
+  if (on && (g.pinHash !== null || g.status !== "published"))
+    return fail(intent, "Revisá los campos marcados.", {
+      showOnHome:
+        g.pinHash !== null
+          ? "Una galería con PIN no puede estar en la portada."
+          : "Solo las galerías publicadas pueden estar en la portada.",
+    });
+  await getDb(env)
+    .update(schema.galleries)
+    .set({ showOnHome: on })
+    .where(eq(schema.galleries.id, g.id));
+  return done(intent, on ? "Visible en la portada." : "Fuera de la portada.");
 }
 
 /** Design (T6.5): enums only; an absent key keeps the stored value. */

@@ -87,6 +87,7 @@ export const es = {
   "footer.language": "Idioma",
   "footer.copyright": "© {year} {studio}",
 
+  "home.galleries": "Galerías",
   "footer.privacy": "Privacidad",
   "privacy.title": "Privacidad",
   "privacy.back": "Volver al inicio",

@@ -166,6 +166,8 @@ export function GalleryEditView({
     gridStyle: g.gridStyle,
     gridGap: g.gridGap,
   });
+  // Not offered while the home query would hide the gallery anyway.
+  const homeBlocked = g.hasPin || g.status !== "published";
   const coverId = g.coverPhotoId ?? data.photos[0]?.id ?? null;
   const coverPhoto = data.photos.find((p) => p.id === coverId);
 
@@ -431,6 +433,51 @@ export function GalleryEditView({
               </Form>
             )}
             <Feedback data={actionData} intent="pin" />
+          </Section>
+
+          <Section title="Portada pública">
+            <Form method="post" className="flex flex-col gap-3">
+              <input type="hidden" name="intent" value="home" />
+              {/* A checkbox submits nothing when off: the hidden 0 comes first. */}
+              <input type="hidden" name="showOnHome" value="0" />
+              <div className="flex items-start gap-2">
+                <input
+                  id="show-on-home"
+                  type="checkbox"
+                  name="showOnHome"
+                  value="1"
+                  defaultChecked={g.showOnHome}
+                  disabled={homeBlocked}
+                  aria-describedby="show-on-home-hint"
+                  className="mt-1 size-4"
+                />
+                <div>
+                  <label htmlFor="show-on-home" className="text-small">
+                    Mostrar en la portada
+                  </label>
+                  <p
+                    id="show-on-home-hint"
+                    className="text-small text-grey-600"
+                  >
+                    {g.hasPin
+                      ? "No disponible: la galería tiene PIN."
+                      : g.status !== "published"
+                        ? "No disponible: la galería no está publicada."
+                        : "Aparece en la página de inicio con su portada. Con PIN o sin publicar se oculta sola."}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <button
+                  type="submit"
+                  className={btnPrimary}
+                  disabled={busy || homeBlocked}
+                >
+                  Guardar portada pública
+                </button>
+              </div>
+              <Feedback data={actionData} intent="home" />
+            </Form>
           </Section>
 
           <Section title="Opciones">
