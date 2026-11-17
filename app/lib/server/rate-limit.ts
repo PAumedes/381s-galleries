@@ -17,11 +17,17 @@ export async function rateLimit(
 ): Promise<boolean> {
   const now = nowIso();
   const cutoff = nowIso(new Date(Date.now() - windowMs));
+  // Prune with a cutoff of at least 10 minutes: some scopes (e.g. dlj:) use
+  // per-key windows shorter than their siblings', and pruning with a short
+  // window would reset other keys' live counters.
+  const pruneCutoff = nowIso(
+    new Date(Date.now() - Math.max(windowMs, 10 * 60 * 1000)),
+  );
   if (Math.random() < 0.01) {
     await env.DB.prepare(
       "DELETE FROM rate_limits WHERE key LIKE ?1 AND window_start <= ?2",
     )
-      .bind(`${scope}:%`, cutoff)
+      .bind(`${scope}:%`, pruneCutoff)
       .run();
   }
   const row = await env.DB.prepare(

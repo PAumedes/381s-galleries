@@ -73,23 +73,80 @@ async function post(
   body: unknown,
   deps?: DownloadDeps,
   signal?: AbortSignal,
-  retry = false,
+  waiter?: Waiter,
 ): Promise<Response> {
   for (let attempt = 0; ; attempt++) {
     try {
       return await postOnce(slug, path, body, deps, signal);
     } catch (err) {
       if (
-        !retry ||
+        !waiter ||
         !(err instanceof RateLimitedError) ||
         attempt >= MAX_RATE_RETRIES
       )
         throw err;
       const wait = retryAfterMs(err.retryAfter, attempt);
-      await (deps?.sleep ?? defaultSleep)(wait);
+      if (!waiter.canWait(wait)) throw err;
+      await waiter.wait(wait);
       if (signal?.aborted) throw abortError();
     }
   }
+}
+
+/**
+ * The run's 429 waits: every sleep ends at once when the signal aborts, the
+ * total waiting is budgeted, and the remaining seconds are reported while waiting.
+ */
+type Waiter = {
+  canWait: (ms: number) => boolean;
+  wait: (ms: number) => Promise<void>;
+};
+
+function createWaiter(
+  deps: DownloadDeps | undefined,
+  signal: AbortSignal | undefined,
+  onWaiting?: (seconds: number | null) => void,
+): Waiter {
+  let budget = MAX_TOTAL_WAIT_MS;
+  let active = 0;
+  let until = 0;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const tick = () =>
+    onWaiting?.(Math.max(0, Math.ceil((until - Date.now()) / 1000)));
+  return {
+    canWait: (ms) => ms <= budget,
+    async wait(ms) {
+      budget -= ms;
+      until = Math.max(until, Date.now() + ms);
+      if (active++ === 0 && onWaiting) timer = setInterval(tick, 1000);
+      tick();
+      try {
+        await abortableSleep(deps?.sleep ?? defaultSleep, ms, signal);
+      } finally {
+        if (--active === 0) {
+          clearInterval(timer);
+          onWaiting?.(null);
+        }
+      }
+    },
+  };
+}
+
+/** `sleep(ms)` that resolves immediately when `signal` aborts. */
+function abortableSleep(
+  sleep: (ms: number) => Promise<void>,
+  ms: number,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (signal?.aborted) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    const done = () => {
+      signal?.removeEventListener("abort", done);
+      resolve();
+    };
+    signal?.addEventListener("abort", done, { once: true });
+    sleep(ms).then(done, done);
+  });
 }
 
 class RateLimitedError extends DownloadError {
@@ -142,6 +199,7 @@ export async function requestTokens(
   bulkId?: string,
   deps?: DownloadDeps,
   signal?: AbortSignal,
+  waiter?: Waiter,
 ): Promise<TokenResult> {
   const res = await post(
     slug,
@@ -149,7 +207,7 @@ export async function requestTokens(
     { photoIds, variant, ...(bulkId ? { bulkId } : {}) },
     deps,
     signal,
-    Boolean(bulkId),
+    bulkId ? (waiter ?? createWaiter(deps, signal)) : undefined,
   );
   return (await res.json()) as TokenResult;
 }
@@ -232,6 +290,8 @@ export type BulkProgress = {
   total: number;
   bytes: number;
   failed: string[];
+  /** Seconds until a rate-limit wait ends (only while waiting). */
+  waiting?: number;
 };
 export type BulkResult = BulkProgress & {
   status: "done" | "cancelled";
@@ -326,7 +386,10 @@ function uniqueName(used: Set<string>, path: string): string {
 }
 
 const MAX_RATE_RETRIES = 5;
-const MAX_RETRY_AFTER_MS = 60_000;
+/** One rate-limit window of /dl and the token endpoints. */
+const MAX_RETRY_AFTER_MS = 600_000;
+/** All 429 waiting of one run. */
+const MAX_TOTAL_WAIT_MS = 12 * 60_000;
 
 /** Wait before retrying a 429: the `Retry-After` header (seconds or date), else exponential; capped. */
 function retryAfterMs(header: string | null, attempt: number): number {
@@ -352,10 +415,16 @@ function defaultSaveBlob(blob: Blob, filename: string) {
 export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
   const { slug, scope, variant, signal, deps } = opts;
   const fetchFn = doFetch(deps);
-  const sleep = deps?.sleep ?? defaultSleep;
+  const sleep = (ms: number) =>
+    abortableSleep(deps?.sleep ?? defaultSleep, ms, signal);
   const progress: BulkProgress = { done: 0, total: 0, bytes: 0, failed: [] };
   const emit = () =>
     opts.onProgress?.({ ...progress, failed: [...progress.failed] });
+  const waiter = createWaiter(deps, signal, (secs) => {
+    if (secs === null) delete progress.waiting;
+    else progress.waiting = secs;
+    emit();
+  });
   const result = (
     status: BulkResult["status"],
     sink: BulkResult["sink"],
@@ -407,7 +476,7 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
     { scope, ...(scope === "set" ? { set: opts.set } : {}), variant },
     deps,
     signal,
-    true,
+    waiter,
   ).catch((e) => {
     if (signal?.aborted) return null;
     throw e;
@@ -460,10 +529,14 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
   };
   const refreshed = new Set<string>();
   let pause: Promise<void> | null = null;
-  const startPause = (ms: number) => {
-    pause ??= sleep(ms).finally(() => {
-      pause = null;
-    });
+  const startPause = (ms: number): boolean => {
+    if (!pause) {
+      if (!waiter.canWait(ms)) return false;
+      pause = waiter.wait(ms).finally(() => {
+        pause = null;
+      });
+    }
+    return true;
   };
 
   async function fetchFile(
@@ -494,6 +567,7 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
               bulkId,
               deps,
               signal,
+              waiter,
             );
             const fresh = r.tokens.find((t) => t.photoId === token.photoId);
             if (fresh) {
@@ -507,7 +581,12 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
         }
         if (res.status === 429) {
           if (rateTries >= MAX_RATE_RETRIES) return { token, res: null };
-          startPause(retryAfterMs(res.headers.get("Retry-After"), rateTries++));
+          if (
+            !startPause(
+              retryAfterMs(res.headers.get("Retry-After"), rateTries++),
+            )
+          )
+            return { token, res: null };
           continue;
         }
         // Expired / revoked / missing: retrying cannot help.
@@ -524,7 +603,15 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
       if (signal?.aborted) throw abortError();
       // Just in time: tokens only live 10 minutes.
       const batch = plan.photoIds.slice(i, i + BATCH_SIZE);
-      const r = await requestTokens(slug, batch, variant, bulkId, deps, signal);
+      const r = await requestTokens(
+        slug,
+        batch,
+        variant,
+        bulkId,
+        deps,
+        signal,
+        waiter,
+      );
       for (const id of [...r.missing, ...r.unavailable]) {
         progress.failed.push(id);
         progress.done++;

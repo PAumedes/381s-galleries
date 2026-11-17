@@ -694,14 +694,14 @@ describe("429 handling in bulk requests", () => {
     expect(sleeps.filter((s) => s === 2000)).toHaveLength(2);
   });
 
-  it("caps Retry-After at 60 s and gives up after 5 retries", async () => {
+  it("gives up after 5 retries (each wait clamped to the budget)", async () => {
     const net = makeNet({ n: 2 });
-    withLimit(net, "/download-tokens", 99, "600");
+    withLimit(net, "/download-tokens", 99, "100");
     const sleeps: number[] = [];
     await expect(run(net, sleeps)).rejects.toMatchObject({
       code: "rate_limited",
     });
-    expect(sleeps).toEqual([60_000, 60_000, 60_000, 60_000, 60_000]);
+    expect(sleeps).toEqual([100_000, 100_000, 100_000, 100_000, 100_000]);
   });
 
   it("a single-photo request (no bulk run) still fails fast on 429", async () => {
@@ -790,5 +790,85 @@ describe("server totalBytes in the bulk run", () => {
     });
     expect(r.status).toBe("done");
     expect(saveBlob).toHaveBeenCalled();
+  });
+});
+
+describe("long Retry-After waits (window length, 12 min budget)", () => {
+  const limited = (after: string) =>
+    new Response(JSON.stringify({ error: "rate_limited" }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", "Retry-After": after },
+    });
+  it("honours Retry-After up to 600 s", async () => {
+    const net = makeNet({ n: 2 });
+    const inner = net.mock.getMockImplementation()!;
+    let n = 0;
+    net.mock.mockImplementation(async (input, init) =>
+      String(input).endsWith("/download-tokens") && n++ < 1
+        ? limited("500")
+        : inner(input, init),
+    );
+    const sleeps: number[] = [];
+    const r = await downloadBulk({
+      slug: "boda",
+      scope: "all",
+      variant: "web",
+      deps: {
+        fetch: net.fetch,
+        saveBlob: () => {},
+        sleep: async (ms) => void sleeps.push(ms),
+      },
+    });
+    expect(r.status).toBe("done");
+    expect(sleeps).toContain(500_000);
+  });
+
+  it("clamps to 600 s and stops once the 12 minute total budget is spent", async () => {
+    const net = makeNet({ n: 2 });
+    const inner = net.mock.getMockImplementation()!;
+    net.mock.mockImplementation(async (input, init) =>
+      String(input).endsWith("/download-tokens")
+        ? limited("9999")
+        : inner(input, init),
+    );
+    const sleeps: number[] = [];
+    await expect(
+      downloadBulk({
+        slug: "boda",
+        scope: "all",
+        variant: "web",
+        deps: {
+          fetch: net.fetch,
+          saveBlob: () => {},
+          sleep: async (ms) => void sleeps.push(ms),
+        },
+      }),
+    ).rejects.toMatchObject({ code: "rate_limited" });
+    expect(sleeps).toEqual([600_000]);
+  });
+
+  it("reports the remaining wait in progress while sleeping", async () => {
+    const net = makeNet({ n: 2 });
+    const inner = net.mock.getMockImplementation()!;
+    let n = 0;
+    net.mock.mockImplementation(async (input, init) =>
+      String(input).endsWith("/download-tokens") && n++ < 1
+        ? limited("30")
+        : inner(input, init),
+    );
+    const seen: (number | undefined)[] = [];
+    await downloadBulk({
+      slug: "boda",
+      scope: "all",
+      variant: "web",
+      onProgress: (p) => seen.push(p.waiting),
+      deps: {
+        fetch: net.fetch,
+        saveBlob: () => {},
+        sleep: async () => {},
+      },
+    });
+    expect(seen).toContain(30);
+    expect(seen[seen.length - 1]).toBeUndefined();
   });
 });

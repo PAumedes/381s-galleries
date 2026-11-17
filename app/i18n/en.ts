@@ -41,6 +41,7 @@ export const en = {
   "download.start": "Download",
   "download.cancel": "Cancel",
   "download.progress": "{done} / {total}",
+  "download.waiting": "Waiting… resuming in {n} s",
   "download.done": "Download complete",
   "download.cancelled": "Download cancelled",
   "download.failed.one": "{n} file couldn't be downloaded",

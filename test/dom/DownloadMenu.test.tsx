@@ -522,3 +522,30 @@ describe("DownloadMenu accessibility", () => {
     fireEvent.keyDown(document, { key: "ArrowRight" });
   });
 });
+
+describe("DownloadMenu Escape with another dialog above", () => {
+  it("does not close or swallow Escape pressed inside a stacked dialog (focus fallback)", () => {
+    const onClose = single();
+    const other = document.createElement("div");
+    other.setAttribute("role", "dialog");
+    const btn = document.createElement("button");
+    other.appendChild(btn);
+    document.body.appendChild(other);
+    btn.focus();
+    const seen = vi.fn();
+    other.addEventListener("keydown", seen);
+    // target is body (not inside the other dialog) but focus is
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.keyDown(btn, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(seen).toHaveBeenCalledTimes(1);
+    other.remove();
+  });
+
+  it("still closes on Escape from inside its own sheet", () => {
+    const onClose = single();
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    expect(onClose).toHaveBeenCalled();
+  });
+});

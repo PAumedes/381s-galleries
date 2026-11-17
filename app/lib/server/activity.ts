@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { schema, type getDb } from "../../db";
 
 /**
@@ -26,7 +26,10 @@ export function activityQuery(db: ReturnType<typeof getDb>, galleryId: string) {
     .from(schema.downloads)
     .leftJoin(
       schema.visitors,
-      eq(schema.visitors.id, schema.downloads.visitorId),
+      and(
+        eq(schema.visitors.id, schema.downloads.visitorId),
+        eq(schema.visitors.galleryId, schema.downloads.galleryId),
+      ),
     )
     .where(eq(schema.downloads.galleryId, galleryId))
     .orderBy(desc(schema.downloads.createdAt));

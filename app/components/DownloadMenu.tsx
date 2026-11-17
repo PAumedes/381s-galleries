@@ -80,7 +80,9 @@ export function DownloadMenu(props: DownloadMenuProps) {
     dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
     const onKey = (e: KeyboardEvent) => {
       // Another dialog (the email gate) on top owns the keyboard.
-      const other = (e.target as Element | null)?.closest?.('[role="dialog"]');
+      const other =
+        (e.target as Element | null)?.closest?.('[role="dialog"]') ??
+        document.activeElement?.closest?.('[role="dialog"]');
       if (other && other !== dialogRef.current) return;
       if (e.key === "Escape") {
         e.preventDefault();
@@ -371,6 +373,11 @@ function BulkBody({
                 total: progress.total,
               })}
             </p>
+            {progress.waiting !== undefined && (
+              <p role="status" className="text-small text-grey-700">
+                {t("download.waiting", { n: progress.waiting })}
+              </p>
+            )}
             {fallback && (
               <div className="flex flex-col gap-2">
                 <p role="note" className="text-small text-grey-700">

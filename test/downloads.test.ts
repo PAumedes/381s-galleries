@@ -837,3 +837,62 @@ describe("GET /dl/:token", () => {
     expect(await downloadRows()).toHaveLength(1);
   });
 });
+
+describe("GET /dl abuse limits", () => {
+  const ipHeaders = { "CF-Connecting-IP": "9.9.9.9" };
+  const seedKey = (key: string, n: number, ageMs = 0) =>
+    env.DB.prepare(
+      "INSERT OR REPLACE INTO rate_limits (key, count, window_start) VALUES (?1, ?2, ?3)",
+    )
+      .bind(key, n, new Date(Date.now() - ageMs).toISOString())
+      .run();
+
+  it("429 with Retry-After after 3000 /dl hits per ip+gallery per 10 min", async () => {
+    await addGallery();
+    await addPhoto("p1");
+    const t = await issue();
+    const ip = await clientIpHash(
+      new Request("https://x.test/", { headers: ipHeaders }),
+      env,
+    );
+    await seedKey(`dlget:${ip}:${G}`, 3000, 60_000);
+    const { drive } = fakeDrive();
+    const res = await dl(t, drive, { headers: ipHeaders });
+    expect(res.status).toBe(429);
+    const ra = Number(res.headers.get("Retry-After"));
+    expect(ra).toBeGreaterThan(0);
+    expect(ra).toBeLessThanOrEqual(600);
+    // another ip is unaffected
+    expect(
+      (await dl(t, drive, { headers: { "CF-Connecting-IP": "8.8.8.8" } }))
+        .status,
+    ).toBe(200);
+  });
+
+  it("a token works 20 times, the 21st is 429 with Retry-After <= its TTL", async () => {
+    await addGallery();
+    await addPhoto("p1");
+    const t = await issue();
+    const { drive } = fakeDrive();
+    for (let i = 0; i < 20; i++)
+      expect((await dl(t, drive, { headers: ipHeaders })).status).toBe(200);
+    const res = await dl(t, drive, { headers: ipHeaders });
+    expect(res.status).toBe(429);
+    const ra = Number(res.headers.get("Retry-After"));
+    expect(ra).toBeGreaterThan(0);
+    expect(ra).toBeLessThanOrEqual(600);
+    const rows = await env.DB.prepare(
+      "SELECT key FROM rate_limits WHERE key LIKE 'dlj:%'",
+    ).all();
+    expect(rows.results).toHaveLength(1);
+  });
+
+  it("the token cap applies even without a client ip header", async () => {
+    await addGallery();
+    await addPhoto("p1");
+    const t = await issue();
+    const { drive } = fakeDrive();
+    for (let i = 0; i < 20; i++) await dl(t, drive);
+    expect((await dl(t, drive)).status).toBe(429);
+  });
+});

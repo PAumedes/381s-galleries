@@ -29,6 +29,10 @@ export const DL_WINDOW_MS = 10 * 60 * 1000;
 /** Token/bulk requests per ip+gallery per window (a big bulk run needs one per 50 files plus refreshes). */
 export const DL_MAX_PER_WINDOW = 300;
 export const DL_MAX_IDS = 50;
+/** `/dl` hits per ip+gallery per window (zips with retries and refreshes). */
+export const DL_GET_MAX_PER_WINDOW = 3000;
+/** Uses of one download token (retries, ranges, resumes). */
+export const DL_TOKEN_MAX_USES = 20;
 const VARIANTS = ["highres", "web", "ig"] as const;
 type DlVariant = (typeof VARIANTS)[number];
 type PhotoRow = typeof schema.photos.$inferSelect;
@@ -235,6 +239,9 @@ export async function handleDownloadTokens(
     bulkId = row.id;
   }
 
+  // Tokens issued under the allow_bulk gate remember it, so /dl can re-check.
+  const bulkTag = bulkId ?? (photoIds.length > 1 ? "multi" : undefined);
+
   const rows = await db
     .select()
     .from(schema.photos)
@@ -263,7 +270,7 @@ export async function handleDownloadTokens(
         v: variant,
         vid: visitor.id,
         pf,
-        ...(bulkId ? { b: bulkId } : {}),
+        ...(bulkTag ? { b: bulkTag } : {}),
       };
       const token = await signToken(
         payload,
@@ -389,6 +396,39 @@ export async function serveDownload(
     return gone();
   }
   const variant = claims.v;
+
+  const limited = async (scope: string, key: string, windowMs: number) =>
+    new Response("Too Many Requests", {
+      status: 429,
+      headers: {
+        ...BASE_HEADERS,
+        "Content-Type": "text/plain; charset=utf-8",
+        "Retry-After": String(
+          await retryAfterSeconds(env, scope, key, windowMs),
+        ),
+      },
+    });
+  const ipHash = await clientIpHash(request, env);
+  if (
+    ipHash &&
+    !(await rateLimit(
+      env,
+      "dlget",
+      `${ipHash}:${claims.g}`,
+      DL_GET_MAX_PER_WINDOW,
+      DL_WINDOW_MS,
+    ))
+  )
+    return limited("dlget", `${ipHash}:${claims.g}`, DL_WINDOW_MS);
+  const exp = (claims as { exp?: number }).exp;
+  const ttlMs = Math.max(
+    1000,
+    typeof exp === "number"
+      ? exp * 1000 - Date.now()
+      : DL_TOKEN_TTL_SECONDS * 1000,
+  );
+  if (!(await rateLimit(env, "dlj", claims.jti, DL_TOKEN_MAX_USES, ttlMs)))
+    return limited("dlj", claims.jti, ttlMs);
 
   const db = getDb(env as Env);
   const [row] = await db

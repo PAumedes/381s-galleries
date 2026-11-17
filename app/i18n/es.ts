@@ -38,6 +38,7 @@ export const es = {
   "download.start": "Descargar",
   "download.cancel": "Cancelar",
   "download.progress": "{done} / {total}",
+  "download.waiting": "Esperando… se reanuda en {n} s",
   "download.done": "Descarga completa",
   "download.cancelled": "Descarga cancelada",
   "download.failed.one": "{n} archivo no se pudo descargar",
