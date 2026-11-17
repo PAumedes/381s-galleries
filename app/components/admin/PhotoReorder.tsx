@@ -32,10 +32,16 @@ function groupBySet(photos: ReorderPhoto[]): Orders {
 export function PhotoReorder({
   photos,
   version,
+  coverPhotoId = null,
+  coverAuto = false,
   actionData,
 }: {
   photos: ReorderPhoto[];
   version: string;
+  /** Effective cover (chosen, else the first photo); gets the "Portada" badge. */
+  coverPhotoId?: string | null;
+  /** The cover is automatic (no explicit choice): badge says so and offers to pin it. */
+  coverAuto?: boolean;
   actionData?: GalleryActionResult;
 }) {
   const [initial] = useState<Orders>(() => groupBySet(photos));
@@ -210,6 +216,7 @@ export function PhotoReorder({
                       role="button"
                       tabIndex={0}
                       aria-pressed={isSel}
+                      id={`photo-${id}`}
                       aria-label={p.name}
                       onClick={() => setSelected((s) => (s === id ? null : id))}
                       onKeyDown={(ev) => onKey(ev, id)}
@@ -225,6 +232,46 @@ export function PhotoReorder({
                       <span className="text-micro bg-paper/90 text-ink absolute bottom-0 left-0 max-w-full truncate px-1">
                         {ids.indexOf(id) + 1}. {p.name}
                       </span>
+                    </div>
+                    <div className="mt-1 flex min-h-8 flex-wrap items-center gap-1">
+                      {coverPhotoId === id ? (
+                        <>
+                          <span className="text-micro bg-ink text-paper px-2 py-0.5 uppercase">
+                            {coverAuto ? "Portada (automática)" : "Portada"}
+                          </span>
+                          {coverAuto && (
+                            <Form method="post">
+                              <input
+                                type="hidden"
+                                name="intent"
+                                value="cover"
+                              />
+                              <input type="hidden" name="photoId" value={id} />
+                              <button
+                                type="submit"
+                                aria-describedby={`photo-${id}`}
+                                disabled={busy}
+                                className="text-micro text-grey-700 hover:text-ink focus-visible:outline-ink px-1 py-1 uppercase underline-offset-4 hover:underline focus-visible:outline-2 disabled:opacity-40"
+                              >
+                                Fijar portada
+                              </button>
+                            </Form>
+                          )}
+                        </>
+                      ) : (
+                        <Form method="post">
+                          <input type="hidden" name="intent" value="cover" />
+                          <input type="hidden" name="photoId" value={id} />
+                          <button
+                            type="submit"
+                            aria-describedby={`photo-${id}`}
+                            disabled={busy}
+                            className="text-micro text-grey-700 hover:text-ink focus-visible:outline-ink px-1 py-1 uppercase underline-offset-4 hover:underline focus-visible:outline-2 disabled:opacity-40"
+                          >
+                            Usar como portada
+                          </button>
+                        </Form>
+                      )}
                     </div>
                   </li>
                 );

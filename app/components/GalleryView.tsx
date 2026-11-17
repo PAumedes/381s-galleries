@@ -13,7 +13,8 @@ import { SiteFooter } from "./SiteFooter";
 import { LanguageToggle } from "./LanguageToggle";
 import { Lightbox } from "./Lightbox";
 import { Logo } from "./Logo";
-import { ChevronDown, Download, Heart, HeartFilled, Share } from "./icons";
+import { CoverHero } from "./CoverHero";
+import { Download, Heart, HeartFilled, Share } from "./icons";
 import { useFavorites } from "./use-favorites";
 import { imgUrl, type GalleryPhoto, type OpenGallery } from "./types";
 
@@ -175,55 +176,29 @@ export function GalleryView({
       data-theme={gallery.theme === "dark" ? "dark" : undefined}
       className="bg-paper text-ink min-h-dvh"
     >
-      <header
-        ref={coverRef}
-        className={`on-dark relative flex h-dvh min-h-96 w-full flex-col justify-between overflow-hidden bg-night text-white${proofing ? " img-protect" : ""}`}
-        onContextMenu={proofing ? (e) => e.preventDefault() : undefined}
-      >
-        {gallery.coverPhotoId && (
-          <img
-            src={imgUrl(
-              gallery.coverPhotoId,
-              "view-lg",
-              photos.find((p) => p.id === gallery.coverPhotoId)?.v,
-            )}
-            alt=""
-            fetchPriority="high"
-            draggable={false}
-            className="absolute inset-0 size-full object-cover"
-          />
-        )}
-        {proofing && gallery.coverPhotoId && (
-          <span
-            data-testid="cover-shield"
-            aria-hidden="true"
-            className="absolute inset-0"
-            onContextMenu={(e) => e.preventDefault()}
-          />
-        )}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/20"
-        />
-        <div className="relative p-6">
-          <Logo variant="light" className="h-12" />
-        </div>
-        <div className="relative flex flex-col items-center gap-6 px-6 pb-10 text-center">
-          <h1 className="text-display font-light uppercase">{gallery.title}</h1>
-          {date && (
-            <p className="text-body -mt-3 font-light tracking-wide">{date}</p>
-          )}
-          <p className="text-micro-label uppercase">{studio}</p>
-          <button
-            type="button"
-            onClick={scrollToGrid}
-            className="text-micro-label duration-base ease-out-soft flex min-h-11 flex-col items-center gap-1 uppercase text-white/80 transition-colors hover:text-white"
-          >
-            {t("gallery.view")}
-            <ChevronDown className="size-5" aria-hidden="true" />
-          </button>
-        </div>
-      </header>
+      <CoverHero
+        headerRef={coverRef}
+        title={gallery.title}
+        date={date}
+        studio={studio}
+        src={
+          gallery.coverPhotoId
+            ? imgUrl(
+                gallery.coverPhotoId,
+                "view-lg",
+                photos.find((p) => p.id === gallery.coverPhotoId)?.v,
+              )
+            : null
+        }
+        proofing={proofing}
+        focus={gallery.coverFocus ?? null}
+        aspect={(() => {
+          const c = photos.find((p) => p.id === gallery.coverPhotoId);
+          return c?.width && c.height ? c.width / c.height : null;
+        })()}
+        scrollLabel={t("gallery.view")}
+        onScroll={scrollToGrid}
+      />
 
       <nav
         className={`bg-paper/80 duration-base ease-out-soft sticky top-0 z-(--z-topbar) grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 sm:grid-cols-[1fr_auto_1fr] sm:gap-4 backdrop-blur transition-transform ${

@@ -194,3 +194,65 @@ describe("PhotoReorder", () => {
     expect(screen.getByRole("link", { name: "Recargar" })).toBeTruthy();
   });
 });
+
+describe("PhotoReorder cover controls", () => {
+  it("badge on the cover tile, 'Usar como portada' form on the others, not draggable-blocking", async () => {
+    const Stub = createRoutesStub([
+      {
+        path: "/admin/g/g1",
+        Component: () => (
+          <PhotoReorder photos={photos} version="v1" coverPhotoId="b" />
+        ),
+      },
+    ]);
+    render(<Stub initialEntries={["/admin/g/g1"]} />);
+    const tiles = await screen.findAllByRole("listitem");
+    const b = tiles.find((t) => t.getAttribute("data-photo-id") === "b")!;
+    expect(b.textContent).toContain("Portada");
+    expect(
+      Array.from(b.querySelectorAll("button")).some((x) =>
+        /Usar como portada/.test(x.textContent ?? ""),
+      ),
+    ).toBe(false);
+    expect(
+      screen.getAllByRole("button", { name: /Usar como portada/ }),
+    ).toHaveLength(photos.length - 1);
+    // Not nested inside the select/drag handle (no interactive-in-interactive).
+    for (const btn of screen.getAllByRole("button", {
+      name: /Usar como portada/,
+    }))
+      expect(btn.closest("[role=button]:not(button)")).toBeNull();
+  });
+});
+
+describe("PhotoReorder automatic cover", () => {
+  it("badge says automatic and the tile offers 'Fijar portada' (cover form with its id)", async () => {
+    const Stub = createRoutesStub([
+      {
+        path: "/admin/g/g1",
+        Component: () => (
+          <PhotoReorder
+            photos={photos}
+            version="v1"
+            coverPhotoId="b"
+            coverAuto
+          />
+        ),
+      },
+    ]);
+    render(<Stub initialEntries={["/admin/g/g1"]} />);
+    const tiles = await screen.findAllByRole("listitem");
+    const b = tiles.find((t) => t.getAttribute("data-photo-id") === "b")!;
+    expect(b.textContent).toContain("Portada (automática)");
+    const pin = Array.from(b.querySelectorAll("button")).find(
+      (x) => x.textContent === "Fijar portada",
+    )!;
+    const form = pin.closest("form")!;
+    expect(
+      (form.querySelector("input[name=intent]") as HTMLInputElement).value,
+    ).toBe("cover");
+    expect(
+      (form.querySelector("input[name=photoId]") as HTMLInputElement).value,
+    ).toBe("b");
+  });
+});

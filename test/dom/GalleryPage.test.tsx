@@ -47,7 +47,6 @@ const gallery = (over: Partial<OpenGallery> = {}): OpenGallery => ({
   requireEmail: true,
   title: "Boda Ana",
   eventDate: "2026-03-14",
-  clientName: null,
   coverPhotoId: "Cer0",
   allowBulk: true,
   theme: "light",

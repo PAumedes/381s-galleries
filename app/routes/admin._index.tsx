@@ -36,11 +36,13 @@ export async function adminIndexData(request: Request, env: Env) {
           : "Error al conectar con Google."
         : null;
   const filter = parseFilter(q.get("estado"));
+  const search = (q.get("q") ?? "").trim().slice(0, 100);
   return {
     connected: await isGoogleConnected(env),
     message,
     filter,
-    galleries: await listGalleries(env, filter),
+    q: search,
+    galleries: await listGalleries(env, filter, search),
     total: await countGalleries(env),
   };
 }
@@ -59,6 +61,7 @@ export default function AdminIndex({ loaderData }: Route.ComponentProps) {
       <GalleryList
         galleries={loaderData.galleries}
         filter={loaderData.filter}
+        q={loaderData.q}
         total={loaderData.total}
       />
     </div>

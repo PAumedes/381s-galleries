@@ -17,7 +17,6 @@ const gallery: OpenGallery = {
   requireEmail: false,
   title: "Boda",
   eventDate: null,
-  clientName: null,
   coverPhotoId: null,
   allowBulk: true,
   allowHighres: true,

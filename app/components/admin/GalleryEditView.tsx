@@ -5,6 +5,7 @@ import type {
   GalleryActionResult,
   loadGalleryEdit,
 } from "../../lib/server/admin-galleries";
+import { CoverPreview } from "./CoverPreview";
 import { GalleryTabs } from "./GalleryTabs";
 import { StatusPill } from "./GalleryList";
 import { PhotoReorder } from "./PhotoReorder";
@@ -154,6 +155,11 @@ export function GalleryEditView({
   const fe = errs("flags");
   const [mode, setMode] = useState<"proofing" | "delivery">(g.mode);
   const proofing = mode === "proofing";
+  const [title, setTitle] = useState(g.title);
+  const [eventDate, setEventDate] = useState(g.eventDate ?? "");
+  const [theme, setTheme] = useState<"light" | "dark">(g.theme);
+  const coverId = g.coverPhotoId ?? data.photos[0]?.id ?? null;
+  const coverPhoto = data.photos.find((p) => p.id === coverId);
 
   return (
     <div className="flex flex-col gap-8">
@@ -172,6 +178,18 @@ export function GalleryEditView({
       <div className="grid gap-10 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
         <div className="flex flex-col gap-8">
           <Section title="Datos">
+            <CoverPreview
+              key={coverId ?? "none"}
+              title={title}
+              eventDate={eventDate || null}
+              theme={theme}
+              proofing={proofing}
+              coverId={coverId}
+              coverWidth={coverPhoto?.width ?? null}
+              coverHeight={coverPhoto?.height ?? null}
+              initialFocus={g.coverFocus}
+              actionData={actionData}
+            />
             <Form
               method="post"
               className="flex flex-col gap-4"
@@ -200,7 +218,8 @@ export function GalleryEditView({
                     name="title"
                     required
                     maxLength={120}
-                    defaultValue={g.title}
+                    value={title}
+                    onChange={(ev) => setTitle(ev.target.value)}
                     className={inputCls}
                   />
                 )}
@@ -223,7 +242,11 @@ export function GalleryEditView({
                   />
                 )}
               </Field>
-              <Field label="Cliente" error={de.clientName}>
+              <Field
+                label="Cliente (solo para vos)"
+                error={de.clientName}
+                hint="Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería."
+              >
                 {(p) => (
                   <input
                     {...p}
@@ -240,7 +263,8 @@ export function GalleryEditView({
                     {...p}
                     type="date"
                     name="eventDate"
-                    defaultValue={g.eventDate ?? ""}
+                    value={eventDate}
+                    onChange={(ev) => setEventDate(ev.target.value)}
                     className={inputCls}
                   />
                 )}
@@ -493,7 +517,10 @@ export function GalleryEditView({
                 <span>Tema</span>
                 <select
                   name="theme"
-                  defaultValue={g.theme}
+                  value={theme}
+                  onChange={(ev) =>
+                    setTheme(ev.target.value === "dark" ? "dark" : "light")
+                  }
                   className="border-grey-300 h-9 border bg-transparent px-2"
                 >
                   <option value="light">Claro</option>
@@ -520,51 +547,21 @@ export function GalleryEditView({
         </div>
 
         <div className="flex min-w-0 flex-col gap-8">
-          <Section title="Portada">
+          <Section title="Fotos">
             {data.photos.length === 0 ? (
               <p className="text-small text-grey-600">
                 Esta galería todavía no tiene fotos visibles.
               </p>
             ) : (
               <>
-                <Form method="post" className="flex flex-col gap-3">
-                  <input type="hidden" name="intent" value="cover" />
-                  <fieldset className="flex flex-col gap-2">
-                    <legend className="sr-only">Portada</legend>
-                    <div className="grid max-h-96 grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2 overflow-y-auto">
-                      {data.photos.map((p) => (
-                        <label
-                          key={p.id}
-                          className="relative block cursor-pointer"
-                        >
-                          <input
-                            type="radio"
-                            name="photoId"
-                            value={p.id}
-                            aria-label={p.name}
-                            defaultChecked={g.coverPhotoId === p.id}
-                            className="peer sr-only"
-                          />
-                          <img
-                            src={`/admin/img/${p.id}/thumb`}
-                            alt={p.name}
-                            loading="lazy"
-                            className="bg-grey-100 peer-checked:outline-ink peer-focus-visible:outline-ink aspect-[3/2] w-full object-cover outline-offset-2 peer-checked:outline-4 peer-focus-visible:outline-2"
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-                  <div>
-                    <button
-                      type="submit"
-                      className={btnPrimary}
-                      disabled={busy}
-                    >
-                      Guardar portada
-                    </button>
-                  </div>
-                </Form>
+                <PhotoReorder
+                  key={data.photos.map((p) => p.id).join(",")}
+                  photos={data.photos}
+                  version={data.version}
+                  coverPhotoId={coverId}
+                  coverAuto={g.coverPhotoId === null}
+                  actionData={actionData}
+                />
                 <Form method="post">
                   <input type="hidden" name="intent" value="cover" />
                   <input type="hidden" name="photoId" value="" />
@@ -574,21 +571,6 @@ export function GalleryEditView({
                 </Form>
                 <Feedback data={actionData} intent="cover" />
               </>
-            )}
-          </Section>
-
-          <Section title="Orden de las fotos">
-            {data.photos.length === 0 ? (
-              <p className="text-small text-grey-600">
-                Sin fotos para ordenar.
-              </p>
-            ) : (
-              <PhotoReorder
-                key={data.photos.map((p) => p.id).join(",")}
-                photos={data.photos}
-                version={data.version}
-                actionData={actionData}
-              />
             )}
           </Section>
 

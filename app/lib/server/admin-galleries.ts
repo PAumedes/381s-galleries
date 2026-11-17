@@ -6,6 +6,7 @@ import {
   groupIssues,
   ISSUE_LABELS,
   isValidDate,
+  normalizeSearch,
   utcIsoToBaLocal,
 } from "../admin-gallery";
 import type { Filter } from "../admin-gallery";
@@ -44,6 +45,7 @@ export interface GalleryListRow {
   id: string;
   title: string;
   slug: string;
+  clientName: string | null;
   eventDate: string | null;
   status: "draft" | "published" | "archived";
   expiresAt: string | null;
@@ -60,6 +62,7 @@ export interface GalleryListRow {
 export async function listGalleries(
   env: Env,
   filter: Filter,
+  q = "",
 ): Promise<GalleryListRow[]> {
   const g = schema.galleries;
   const status = FILTER_STATUS[filter];
@@ -68,6 +71,7 @@ export async function listGalleries(
       id: g.id,
       title: g.title,
       slug: g.slug,
+      clientName: g.clientName,
       eventDate: g.eventDate,
       status: g.status,
       expiresAt: g.expiresAt,
@@ -88,7 +92,17 @@ export async function listGalleries(
       asc(g.id),
     );
   const now = Date.now();
-  return rows.map(({ syncIssuesJson, ...r }) => ({
+  // Search on the loaded rows (a studio has well under 1000 galleries):
+  // accent/case-insensitive substring over title, slug and client name.
+  const needle = normalizeSearch(q);
+  const matched = needle
+    ? rows.filter((r) =>
+        [r.title, r.slug, r.clientName ?? ""].some((v) =>
+          normalizeSearch(v).includes(needle),
+        ),
+      )
+    : rows;
+  return matched.map(({ syncIssuesJson, ...r }) => ({
     ...r,
     expired: isExpired(r.expiresAt, now),
     issueCount: groupIssues(syncIssuesJson).total,
@@ -119,6 +133,8 @@ export interface EditPhoto {
   set: string;
   name: string;
   takenAt: string | null;
+  width: number | null;
+  height: number | null;
 }
 
 export async function loadGalleryEdit(env: Env, id: string) {
@@ -134,6 +150,8 @@ export async function loadGalleryEdit(env: Env, id: string) {
       set: schema.photos.setName,
       name: schema.photos.baseName,
       takenAt: schema.photos.takenAt,
+      width: schema.photos.width,
+      height: schema.photos.height,
       hasWm: sql<number>`(${schema.photos.driveWmId} IS NOT NULL)`,
       hasThumbWm: sql<number>`(${schema.photos.driveThumbWmId} IS NOT NULL)`,
     })
@@ -178,6 +196,10 @@ export async function loadGalleryEdit(env: Env, id: string) {
       coverPhotoId: ps.some((p) => p.id === g.coverPhotoId)
         ? g.coverPhotoId
         : null,
+      coverFocus:
+        g.coverFocusX !== null && g.coverFocusY !== null
+          ? { x: g.coverFocusX, y: g.coverFocusY }
+          : null,
     },
     hasWmFiles: ps.some((p) => p.hasWm),
     hasThumbWmFiles: ps.some((p) => p.hasThumbWm),
@@ -251,6 +273,8 @@ export async function galleryAction(
       return savePin(env, g, form);
     case "cover":
       return saveCover(env, g, str(form, "photoId"));
+    case "focus":
+      return saveFocus(env, g, form);
     case "reorder":
       return reorder(env, g, form);
     default:
@@ -479,7 +503,7 @@ async function saveCover(env: Env, g: GalleryRow, photoId: string) {
   if (photoId === "") {
     await db
       .update(schema.galleries)
-      .set({ coverPhotoId: null })
+      .set({ coverPhotoId: null, coverFocusX: null, coverFocusY: null })
       .where(eq(schema.galleries.id, g.id));
     return done(intent, "Portada automática (primera foto).");
   }
@@ -500,9 +524,45 @@ async function saveCover(env: Env, g: GalleryRow, photoId: string) {
     );
   await db
     .update(schema.galleries)
-    .set({ coverPhotoId: p.id })
+    .set({ coverPhotoId: p.id, coverFocusX: null, coverFocusY: null })
     .where(eq(schema.galleries.id, g.id));
   return done(intent, "Portada guardada.");
+}
+
+// A plain decimal (optional sign/exponent); no hex, no Infinity/NaN words.
+const FOCUS_RE = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i;
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+/**
+ * Cover focal point = a point ON THE IMAGE as percentages (u,v) of its width
+ * and height. Both empty = automatic (null); else any finite number 0-100,
+ * rounded to one decimal.
+ */
+async function saveFocus(env: Env, g: GalleryRow, form: FormData) {
+  const intent = "focus";
+  const rx = str(form, "focusX").trim();
+  const ry = str(form, "focusY").trim();
+  let x: number | null = null;
+  let y: number | null = null;
+  if (rx !== "" || ry !== "") {
+    x = FOCUS_RE.test(rx) ? Number(rx) : Number.NaN;
+    y = FOCUS_RE.test(ry) ? Number(ry) : Number.NaN;
+    if (
+      !(Number.isFinite(x) && Number.isFinite(y)) ||
+      !(x >= 0 && x <= 100 && y >= 0 && y <= 100)
+    )
+      return fail(intent, "El punto focal debe estar entre 0 y 100.");
+    x = round1(x);
+    y = round1(y);
+  }
+  await getDb(env)
+    .update(schema.galleries)
+    .set({ coverFocusX: x, coverFocusY: y })
+    .where(eq(schema.galleries.id, g.id));
+  return done(
+    intent,
+    x === null ? "Portada centrada." : "Punto focal guardado.",
+  );
 }
 
 function parseOrder(raw: string): Record<string, string[]> | null {

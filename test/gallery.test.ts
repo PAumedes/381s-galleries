@@ -200,7 +200,6 @@ describe("loadGallery: open data", () => {
     expect(r.data.gallery).toMatchObject({
       title: "Boda Ana",
       eventDate: "2026-03-14",
-      clientName: "Ana",
       allowBulk: false,
       sets: [
         { name: "Ceremonia", count: 2 },

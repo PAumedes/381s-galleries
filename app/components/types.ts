@@ -20,8 +20,9 @@ export type OpenGallery = {
   requireEmail: boolean;
   title: string;
   eventDate: string | null;
-  clientName: string | null;
   coverPhotoId: string | null;
+  /** Cover focal point: a point on the image, in percent of its width/height (u,v); null = automatic. */
+  coverFocus?: { x: number; y: number } | null;
   allowBulk: boolean;
   allowHighres: boolean;
   allowWeb: boolean;

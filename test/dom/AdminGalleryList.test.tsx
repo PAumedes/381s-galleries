@@ -11,6 +11,7 @@ const item = (over: Partial<GalleryListItem> = {}): GalleryListItem => ({
   id: "g1",
   title: "Boda Ana",
   slug: "boda-ana",
+  clientName: null,
   eventDate: "2026-11-01",
   status: "published",
   expiresAt: null,
@@ -125,5 +126,64 @@ describe("GalleryList", () => {
       await screen.findByText(/No hay galerías en este filtro/),
     ).toBeTruthy();
     expect(document.body.textContent).not.toContain("high-res");
+  });
+});
+
+describe("GalleryList client name and search", () => {
+  it("shows the client name muted under the title, nothing when null", async () => {
+    show([
+      item({ clientName: "María Pérez" }),
+      item({ id: "g2", title: "Otra", slug: "otra", clientName: null }),
+    ]);
+    const link = await screen.findByRole("link", { name: "Boda Ana" });
+    expect(within(link.closest("td")!).getByText("María Pérez")).toBeTruthy();
+    const other = screen.getByRole("link", { name: "Otra" }).closest("td")!;
+    expect(other.textContent).toBe("Otra/otra");
+  });
+  it("search box: GET form with q, keeps the status filter, prefilled", async () => {
+    const Stub = createRoutesStub([
+      {
+        path: "/admin",
+        Component: () => (
+          <GalleryList
+            galleries={[item()]}
+            filter="borradores"
+            total={1}
+            q="ana"
+          />
+        ),
+      },
+    ]);
+    render(<Stub initialEntries={["/admin?estado=borradores&q=ana"]} />);
+    const box = (await screen.findByRole("searchbox")) as HTMLInputElement;
+    expect(box.name).toBe("q");
+    expect(box.value).toBe("ana");
+    const form = box.closest("form")!;
+    expect(form.method).toBe("get");
+    expect(
+      (form.querySelector("input[name=estado]") as HTMLInputElement).value,
+    ).toBe("borradores");
+    expect(
+      screen.getByRole("link", { name: "Publicadas" }).getAttribute("href"),
+    ).toBe("/admin?estado=publicadas&q=ana");
+  });
+  it("no match with a query says so (not the empty-library guide)", async () => {
+    const Stub = createRoutesStub([
+      {
+        path: "/admin",
+        Component: () => (
+          <GalleryList galleries={[]} filter="todas" total={4} q="zzz" />
+        ),
+      },
+    ]);
+    render(<Stub initialEntries={["/admin?q=zzz"]} />);
+    expect(
+      await screen.findByText(/No hay galerías que coincidan/),
+    ).toBeTruthy();
+  });
+  it("the search box is hidden for an empty library", async () => {
+    show([], "todas", 0);
+    await screen.findByText(/Todavía no hay galerías/);
+    expect(screen.queryByRole("searchbox")).toBeNull();
   });
 });

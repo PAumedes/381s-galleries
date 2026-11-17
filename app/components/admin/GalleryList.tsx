@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router";
+import { Form, Link, useNavigate } from "react-router";
 
 import {
   FILTERS,
@@ -37,6 +37,14 @@ export function StatusPill({
       {label}
     </span>
   );
+}
+
+function filterHref(f: Filter, q: string): string {
+  const p = new URLSearchParams();
+  if (f !== "todas") p.set("estado", f);
+  if (q) p.set("q", q);
+  const qs = p.toString();
+  return qs ? `/admin?${qs}` : "/admin";
 }
 
 function fmtExpiry(iso: string | null): string {
@@ -81,20 +89,48 @@ export function GalleryList({
   galleries,
   filter,
   total,
+  q = "",
 }: {
   galleries: GalleryListItem[];
   filter: Filter;
   total: number;
+  /** Current search text (server-side `?q=`). */
+  q?: string;
 }) {
   const navigate = useNavigate();
   if (total === 0 && galleries.length === 0) return <EmptyLibrary />;
   return (
     <div className="flex flex-col gap-4">
+      <Form
+        method="get"
+        action="/admin"
+        role="search"
+        className="flex max-w-xl items-center gap-2"
+      >
+        {filter !== "todas" && (
+          <input type="hidden" name="estado" value={filter} />
+        )}
+        <input
+          type="search"
+          name="q"
+          defaultValue={q}
+          maxLength={100}
+          placeholder="Buscar por título, slug o cliente"
+          aria-label="Buscar galerías"
+          className="border-grey-300 bg-white w-full border px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        />
+        <button
+          type="submit"
+          className="text-micro border-ink border px-4 py-2 uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        >
+          Buscar
+        </button>
+      </Form>
       <nav aria-label="Filtrar galerías" className="flex flex-wrap gap-1">
         {FILTERS.map((f) => (
           <Link
             key={f}
-            to={f === "todas" ? "/admin" : `/admin?estado=${f}`}
+            to={filterHref(f, q)}
             aria-current={f === filter ? "page" : undefined}
             className={`text-micro px-3 py-2 uppercase ${f === filter ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`}
           >
@@ -104,7 +140,9 @@ export function GalleryList({
       </nav>
       {galleries.length === 0 ? (
         <p className="text-body text-grey-600">
-          No hay galerías en este filtro.
+          {q
+            ? "No hay galerías que coincidan con la búsqueda."
+            : "No hay galerías en este filtro."}
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -172,6 +210,9 @@ export function GalleryList({
                     >
                       {g.title}
                     </Link>
+                    {g.clientName && (
+                      <div className="text-grey-600">{g.clientName}</div>
+                    )}
                     <div className="text-grey-500">/{g.slug}</div>
                   </td>
                   <td className="py-2 pr-3">

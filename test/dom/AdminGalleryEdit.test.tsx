@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { createRoutesStub } from "react-router";
 import { describe, expect, it } from "vitest";
 import {
@@ -24,6 +24,7 @@ const base: GalleryEditData = {
     theme: "light" as const,
     hasPin: false,
     coverPhotoId: "p1",
+    coverFocus: null,
   },
   hasWmFiles: false,
   hasThumbWmFiles: false,
@@ -73,7 +74,8 @@ describe("GalleryEditView", () => {
       "boda-ana",
     );
     expect(
-      (screen.getByLabelText("Cliente") as HTMLInputElement).maxLength,
+      (screen.getByLabelText("Cliente (solo para vos)") as HTMLInputElement)
+        .maxLength,
     ).toBe(120);
     expect(
       (screen.getByLabelText("Fecha del evento") as HTMLInputElement).type,
@@ -114,9 +116,9 @@ describe("GalleryEditView", () => {
       screen.getByText("La fecha de vencimiento no es válida."),
     ).toBeTruthy();
     expect(
-      (screen.getByLabelText("Cliente") as HTMLInputElement).getAttribute(
-        "aria-invalid",
-      ),
+      (
+        screen.getByLabelText("Cliente (solo para vos)") as HTMLInputElement
+      ).getAttribute("aria-invalid"),
     ).toBeNull();
   });
 
@@ -270,20 +272,6 @@ describe("GalleryEditView", () => {
       "Claro",
       "Oscuro",
     ]);
-  });
-
-  it("cover picker lists visible photos via the admin image route", async () => {
-    show();
-    await screen.findByLabelText("Título");
-    const picker = screen.getByRole("group", { name: "Portada" });
-    const imgs = Array.from(picker.querySelectorAll("img"));
-    expect(imgs.map((i) => i.getAttribute("src"))).toEqual([
-      "/admin/img/p1/thumb",
-      "/admin/img/p2/thumb",
-    ]);
-    expect(
-      (within(picker).getByLabelText("IMG_1") as HTMLInputElement).checked,
-    ).toBe(true);
   });
 
   it("sync issues grouped with labels and file names", async () => {

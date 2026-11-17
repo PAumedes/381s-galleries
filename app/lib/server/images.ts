@@ -249,6 +249,9 @@ export interface ImageDeps {
   drive: DriveClient;
 }
 
+/** Admin-only extra variant: the watermarked view-sm (cover preview in Prueba). */
+export const ADMIN_WM_VARIANT = "view-sm-wm";
+
 export interface ImageOptions {
   /**
    * Admin preview: the caller already ran `requireAdmin`. Skips the gallery
@@ -280,14 +283,16 @@ export async function serveImage(
   opts: ImageOptions = {},
 ): Promise<Response> {
   const { photoId, variant } = params;
+  const adminWm = !!opts.admin && variant === ADMIN_WM_VARIANT;
   if (
     !photoId ||
     !variant ||
-    !(VARIANTS as readonly string[]).includes(variant) ||
-    (opts.admin && variant === "view-lg")
+    (!adminWm &&
+      (!(VARIANTS as readonly string[]).includes(variant) ||
+        (opts.admin && variant === "view-lg")))
   )
     return notFound();
-  const v = variant as Variant;
+  const v = (adminWm ? "view-sm" : variant) as Variant;
 
   const rows = await getDb(env)
     .select({ photo: schema.photos, gallery: schema.galleries })
@@ -308,8 +313,8 @@ export async function serveImage(
   const proofing = gallery.mode === "proofing";
   // Admin sees clean previews; those must not share R2 keys with the
   // watermarked public objects, so they bypass the cache entirely.
-  const adminClean = !!opts.admin && proofing;
-  const src = resolveSource(photo, proofing && !opts.admin, v);
+  const adminClean = !!opts.admin && (proofing || adminWm);
+  const src = resolveSource(photo, adminWm || (proofing && !opts.admin), v);
   if (!src) return notFound();
   const { fileId, watermark, version } = src;
 
