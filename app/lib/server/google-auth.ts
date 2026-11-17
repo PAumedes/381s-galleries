@@ -1,6 +1,7 @@
 import { inArray } from "drizzle-orm";
 import { getDb, schema } from "../../db";
 import { requireAdmin } from "./auth";
+import { publicOrigin } from "./public-url";
 import {
   b64urlEncode,
   decryptSecret,
@@ -270,11 +271,15 @@ export async function disconnectGoogle(env: GoogleEnv): Promise<void> {
 // ---- OAuth routes ----
 
 type FlowEnv = GoogleEnv &
+  Pick<Env, "PUBLIC_ORIGIN"> &
   Parameters<typeof requireAdmin>[1] &
   Pick<Env, "SESSION_SECRET">;
 
-function redirectUriFor(request: Request): string | null {
-  const u = new URL(request.url);
+function redirectUriFor(
+  env: { PUBLIC_ORIGIN?: string },
+  request: Request,
+): string | null {
+  const u = new URL(publicOrigin(env, request));
   const local = u.hostname === "localhost" || u.hostname === "127.0.0.1";
   if (u.protocol !== "https:" && !(local && u.protocol === "http:")) {
     return null;
@@ -322,7 +327,7 @@ export async function handleConnect(
   env: FlowEnv,
 ): Promise<Response> {
   await requireAdmin(request, env);
-  const redirectUri = redirectUriFor(request);
+  const redirectUri = redirectUriFor(env, request);
   if (!redirectUri) return bad();
   const state = b64urlEncode(crypto.getRandomValues(new Uint8Array(32)));
   const token = await signToken(
@@ -348,7 +353,7 @@ export async function handleCallback(
 ): Promise<Response> {
   await requireAdmin(request, env);
   const url = new URL(request.url);
-  const redirectUri = redirectUriFor(request);
+  const redirectUri = redirectUriFor(env, request);
   if (!redirectUri) return bad();
   const param = url.searchParams.get("state");
   let nonceExp: number | null = null;

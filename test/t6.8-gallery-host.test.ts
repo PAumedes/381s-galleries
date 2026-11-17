@@ -69,14 +69,71 @@ describe("legacyRedirect", () => {
       legacyRedirect(old("/x"), { ...env, LEGACY_HOSTS: " , " }),
     ).toBeNull();
   });
-  it("is a no-op without a valid PUBLIC_ORIGIN (never builds from the request)", () => {
+  it.each([
+    undefined,
+    "",
+    "nope",
+    "http://gallery.381studios.ar",
+    "https://user:pw@gallery.381studios.ar",
+    "https://session.381studios.ar",
+    "https://Session.381studios.ar.",
+  ])("fails closed with an empty 421 when PUBLIC_ORIGIN is %s", async (o) => {
+    const r = legacyRedirect(old("/x"), {
+      LEGACY_HOSTS: "session.381studios.ar",
+      PUBLIC_ORIGIN: o,
+    })!;
+    expect(r.status).toBe(421);
+    expect(r.headers.get("Location")).toBeNull();
+    expect(await r.text()).toBe("");
+  });
+  it("allows http PUBLIC_ORIGIN only for localhost", () => {
+    const r = legacyRedirect(old("/x"), {
+      LEGACY_HOSTS: env.LEGACY_HOSTS,
+      PUBLIC_ORIGIN: "http://localhost:5173",
+    })!;
+    expect(r.status).toBe(301);
+    expect(r.headers.get("Location")).toBe("http://localhost:5173/x");
+  });
+  it("ignores one trailing dot on request host and LEGACY_HOSTS items, and case", () => {
     expect(
-      legacyRedirect(old("/x"), { LEGACY_HOSTS: env.LEGACY_HOSTS }),
-    ).toBeNull();
+      legacyRedirect(new Request("https://SESSION.381studios.ar./x"), env),
+    ).not.toBeNull();
+    const e = { ...env, LEGACY_HOSTS: " ,Session.381studios.ar. , " };
+    expect(legacyRedirect(old("/x"), e)!.status).toBe(301);
     expect(
-      legacyRedirect(old("/x"), { ...env, PUBLIC_ORIGIN: "nope" }),
+      legacyRedirect(new Request("https://session.381studios.ar../x"), e),
     ).toBeNull();
   });
+  it("adds security headers to redirects and 421", () => {
+    for (const r of [
+      legacyRedirect(old("/x"), env)!,
+      legacyRedirect(old("/x"), { LEGACY_HOSTS: env.LEGACY_HOSTS })!,
+    ]) {
+      expect(r.headers.get("X-Content-Type-Options")).toBe("nosniff");
+      expect(r.headers.get("X-Frame-Options")).toBe("DENY");
+      expect(r.headers.get("Referrer-Policy")).toBeTruthy();
+    }
+  });
+  it.each([
+    "/admin",
+    "/Admin/galleries",
+    "/ADMIN/google/callback?x=1",
+    "/api/admin/foo",
+    "/boda?code=abc",
+    "/boda?a=1&state=xyz",
+  ])("no-store for sensitive path %s", (p) => {
+    expect(legacyRedirect(old(p), env)!.headers.get("Cache-Control")).toBe(
+      "no-store",
+    );
+  });
+  it.each(["/boda", "/administrador", "/boda?lang=en", "/img/a?v=1"])(
+    "keeps public cache for %s",
+    (p) => {
+      expect(legacyRedirect(old(p), env)!.headers.get("Cache-Control")).toBe(
+        "public, max-age=86400",
+      );
+    },
+  );
   it("matches hosts case-insensitively, several entries, and the Host header cannot steer the target", () => {
     const e = { ...env, LEGACY_HOSTS: "a.example.com, Session.381studios.ar" };
     const r = legacyRedirect(old("/x"), e)!;
