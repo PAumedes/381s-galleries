@@ -636,32 +636,37 @@ export async function runSync(
       const stmts: BatchItem[] = [];
 
       if (ex) {
+        // Only galleries sync itself archived come back when the folder does;
+        // an admin-archived gallery stays archived.
         const restore =
-          ex.archivedPrevStatus !== null && ex.status === "archived"
-            ? ex.archivedPrevStatus
+          ex.archivedBySync && ex.status === "archived"
+            ? (ex.archivedPrevStatus ?? "draft")
             : undefined;
+        // The admin owns use_watermark_preview: sync only follows transitions
+        // of preview-wm availability.
+        const hadWm = rows.some((r) => r.driveWmId !== null);
+        const wmSet =
+          a.hasWm !== hadWm ? { useWatermarkPreview: a.hasWm } : undefined;
         const changed =
-          ex.useWatermarkPreview !== a.hasWm ||
+          (wmSet !== undefined &&
+            ex.useWatermarkPreview !== wmSet.useWatermarkPreview) ||
           ex.syncIssuesJson !== issuesJson ||
           ex.driveModifiedAt !== a.folder.modifiedTime ||
           restore !== undefined;
         if (changed) result.galleries.updated++;
-        if (
-          changed ||
-          ex.folderMissingSince !== null ||
-          ex.archivedPrevStatus !== null
-        )
+        if (changed || ex.folderMissingSince !== null || ex.archivedBySync)
           stmts.push(
             db
               .update(schema.galleries)
               .set({
-                useWatermarkPreview: a.hasWm,
+                ...wmSet,
                 syncIssuesJson: issuesJson,
                 driveModifiedAt: a.folder.modifiedTime,
                 lastSyncedAt: syncedAt,
                 folderMissingSince: null,
-                ...(ex.archivedPrevStatus !== null
+                ...(ex.archivedBySync
                   ? {
+                      archivedBySync: false,
                       archivedPrevStatus: null,
                       ...(restore ? { status: restore } : {}),
                     }
@@ -812,7 +817,11 @@ export async function runSync(
         gstmts.push(
           db
             .update(schema.galleries)
-            .set({ status: "archived", archivedPrevStatus: prev })
+            .set({
+              status: "archived",
+              archivedPrevStatus: prev,
+              archivedBySync: true,
+            })
             .where(inArray(schema.galleries.id, ids)),
         );
     await flush(gstmts);

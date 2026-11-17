@@ -50,6 +50,13 @@
       "when": 1794871997442,
       "tag": "0006_download_token_id",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794877694766,
+      "tag": "0007_archived_by_sync",
+      "breakpoints": true
     }
   ]
 }

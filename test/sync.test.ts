@@ -373,6 +373,7 @@ describe("first sync on fixtures", () => {
     g = await galleryBy("retrato-sofia");
     expect(g.status).toBe("archived");
     expect(g.archivedPrevStatus).toBe("published");
+    expect(g.archivedBySync).toBe(true);
     expect((await photosOf(g.id)).length).toBe(30);
     const r2 = await runSync(e, { drive, force: true, now: later() });
     expect(r2.galleries.archived).toBe(0);
@@ -796,11 +797,12 @@ describe("sync safety", () => {
     hidden = false;
     await runSync(e, { drive: d, force: true, now: later() });
     g = await galleryBy("retrato-sofia");
-    expect([g.status, g.archivedPrevStatus, g.folderMissingSince]).toEqual([
-      "draft",
-      null,
-      null,
-    ]);
+    expect([
+      g.status,
+      g.archivedPrevStatus,
+      g.archivedBySync,
+      g.folderMissingSince,
+    ]).toEqual(["draft", null, false, null]);
   });
 
   it("unchanged token still lets a pending grace period mature", async () => {
@@ -1087,5 +1089,78 @@ describe("review fixes", () => {
     expect(JSON.parse((await lastError()).value).message).toBe(
       "root folder listed empty",
     );
+  });
+});
+
+describe("use_watermark_preview transitions", () => {
+  const mk = (wm: boolean) =>
+    tree({
+      Boda: {
+        "high-res": { "": ["a.jpg", "b.jpg"] },
+        ...(wm ? { "preview-wm": { "": ["a.jpg", "b.jpg"] } } : {}),
+      },
+    });
+  const setFlag = (id: string, v: boolean) =>
+    db
+      .update(schema.galleries)
+      .set({ useWatermarkPreview: v })
+      .where(eq(schema.galleries.id, id));
+  const rescan = (d: MockDrive) =>
+    runSync(e, { drive: d, force: true, now: later() });
+
+  it("(a) no preview-wm: admin-set ON stays ON across rescans", async () => {
+    const fx = mk(false);
+    await setRoot(fx.rootId);
+    const d = createMockDrive(fx);
+    await runSync(e, { drive: d });
+    const g = await galleryBy("boda");
+    expect(g.useWatermarkPreview).toBe(false);
+    await setFlag(g.id, true);
+    await rescan(d);
+    expect((await galleryBy("boda")).useWatermarkPreview).toBe(true);
+  });
+
+  it("(b) preview-wm appears: flag turns ON", async () => {
+    const fx = mk(false);
+    await setRoot(fx.rootId);
+    const d = createMockDrive(fx);
+    await runSync(e, { drive: d });
+    expect((await galleryBy("boda")).useWatermarkPreview).toBe(false);
+    const album = await walk(d, fx.rootId, "Boda");
+    const wm = d.addFile(album, { name: "preview-wm", mimeType: FOLDER_MIME });
+    d.addFile(wm.id, { name: "a.jpg", width: 800, height: 600 });
+    await rescan(d);
+    const g = await galleryBy("boda");
+    expect(g.useWatermarkPreview).toBe(true);
+    expect((await photosOf(g.id)).some((p) => p.driveWmId !== null)).toBe(true);
+  });
+
+  it("(c) admin turns OFF while files exist: rescan keeps OFF", async () => {
+    const fx = mk(true);
+    await setRoot(fx.rootId);
+    const d = createMockDrive(fx);
+    await runSync(e, { drive: d });
+    const g = await galleryBy("boda");
+    expect(g.useWatermarkPreview).toBe(true);
+    await setFlag(g.id, false);
+    await rescan(d);
+    expect((await galleryBy("boda")).useWatermarkPreview).toBe(false);
+  });
+
+  it("(d) all preview-wm files removed: flag turns OFF", async () => {
+    const fx = mk(true);
+    await setRoot(fx.rootId);
+    const d = createMockDrive(fx);
+    await runSync(e, { drive: d });
+    expect((await galleryBy("boda")).useWatermarkPreview).toBe(true);
+    for (const f of await d.listChildren(
+      await walk(d, fx.rootId, "Boda", "preview-wm"),
+    ))
+      d.removeFile(f.id);
+    d.removeFile(await walk(d, fx.rootId, "Boda", "preview-wm"));
+    await rescan(d);
+    const g = await galleryBy("boda");
+    expect(g.useWatermarkPreview).toBe(false);
+    expect((await photosOf(g.id)).length).toBe(2);
   });
 });

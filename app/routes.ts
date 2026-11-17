@@ -4,9 +4,14 @@ export default [
   index("routes/home.tsx"),
   route("admin/google/connect", "routes/admin.google.connect.tsx"),
   route("admin/google/callback", "routes/admin.google.callback.tsx"),
+  route(
+    "admin/img/:photoId/:variant",
+    "routes/admin.img.$photoId.$variant.tsx",
+  ),
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
     route("setup", "routes/admin.setup.tsx"),
+    route("g/:id", "routes/admin.g.$id.tsx"),
   ]),
   route("img/:photoId/:variant", "routes/img.$photoId.$variant.tsx"),
   route("dl/:token", "routes/dl.$token.tsx"),

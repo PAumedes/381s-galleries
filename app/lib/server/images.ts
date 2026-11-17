@@ -103,6 +103,15 @@ export interface ImageDeps {
   drive: DriveClient;
 }
 
+export interface ImageOptions {
+  /**
+   * Admin preview: the caller already ran `requireAdmin`. Skips the gallery
+   * access checks (draft/archived/expired/PIN) and serves only thumb/view-sm;
+   * the watermark policy and R2 cache rules are unchanged.
+   */
+  admin?: boolean;
+}
+
 /**
  * Core of GET /img/:photoId/:variant (PLAN 5.3), independent of React Router.
  *
@@ -120,12 +129,14 @@ export async function serveImage(
   env: Env,
   ctx: Pick<ExecutionContext, "waitUntil">,
   deps: ImageDeps,
+  opts: ImageOptions = {},
 ): Promise<Response> {
   const { photoId, variant } = params;
   if (
     !photoId ||
     !variant ||
-    !(VARIANTS as readonly string[]).includes(variant)
+    !(VARIANTS as readonly string[]).includes(variant) ||
+    (opts.admin && variant === "view-lg")
   )
     return notFound();
   const v = variant as Variant;
@@ -143,7 +154,8 @@ export async function serveImage(
   if (!row) return notFound();
   const { photo, gallery } = row;
 
-  if (!(await openGallery(request, gallery, env))) return notFound();
+  if (!opts.admin && !(await openGallery(request, gallery, env)))
+    return notFound();
 
   const watermark = v !== "thumb" && gallery.useWatermarkPreview;
   if (watermark && !photo.driveWmId) return notFound();

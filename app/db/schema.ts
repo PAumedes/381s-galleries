@@ -74,6 +74,11 @@ export const galleries = sqliteTable(
     archivedPrevStatus: text("archived_prev_status", {
       enum: ["draft", "published"],
     }),
+    // 1 only when sync (not an admin) archived the gallery: only those are
+    // restored automatically when the folder reappears.
+    archivedBySync: integer("archived_by_sync", { mode: "boolean" })
+      .notNull()
+      .default(false),
     createdAt: createdAt(),
   },
   (t) => [

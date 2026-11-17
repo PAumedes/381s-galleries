@@ -34,8 +34,9 @@ describe("T1.3 archive is a one-way, lossy trap", () => {
     expect((await galleryBy("retrato-sofia")).status).toBe("published");
   });
 
-  // Skipped by decision: only sync-archived galleries (archived_prev_status set)
-  // are restored; a plain/admin "archived" status must stay archived.
+  // Skipped by decision: only sync-archived galleries (archived_by_sync=1) are
+  // restored; the assertion below is the old inverted expectation. The new
+  // behaviour is covered by T4.2-sync-clobbers-admin.test.ts.
   it.skip("trashed then restored album stays archived", async () => {
     const inner = createMockDrive();
     await runSync(e, { drive: inner });

@@ -1,6 +1,9 @@
 import { env } from "cloudflare:workers";
 
+import { GalleryList } from "../components/admin/GalleryList";
+import { parseFilter } from "../lib/admin-gallery";
 import { adminHeaders } from "../lib/server/admin";
+import { countGalleries, listGalleries } from "../lib/server/admin-galleries";
 import { requireAdmin } from "../lib/server/auth";
 import { isGoogleConnected } from "../lib/server/google-auth";
 import type { Route } from "./+types/admin._index";
@@ -19,11 +22,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return adminIndexData(request, env);
 }
 
-export async function adminIndexData(
-  request: Request,
-  env: Parameters<typeof requireAdmin>[1] &
-    Parameters<typeof isGoogleConnected>[0],
-) {
+export async function adminIndexData(request: Request, env: Env) {
   await requireAdmin(request, env);
   const q = new URL(request.url).searchParams;
   const flag = q.get("google");
@@ -36,7 +35,14 @@ export async function adminIndexData(
           ? MESSAGES[reason]
           : "Error al conectar con Google."
         : null;
-  return { connected: await isGoogleConnected(env), message };
+  const filter = parseFilter(q.get("estado"));
+  return {
+    connected: await isGoogleConnected(env),
+    message,
+    filter,
+    galleries: await listGalleries(env, filter),
+    total: await countGalleries(env),
+  };
 }
 
 export const headers = () => adminHeaders();
@@ -50,9 +56,11 @@ export default function AdminIndex({ loaderData }: Route.ComponentProps) {
           {loaderData.message}
         </p>
       )}
-      <p className="text-body text-grey-600">
-        Próximamente: listado de galerías.
-      </p>
+      <GalleryList
+        galleries={loaderData.galleries}
+        filter={loaderData.filter}
+        total={loaderData.total}
+      />
     </div>
   );
 }
