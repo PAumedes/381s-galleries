@@ -240,6 +240,16 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T5.5 Deploy from GitHub Actions:** `scripts/setup-cloudflare.mjs` + `.github/workflows/{setup,deploy,ci}.yml`; DEPLOY.md rewritten browser-first. Hardening: secrets only on the Setup/Deploy steps (no job-level env), actions pinned to commit SHAs + Dependabot (weekly), tolerant JSON parsing of wrangler output, `database_id` rewrite scoped to the `381s-galleries` d1 entry (comments ignored), commit-back with `git pull --rebase` and a clear `::error::`, subprocess test with a fake `pnpm`.
 - [x] **T5.6 Privacy page:** public `/privacy` (canonical, registered in the Google OAuth consent screen; es/en by lang; Logo, studio name from settings; optional `PUBLIC_CONTACT_EMAIL` var, unset by default, else a generic contact line); `/privacidad` 301-redirects to it (keeps `?lang`). Both reserved slugs. "Privacidad" footer link on gallery pages and home (`SiteFooter`).
 
+### Phase 6 — Feedback round (after first real use)
+- [x] **T6.1 Lightbox rapid navigation** — fast prev/next clicks or key repeats leave the lightbox in a broken state; fix races (stale loads, fades, preloads).
+- [ ] **T6.2 Image speed** — warm the R2 cache after sync (cron batches within the subrequest budget) + Cloudflare Cache API layer after access checks; avoid Drive on first view where possible.
+- [ ] **T6.3 Prueba / Entrega mode** — one switch per gallery. Prueba: watermarked cover, grid (optional `thumb-wm` recipe, fallback `preview-wm`) and lightbox, downloads off, image protection (no right-click/drag/long-press save, images behind a transparent layer). Entrega: clean images, downloads per size flags.
+- [ ] **T6.4 Gallery editor rework** — one Photos panel (order + "Usar como portada"), live cover preview with focal point, client name shown/searchable in the list.
+- [ ] **T6.5 Themes** — theme presets (Claro, Oscuro, Arena, Gris), cover layouts, grid styles, spacing; Pixieset-like design panel.
+- [ ] **T6.6 Public portfolio home** — per-gallery "Mostrar en la portada" (published, no PIN only); home shows a cover grid.
+- [ ] **T6.7 Admin in English** — ES/EN toggle in the admin.
+- [ ] **T6.8 Subdomain rename** — new public hostname; old one 301-redirects.
+
 ### Backlog (not now)
 - Email notifications (Resend / Gmail SMTP)
 - Mercado Pago checkout for prints/digitals
