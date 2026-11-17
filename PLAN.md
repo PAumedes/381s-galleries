@@ -189,9 +189,9 @@ Simple, elegant, minimal, **Pixieset-inspired**: the photos are the interface.
 ## 6. Security rules
 - Never expose Drive file IDs, R2 keys or tokens to the client.
 - Every client route checks the gallery cookie **and** that the photo belongs to that gallery **and** gallery is published + not expired.
-- PIN: PBKDF2-SHA256 (Web Crypto), 100k iterations, random salt; max 5 attempts / 10 min per IP+gallery (IPv6 keyed on the /64) and 50 / 10 min per gallery across all IPs (`pinG:`), via the shared `rateLimit` helper (`pin:` scope in `rate_limits`, §4). New PINs need >= 6 characters (older, shorter ones keep working).
+- PIN: PBKDF2-SHA256 (Web Crypto), 100k iterations, random salt; max 5 attempts / 10 min per IP+gallery (IPv6 keyed on the /64) and 100 / 10 min per gallery across all IPs (`pinG:`; sessions already unlocked are never throttled and POST is a no-op redirect). Trade-off: a gallery-wide cap lets an attacker lock guests out for a window, but bounds brute force; with the 6-char minimum, 100 / 10 min means ~70 days worst case for a numeric 6-digit PIN (10^6 / 100 * 10 min), and a guest can still be locked out for up to 10 min under attack, via the shared `rateLimit` helper (`pin:` scope in `rate_limits`, §4). New PINs need >= 6 characters (older, shorter ones keep working).
 - Security headers on every response (`workers/app.ts` -> `applySecurityHeaders`): CSP with a per-request nonce (`app/entry.server.tsx`), X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy.
-- `/img` R2 misses: `img:<ipHash>:<gid>` 1500 / 10 min -> 429 before Drive is called.
+- `/img` R2 misses: `img:<ipHash>:<gid>` 5000 / 10 min -> 429 before Drive is called.
 - `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY` must all differ (`assertDistinctSecrets`).
 - Constant-time comparison for HMACs.
 - Refresh token stored AES-GCM encrypted (`TOKEN_KEY`).

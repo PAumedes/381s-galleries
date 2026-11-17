@@ -17,7 +17,7 @@ const MOCK_KIND: Record<Variant, MockVariant> = {
 };
 
 /** Drive fetches (R2 misses) per IP and gallery per window. */
-export const IMG_MISS_MAX = 1500;
+export const IMG_MISS_MAX = 5000;
 export const IMG_MISS_WINDOW_MS = 10 * 60 * 1000;
 
 const BASE_HEADERS = { "X-Content-Type-Options": "nosniff" };

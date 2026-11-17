@@ -51,7 +51,10 @@ describe("ipv6Prefix64", () => {
     ["2001:DB8:0:0::5", "2001:0db8:0000:0000::/64"],
     ["2001:db8:1:2:3:4:5:6", "2001:0db8:0001:0002::/64"],
     ["::1", "0000:0000:0000:0000::/64"],
-    ["::ffff:1.2.3.4", "0000:0000:0000:0000::/64"],
+    ["::ffff:1.2.3.4", "1.2.3.4"],
+    ["::ffff:102:304", "1.2.3.4"],
+    ["64:ff9b::1.2.3.4", "1.2.3.4"],
+    ["fe80::1%eth0", "fe80:0000:0000:0000::/64"],
   ])("%s", (ip, out) => expect(ipv6Prefix64(ip)).toBe(out));
   it("leaves IPv4 and garbage alone", () => {
     expect(ipv6Prefix64("203.0.113.9")).toBe("203.0.113.9");
@@ -112,9 +115,9 @@ describe("PIN limiter", () => {
     ).toBe(303);
   });
   it("per-gallery: PIN_GALLERY_MAX_ATTEMPTS wrong guesses from many IPs lock everyone", async () => {
-    expect(PIN_GALLERY_MAX_ATTEMPTS).toBe(50);
+    expect(PIN_GALLERY_MAX_ATTEMPTS).toBe(100);
     await env.DB.prepare(
-      "INSERT INTO rate_limits (key, count, window_start) VALUES ('pinG:gP', 50, strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
+      "INSERT INTO rate_limits (key, count, window_start) VALUES ('pinG:gP', 100, strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
     ).run();
     expect(
       (await unlockGallery(post("1234", "9.9.9.9"), "boda", env)).status,
@@ -122,7 +125,7 @@ describe("PIN limiter", () => {
   });
   it("a correct PIN clears the gallery counter", async () => {
     await env.DB.prepare(
-      "INSERT INTO rate_limits (key, count, window_start) VALUES ('pinG:gP', 49, strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
+      "INSERT INTO rate_limits (key, count, window_start) VALUES ('pinG:gP', 99, strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
     ).run();
     expect(
       (await unlockGallery(post("1234", "8.8.8.8"), "boda", env)).status,

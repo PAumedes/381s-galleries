@@ -461,7 +461,7 @@ describe("metadata-validated cache", () => {
   });
 });
 
-describe("R2-miss rate limit (img:<ip>:<gallery>, 1500 / 10 min)", () => {
+describe("R2-miss rate limit (img:<ip>:<gallery>, 5000 / 10 min)", () => {
   const hdr = { "CF-Connecting-IP": "203.0.113.7" };
   const seed = async (n: number) => {
     const ipHash = await clientIpHash(
@@ -479,7 +479,7 @@ describe("R2-miss rate limit (img:<ip>:<gallery>, 1500 / 10 min)", () => {
   });
 
   it("429 + Retry-After once the budget is spent, Drive not called", async () => {
-    await seed(1500);
+    await seed(5000);
     const f = fakeDrive();
     const res = await get("thumb", { drive: f.drive, headers: hdr });
     expect(res.status).toBe(429);
@@ -502,7 +502,7 @@ describe("R2-miss rate limit (img:<ip>:<gallery>, 1500 / 10 min)", () => {
     expect(f.calls.length).toBe(1);
   });
   it("another IP is unaffected", async () => {
-    await seed(1500);
+    await seed(5000);
     const res = await get("thumb", {
       headers: { "CF-Connecting-IP": "203.0.113.8" },
     });

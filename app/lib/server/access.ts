@@ -44,7 +44,8 @@ export function crossSite(request: Request): boolean {
 
 /**
  * First 64 bits of an IPv6 address as `xxxx:xxxx:xxxx:xxxx::/64` (one subscriber
- * owns a whole /64, so per-address limits are meaningless). IPv4 and anything
+ * owns a whole /64, so per-address limits are meaningless). IPv4-mapped and
+ * NAT64 addresses collapse to their embedded IPv4; IPv4 and anything
  * unparseable are returned unchanged.
  */
 export function ipv6Prefix64(ip: string): string {
@@ -69,6 +70,15 @@ export function ipv6Prefix64(ip: string): string {
   } else groups = head;
   if (groups.length !== 8 || !groups.every((g) => /^[0-9a-f]{1,4}$/.test(g)))
     return ip;
+  // IPv4-mapped (::ffff:0:0/96) and NAT64 (64:ff9b::/96): key by the embedded
+  // IPv4, otherwise every client behind the same gateway shares one /64.
+  const n = groups.map((g) => parseInt(g, 16));
+  const zeros = (from: number, to: number) =>
+    n.slice(from, to).every((x) => x === 0);
+  const mapped = zeros(0, 5) && n[5] === 0xffff;
+  const nat64 = n[0] === 0x64 && n[1] === 0xff9b && zeros(2, 6);
+  if (mapped || nat64)
+    return `${n[6] >> 8}.${n[6] & 255}.${n[7] >> 8}.${n[7] & 255}`;
   return (
     groups
       .slice(0, 4)

@@ -209,7 +209,7 @@ const UNKNOWN_GALLERY = "unknown";
 export const PIN_MAX_ATTEMPTS = 5;
 export const PIN_WINDOW_MS = 10 * 60 * 1000;
 /** Per gallery, across all IPs (a 4-digit PIN is otherwise guessable by rotating IPs). */
-export const PIN_GALLERY_MAX_ATTEMPTS = 50;
+export const PIN_GALLERY_MAX_ATTEMPTS = 100;
 
 // Valid-format hash of nothing: unknown slugs still pay for one PBKDF2 run.
 const DUMMY_HASH = `pbkdf2$100000$${"A".repeat(22)}$${"A".repeat(43)}`;
@@ -254,6 +254,10 @@ export async function unlockGallery(
   const location =
     "/" + encodeURIComponent(g.slug) + (lang ? `?lang=${lang}` : "");
   if (!g.pinHash) return { status: 303, location };
+
+  // Already unlocked: nothing to verify and never throttled.
+  if ((await openGallery(request, g, env)) !== null)
+    return { status: 303, location };
 
   if (!ipHash) return { status: 429 };
   if (!(await pinLimit(g.id, ipHash))) return { status: 429 };

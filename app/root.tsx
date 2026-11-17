@@ -68,11 +68,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="icon" href="/favicon.ico" sizes="32x32" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <script
-          nonce={loaderData?.nonce}
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: A2HS_CAPTURE }}
-        />
+        {loaderData?.nonce ? (
+          <script
+            nonce={loaderData.nonce}
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: A2HS_CAPTURE }}
+          />
+        ) : null}
         <Meta />
         <Links />
       </head>
