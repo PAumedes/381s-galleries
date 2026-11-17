@@ -12,6 +12,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { getStudioName } from "./lib/server/admin";
 import { en } from "./i18n/en";
 import { es } from "./i18n/es";
 import { getLang, langCookie } from "./i18n/lang";
@@ -22,7 +23,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const payload = {
     lang,
     messages: lang === "en" ? en : es,
-    studioName: env.STUDIO_NAME,
+    studioName: await getStudioName(env, request),
   };
   const explicit = new URL(request.url).searchParams.has("lang");
   return data(

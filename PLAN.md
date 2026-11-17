@@ -147,6 +147,8 @@ Client photo payload (`GalleryPhoto`) carries `variants: { web: boolean; ig: boo
 - **Activity:** views + downloads (who, photo, variant, when, country), CSV export.
 - **Favorites:** per visitor/list, **"Copy for Capture One"** → base names joined by spaces (paste into C1 search/filter) + `.txt` download.
 
+**T4.1 decisions:** `/admin` is a layout route (`admin.tsx`; children: index = galleries list, `setup`); every admin response is `Cache-Control: private, no-store` + `X-Robots-Tag: noindex`. Every admin mutation is a React Router action starting with `adminAction(request, env)` (`requireAdmin`, then `crossSite` -> 403; returns the admin email). Setup actions use one form per `intent` (`disconnect`, `root`, `sync`, `studio`) and return `{intent, ok, error?, message?, result?}` (errors in Spanish, never ids/upstream detail). Root folder: paste a folder URL (`/drive/folders/<id>`, `/drive/u/N/folders/<id>`, `open?id=`) or bare id (`[A-Za-z0-9_-]{10,}`); verified with `getMeta` (folder, not trashed); settings `drive_root_id` + `drive_root_name` (the name, not the id, goes to the client). Studio name: setting `studio_name` (1-60 chars, no control chars) overrides env `STUDIO_NAME` (root loader, cached per request). Logo is fixed (no upload; the "logo URL" idea is dropped). New setting `sync_last_ok` (ISO) written by the cron and the Sync-now button; `sync_last_error` is shown in the shell and on the setup page.
+
 The app never writes or deletes anything in Drive. To remove photos, delete them in Drive; the next sync picks it up.
 
 ### 5.8 Design direction (client-facing UI)
@@ -210,7 +212,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T3.2 Download UI.** `DownloadMenu.tsx` (High-res / Web / Instagram per flags), download all / set with `client-zip`, progress. *Accept:* all photo queries use `photoVisible`.
 
 ### Phase 4 — Admin UI
-- [ ] **T4.1 ∥ Setup page** (connect Google, root folder, branding).
+- [x] **T4.1 ∥ Setup page** (connect Google, root folder, branding). Layout route `admin.tsx` (requireAdmin for all children, sidebar/top bar, status), `admin.setup.tsx`, `adminAction()` in `app/lib/server/admin.ts`. See §5.7.
 - [ ] **T4.2 ∥ Galleries list + gallery edit** (incl. reorder, cover, sync issues, publish).
 - [ ] **T4.3 ∥ Share panel + QR + print card.**
 - [ ] **T4.4 ∥ Activity + favorites views, CSV, "Copy for Capture One".**

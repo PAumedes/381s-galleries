@@ -856,8 +856,10 @@ export async function runScheduledSync(
     if (r.skipped === "no_root") await record("no root folder configured");
     else if (r.skipped === "empty_root")
       await record("root folder listed empty");
-    else if (r.skipped !== "locked")
+    else if (r.skipped !== "locked") {
       await dropSetting(env, LAST_ERROR_KEY, noop);
+      await putSetting(env, SETTINGS_KEYS.syncLastOk, nowIso(), noop);
+    }
     return r;
   } catch (err) {
     // Name only: messages may hold Drive ids.
