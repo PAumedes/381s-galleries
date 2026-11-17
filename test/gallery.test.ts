@@ -128,6 +128,7 @@ describe("loadGallery: states", () => {
     expect(r.status).toBe(200);
     expect(r.data).toEqual({
       state: "locked",
+      slug: "boda-ana",
       title: "Boda Ana",
       theme: "light",
     });

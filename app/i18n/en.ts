@@ -5,6 +5,10 @@ export const en = {
   "gallery.all": "All",
   "gallery.sets": "Sections",
   "gallery.share": "Share",
+  "pwa.ios": "Tap Share, then 'Add to Home Screen'",
+  "pwa.install": "Add to Home Screen",
+  "pwa.dismiss": "Close",
+  "pwa.androidText": "Keep this gallery one tap away on your home screen",
   "gallery.linkCopied": "Link copied",
 
   "pin.placeholder": "PIN",

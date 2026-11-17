@@ -38,7 +38,7 @@ function shouldLogView(request: Request): boolean {
 
 export type GalleryData =
   | { state: "unavailable" }
-  | { state: "locked"; title: string; theme: "light" | "dark" }
+  | { state: "locked"; slug: string; title: string; theme: "light" | "dark" }
   | {
       state: "open";
       gallery: OpenGallery;
@@ -84,7 +84,7 @@ export async function loadGallery(
   if (!open) {
     return {
       status: 200,
-      data: { state: "locked", title: g.title, theme: g.theme },
+      data: { state: "locked", slug: g.slug, title: g.title, theme: g.theme },
     };
   }
   const { session } = open;

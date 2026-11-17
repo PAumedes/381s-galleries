@@ -23,6 +23,7 @@ export default [
   route("img/:photoId/:variant", "routes/img.$photoId.$variant.tsx"),
   route("dl/:token", "routes/dl.$token.tsx"),
   route("api/admin/sync", "routes/api.admin.sync.tsx"),
+  route("api/g/:slug/manifest.webmanifest", "routes/api.g.$slug.manifest.tsx"),
   route("api/g/:slug/visitor", "routes/api.g.$slug.visitor.tsx"),
   route("api/g/:slug/favorites", "routes/api.g.$slug.favorites.tsx"),
   route(

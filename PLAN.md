@@ -231,7 +231,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 
 ### Phase 5 — Polish & deploy
 - [x] **T5.1 Branding/theme**, dark/light, OG image (cover via `/img`), full i18n per §2 (es + en).
-- [ ] **T5.2 PWA** manifest + "add to home screen".
+- [x] **T5.2 PWA** manifest + "add to home screen". Per-gallery manifest at `/api/g/:slug/manifest.webmanifest` (`app/lib/server/manifest.ts`, `app/lib/pwa.ts`): same privacy rules as og (only published, unexpired, PIN-less galleries expose title/slug; everything else gets the generic studio manifest, start_url `/`), `private, max-age=300`. Generic `public/manifest.webmanifest` linked from root. Icons in `public/icons/` generated manually by `scripts/make-icons.mjs` (`@resvg/resvg-js`, dev only; no runtime image processing). iOS meta tags + theme-color per theme. **No service worker** (deliberate: keeps it simple; downloads use the File System Access API, nothing needs offline). `AddToHomeHint` (mobile/coarse pointer, not standalone, after scrolling into the grid, once per gallery via `localStorage a2hs:<slug>`): Android/Chrome button on the captured `beforeinstallprompt`, iOS Safari share instructions, other browsers nothing. Known limit: PIN galleries install as the generic studio app (start_url `/`), by design. The gallery cookie (SameSite=Lax, Path=/) survives in standalone mode.
 - [ ] **T5.3 `DEPLOY.md`:** Cloudflare (D1, R2, secrets, Access app, custom domain), Google Cloud (Drive API, OAuth web client, redirect URI, In production), Capture One recipe setup.
 - [ ] **T5.4 Final review** against §6 (security review).
 

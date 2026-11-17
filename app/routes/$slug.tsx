@@ -9,6 +9,7 @@ import { es } from "../i18n/es";
 import { getLang, langCookie } from "../i18n/lang";
 import { makeT } from "../i18n/t";
 import { galleryMeta } from "../lib/og";
+import { pwaMeta } from "../lib/pwa";
 import { DEFAULT_STUDIO_NAME } from "../lib/use-studio-name";
 import { loadGallery, unlockGallery } from "../lib/server/gallery";
 import { publicOrigin } from "../lib/server/public-url";
@@ -70,11 +71,15 @@ export function headers({ loaderHeaders, actionHeaders }: Route.HeadersArgs) {
 export function meta({ loaderData: d, matches }: Route.MetaArgs) {
   const root = matches.find((m) => m?.id === "root")?.loaderData as
     { studioName?: string; lang?: string } | undefined;
-  return galleryMeta(d, {
-    studio: root?.studioName ?? DEFAULT_STUDIO_NAME,
-    lang: root?.lang ?? "es",
-    origin: d?.origin ?? "",
-  });
+  const studio = root?.studioName ?? DEFAULT_STUDIO_NAME;
+  return [
+    ...galleryMeta(d, {
+      studio,
+      lang: root?.lang ?? "es",
+      origin: d?.origin ?? "",
+    }),
+    ...pwaMeta(d, { studio }),
+  ];
 }
 
 export default function GalleryPage({

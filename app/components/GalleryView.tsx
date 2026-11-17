@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { TKey } from "../i18n/t";
 import { useLang, useT } from "../i18n/use-t";
 import { useStudioName } from "../lib/use-studio-name";
+import { AddToHomeHint } from "./AddToHomeHint";
 import { DownloadMenu, enabledSizes } from "./DownloadMenu";
 import { EmailGate } from "./EmailGate";
 import { Grid } from "./Grid";
@@ -316,6 +317,8 @@ export function GalleryView({
         </p>
         <LanguageToggle className="text-grey-600" />
       </footer>
+
+      <AddToHomeHint slug={gallery.slug} gridRef={gridRef} />
 
       {toast && (
         <p

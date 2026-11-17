@@ -118,6 +118,7 @@ describe("loadGallery: theme + og preview data", () => {
     const locked = (await loadGallery(req(), "boda-ana", env)).data;
     expect(locked).toEqual({
       state: "locked",
+      slug: "boda-ana",
       title: "Boda Ana",
       theme: "dark",
     });
@@ -233,7 +234,10 @@ describe("galleryMeta", () => {
   });
 
   it.each([
-    ["locked", { state: "locked", title: "SECRET TITLE", theme: "light" }],
+    [
+      "locked",
+      { state: "locked", slug: "s", title: "SECRET TITLE", theme: "light" },
+    ],
     ["unavailable", { state: "unavailable" }],
     ["unknown/undefined", undefined],
   ])("%s: generic meta, no title leak, no image", (_n, data) => {
@@ -251,7 +255,7 @@ describe("galleryMeta", () => {
     expect(
       JSON.stringify(
         galleryMeta(
-          { state: "locked", title: "x", theme: "dark" } as never,
+          { state: "locked", slug: "x", title: "x", theme: "dark" } as never,
           base,
         ),
       ),
