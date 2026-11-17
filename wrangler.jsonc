@@ -24,7 +24,7 @@
       "binding": "DB",
       "database_name": "381s-galleries",
       // Placeholder: replace with the real id from `wrangler d1 create 381s-galleries`.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "5aa33a23-9b94-45dd-a3b8-11305cd8affb",
       "migrations_dir": "migrations",
     },
   ],
