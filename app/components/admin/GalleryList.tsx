@@ -156,49 +156,92 @@ export function GalleryList({
         </p>
       ) : (
         <div className="xl:overflow-x-auto">
-          <table className="text-small block w-full text-left xl:table xl:min-w-[56rem]">
-            <thead className="text-micro text-grey-600 sr-only uppercase xl:not-sr-only xl:table-header-group">
-              <tr className="border-grey-200 border-b">
-                <th scope="col" className="w-20 py-2 pr-3 font-medium">
+          <table
+            role="table"
+            className="text-small block w-full text-left xl:table xl:min-w-[56rem]"
+          >
+            <thead
+              role="rowgroup"
+              className="text-micro text-grey-600 sr-only uppercase xl:not-sr-only xl:table-header-group"
+            >
+              <tr role="row" className="border-grey-200 border-b">
+                <th
+                  scope="col"
+                  role="columnheader"
+                  className="w-20 py-2 pr-3 font-medium"
+                >
                   <span className="sr-only">{t("admin.list.col.cover")}</span>
                 </th>
-                <th scope="col" className="py-2 pr-3 font-medium">
+                <th
+                  scope="col"
+                  role="columnheader"
+                  className="py-2 pr-3 font-medium"
+                >
                   {t("admin.list.col.title")}
                 </th>
-                <th scope="col" className="py-2 pr-3 font-medium">
+                <th
+                  scope="col"
+                  role="columnheader"
+                  className="py-2 pr-3 font-medium"
+                >
                   {t("admin.list.col.date")}
                 </th>
-                <th scope="col" className="py-2 pr-3 font-medium">
+                <th
+                  scope="col"
+                  role="columnheader"
+                  className="py-2 pr-3 font-medium"
+                >
                   {t("admin.list.col.status")}
                 </th>
-                <th scope="col" className="py-2 pr-3 text-right font-medium">
+                <th
+                  scope="col"
+                  role="columnheader"
+                  className="py-2 pr-3 text-right font-medium"
+                >
                   {t("admin.list.col.photos")}
                 </th>
-                <th scope="col" className="py-2 pr-3 text-right font-medium">
+                <th
+                  scope="col"
+                  role="columnheader"
+                  className="py-2 pr-3 text-right font-medium"
+                >
                   {t("admin.list.col.views")}
                 </th>
-                <th scope="col" className="py-2 pr-3 text-right font-medium">
+                <th
+                  scope="col"
+                  role="columnheader"
+                  className="py-2 pr-3 text-right font-medium"
+                >
                   {t("admin.list.col.downloads")}
                 </th>
-                <th scope="col" className="py-2 pr-3 font-medium">
+                <th
+                  scope="col"
+                  role="columnheader"
+                  className="py-2 pr-3 font-medium"
+                >
                   {t("admin.list.col.expires")}
                 </th>
-                <th scope="col" className="py-2 font-medium">
+                <th
+                  scope="col"
+                  role="columnheader"
+                  className="py-2 font-medium"
+                >
                   {t("admin.list.col.issues")}
                 </th>
               </tr>
             </thead>
-            <tbody className="block xl:table-row-group">
+            <tbody role="rowgroup" className="block xl:table-row-group">
               {galleries.map((g) => (
                 <tr
                   key={g.id}
+                  role="row"
                   onClick={(ev) => {
                     if (!(ev.target as HTMLElement).closest("a"))
                       void navigate(`/admin/g/${g.id}`);
                   }}
                   className="border-grey-100 hover:bg-grey-50 grid cursor-pointer grid-cols-3 gap-x-3 gap-y-1 border-b py-3 xl:table-row xl:py-0"
                 >
-                  <td className="xl:py-2 xl:pr-3">
+                  <td role="cell" className="xl:py-2 xl:pr-3">
                     {g.coverPhotoId ? (
                       <img
                         src={`/admin/img/${g.coverPhotoId}/thumb`}
@@ -213,7 +256,10 @@ export function GalleryList({
                       />
                     )}
                   </td>
-                  <td className="col-span-2 min-w-0 xl:table-cell xl:py-2 xl:pr-3">
+                  <td
+                    role="cell"
+                    className="col-span-2 min-w-0 xl:table-cell xl:py-2 xl:pr-3"
+                  >
                     <Link
                       to={`/admin/g/${g.id}`}
                       className="text-body text-ink flex min-h-tap items-center font-medium underline-offset-4 hover:underline xl:inline xl:min-h-0"
@@ -226,42 +272,51 @@ export function GalleryList({
                     <div className="text-grey-600">/{g.slug}</div>
                   </td>
                   <td
+                    role="cell"
                     data-label={t("admin.list.col.date")}
                     className={`row-start-2 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden xl:py-2 xl:pr-3`}
                   >
                     {g.eventDate ? fmt.date(g.eventDate) : "—"}
                   </td>
                   <td
+                    role="cell"
                     data-label={t("admin.list.col.status")}
                     className={`row-start-2 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden xl:py-2 xl:pr-3`}
                   >
                     <StatusPill status={g.status} expired={g.expired} />
                   </td>
                   <td
+                    role="cell"
                     data-label={t("admin.list.col.photos")}
                     className={`row-start-3 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden tabular-nums xl:py-2 xl:pr-3 xl:text-right`}
                   >
                     {fmt.number(g.photoCount)}
                   </td>
                   <td
+                    role="cell"
                     data-label={t("admin.list.col.views")}
                     className={`row-start-3 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden tabular-nums xl:py-2 xl:pr-3 xl:text-right`}
                   >
                     {fmt.number(g.views)}
                   </td>
                   <td
+                    role="cell"
                     data-label={t("admin.list.col.downloads")}
                     className={`row-start-3 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden tabular-nums xl:py-2 xl:pr-3 xl:text-right`}
                   >
                     {fmt.number(g.downloads)}
                   </td>
                   <td
+                    role="cell"
                     data-label={t("admin.list.col.expires")}
                     className={`row-start-4 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden col-span-3 xl:py-2 xl:pr-3`}
                   >
                     {expiry(g.expiresAt)}
                   </td>
-                  <td className="col-start-3 row-start-2 empty:hidden xl:py-2 xl:empty:table-cell">
+                  <td
+                    role="cell"
+                    className="col-start-3 row-start-2 empty:hidden xl:py-2 xl:empty:table-cell"
+                  >
                     {g.issueCount > 0 && (
                       <span
                         aria-label={t("admin.list.issueBadge", {

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router";
 
 import { useFormat } from "../../i18n/use-format";
@@ -69,6 +69,7 @@ export function AdminShell({
   const t = useT();
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const { pathname } = useLocation();
   // Phones: the menu closes after navigating and with Escape.
   const [openAt, setOpenAt] = useState(pathname);
@@ -79,7 +80,10 @@ export function AdminShell({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      // The panel turns display:none below md; keep focus on the toggle.
+      toggleRef.current?.focus();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -98,6 +102,7 @@ export function AdminShell({
             <Logo variant="dark" className="h-8" />
           </a>
           <button
+            ref={toggleRef}
             type="button"
             aria-expanded={open}
             aria-controls={panelId}
@@ -116,7 +121,13 @@ export function AdminShell({
             className="flex flex-col gap-1"
           >
             {NAV.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.end} className={link}>
+              <NavLink
+                key={n.to}
+                to={n.to}
+                end={n.end}
+                className={link}
+                onClick={() => setOpen(false)}
+              >
                 {t(n.label)}
               </NavLink>
             ))}

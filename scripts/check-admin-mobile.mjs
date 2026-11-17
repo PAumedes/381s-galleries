@@ -3,7 +3,7 @@
 // Not part of `pnpm test`: needs a running dev server (`pnpm dev`, mock Drive,
 // ALLOW_DEV_ADMIN=1, `pnpm seed`) and Playwright with a Chromium.
 //
-//   node scripts/check-admin-mobile.mjs [--base http://localhost:5173] [--shots DIR]
+//   node scripts/check-admin-mobile.mjs [--base http://localhost:5173] [--shots DIR] [--allow-remote]
 //
 // Per screen and width it fails on: horizontal overflow, visible controls
 // smaller than 44x44 CSS px (phone width only), form fields under 16px font
@@ -18,6 +18,22 @@ const arg = (name, fallback) => {
   return i > -1 ? process.argv[i + 1] : fallback;
 };
 const BASE = arg("base", process.env.BASE_URL ?? "http://localhost:5173");
+const ALLOW_REMOTE = process.argv.includes("--allow-remote");
+{
+  let host = "";
+  try {
+    host = new URL(BASE).hostname;
+  } catch {
+    /* invalid URL: refused below */
+  }
+  const local = ["localhost", "127.0.0.1", "[::1]"].includes(host);
+  if (!local && !ALLOW_REMOTE) {
+    console.error(
+      `Refusing non-local --base ${BASE} (pass --allow-remote to override).`,
+    );
+    process.exit(2);
+  }
+}
 const SHOTS = arg("shots", "");
 const WIDTHS = [360, 768, 1280];
 const HEIGHTS = { 360: 740, 768: 1024, 1280: 800 };

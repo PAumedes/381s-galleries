@@ -116,8 +116,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       <p className="text-body text-grey-600">{message}</p>
       <a
         href="/"
-        data-tap
-        className="text-micro-label text-grey-600 hover:text-ink"
+        className="text-micro-label text-grey-600 hover:text-ink inline-flex min-h-tap items-center"
       >
         {t("error.home")}
       </a>

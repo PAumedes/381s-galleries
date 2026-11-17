@@ -40,7 +40,7 @@ pnpm seed                      # once
 node scripts/check-admin-mobile.mjs [--base http://localhost:5173] [--shots DIR]
 ```
 
-It needs Playwright with a Chromium (`npm i -g playwright`; it uses Chrome if installed), is not part of `pnpm test`, exits non-zero on horizontal overflow, controls under 44px, form fields under 16px or dialogs that overflow, and with `--shots` saves one PNG per screen and width. Photos are faked in the browser, so it works offline.
+It needs Playwright with a Chromium (`npm i -g playwright`; it uses Chrome if installed), is not part of `pnpm test`, exits non-zero on horizontal overflow, controls under 44px, form fields under 16px or dialogs that overflow, and with `--shots` saves one PNG per screen and width. Photos are faked in the browser, so it works offline. It drives admin pages with dev auth, so it exits 2 unless `--base` points to `localhost`, `127.0.0.1` or `[::1]`; pass `--allow-remote` to override.
 
 ## Routes
 
