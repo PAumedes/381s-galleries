@@ -4,6 +4,7 @@ import { useLoaderData } from "react-router";
 
 import { getDb, schema } from "../db";
 import { CardView, type CardLang } from "../components/admin/CardView";
+import { asAdminLang, getAdminLang } from "../i18n/lang";
 import { metaT, type MetaMatches } from "../i18n/meta";
 import { adminHeaders, getStudioName } from "../lib/server/admin";
 import { requireAdmin } from "../lib/server/auth";
@@ -31,7 +32,9 @@ export async function cardData(request: Request, e: Env, id: string) {
     .from(schema.galleries)
     .where(eq(schema.galleries.id, id));
   if (!g) throw new Response("Not found", { status: 404 });
-  const lang: CardLang = url.searchParams.get("lang") === "en" ? "en" : "es";
+  // An explicit ?lang= (es|en) wins; otherwise the admin language.
+  const lang: CardLang =
+    asAdminLang(url.searchParams.get("lang")) ?? getAdminLang(request);
   return {
     title: g.title,
     eventDate: g.eventDate,

@@ -7,6 +7,9 @@ import {
   fmtBaSeconds,
   namesTxt,
 } from "../admin-activity";
+import { allMessages } from "../../i18n/dictionaries";
+import { DEFAULT_LANG, type Lang } from "../../i18n/lang";
+import { makeT } from "../../i18n/t";
 import { isAnon } from "./access";
 import { activityQuery } from "./activity";
 import { adminHeaders } from "./admin";
@@ -201,9 +204,25 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
 export async function activityCsv(
   env: Env,
   id: string,
+  lang: Lang = DEFAULT_LANG,
 ): Promise<Response | null> {
   const g = await loadGallery(env, id);
   if (!g) return null;
+  const t = makeT(lang, allMessages(lang));
+  const sizeLabel = (v: string) =>
+    v === "highres"
+      ? t("admin.size.highres")
+      : v === "web"
+        ? t("admin.size.web")
+        : v === "ig"
+          ? t("admin.size.ig")
+          : v;
+  const kindLabel = (v: string) =>
+    v === "single"
+      ? t("admin.export.kind.single")
+      : v === "bulk"
+        ? t("admin.export.kind.bulk")
+        : v;
   const db = getDb(env);
   const photos = await photoMap(env, id);
   const enc = new TextEncoder();
@@ -218,15 +237,15 @@ export async function activityCsv(
           enc.encode(
             CSV_BOM +
               csvLine([
-                "datetime_utc",
-                "datetime_ar",
-                "visitor_email",
-                "photo",
-                "set",
-                "size",
-                "kind",
-                "bulk_id",
-                "country",
+                t("admin.export.col.when_utc"),
+                t("admin.export.col.when_ar"),
+                t("admin.export.col.email"),
+                t("admin.export.col.photo"),
+                t("admin.export.col.set"),
+                t("admin.export.col.size"),
+                t("admin.export.col.kind"),
+                t("admin.export.col.bulkId"),
+                t("admin.export.col.country"),
               ]),
           ),
         );
@@ -246,8 +265,8 @@ export async function activityCsv(
           r.email,
           p?.name,
           p?.set,
-          r.variant,
-          r.kind,
+          sizeLabel(r.variant),
+          kindLabel(r.kind),
           r.photoId === null ? r.id : r.bulkId,
           r.country,
         ]);
@@ -265,7 +284,7 @@ export async function activityCsv(
     headers: {
       ...adminHeaders(),
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${g.slug}-actividad.csv"`,
+      "Content-Disposition": `attachment; filename="${g.slug}-${t("admin.export.file.activity")}.csv"`,
     },
   });
 }
@@ -389,9 +408,11 @@ export async function favoritesTxt(
   env: Env,
   id: string,
   visitorId: string | null,
+  lang: Lang = DEFAULT_LANG,
 ): Promise<Response | null> {
   const g = await loadGallery(env, id);
   if (!g) return null;
+  const t = makeT(lang, allMessages(lang));
   let rows = await favoriteRows(env, id);
   if (visitorId) {
     // `visitorId` is a person key: an anonymous visitor id or a (lowercased) email.
@@ -411,7 +432,7 @@ export async function favoritesTxt(
     headers: {
       ...adminHeaders(),
       "Content-Type": "text/plain; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${g.slug}-favoritos${suffix}.txt"`,
+      "Content-Disposition": `attachment; filename="${g.slug}-${t("admin.export.file.favorites")}${suffix}.txt"`,
     },
   });
 }
