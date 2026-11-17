@@ -12,7 +12,8 @@ type Row = ActivityViewData["rows"][number];
 
 const th = "text-micro text-grey-700 px-3 py-2 text-left font-medium uppercase";
 const td = "px-3 py-2 align-middle text-small";
-const selectCls = "border-grey-300 bg-white border px-3 py-2 text-small";
+const selectCls =
+  "border-grey-300 bg-white border px-3 py-2 text-small focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 function Card({ label, value }: { label: string; value: number }) {
   return (
@@ -189,11 +190,21 @@ export function ActivityView({ data }: { data: ActivityViewData }) {
             <table aria-label="Descargas" className="w-full min-w-[40rem]">
               <thead>
                 <tr>
-                  <th className={th}>Cuándo</th>
-                  <th className={th}>Quién</th>
-                  <th className={th}>Qué</th>
-                  <th className={th}>Tamaño</th>
-                  <th className={th}>País</th>
+                  <th scope="col" className={th}>
+                    Cuándo
+                  </th>
+                  <th scope="col" className={th}>
+                    Quién
+                  </th>
+                  <th scope="col" className={th}>
+                    Qué
+                  </th>
+                  <th scope="col" className={th}>
+                    Tamaño
+                  </th>
+                  <th scope="col" className={th}>
+                    País
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -223,9 +234,15 @@ export function ActivityView({ data }: { data: ActivityViewData }) {
             <table aria-label="Visitas" className="w-full max-w-xl">
               <thead>
                 <tr>
-                  <th className={th}>Fecha</th>
-                  <th className={th}>Visitante</th>
-                  <th className={th}>País</th>
+                  <th scope="col" className={th}>
+                    Fecha
+                  </th>
+                  <th scope="col" className={th}>
+                    Visitante
+                  </th>
+                  <th scope="col" className={th}>
+                    País
+                  </th>
                 </tr>
               </thead>
               <tbody>

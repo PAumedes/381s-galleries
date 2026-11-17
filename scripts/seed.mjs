@@ -3,7 +3,14 @@
 const url = process.env.SEED_URL ?? "http://localhost:5173/api/admin/sync";
 
 try {
-  const res = await fetch(url, { method: "POST" });
+  // The endpoint refuses cross-site requests (CSRF): look same-origin.
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Origin: new URL(url).origin,
+      "Sec-Fetch-Site": "same-origin",
+    },
+  });
   const body = await res.text();
   console.log(`${res.status} ${body}`);
   if (!res.ok) process.exit(1);

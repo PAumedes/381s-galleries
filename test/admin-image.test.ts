@@ -182,3 +182,17 @@ describe("admin image route", () => {
     expect(await r.text()).not.toContain("DRIVE");
   });
 });
+
+describe("admin thumb caching (phase-4 review)", () => {
+  it("always answers Cache-Control: private, no-store", async () => {
+    await seed();
+    const r = await serveAdminImage(
+      req("thumb"),
+      { photoId: P, variant: "thumb" },
+      mockAdmin,
+      ctx,
+      { drive },
+    );
+    expect(r.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+});

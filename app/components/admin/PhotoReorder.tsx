@@ -15,7 +15,7 @@ export interface ReorderPhoto {
 type Orders = Record<string, string[]>;
 
 const btn =
-  "text-micro uppercase border border-ink px-3 py-2 disabled:opacity-40 disabled:cursor-not-allowed";
+  "text-micro uppercase border border-ink px-3 py-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 function groupBySet(photos: ReorderPhoto[]): Orders {
   const out: Orders = {};
@@ -217,7 +217,7 @@ export function PhotoReorder({
                     >
                       <img
                         src={`/admin/img/${id}/thumb`}
-                        alt=""
+                        alt={byId.get(id)?.name ?? ""}
                         loading="lazy"
                         draggable={false}
                         className="bg-grey-100 aspect-[3/2] w-full object-cover"

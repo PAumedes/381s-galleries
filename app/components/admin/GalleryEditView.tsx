@@ -15,10 +15,10 @@ export type GalleryEditData = NonNullable<
 >;
 
 const btn =
-  "text-micro uppercase border border-ink px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed";
+  "text-micro uppercase border border-ink px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 const btnPrimary = `${btn} bg-ink text-paper`;
 const inputCls =
-  "border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2";
+  "border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 function Section({
   title,
@@ -469,7 +469,7 @@ export function GalleryEditView({
                           />
                           <img
                             src={`/admin/img/${p.id}/thumb`}
-                            alt=""
+                            alt={p.name}
                             loading="lazy"
                             className="bg-grey-100 peer-checked:outline-ink peer-focus-visible:outline-ink aspect-[3/2] w-full object-cover outline-offset-2 peer-checked:outline-4 peer-focus-visible:outline-2"
                           />

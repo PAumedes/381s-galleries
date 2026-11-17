@@ -1,5 +1,6 @@
 import { NavLink } from "react-router";
 
+import { fmtBa } from "../../lib/ba-time";
 import { Logo } from "../Logo";
 
 export interface AdminStatus {
@@ -14,9 +15,9 @@ const NAV = [
   { to: "/admin/setup", label: "Ajustes", end: false },
 ];
 
-/** "2026-11-16T10:00:00Z" -> "2026-11-16 10:00 UTC" (stable, no locale drift). */
+/** "2026-11-16T13:00:00Z" -> "16/11/2026 10:00" (Buenos Aires time). */
 export function fmtTime(iso: string): string {
-  return iso.replace("T", " ").replace(/:\d\dZ$/, " UTC");
+  return fmtBa(iso) || iso;
 }
 
 export function StatusLine({ status }: { status: AdminStatus }) {

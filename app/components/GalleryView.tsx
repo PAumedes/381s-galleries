@@ -7,6 +7,7 @@ import { useStudioName } from "../lib/use-studio-name";
 import { DownloadMenu, enabledSizes } from "./DownloadMenu";
 import { EmailGate } from "./EmailGate";
 import { Grid } from "./Grid";
+import { formatEventDate } from "../lib/event-date";
 import { LanguageToggle } from "./LanguageToggle";
 import { Lightbox } from "./Lightbox";
 import { Logo } from "./Logo";
@@ -16,18 +17,6 @@ import { imgUrl, type GalleryPhoto, type OpenGallery } from "./types";
 
 const ALL = "\u0000all";
 const FAV = "\u0000fav";
-
-function formatDate(value: string | null, lang: string): string | null {
-  if (!value) return null;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  return new Intl.DateTimeFormat(lang, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  }).format(d);
-}
 
 const reducedMotion = () =>
   typeof window !== "undefined" &&
@@ -164,7 +153,7 @@ export function GalleryView({
       ? photos.find((p) => p.id === sheet.id)
       : undefined;
 
-  const date = formatDate(gallery.eventDate, lang);
+  const date = formatEventDate(gallery.eventDate, lang);
   const tabs = [
     ...(multi
       ? [

@@ -21,6 +21,7 @@ export async function serveAdminImage(
   await requireAdmin(request, e);
   const res = await serveImage(request, params, e, ctx, deps, { admin: true });
   const out = new Response(res.body, res);
+  out.headers.set("Cache-Control", "private, no-store");
   out.headers.set("X-Robots-Tag", "noindex, nofollow");
   return out;
 }

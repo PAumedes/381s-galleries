@@ -4,7 +4,7 @@ import { downloadBlob, qrPngBlob } from "../../lib/qr";
 import { QrCode } from "./QrCode";
 
 const btn =
-  "text-micro uppercase border border-ink px-4 py-2 disabled:opacity-40";
+  "text-micro uppercase border border-ink px-4 py-2 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 export function SharePanel({
   url,

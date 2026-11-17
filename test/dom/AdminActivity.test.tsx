@@ -163,4 +163,12 @@ describe("ActivityView", () => {
     show({ ...data, rows: [], next: null, views: [] });
     expect(await screen.findByText("Sin descargas todavía.")).toBeTruthy();
   });
+
+  it("every table header has scope=col", async () => {
+    const { container } = show();
+    await screen.findByRole("table", { name: "Descargas" });
+    const ths = [...container.querySelectorAll("th")];
+    expect(ths.length).toBeGreaterThan(0);
+    for (const th of ths) expect(th.getAttribute("scope")).toBe("col");
+  });
 });

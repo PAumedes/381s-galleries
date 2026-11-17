@@ -22,45 +22,9 @@ export function parseFilter(v: string | null | undefined): Filter {
 }
 
 // ----------------------------------------------------- Buenos Aires time
-// Argentina has no DST: America/Argentina/Buenos_Aires is a fixed UTC-3.
-const BA_OFFSET_MS = 3 * 60 * 60 * 1000;
+export { baLocalToUtcIso, isValidDate, utcIsoToBaLocal } from "./ba-time";
+
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
-const TIME_RE = /^(\d{2}):(\d{2})$/;
-
-/** True for a real calendar date `YYYY-MM-DD`. */
-export function isValidDate(date: string): boolean {
-  const m = DATE_RE.exec(date);
-  if (!m) return false;
-  const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
-  return (
-    d.getUTCFullYear() === +m[1] &&
-    d.getUTCMonth() === +m[2] - 1 &&
-    d.getUTCDate() === +m[3]
-  );
-}
-
-/** Buenos Aires wall-clock date + time -> UTC `YYYY-MM-DDTHH:MM:SSZ` (null if invalid). */
-export function baLocalToUtcIso(date: string, time: string): string | null {
-  const m = DATE_RE.exec(date);
-  const t = TIME_RE.exec(time);
-  if (!m || !t || !isValidDate(date)) return null;
-  const h = +t[1];
-  const min = +t[2];
-  if (h > 23 || min > 59) return null;
-  const ms = Date.UTC(+m[1], +m[2] - 1, +m[3], h, min) + BA_OFFSET_MS;
-  return new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
-}
-
-/** UTC ISO -> Buenos Aires `{date, time}` (null for null/unparseable). */
-export function utcIsoToBaLocal(
-  iso: string | null | undefined,
-): { date: string; time: string } | null {
-  if (!iso) return null;
-  const t = Date.parse(iso);
-  if (Number.isNaN(t)) return null;
-  const s = new Date(t - BA_OFFSET_MS).toISOString();
-  return { date: s.slice(0, 10), time: s.slice(11, 16) };
-}
 
 /** `2026-11-01` -> `01/11/2026` (unchanged when not a plain date). */
 export function fmtDate(date: string | null): string {

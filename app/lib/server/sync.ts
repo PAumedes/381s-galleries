@@ -840,6 +840,24 @@ export async function runSync(
 }
 
 /**
+ * The one place that records a successful sync: runs `runSync` and, unless it
+ * was skipped for lack of work done (locked / no root / empty root), clears `sync_last_error` and
+ * stamps `sync_last_ok`. Used by the cron, the admin API and the setup button.
+ */
+export async function runRecordedSync(
+  env: SyncEnv,
+  opts: SyncOptions,
+): Promise<SyncResult> {
+  const r = await runSync(env, opts);
+  if (!r.skipped || r.skipped === "unchanged") {
+    const noop: Op = () => {};
+    await dropSetting(env, LAST_ERROR_KEY, noop);
+    await putSetting(env, SETTINGS_KEYS.syncLastOk, nowIso(), noop);
+  }
+  return r;
+}
+
+/**
  * Cron entry point: records a generic `sync_last_error` (cleared on success)
  * and rethrows so the Cron Trigger run shows as failed.
  */
@@ -861,14 +879,10 @@ export async function runScheduledSync(
     }
   };
   try {
-    const r = await runSync(env, { drive });
+    const r = await runRecordedSync(env, { drive });
     if (r.skipped === "no_root") await record("no root folder configured");
     else if (r.skipped === "empty_root")
       await record("root folder listed empty");
-    else if (r.skipped !== "locked") {
-      await dropSetting(env, LAST_ERROR_KEY, noop);
-      await putSetting(env, SETTINGS_KEYS.syncLastOk, nowIso(), noop);
-    }
     return r;
   } catch (err) {
     // Name only: messages may hold Drive ids.

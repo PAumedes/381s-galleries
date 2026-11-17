@@ -177,6 +177,7 @@ export const favorites = sqliteTable(
   },
   (t) => [
     primaryKey({ columns: [t.visitorId, t.photoId, t.listName] }),
+    index("favorites_gallery_visitor_idx").on(t.galleryId, t.visitorId),
     // Composite FKs: visitor and photo must both belong to gallery_id.
     foreignKey({
       columns: [t.galleryId, t.visitorId],
@@ -211,6 +212,7 @@ export const downloads = sqliteTable(
   },
   (t) => [
     index("downloads_gallery_created_idx").on(t.galleryId, t.createdAt),
+    index("downloads_gallery_bulk_idx").on(t.galleryId, t.bulkId),
     uniqueIndex("downloads_token_id_idx").on(t.tokenId),
     check(
       "downloads_variant_check",

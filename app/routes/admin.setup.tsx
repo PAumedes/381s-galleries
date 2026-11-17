@@ -20,7 +20,7 @@ import {
   putSetting,
   SETTINGS_KEYS,
 } from "../lib/server/settings";
-import { runSync, SyncBudgetError } from "../lib/server/sync";
+import { runRecordedSync, SyncBudgetError } from "../lib/server/sync";
 import type { SyncResult } from "../lib/server/sync";
 import { nowIso } from "../db";
 import type { LastError } from "./admin";
@@ -114,11 +114,7 @@ async function syncNow(e: Env, drive: DriveClient): Promise<SetupActionResult> {
   if (Number.isFinite(last) && Date.now() - last < 30_000)
     return fail("sync", "Se sincronizó hace instantes");
   try {
-    const result = await runSync(e, { drive, force: true });
-    if (!result.skipped) {
-      await deleteSetting(e, SETTINGS_KEYS.syncLastError);
-      await putSetting(e, SETTINGS_KEYS.syncLastOk, nowIso());
-    }
+    const result = await runRecordedSync(e, { drive, force: true });
     return { intent: "sync", ok: true, result };
   } catch (err) {
     console.error(

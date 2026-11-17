@@ -1,3 +1,4 @@
+import { formatEventDate } from "../../lib/event-date";
 import { QrCode } from "./QrCode";
 
 export type CardLang = "es" | "en";
@@ -16,18 +17,6 @@ const TEXT = {
   en: { print: "Print", other: "ES", otherLang: "es" },
 } as const;
 
-function formatDate(value: string | null, lang: CardLang): string | null {
-  if (!value) return null;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  return new Intl.DateTimeFormat(lang, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  }).format(d);
-}
-
 /** A6 portrait (105x148 mm) card; print CSS in app.css (.print-card). */
 export function CardView({
   title,
@@ -38,7 +27,7 @@ export function CardView({
   lang,
 }: CardData) {
   const t = TEXT[lang];
-  const date = formatDate(eventDate, lang);
+  const date = formatEventDate(eventDate, lang);
   return (
     <div className="card-screen bg-grey-100 flex min-h-screen flex-col items-center gap-6 p-6 print:block print:min-h-0 print:bg-white print:p-0">
       <div className="flex items-center gap-3 print:hidden">

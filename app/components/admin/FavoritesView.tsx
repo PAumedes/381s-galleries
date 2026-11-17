@@ -12,7 +12,8 @@ type Photo =
   | FavoritesViewData["all"][number]
   | FavoritesViewData["visitors"][number]["lists"][number]["photos"][number];
 
-const btn = "text-micro border-ink border px-3 py-1.5 uppercase";
+const btn =
+  "text-micro border-ink border px-3 py-1.5 uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 function Thumbs({
   photos,

@@ -26,9 +26,10 @@ export interface SetupActionData {
 }
 
 const btn =
-  "text-micro uppercase border border-ink px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed";
+  "text-micro uppercase border border-ink px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 const btnPrimary = `${btn} bg-ink text-paper`;
-const input = "border-grey-300 bg-white w-full border px-3 py-2 text-body";
+const input =
+  "border-grey-300 bg-white w-full border px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 function Section({
   title,

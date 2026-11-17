@@ -1,7 +1,9 @@
 // Pure helpers for the admin Activity / Favorites views and the CSV / txt
 // exports (safe to import from client components).
 
-const BA_OFFSET_MS = 3 * 60 * 60 * 1000;
+import { baParts } from "./ba-time";
+
+export { fmtBa } from "./ba-time";
 
 export const CSV_BOM = "﻿";
 
@@ -17,21 +19,6 @@ export function csvLine(
   cells: ReadonlyArray<string | number | null | undefined>,
 ) {
   return cells.map(csvCell).join(",") + "\r\n";
-}
-
-function baParts(iso: string | null | undefined) {
-  const t = iso ? Date.parse(iso) : NaN;
-  if (Number.isNaN(t)) return null;
-  const s = new Date(t - BA_OFFSET_MS).toISOString();
-  return { date: s.slice(0, 10), time: s.slice(11, 19) };
-}
-
-/** UTC ISO -> `DD/MM/YYYY HH:MM` in Buenos Aires (fixed UTC-3); "" if invalid. */
-export function fmtBa(iso: string | null | undefined): string {
-  const p = baParts(iso);
-  if (!p) return "";
-  const [y, m, d] = p.date.split("-");
-  return `${d}/${m}/${y} ${p.time.slice(0, 5)}`;
 }
 
 /** UTC ISO -> `YYYY-MM-DD HH:MM:SS` in Buenos Aires; "" if invalid. */
