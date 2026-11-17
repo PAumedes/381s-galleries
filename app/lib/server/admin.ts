@@ -7,6 +7,8 @@ export function adminHeaders(): Record<string, string> {
   return {
     "Cache-Control": "private, no-store",
     "X-Robots-Tag": "noindex, nofollow",
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
   };
 }
 

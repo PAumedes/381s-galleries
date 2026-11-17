@@ -143,7 +143,7 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
     await env.DB.prepare(
       `SELECT
         (SELECT COUNT(*) FROM gallery_views WHERE gallery_id = ?1) AS views,
-        (SELECT COUNT(*) FROM visitors WHERE gallery_id = ?1 AND email NOT LIKE '%@anon.invalid') AS visitors,
+        (SELECT COUNT(DISTINCT lower(email)) FROM visitors WHERE gallery_id = ?1 AND email NOT LIKE '%@anon.invalid') AS visitors,
         (SELECT COUNT(*) FROM downloads WHERE gallery_id = ?1 AND photo_id IS NOT NULL) AS photos,
         (SELECT COUNT(*) FROM downloads WHERE gallery_id = ?1 AND photo_id IS NULL AND kind = 'bulk') AS bulks`,
     )
@@ -152,10 +152,11 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
   ).results;
 
   const opts = await env.DB.prepare(
-    `SELECT DISTINCT v.email AS email FROM visitors v
+    `SELECT lower(v.email) AS email FROM visitors v
       WHERE v.gallery_id = ?1 AND v.email NOT LIKE '%@anon.invalid'
         AND EXISTS (SELECT 1 FROM downloads d WHERE d.visitor_id = v.id AND d.gallery_id = ?1)
-      ORDER BY v.email COLLATE NOCASE`,
+      GROUP BY lower(v.email)
+      ORDER BY lower(v.email)`,
   )
     .bind(id)
     .all<{ email: string }>();
@@ -330,15 +331,17 @@ export async function loadFavoritesAdmin(env: Env, id: string) {
   const picks = new Map<string, { photo: FavPhoto; visitors: Set<string> }>();
   for (const r of rows) {
     const anon = isAnon(r.email);
-    let v = by.get(r.visitorId);
+    // Per-device visitors: one person per (lowercased) email in admin.
+    const person = anon ? r.visitorId : r.email.toLowerCase();
+    let v = by.get(person);
     if (!v) {
       v = {
-        id: r.visitorId,
+        id: person,
         label: anon ? anonLabel(r.visitorId) : r.email,
         anon,
         lists: new Map(),
       };
-      by.set(r.visitorId, v);
+      by.set(person, v);
     }
     let l = v.lists.get(r.listName);
     if (!l) {
@@ -352,9 +355,10 @@ export async function loadFavoritesAdmin(env: Env, id: string) {
       set: r.set,
       hidden: !r.visible,
     };
-    l.photos.push(photo);
+    // Two devices of one person favouriting the same photo is one pick.
+    if (!l.photos.some((x) => x.id === photo.id)) l.photos.push(photo);
     const p = picks.get(r.photoId) ?? { photo, visitors: new Set() };
-    p.visitors.add(r.visitorId);
+    p.visitors.add(person);
     picks.set(r.photoId, p);
   }
   const visitors = [...by.values()]
@@ -390,10 +394,16 @@ export async function favoritesTxt(
   if (!g) return null;
   let rows = await favoriteRows(env, id);
   if (visitorId) {
-    rows = rows.filter((r) => r.visitorId === visitorId);
+    // `visitorId` is a person key: an anonymous visitor id or a (lowercased) email.
+    const key = visitorId.toLowerCase();
+    rows = rows.filter(
+      (r) =>
+        r.visitorId === visitorId ||
+        (!isAnon(r.email) && r.email.toLowerCase() === key),
+    );
     if (rows.length === 0) return null;
   }
-  const names = rows.filter((r) => r.visible).map((r) => r.name);
+  const names = [...new Set(rows.filter((r) => r.visible).map((r) => r.name))];
   const suffix = visitorId
     ? `-${visitorId.slice(0, 8).replace(/[^\w-]/g, "")}`
     : "";

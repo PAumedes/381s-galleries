@@ -26,18 +26,16 @@ describe("T0 adversarial: schema", () => {
     ).rejects.toThrow();
   });
 
-  it("visitors email uniqueness is case-insensitive per gallery", async () => {
+  it("visitors: the same email may repeat per gallery (per-device visitors, PLAN 5.4)", async () => {
     await env.DB.prepare(
       "INSERT INTO galleries (id, drive_folder_id, slug, title) VALUES ('adv2','adv-f2','adv-s2','T')",
     ).run();
     await env.DB.prepare(
       "INSERT INTO visitors (id, gallery_id, email) VALUES ('v-a','adv2','Client@Example.com')",
     ).run();
-    await expect(
-      env.DB.prepare(
-        "INSERT INTO visitors (id, gallery_id, email) VALUES ('v-b','adv2','client@example.com')",
-      ).run(),
-    ).rejects.toThrow();
+    await env.DB.prepare(
+      "INSERT INTO visitors (id, gallery_id, email) VALUES ('v-b','adv2','client@example.com')",
+    ).run();
   });
 
   it("gallery slugs are unique case-insensitively", async () => {

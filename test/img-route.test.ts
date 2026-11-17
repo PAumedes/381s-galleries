@@ -1,7 +1,8 @@
 import { applyD1Migrations } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { getDb, schema } from "../app/db";
+import { getDb, nowIso, schema } from "../app/db";
+import { clientIpHash } from "../app/lib/server/access";
 import { gallerySessionCookie, pinFingerprint } from "../app/lib/server/auth";
 import { DriveError } from "../app/lib/server/drive-types";
 import type { DriveClient } from "../app/lib/server/drive-types";
@@ -457,5 +458,54 @@ describe("metadata-validated cache", () => {
         new Response(new Uint8Array(0), { headers: { "Content-Length": "0" } }),
     } as unknown as DriveClient;
     expect((await get("thumb", { drive })).status).toBe(502);
+  });
+});
+
+describe("R2-miss rate limit (img:<ip>:<gallery>, 1500 / 10 min)", () => {
+  const hdr = { "CF-Connecting-IP": "203.0.113.7" };
+  const seed = async (n: number) => {
+    const ipHash = await clientIpHash(
+      new Request("https://x.test/", { headers: hdr }),
+      env,
+    );
+    await env.DB.prepare(
+      "INSERT OR REPLACE INTO rate_limits (key, count, window_start) VALUES (?1, ?2, ?3)",
+    )
+      .bind(`img:${ipHash}:${GA}`, n, nowIso())
+      .run();
+  };
+  beforeEach(async () => {
+    await env.DB.prepare("DELETE FROM rate_limits").run();
+  });
+
+  it("429 + Retry-After once the budget is spent, Drive not called", async () => {
+    await seed(1500);
+    const f = fakeDrive();
+    const res = await get("thumb", { drive: f.drive, headers: hdr });
+    expect(res.status).toBe(429);
+    expect(Number(res.headers.get("Retry-After"))).toBeGreaterThanOrEqual(1);
+    expect(f.calls).toEqual([]);
+  });
+  it("still allowed at the limit", async () => {
+    await seed(1499);
+    const f = fakeDrive();
+    expect((await get("thumb", { drive: f.drive, headers: hdr })).status).toBe(
+      200,
+    );
+  });
+  it("R2 hits are not counted or limited", async () => {
+    const f = fakeDrive();
+    await get("thumb", { drive: f.drive, headers: hdr });
+    await seed(5000);
+    const res = await get("thumb", { drive: f.drive, headers: hdr });
+    expect(res.status).toBe(200);
+    expect(f.calls.length).toBe(1);
+  });
+  it("another IP is unaffected", async () => {
+    await seed(1500);
+    const res = await get("thumb", {
+      headers: { "CF-Connecting-IP": "203.0.113.8" },
+    });
+    expect(res.status).toBe(200);
   });
 });

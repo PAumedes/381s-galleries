@@ -64,8 +64,8 @@ export function useVisitor(slug: string, requireEmail: boolean) {
         });
         if (res.status === 400) return "invalid";
         if (!res.ok) return "error";
-        const body = (await res.json()) as { visitor: Visitor };
-        setVisitor(body.visitor);
+        // The server never echoes stored data; show what was just typed.
+        setVisitor({ email, name: name || null });
         known.current = true;
       } catch {
         return "error";

@@ -349,7 +349,7 @@ export function GalleryEditView({
               <Field
                 label="Nuevo PIN"
                 error={pe.pin}
-                hint="De 4 a 32 caracteres."
+                hint="De 6 a 32 caracteres."
               >
                 {(p) => (
                   <input
@@ -357,7 +357,7 @@ export function GalleryEditView({
                     type="password"
                     name="pin"
                     required
-                    minLength={4}
+                    minLength={6}
                     maxLength={32}
                     autoComplete="new-password"
                     className={inputCls}

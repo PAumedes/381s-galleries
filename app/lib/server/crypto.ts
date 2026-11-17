@@ -44,6 +44,30 @@ function assertStrongSecret(secret: string): void {
   }
 }
 
+/**
+ * SESSION_SECRET, DOWNLOAD_SECRET and TOKEN_KEY must all differ: a leak or a
+ * misuse of one must not compromise the others. Missing values are left to
+ * the per-secret guards.
+ */
+export function assertDistinctSecrets(
+  env: Partial<
+    Record<"SESSION_SECRET" | "DOWNLOAD_SECRET" | "TOKEN_KEY", string>
+  >,
+): void {
+  const names = ["SESSION_SECRET", "DOWNLOAD_SECRET", "TOKEN_KEY"] as const;
+  for (let i = 0; i < names.length; i++) {
+    for (let j = i + 1; j < names.length; j++) {
+      const a = env[names[i]]?.trim();
+      const b = env[names[j]]?.trim();
+      if (a && b && a === b) {
+        throw new Error(
+          `${names[i]} and ${names[j]} must differ: use a distinct random value for each (openssl rand -base64 32)`,
+        );
+      }
+    }
+  }
+}
+
 function hmacKey(secret: string, usages: KeyUsage[]): Promise<CryptoKey> {
   assertStrongSecret(secret);
   return crypto.subtle.importKey(

@@ -152,7 +152,7 @@ describe("GalleryEditView", () => {
     expect(screen.getByText(/cierra las sesiones/)).toBeTruthy();
     const pin = screen.getByLabelText("Nuevo PIN") as HTMLInputElement;
     expect(pin.value).toBe("");
-    expect(pin.minLength).toBe(4);
+    expect(pin.minLength).toBe(6);
     expect(pin.maxLength).toBe(32);
     expect(screen.getByRole("button", { name: "Cambiar PIN" })).toBeTruthy();
   });

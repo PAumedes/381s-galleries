@@ -208,6 +208,8 @@ export async function loadGallery(
 const UNKNOWN_GALLERY = "unknown";
 export const PIN_MAX_ATTEMPTS = 5;
 export const PIN_WINDOW_MS = 10 * 60 * 1000;
+/** Per gallery, across all IPs (a 4-digit PIN is otherwise guessable by rotating IPs). */
+export const PIN_GALLERY_MAX_ATTEMPTS = 50;
 
 // Valid-format hash of nothing: unknown slugs still pay for one PBKDF2 run.
 const DUMMY_HASH = `pbkdf2$100000$${"A".repeat(22)}$${"A".repeat(43)}`;
@@ -233,7 +235,7 @@ export async function unlockGallery(
   }
 
   const g = await findGallery(env, slug);
-  const ipHash = await clientIpHash(request, env);
+  const ipHash = await clientIpHash(request, env, { prefix64: true });
   const pinLimit = (galleryId: string, ip: string) =>
     rateLimit(
       env,
@@ -255,10 +257,23 @@ export async function unlockGallery(
 
   if (!ipHash) return { status: 429 };
   if (!(await pinLimit(g.id, ipHash))) return { status: 429 };
+  if (
+    !(await rateLimit(
+      env,
+      "pinG",
+      g.id,
+      PIN_GALLERY_MAX_ATTEMPTS,
+      PIN_WINDOW_MS,
+    ))
+  )
+    return { status: 429 };
   const ok = await verifyPin(pin, g.pinHash);
   if (!ok || !pin) return { status: 400 };
 
   await resetRateLimit(env, "pin", `${ipHash}:${g.id}`);
+  // Only wrong guesses should exhaust the gallery budget: a correct PIN means
+  // the guests are legitimate (many unlock at once at an event).
+  await resetRateLimit(env, "pinG", g.id);
   const setCookie = await updateSession(request, g, { unlocked: true }, env);
   return { status: 303, location, setCookie };
 }

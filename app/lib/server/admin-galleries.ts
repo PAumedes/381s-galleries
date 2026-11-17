@@ -22,7 +22,7 @@ const EXPIRY_YEAR_MAX = 2100;
 export const TITLE_MAX = 120;
 export const CLIENT_MAX = 120;
 export const SLUG_MAX = 60;
-export const PIN_MIN = 4;
+export const PIN_MIN = 6;
 export const PIN_MAX = 32;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 // Control chars and bidi overrides/isolates only (ZWJ/ZWNJ are legitimate).

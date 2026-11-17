@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
-import { openGallery } from "./access";
+import { clientIpHash, openGallery } from "./access";
+import { rateLimit, retryAfterSeconds } from "./rate-limit";
 import { mockImageUrl } from "./drive-mock";
 import type { MockVariant } from "./drive-mock";
 import { DriveError } from "./drive-types";
@@ -14,6 +15,10 @@ const MOCK_KIND: Record<Variant, MockVariant> = {
   "view-sm": "web",
   "view-lg": "highres",
 };
+
+/** Drive fetches (R2 misses) per IP and gallery per window. */
+export const IMG_MISS_MAX = 1500;
+export const IMG_MISS_WINDOW_MS = 10 * 60 * 1000;
 
 const BASE_HEADERS = { "X-Content-Type-Options": "nosniff" };
 
@@ -221,6 +226,25 @@ export async function serveImage(
         "Content-Length": String(hit.size),
       },
     });
+  }
+
+  // R2 miss: about to spend Drive quota. Hits above are free and unlimited.
+  if (!opts.admin) {
+    const ipHash = (await clientIpHash(request, env)) ?? "noip";
+    const key = `${ipHash}:${gallery.id}`;
+    if (!(await rateLimit(env, "img", key, IMG_MISS_MAX, IMG_MISS_WINDOW_MS))) {
+      return new Response("Too many requests", {
+        status: 429,
+        headers: {
+          ...BASE_HEADERS,
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-store",
+          "Retry-After": String(
+            await retryAfterSeconds(env, "img", key, IMG_MISS_WINDOW_MS),
+          ),
+        },
+      });
+    }
   }
 
   let upstream: Response;

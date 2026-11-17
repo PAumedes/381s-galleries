@@ -18,6 +18,8 @@ import type { Route } from "./+types/$slug";
 const SECURITY_HEADERS = {
   "Cache-Control": "private, no-store",
   "Referrer-Policy": "same-origin",
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
   "X-Robots-Tag": "noindex, nofollow",
 };
 

@@ -400,10 +400,14 @@ describe("details action", () => {
       expect(r.fieldErrors?.title, c).toBeTruthy();
       expect(r.fieldErrors?.clientName, c).toBeTruthy();
     }
-    const pin = await act(g, { intent: "pin", mode: "set", pin: "12\u202E34" });
+    const pin = await act(g, {
+      intent: "pin",
+      mode: "set",
+      pin: "1234\u202E56",
+    });
     expect(pin.ok).toBe(false);
     expect(
-      (await act(g, { intent: "pin", mode: "set", pin: "12\u200D34" })).ok,
+      (await act(g, { intent: "pin", mode: "set", pin: "1234\u200D56" })).ok,
     ).toBe(true);
   });
 
@@ -705,27 +709,27 @@ describe("pin action", () => {
     const g = await gallery();
     const cookie = await cookieFor((await row(g))!);
     expect(await sessionOk(g, cookie)).toBe(true);
-    const r = await act(g, { intent: "pin", mode: "set", pin: "1234" });
+    const r = await act(g, { intent: "pin", mode: "set", pin: "123456" });
     expect(r.ok).toBe(true);
     const x = (await row(g))!;
     expect(x.pinHash).toMatch(/^pbkdf2\$/);
-    expect(await verifyPin("1234", x.pinHash!)).toBe(true);
+    expect(await verifyPin("123456", x.pinHash!)).toBe(true);
     expect(JSON.stringify(r)).not.toContain("1234");
     expect(JSON.stringify(r)).not.toContain("pbkdf2");
     expect(await sessionOk(g, cookie)).toBe(false);
   });
   it("change invalidates sessions of the previous pin", async () => {
     const g = await gallery();
-    await act(g, { intent: "pin", mode: "set", pin: "1234" });
+    await act(g, { intent: "pin", mode: "set", pin: "123456" });
     const cookie = await cookieFor((await row(g))!);
     expect(await sessionOk(g, cookie)).toBe(true);
-    await act(g, { intent: "pin", mode: "set", pin: "5678" });
+    await act(g, { intent: "pin", mode: "set", pin: "567890" });
     expect(await sessionOk(g, cookie)).toBe(false);
-    expect(await verifyPin("5678", (await row(g))!.pinHash!)).toBe(true);
+    expect(await verifyPin("567890", (await row(g))!.pinHash!)).toBe(true);
   });
   it("remove clears the hash and invalidates sessions", async () => {
     const g = await gallery();
-    await act(g, { intent: "pin", mode: "set", pin: "1234" });
+    await act(g, { intent: "pin", mode: "set", pin: "123456" });
     const cookie = await cookieFor((await row(g))!);
     const r = await act(g, { intent: "pin", mode: "remove" });
     expect(r.ok).toBe(true);

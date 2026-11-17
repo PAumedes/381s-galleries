@@ -161,8 +161,9 @@ export const visitors = sqliteTable(
   (t) => [
     // Target for favorites' composite FK (same-gallery guarantee).
     unique("visitors_gallery_id_id_unique").on(t.galleryId, t.id),
-    // Case-insensitive; app code must also trim + lowercase emails (PLAN 5.4).
-    uniqueIndex("visitors_gallery_email_nocase_unique").on(
+    // Per-device visitors (PLAN 5.4): the same email may appear on several
+    // rows, so this is a plain lookup index. App code trims + lowercases emails.
+    index("visitors_gallery_email_nocase_idx").on(
       t.galleryId,
       sql`${t.email} COLLATE NOCASE`,
     ),

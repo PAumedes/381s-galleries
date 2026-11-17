@@ -154,50 +154,40 @@ export async function handleVisitor(
   const name = cleanName(body.name);
 
   const db = getDb(env as Env);
-  const findByEmail = async () =>
-    (
-      await db
-        .select()
-        .from(schema.visitors)
-        .where(
-          and(
-            eq(schema.visitors.galleryId, g.id),
-            sql`${schema.visitors.email} = ${email} COLLATE NOCASE`,
-          ),
-        )
-    )[0];
-
-  let v = await findByEmail();
-  const existed = !!v;
-  if (!v) {
-    const ipHash = await clientIpHash(request, env);
-    if (!ipHash) return reply({ error: "rate_limited" }, 429);
-    if (
-      !(await rateLimit(
-        env,
-        "visitor",
-        `${ipHash}:${g.id}`,
-        VISITOR_MAX_PER_WINDOW,
-        VISITOR_WINDOW_MS,
-      ))
-    ) {
-      return reply({ error: "rate_limited" }, 429);
-    }
+  // Per-device visitors (PLAN 5.4): a session never binds to a visitor row it
+  // did not create, so typing someone else's email reveals nothing. A session
+  // that already has a visitor just updates it.
+  const { visitor: current } = await requireVisitor(env, g, open.session);
+  if (current) {
     await db
-      .insert(schema.visitors)
-      .values({ id: newId(), galleryId: g.id, email, name })
-      .onConflictDoNothing();
-    v = await findByEmail();
+      .update(schema.visitors)
+      .set(name ? { email, name } : { email })
+      .where(
+        and(
+          eq(schema.visitors.id, current.id),
+          eq(schema.visitors.galleryId, g.id),
+        ),
+      );
+    return reply({ ok: true });
   }
-  if (!v) return reply({ error: "server_error" }, 500);
-  const cookie = await updateSession(request, g, { visitorId: v.id }, env);
-  return reply(
-    {
-      visitor: existed ? { email: v.email } : { email: v.email, name: v.name },
-    },
-    200,
-    cookie,
-  );
+
+  const ipHash = await clientIpHash(request, env);
+  if (!ipHash) return reply({ error: "rate_limited" }, 429);
+  if (
+    !(await rateLimit(
+      env,
+      "visitor",
+      `${ipHash}:${g.id}`,
+      VISITOR_MAX_PER_WINDOW,
+      VISITOR_WINDOW_MS,
+    ))
+  ) {
+    return reply({ error: "rate_limited" }, 429);
+  }
+  const id = newId();
+  await db.insert(schema.visitors).values({ id, galleryId: g.id, email, name });
+  const cookie = await updateSession(request, g, { visitorId: id }, env);
+  return reply({ ok: true }, 200, cookie);
 }
 
 export async function handleListFavorites(
