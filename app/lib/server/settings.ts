@@ -12,6 +12,12 @@ export const SETTINGS_KEYS = {
   syncLock: "sync_lock",
   r2PendingDeletes: "r2_pending_deletes",
   syncLastError: "sync_last_error",
+  /** ISO time of the last successful sync (cron or admin button). */
+  syncLastOk: "sync_last_ok",
+  /** Display name of the saved root folder (never the id). */
+  driveRootName: "drive_root_name",
+  /** Studio name override (admin setup); env STUDIO_NAME is the fallback. */
+  studioName: "studio_name",
 } as const;
 
 type SettingsEnv = Pick<Env, "DB">;

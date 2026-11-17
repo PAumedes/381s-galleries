@@ -1,4 +1,6 @@
 DRIVE_MODE=mock
+# Canonical origin for share links/QR (https, or http for localhost).
+PUBLIC_ORIGIN=http://localhost:5173
 # Local dev only: lets /admin work on localhost without Cloudflare Access.
 ALLOW_DEV_ADMIN=1
 # Secrets must be >= 32 chars; the app refuses empty/short/"change-me" values.

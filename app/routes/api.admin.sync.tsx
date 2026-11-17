@@ -1,9 +1,10 @@
 import { env } from "cloudflare:workers";
 
+import { adminAction } from "../lib/server/admin";
 import { requireAdmin } from "../lib/server/auth";
 import { getDrive } from "../lib/server/drive-factory";
 import type { DriveClient } from "../lib/server/drive-types";
-import { runSync, SyncBudgetError } from "../lib/server/sync";
+import { runRecordedSync, SyncBudgetError } from "../lib/server/sync";
 
 /** POST /api/admin/sync: forced sync, returns the SyncResult (no Drive ids). */
 export async function handleSync(
@@ -18,16 +19,14 @@ export async function handleSync(
       headers: { Allow: "POST" },
     });
   // CSRF: the Access cookie is sent on cross-site requests, so refuse them.
-  const site = request.headers.get("Sec-Fetch-Site");
-  const origin = request.headers.get("Origin");
-  if (
-    site === "cross-site" ||
-    site === "same-site" ||
-    (origin !== null && origin !== new URL(request.url).origin)
-  )
-    return new Response("Forbidden", { status: 403 });
   try {
-    const result = await runSync(e, {
+    await adminAction(request, e);
+  } catch (err) {
+    if (err instanceof Response) return err;
+    throw err;
+  }
+  try {
+    const result = await runRecordedSync(e, {
       drive: drive ?? getDrive(e),
       force: true,
     });

@@ -33,7 +33,8 @@ Deliver photos to clients through branded online galleries, at $0/month infrastr
 | Bulk download | Browser-side zip with `client-zip` | No server zipping |
 | Image processing | **None.** Never resize, re-encode or watermark in code | Capture One does all of it |
 | URLs | Public: `https://session.381studios.ar/<slug>`. Admin: `/admin`. Reserved slugs (rejected by sync, suffixed with `-2`): `admin, api, img, dl, assets, brand, favicon.ico, robots.txt, manifest.webmanifest` | |
-| i18n | **Spanish (default) + English**. Strings in `app/i18n/{es,en}.ts` with a typed key set; language from `?lang=` → cookie → `Accept-Language` → `es`. Small ES/EN toggle in the footer. Admin UI in Spanish only | |
+| Public origin | `PUBLIC_ORIGIN` var (wrangler.jsonc; `.dev.vars` locally). Share panel/QR/print card build links via `publicGalleryUrl` (`app/lib/server/public-url.ts`): must be https (http only for localhost), else falls back to the request origin | Links never depend on the Host header |
+| i18n | **Spanish (default) + English**. Strings in `app/i18n/{es,en}.ts` with a typed key set; language from `?lang=` → cookie → `Accept-Language` → `es`. Small ES/EN toggle in the footer. Admin UI in Spanish only (the only exception: the printable A6 card, ES/EN via `?lang=`) | |
 | Branding | Studio name "381 Studios", black/white logos (see §5.8), Montserrat, monochrome palette (no accent colour) | |
 | Max image size | **2048px is the largest file delivered.** Web sharing only, no prints, no full-size originals | |
 | Dev mode | `DRIVE_MODE=mock` (§5.9): fake galleries, images from picsum.photos. Default in `.dev.vars.example` | Build and test without Google |
@@ -71,7 +72,8 @@ galleries     (id PK, drive_folder_id UNIQUE, slug UNIQUE, title, client_name?, 
                cover_photo_id?, allow_highres bool=1, allow_web bool=1, allow_ig bool=1, allow_bulk bool=1,
                require_email bool=1, use_watermark_preview bool (auto true if preview-wm exists),
                drive_modified_at?, last_synced_at?, sync_issues_json?,
-               folder_missing_since?, archived_prev_status? ('draft'|'published'), created_at)
+               folder_missing_since?, archived_prev_status? ('draft'|'published'),
+               archived_by_sync bool=0 (1 = archived by sync's folder-removal rule; only those are auto-restored), created_at)
 photos        (id PK, gallery_id FK cascade, set_name default 'Highlights', base_name,
                drive_highres_id, drive_web_id?, drive_ig_id?, drive_thumb_id?, drive_wm_id?,
                highres_bytes?, variant_versions? (JSON {highres,web,ig,thumb,wm} = each variant's Drive modifiedTime), width?, height?, taken_at?, sort int,   // width/height of high-res
@@ -84,9 +86,11 @@ visitors      (id PK, gallery_id FK, email, name?, first_seen,
 favorites     (gallery_id, visitor_id, photo_id, list_name default 'Favoritos', comment?, created_at,
                PK(visitor_id, photo_id, list_name),
                FK(gallery_id, visitor_id) -> visitors(gallery_id, id) cascade,
-               FK(gallery_id, photo_id) -> photos(gallery_id, id) cascade)   // same-gallery guaranteed by DB
+               FK(gallery_id, photo_id) -> photos(gallery_id, id) cascade)   // same-gallery guaranteed by DB; idx (gallery_id, visitor_id) [0009]
 downloads     (id PK, gallery_id, photo_id?, visitor_id?, variant: 'highres'|'web'|'ig',
-               kind: 'single'|'bulk', token_id? UNIQUE (jti of the /dl token: retries log once), country?, ua?, created_at)
+               kind: 'single'|'bulk', token_id? UNIQUE (jti of the /dl token: retries log once),
+               bulk_id? (per-photo rows of a bulk run: id of their header row), bulk_scope? (header rows only: 'all'|'favorites'|'set:<name>'), country?, ua?, created_at)
+               // indexes: (gallery_id, created_at), (gallery_id, bulk_id) [0009]
                // Activity shape: a bulk HEADER row = kind 'bulk' with photo_id NULL (one per download-all/set, written by /bulk);
                // per-photo rows have photo_id NOT NULL (written by /dl hits; kind 'bulk' when the token carried a bulkId).
                // Anonymous visitors are those with email LIKE '%@anon.invalid'. `activityQuery(db, galleryId)` (`app/lib/server/activity.ts`)
@@ -107,7 +111,7 @@ Width/height/taken_at come from Drive's `imageMediaMetadata` (no EXIF parsing in
 3. Build photo records with the matching rule (§3; set names and base names match case-insensitively; a case-only set rename updates `set_name` in place, ids unchanged). Upsert. **No hard deletes on a single scan:** a photo whose high-res file is absent gets `photos.missing_since` (ISO) set; if it is present again the column is cleared; it is hard-deleted (with its R2 keys) only when `missing_since` is older than `SYNC_DELETE_GRACE_MS` (1 hour) on a later run (runs keep rescanning while any grace period is pending). If a gallery's high-res folder is missing or has zero JPEGs while the gallery has photos, nothing is marked or deleted and the gallery gets issue `highres_empty`.
 4. Store mismatches in `sync_issues_json` (capped at 200 entries + a final `{"truncated": n}` summary); set `use_watermark_preview` if `preview-wm` exists.
 5. Stay within Worker limits (T1.3 decision): the scan is **breadth-first with `listChildrenMany`** (root → albums → all recipe folders → all set folders: ~4 queries for the whole library). `runSync` takes a `budget` (default 45; Workers Free allows 50 external subrequests) counting EVERY external call: `listChanges`, `getStartPageToken`, `getMeta(root)`, every scan query and the Google OAuth refresh (the drive factory counts it in `drive.subrequests()`). It checks that the next call fits BEFORE making it and re-checks after; on overrun it aborts with `SyncBudgetError` before any DB write and the changes token is not stored. D1/R2 calls are a separate pool (limit 1000): a counter aborts above 900. D1 writes are chunked into batches of <=100 statements per gallery (ordered so a failure mid-gallery leaves consistent rows; the next run re-diffs). A `sync_lock` settings row (5 min expiry) prevents overlapping runs. `listChanges` falls back to a full rescan only on 400/404 (stale token); other errors are rethrown.
-6. **Archived on removal (with grace):** an album folder that disappears or is trashed first gets `galleries.folder_missing_since`; only after `SYNC_DELETE_GRACE_MS` is the gallery set to `archived` and its previous status stored in `archived_prev_status` (rows and photos are kept). If the folder returns, `folder_missing_since` is cleared and, when `archived_prev_status` is set, the previous status is restored. If the root listing is empty while galleries exist, the run aborts (console error, no writes, token not stored, result `skipped: "empty_root"`). Renaming a folder never changes an existing gallery's slug/title/status.
+6. **Archived on removal (with grace):** an album folder that disappears or is trashed first gets `galleries.folder_missing_since`; only after `SYNC_DELETE_GRACE_MS` is the gallery set to `archived` and its previous status stored in `archived_prev_status` (rows and photos are kept). The same step sets `archived_by_sync = 1`. If the folder returns, `folder_missing_since` is cleared and the previous status is restored **only for galleries with `archived_by_sync = 1`** (an admin-archived gallery, `archived_by_sync = 0`, stays archived); restoring clears `archived_by_sync`. If the root listing is empty while galleries exist, the run aborts (console error, no writes, token not stored, result `skipped: "empty_root"`). Renaming a folder never changes an existing gallery's slug/title/status.
 7. **Mock auto-publish:** when `DRIVE_MODE=mock`, new galleries are created `published` (instead of `draft`) so the seeded galleries are viewable immediately.
 
 ### 5.2 Client views gallery
@@ -146,6 +150,15 @@ Client photo payload (`GalleryPhoto`) carries `variants: { web: boolean; ig: boo
 - **Share panel:** link + copy, **QR code** (SVG/PNG via `qrcode`, generated in browser), printable A6 card (QR, title, studio logo).
 - **Activity:** views + downloads (who, photo, variant, when, country), CSV export.
 - **Favorites:** per visitor/list, **"Copy for Capture One"** → base names joined by spaces (paste into C1 search/filter) + `.txt` download.
+
+**T4.1 decisions:** `/admin` is a layout route (`admin.tsx`; children: index = galleries list, `setup`); every admin response is `Cache-Control: private, no-store` + `X-Robots-Tag: noindex`. Every admin mutation is a React Router action starting with `adminAction(request, env)` (`requireAdmin`, then `crossSite` -> 403; returns the admin email). Setup actions use one form per `intent` (`disconnect`, `root`, `sync`, `studio`) and return `{intent, ok, error?, message?, result?}` (errors in Spanish, never ids/upstream detail). Root folder: paste a folder URL (`/drive/folders/<id>`, `/drive/u/N/folders/<id>`, `open?id=`) or bare id (`[A-Za-z0-9_-]{10,}`); verified with `getMeta` (folder, not trashed); settings `drive_root_id` + `drive_root_name` (the name, not the id, goes to the client). Studio name: setting `studio_name` (1-60 chars, no control chars) overrides env `STUDIO_NAME` (root loader, cached per request). Logo is fixed (no upload; the "logo URL" idea is dropped). New setting `sync_last_ok` (ISO) written by the cron and the Sync-now button; `sync_last_error` is shown in the shell and on the setup page. Review fixes: `runRecordedSync` (`sync.ts`) is the single place that clears `sync_last_error` and writes `sync_last_ok` (every non-skipped run, `unchanged` included); the cron, `POST /api/admin/sync` and the setup button all go through it. `/api/admin/sync` also uses `adminAction` (CSRF: `Sec-Fetch-Site`/`Origin`), so `pnpm seed` sends `Origin` + `Sec-Fetch-Site: same-origin`. Admin times are shown in Buenos Aires time (`app/lib/ba-time.ts`, fixed UTC-3; the shell never prints "UTC"). Admin thumbs are `Cache-Control: private, no-store`.
+
+**T4.2 decisions:** `/admin` lists galleries (tabs via `?estado=todas|publicadas|borradores|archivadas`; non-archived first, then newest). Counts: photos = visible only (`photoVisible`), downloads = per-photo rows only (bulk headers excluded), views = `gallery_views` rows, issues badge = entries + the `truncated` summary. Cover thumb = chosen visible cover, else the first visible photo. Thumbs come from **`/admin/img/:photoId/:variant`** (top-level route, `requireAdmin`, `thumb`|`view-sm` only): `serveImage(..., {admin: true})` skips only the gallery access gate (draft/archived/expired/PIN); same R2 cache, watermark policy and `missing_since` rule. Edit page `/admin/g/:id` (loader 404 for unknown id; actions via `adminAction`, every write `WHERE id = <gallery>`; results `{intent, ok, error?, fieldErrors?, message?, stale?}` in Spanish; one form per intent: `details`, `flags`, `status`, `pin`, `cover`, `reorder`). Details: title 1-120, client <=120, slug lowercased `[a-z0-9]+(-[a-z0-9]+)*` <=60, not reserved, unique NOCASE (confirm dialog + hint that shared links/QR break), event date a real `YYYY-MM-DD`, expiry = Buenos Aires wall clock (fixed UTC-3, no DST) stored as UTC `nowIso` format; date without time = 23:59; empty = never. Status transitions (compare-and-set): publish (draft only), draft (published only), archive (stores `archived_prev_status`), restore (previous status, else draft; clears it). PIN 4-32 chars via `hashPin`, remove sets NULL; the hash is never sent to the client (`hasPin` only); `pf` makes old sessions/download tokens die automatically. `use_watermark_preview` can only be turned on when a visible photo has a `preview-wm` file. Cover must be a visible photo of the gallery (empty = automatic). Reorder: client sends `order` = JSON `{set: [photoId...]}` + `version` = hash of the sorted visible photo ids; the server rejects a stale version (`stale: true`, reload message) or any payload that is not exactly the current visible set with each id in its own set; writes `sort = index within set` only for changed rows via `UPDATE … SET sort = CASE id …` chunks of <=45 ids (<=91 bound params), all chunks in ONE `db.batch` (atomic), each scoped by `gallery_id`. UI: mouse drag-and-drop, plus select (click/Enter/Space) and arrows/Home/End or "Mover antes/después" (touch), quick sorts per set by capture date / name, "Restablecer". Sync owns neither: it changes `use_watermark_preview` only on preview-wm availability transitions, and restores only galleries with `archived_by_sync=1` (migration 0007); admin archive sets `archived_by_sync=0`. Expiry year 2000-2100; text rejects only `\p{Cc}` + bidi controls.
+
+**T4.3 decisions:** share panel on the edit page. Link = `publicGalleryUrl(env, slug)` (`PUBLIC_ORIGIN`, https or localhost http, else the request origin; never the Host header). QR = `qrcode` (lazy import, browser only; SVG and PNG download, error correction M, 2-module quiet zone, black on white). Print card = `/admin/g/:id/card` (resource-style page, `requireAdmin`, `private, no-store`): **A6 portrait (105x148 mm)** via print CSS (`.print-card`), with QR, title, event date, studio name and, when the gallery has a PIN, a blank `PIN: ____` line to write by hand (the PIN is never rendered); `?lang=es|en` (default `es`; anything else = `es`) is the only bilingual admin screen; the screen has a Print button and ES/EN toggle that are hidden when printing.
+
+**T4.4 decisions:** sub-routes under the admin layout, with a shared tab bar (`GalleryTabs`: Datos / Actividad / Favoritos): `/admin/g/:id/activity` (`?visitor=<email>|anon&size=highres|web|ig&cursor=<created_at>|<id>`) and `/admin/g/:id/favorites`; resource routes (outside the layout) `/admin/g/:id/activity.csv` and `/admin/g/:id/favorites.txt[?visitor=<visitorId>]`. All `requireAdmin` (401), unknown gallery 404, `private, no-store`. Migration 0008 adds `downloads.bulk_id` (per-photo rows of a bulk run point to their header; written by `/dl` from the token's `b`, null for single downloads and "multi" tokens) and `downloads.bulk_scope` (header only: `all` | `favorites` | `set:<name>`), so bulk rows nest under their header; older rows stay top-level. Summary cards: views = `gallery_views` rows; visitors = non-anonymous `visitors` rows; photos = per-photo rows (anonymous included); bulks = header rows. Table = top-level rows (headers + rows without a header), newest first, 50 per page, keyset cursor (`created_at`, `id`); filters apply to top-level rows (children follow their header; children capped at 1000 per page); "Visitas" mini-table = latest 50 views. Anonymous = "Anónimo" in activity/CSV (empty email) and "Anónimo #<first 6 of visitor id>" in favorites (shown only when they have favorites). `activityQuery(db, galleryId, opts?)` takes `visitor|variant|before|topLevel|bulkIds|limit`. CSV: UTF-8 BOM, CRLF, columns `datetime_utc,datetime_ar,visitor_email,photo,set,size,kind,bulk_id,country` (header rows have empty photo/set and `bulk_id` = own id), cells starting with `= + - @ \t \r` get a leading `'`, streamed in keyset chunks of 200 (`<slug>-actividad.csv`). Favorites: per visitor/list (count, last activity, thumbs via `/admin/img`), photos in their sync grace period shown greyed "(oculta)" but excluded from Capture One output; "Todos los favoritos" = union with how many visitors picked each (a visitor counts once across lists). Capture One text = base names without image extension, deduped, space-separated (names with whitespace quoted) or comma-separated via a toggle; `.txt` = one name per line.
+
 
 The app never writes or deletes anything in Drive. To remove photos, delete them in Drive; the next sync picks it up.
 
@@ -210,10 +223,10 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T3.2 Download UI.** `DownloadMenu.tsx` (High-res / Web / Instagram per flags), download all / set with `client-zip`, progress. *Accept:* all photo queries use `photoVisible`.
 
 ### Phase 4 — Admin UI
-- [ ] **T4.1 ∥ Setup page** (connect Google, root folder, branding).
-- [ ] **T4.2 ∥ Galleries list + gallery edit** (incl. reorder, cover, sync issues, publish).
-- [ ] **T4.3 ∥ Share panel + QR + print card.**
-- [ ] **T4.4 ∥ Activity + favorites views, CSV, "Copy for Capture One".**
+- [x] **T4.1 ∥ Setup page** (connect Google, root folder, branding). Layout route `admin.tsx` (requireAdmin for all children, sidebar/top bar, status), `admin.setup.tsx`, `adminAction()` in `app/lib/server/admin.ts`. See §5.7.
+- [x] **T4.2 ∥ Galleries list + gallery edit** (incl. reorder, cover, sync issues, publish).
+- [x] **T4.3 ∥ Share panel + QR + print card.**
+- [x] **T4.4 ∥ Activity + favorites views, CSV, "Copy for Capture One".**
 
 ### Phase 5 — Polish & deploy
 - [ ] **T5.1 Branding/theme**, dark/light, OG image (cover via `/img`), full i18n per §2 (es + en).
@@ -242,12 +255,25 @@ See `.claude/WORKFLOW.md`.
 ## 10. (reserved)
 
 ## 11. Manual steps for the photographer
-1. Cloudflare: add custom domain `session.381studios.ar` to the Worker (DNS already on Cloudflare). Worker has workers.dev and preview URLs disabled; only the custom domain serves it.
+1. Cloudflare: add custom domain `session.381studios.ar` to the Worker (DNS already on Cloudflare). Worker has workers.dev and preview URLs disabled; only the custom domain serves it. If the domain changes, update the `PUBLIC_ORIGIN` var in `wrangler.jsonc` (used for share links, QR and the print card).
 2. Google Cloud project → enable Drive API → OAuth **Web** client with redirect `https://<domain>/admin/google/callback` → consent screen **In production**.
 3. Cloudflare Zero Trust → Access application for `/admin*` and `/api/admin*` allowing your email. Copy the application's **Audience (AUD) tag** (Access > Applications > your app > Overview) into `ACCESS_AUD`, and your team domain (`<team>.cloudflareaccess.com`, Zero Trust > Settings > Custom Pages) into `ACCESS_TEAM_DOMAIN`.
-4. `wrangler secret put`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`, `ADMIN_EMAIL`, `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`. Secrets must be >= 32 chars (`openssl rand -base64 32`).
-5. Drive for desktop syncing `My Drive/381studios`.
-6. Capture One: create the recipes from §3, all enabled, output to `…/381studios/[Session Name]/<recipe>`.
-7. Admin → Setup → Connect Google → paste root folder → after a sync, publish the gallery and share the link/QR.
+4. Environment (see the table below). Secrets must be >= 32 chars (`openssl rand -base64 32`).
+5. Deploy order: set the secrets -> apply the remote migrations `0000`-`0009` (`wrangler d1 migrations apply DB --remote`) -> `pnpm deploy` -> open `/admin/setup`, **Connect Google** -> paste the root folder.
+6. Drive for desktop syncing `My Drive/381studios`.
+7. Capture One: create the recipes from §3, all enabled, output to `…/381studios/[Session Name]/<recipe>`.
+8. After the first sync (Admin → Setup), publish the gallery and share the link/QR.
+
+**Environment**
+
+| Name | Kind | Notes |
+|---|---|---|
+| `DRIVE_MODE` | var (`wrangler.jsonc`) | `google` in production; `mock` only locally |
+| `STUDIO_NAME` | var | fallback studio name (admin setting overrides it) |
+| `PUBLIC_ORIGIN` | var | canonical https origin for share links, QR and the print card |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | secret | OAuth Web client |
+| `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY` | secret | >= 32 chars; `TOKEN_KEY` is base64 of 32 bytes |
+| `ADMIN_EMAIL`, `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` | secret | Cloudflare Access verification |
+| `ALLOW_DEV_ADMIN` | local only (`.dev.vars`) | lets `/admin` work without Access on localhost. **Never set it in production** (not as a var, not as a secret) |
 
 If sync hits Free plan CPU (10 ms) or subrequest limits on very large libraries, Workers Paid ($5/month) lifts them; the sync aborts cleanly rather than corrupting data.

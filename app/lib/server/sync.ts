@@ -636,32 +636,37 @@ export async function runSync(
       const stmts: BatchItem[] = [];
 
       if (ex) {
+        // Only galleries sync itself archived come back when the folder does;
+        // an admin-archived gallery stays archived.
         const restore =
-          ex.archivedPrevStatus !== null && ex.status === "archived"
-            ? ex.archivedPrevStatus
+          ex.archivedBySync && ex.status === "archived"
+            ? (ex.archivedPrevStatus ?? "draft")
             : undefined;
+        // The admin owns use_watermark_preview: sync only follows transitions
+        // of preview-wm availability.
+        const hadWm = rows.some((r) => r.driveWmId !== null);
+        const wmSet =
+          a.hasWm !== hadWm ? { useWatermarkPreview: a.hasWm } : undefined;
         const changed =
-          ex.useWatermarkPreview !== a.hasWm ||
+          (wmSet !== undefined &&
+            ex.useWatermarkPreview !== wmSet.useWatermarkPreview) ||
           ex.syncIssuesJson !== issuesJson ||
           ex.driveModifiedAt !== a.folder.modifiedTime ||
           restore !== undefined;
         if (changed) result.galleries.updated++;
-        if (
-          changed ||
-          ex.folderMissingSince !== null ||
-          ex.archivedPrevStatus !== null
-        )
+        if (changed || ex.folderMissingSince !== null || ex.archivedBySync)
           stmts.push(
             db
               .update(schema.galleries)
               .set({
-                useWatermarkPreview: a.hasWm,
+                ...wmSet,
                 syncIssuesJson: issuesJson,
                 driveModifiedAt: a.folder.modifiedTime,
                 lastSyncedAt: syncedAt,
                 folderMissingSince: null,
-                ...(ex.archivedPrevStatus !== null
+                ...(ex.archivedBySync
                   ? {
+                      archivedBySync: false,
                       archivedPrevStatus: null,
                       ...(restore ? { status: restore } : {}),
                     }
@@ -812,7 +817,11 @@ export async function runSync(
         gstmts.push(
           db
             .update(schema.galleries)
-            .set({ status: "archived", archivedPrevStatus: prev })
+            .set({
+              status: "archived",
+              archivedPrevStatus: prev,
+              archivedBySync: true,
+            })
             .where(inArray(schema.galleries.id, ids)),
         );
     await flush(gstmts);
@@ -828,6 +837,24 @@ export async function runSync(
       .bind(LOCK_KEY, lockValue)
       .run();
   }
+}
+
+/**
+ * The one place that records a successful sync: runs `runSync` and, unless it
+ * was skipped for lack of work done (locked / no root / empty root), clears `sync_last_error` and
+ * stamps `sync_last_ok`. Used by the cron, the admin API and the setup button.
+ */
+export async function runRecordedSync(
+  env: SyncEnv,
+  opts: SyncOptions,
+): Promise<SyncResult> {
+  const r = await runSync(env, opts);
+  if (!r.skipped || r.skipped === "unchanged") {
+    const noop: Op = () => {};
+    await dropSetting(env, LAST_ERROR_KEY, noop);
+    await putSetting(env, SETTINGS_KEYS.syncLastOk, nowIso(), noop);
+  }
+  return r;
 }
 
 /**
@@ -852,12 +879,10 @@ export async function runScheduledSync(
     }
   };
   try {
-    const r = await runSync(env, { drive });
+    const r = await runRecordedSync(env, { drive });
     if (r.skipped === "no_root") await record("no root folder configured");
     else if (r.skipped === "empty_root")
       await record("root folder listed empty");
-    else if (r.skipped !== "locked")
-      await dropSetting(env, LAST_ERROR_KEY, noop);
     return r;
   } catch (err) {
     // Name only: messages may hold Drive ids.

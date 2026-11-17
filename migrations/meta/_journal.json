@@ -50,6 +50,27 @@
       "when": 1794871997442,
       "tag": "0006_download_token_id",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794877694766,
+      "tag": "0007_archived_by_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794879229126,
+      "tag": "0008_download_bulk_link",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1794881006763,
+      "tag": "0009_admin_indexes",
+      "breakpoints": true
     }
   ]
 }

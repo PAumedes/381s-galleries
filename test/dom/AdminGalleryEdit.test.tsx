@@ -1,0 +1,224 @@
+import { render, screen, within } from "@testing-library/react";
+import { createRoutesStub } from "react-router";
+import { describe, expect, it } from "vitest";
+import {
+  GalleryEditView,
+  type GalleryEditData,
+} from "../../app/components/admin/GalleryEditView";
+
+const base: GalleryEditData = {
+  gallery: {
+    id: "g1",
+    title: "Boda Ana",
+    slug: "boda-ana",
+    clientName: "Ana",
+    eventDate: "2026-11-01",
+    expires: { date: "2026-12-24", time: "18:30" },
+    status: "draft",
+    allowHighres: true,
+    allowWeb: true,
+    allowIg: false,
+    allowBulk: true,
+    requireEmail: true,
+    useWatermarkPreview: false,
+    hasPin: false,
+    coverPhotoId: "p1",
+  },
+  hasWmFiles: false,
+  photos: [
+    { id: "p1", set: "Highlights", name: "IMG_1", takenAt: null },
+    { id: "p2", set: "Highlights", name: "IMG_2", takenAt: null },
+  ],
+  version: "v1",
+  issues: {
+    groups: [
+      {
+        type: "missing_web",
+        label: "Falta la versión web",
+        items: [{ set: "Fiesta", name: "IMG_9" }],
+      },
+    ],
+    truncated: 0,
+    total: 1,
+  },
+};
+
+function show(data: Partial<GalleryEditData> = {}, actionData?: unknown) {
+  const Stub = createRoutesStub([
+    {
+      path: "/admin/g/g1",
+      Component: () => (
+        <GalleryEditView
+          data={{ ...base, ...data }}
+          actionData={actionData as never}
+        />
+      ),
+    },
+  ]);
+  return render(<Stub initialEntries={["/admin/g/g1"]} />);
+}
+const gal = (over: Partial<GalleryEditData["gallery"]>) => ({
+  gallery: { ...base.gallery, ...over },
+});
+
+describe("GalleryEditView", () => {
+  it("prefills the details form with maxLength constraints and a slug warning", async () => {
+    show();
+    const title = (await screen.findByLabelText("Título")) as HTMLInputElement;
+    expect(title.value).toBe("Boda Ana");
+    expect(title.maxLength).toBe(120);
+    expect((screen.getByLabelText("Slug") as HTMLInputElement).value).toBe(
+      "boda-ana",
+    );
+    expect(
+      (screen.getByLabelText("Cliente") as HTMLInputElement).maxLength,
+    ).toBe(120);
+    expect(
+      (screen.getByLabelText("Fecha del evento") as HTMLInputElement).type,
+    ).toBe("date");
+    expect(
+      (screen.getByLabelText("Vence (fecha)") as HTMLInputElement).value,
+    ).toBe("2026-12-24");
+    expect(
+      (screen.getByLabelText("Vence (hora)") as HTMLInputElement).value,
+    ).toBe("18:30");
+    expect(screen.getByText(/dejarán de funcionar/)).toBeTruthy();
+    expect(screen.getByText(/Buenos Aires/)).toBeTruthy();
+  });
+
+  it("shows inline Spanish field errors next to the field", async () => {
+    show(
+      {},
+      {
+        intent: "details",
+        ok: false,
+        error: "Revisá los campos marcados.",
+        fieldErrors: {
+          title: "El título debe tener entre 1 y 120 caracteres.",
+          slug: "Ese slug ya está en uso.",
+          expires: "La fecha de vencimiento no es válida.",
+        },
+      },
+    );
+    const title = (await screen.findByLabelText("Título")) as HTMLInputElement;
+    expect(title.getAttribute("aria-invalid")).toBe("true");
+    const msg = screen.getByText(
+      "El título debe tener entre 1 y 120 caracteres.",
+    );
+    expect(msg.getAttribute("role")).toBe("alert");
+    expect(title.getAttribute("aria-describedby")).toContain(msg.id);
+    expect(screen.getByText("Ese slug ya está en uso.")).toBeTruthy();
+    expect(
+      screen.getByText("La fecha de vencimiento no es válida."),
+    ).toBeTruthy();
+    expect(
+      (screen.getByLabelText("Cliente") as HTMLInputElement).getAttribute(
+        "aria-invalid",
+      ),
+    ).toBeNull();
+  });
+
+  it("status buttons depend on the current status", async () => {
+    const { unmount } = show();
+    await screen.findByLabelText("Título");
+    const names = () =>
+      screen
+        .getAllByRole("button")
+        .map((b) => b.textContent)
+        .filter((t) =>
+          ["Publicar", "Pasar a borrador", "Archivar", "Restaurar"].includes(
+            t!,
+          ),
+        );
+    expect(names()).toEqual(["Publicar", "Archivar"]);
+    unmount();
+    show(gal({ status: "published" }));
+    await screen.findByLabelText("Título");
+    expect(names()).toEqual(["Pasar a borrador", "Archivar"]);
+  });
+  it("archived: only Restaurar", async () => {
+    show(gal({ status: "archived" }));
+    await screen.findByLabelText("Título");
+    expect(screen.getByRole("button", { name: "Restaurar" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Publicar" })).toBeNull();
+  });
+
+  it("PIN: never shows the value; says PIN activo and warns about sessions", async () => {
+    show(gal({ hasPin: true }));
+    await screen.findByLabelText("Título");
+    expect(screen.getByText("PIN activo")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Quitar PIN" })).toBeTruthy();
+    expect(screen.getByText(/cierra las sesiones/)).toBeTruthy();
+    const pin = screen.getByLabelText("Nuevo PIN") as HTMLInputElement;
+    expect(pin.value).toBe("");
+    expect(pin.minLength).toBe(4);
+    expect(pin.maxLength).toBe(32);
+    expect(screen.getByRole("button", { name: "Cambiar PIN" })).toBeTruthy();
+  });
+  it("PIN: none set", async () => {
+    show();
+    await screen.findByLabelText("Título");
+    expect(screen.getByText("Sin PIN")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Quitar PIN" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Guardar PIN" })).toBeTruthy();
+  });
+
+  it("watermark flag disabled with explanation when there are no preview-wm files", async () => {
+    show();
+    const cb = (await screen.findByLabelText(
+      /marca de agua/i,
+    )) as HTMLInputElement;
+    expect(cb.disabled).toBe(true);
+    expect(screen.getByText(/no tiene archivos preview-wm/)).toBeTruthy();
+  });
+  it("watermark flag enabled with files", async () => {
+    show({ hasWmFiles: true });
+    const cb = (await screen.findByLabelText(
+      /marca de agua/i,
+    )) as HTMLInputElement;
+    expect(cb.disabled).toBe(false);
+  });
+  it("flag checkboxes reflect state", async () => {
+    show();
+    expect(
+      ((await screen.findByLabelText(/Alta resolución/)) as HTMLInputElement)
+        .checked,
+    ).toBe(true);
+    expect(
+      (screen.getByLabelText(/Instagram/) as HTMLInputElement).checked,
+    ).toBe(false);
+    expect(
+      (screen.getByLabelText(/Pedir email/) as HTMLInputElement).checked,
+    ).toBe(true);
+  });
+
+  it("cover picker lists visible photos via the admin image route", async () => {
+    show();
+    await screen.findByLabelText("Título");
+    const picker = screen.getByRole("group", { name: "Portada" });
+    const imgs = Array.from(picker.querySelectorAll("img"));
+    expect(imgs.map((i) => i.getAttribute("src"))).toEqual([
+      "/admin/img/p1/thumb",
+      "/admin/img/p2/thumb",
+    ]);
+    expect(
+      (within(picker).getByLabelText("IMG_1") as HTMLInputElement).checked,
+    ).toBe(true);
+  });
+
+  it("sync issues grouped with labels and file names", async () => {
+    show();
+    expect(await screen.findByText(/Falta la versión web/)).toBeTruthy();
+    expect(screen.getByText(/IMG_9/)).toBeTruthy();
+    expect(screen.getByText(/Fiesta/)).toBeTruthy();
+  });
+  it("no issues: says so", async () => {
+    show({ issues: { groups: [], truncated: 0, total: 0 } });
+    expect(await screen.findByText(/Sin avisos/)).toBeTruthy();
+  });
+
+  it("shows feedback for ok actions", async () => {
+    show({}, { intent: "pin", ok: true, message: "PIN guardado." });
+    expect(await screen.findByText("PIN guardado.")).toBeTruthy();
+  });
+});

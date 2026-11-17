@@ -74,6 +74,11 @@ export const galleries = sqliteTable(
     archivedPrevStatus: text("archived_prev_status", {
       enum: ["draft", "published"],
     }),
+    // 1 only when sync (not an admin) archived the gallery: only those are
+    // restored automatically when the folder reappears.
+    archivedBySync: integer("archived_by_sync", { mode: "boolean" })
+      .notNull()
+      .default(false),
     createdAt: createdAt(),
   },
   (t) => [
@@ -172,6 +177,7 @@ export const favorites = sqliteTable(
   },
   (t) => [
     primaryKey({ columns: [t.visitorId, t.photoId, t.listName] }),
+    index("favorites_gallery_visitor_idx").on(t.galleryId, t.visitorId),
     // Composite FKs: visitor and photo must both belong to gallery_id.
     foreignKey({
       columns: [t.galleryId, t.visitorId],
@@ -196,12 +202,17 @@ export const downloads = sqliteTable(
     kind: text("kind", { enum: ["single", "bulk"] }).notNull(),
     /** Download token id (jti): a retried/resumed token logs only once. */
     tokenId: text("token_id"),
+    /** Per-photo rows of a bulk run: the header row's id (null for single downloads and "multi" tokens). */
+    bulkId: text("bulk_id"),
+    /** Bulk header rows only: `all`, `favorites` or `set:<name>`. */
+    bulkScope: text("bulk_scope"),
     country: text("country"),
     ua: text("ua"),
     createdAt: createdAt(),
   },
   (t) => [
     index("downloads_gallery_created_idx").on(t.galleryId, t.createdAt),
+    index("downloads_gallery_bulk_idx").on(t.galleryId, t.bulkId),
     uniqueIndex("downloads_token_id_idx").on(t.tokenId),
     check(
       "downloads_variant_check",

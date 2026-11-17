@@ -1,0 +1,1 @@
+ALTER TABLE `galleries` ADD `archived_by_sync` integer DEFAULT false NOT NULL;

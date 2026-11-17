@@ -21,13 +21,14 @@ pnpm seed                        # in a second terminal (dev server must be runn
 In `.dev.vars`:
 
 - `SESSION_SECRET`, `DOWNLOAD_SECRET` and `TOKEN_KEY`: each a random value of at least 32 characters, e.g. `openssl rand -base64 32`.
-- `DRIVE_MODE=mock` and `ALLOW_DEV_ADMIN=1` (already set in the example).
+- `DRIVE_MODE=mock` and `ALLOW_DEV_ADMIN=1` (already set in the example; `ALLOW_DEV_ADMIN` must never be set in production).
+- `PUBLIC_ORIGIN=http://localhost:5173`: the origin used for share links, QR codes and the print card (https in production, http only for localhost; otherwise the request origin is used).
 
 Then open <http://localhost:5173/admin>.
 
 `pnpm seed` calls the running dev server (`POST /api/admin/sync`), so `pnpm dev` must be up first. The mock Drive tree is in-memory and deterministic, so seeding again is idempotent.
 
-After pulling: run `pnpm db:migrate:local` (new migrations are applied to the local D1).
+**After pulling, run `pnpm db:migrate:local`**: new migrations (currently up to `0009`) are applied to the local D1.
 
 ## Routes
 
@@ -37,5 +38,12 @@ After pulling: run `pnpm db:migrate:local` (new migrations are applied to the lo
 - `/dl/:token`: signed download of one photo (GET/HEAD; tokens from `download-tokens`, valid 10 min)
 - `/api/g/:slug/download-tokens`: POST, issues up to 50 `/dl` tokens
 - `/api/g/:slug/bulk`: POST, plans "download all / set / favorites" (the browser zips)
-- `/admin`: admin UI (Cloudflare Access)
-- `/api/admin/sync`: "Sync now" (POST, admin only)
+- `/admin`: galleries list (`?estado=todas|publicadas|borradores|archivadas`), Cloudflare Access
+- `/admin/setup`: connect Google, root folder, studio name, "Sync now"
+- `/admin/google/connect`, `/admin/google/callback`: Google OAuth flow
+- `/admin/g/:id`: edit gallery (details, PIN, expiry, status, flags, cover, reorder, share panel + QR)
+- `/admin/g/:id/card`: printable A6 card (`?lang=es|en`)
+- `/admin/g/:id/activity`: views and downloads; `/admin/g/:id/activity.csv`: CSV export
+- `/admin/g/:id/favorites`: favorites per visitor; `/admin/g/:id/favorites.txt`: base names for Capture One
+- `/admin/img/:photoId/:variant`: admin thumbnails (`thumb`, `view-sm`), `private, no-store`
+- `/api/admin/sync`: "Sync now" (POST, admin only, same-origin only)
