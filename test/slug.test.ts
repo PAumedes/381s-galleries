@@ -13,6 +13,8 @@ describe("RESERVED_SLUGS", () => {
       "favicon.ico",
       "robots.txt",
       "manifest.webmanifest",
+      "privacidad",
+      "privacy",
     ]);
   });
 });

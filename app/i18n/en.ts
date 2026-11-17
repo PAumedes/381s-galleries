@@ -88,4 +88,28 @@ export const en = {
   "footer.langEn": "EN",
   "footer.language": "Language",
   "footer.copyright": "© {year} {studio}",
+
+  "footer.privacy": "Privacy",
+  "privacy.title": "Privacy",
+  "privacy.back": "Back to home",
+  "privacy.who.title": "Who runs this",
+  "privacy.who.body":
+    "This app is run by {studio} to deliver photos to its clients.",
+  "privacy.access.title": "What the app accesses",
+  "privacy.access.body":
+    "It only reads (read-only access) the studio's own Google Drive folder that holds the photos. It does not access any Google data of clients or visitors.",
+  "privacy.stored.title": "What we store about visitors",
+  "privacy.stored.body":
+    "The email and name you optionally enter to use favorites or downloads, your favorites, and download and view logs with the country and a hashed IP. We use cookies for gallery access and to remember your language.",
+  "privacy.purpose.title": "Why",
+  "privacy.purpose.body":
+    "To deliver the photos and to let the studio see activity on each gallery.",
+  "privacy.retention.title": "How long",
+  "privacy.retention.body": "Until the studio deletes the gallery.",
+  "privacy.sharing.title": "Selling and third parties",
+  "privacy.sharing.body": "We do not sell or share your data.",
+  "privacy.contact.title": "Contact",
+  "privacy.contact.generic":
+    "For questions, contact the studio through the usual channels.",
+  "privacy.contact.lead": "For questions, write to",
 } as const satisfies Record<keyof typeof es, string>;
