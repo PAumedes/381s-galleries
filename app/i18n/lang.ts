@@ -123,5 +123,5 @@ export function adminLangCookie(lang: Lang, secure = false): string {
 
 /** Expires the old Path=/admin cookie; set alongside the new one. */
 export function legacyAdminLangCookieExpiry(secure = false): string {
-  return `${ADMIN_LANG_COOKIE}=; Max-Age=0; Path=/admin; SameSite=Lax${secure ? "; Secure" : ""}`;
+  return `${ADMIN_LANG_COOKIE}=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/admin; SameSite=Lax${secure ? "; Secure" : ""}`;
 }
