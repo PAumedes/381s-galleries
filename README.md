@@ -60,3 +60,7 @@ It needs Playwright with a Chromium (`npm i -g playwright`; it uses Chrome if in
 - `/admin/g/:id/favorites`: favorites per visitor; `/admin/g/:id/favorites.txt`: base names for Capture One
 - `/admin/img/:photoId/:variant`: admin images (`thumb`, `view-sm`, and the watermarked `thumb-wm` / `view-sm-wm` for Prueba previews), `private, no-store`
 - `/api/admin/sync`: "Sync now" (POST, admin only, same-origin only)
+
+## License
+
+Proprietary. All rights reserved (see `LICENSE`). Third-party dependencies keep their own licenses.
