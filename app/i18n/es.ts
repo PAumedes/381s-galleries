@@ -351,7 +351,6 @@ export const es = {
   "admin.activity.col.who": "Quién",
   "admin.activity.col.what": "Qué",
   "admin.activity.col.size": "Tamaño",
-  "admin.activity.col.country": "País",
   "admin.activity.older": "Más antiguas →",
   "admin.activity.latestVisits": "Últimas visitas",
   "admin.activity.noVisits": "Sin visitas todavía.",

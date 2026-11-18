@@ -353,7 +353,6 @@ export const en = {
   "admin.activity.col.who": "Who",
   "admin.activity.col.what": "What",
   "admin.activity.col.size": "Size",
-  "admin.activity.col.country": "Country",
   "admin.activity.older": "Older →",
   "admin.activity.latestVisits": "Latest visits",
   "admin.activity.noVisits": "No visits yet.",
