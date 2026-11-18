@@ -1,4 +1,4 @@
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 /** How the "Fotos" tiles show a picture: whole (letterboxed) or cropped fill. */
 export type FitMode = "fit" | "fill";
@@ -38,8 +38,25 @@ export function parsePrefs(raw: string | null): FitPrefs {
   }
 }
 
-const subscribe = () => () => {};
+/** Set when storage is unavailable, so the choice still lasts this page view. */
+let memory: string | null | undefined;
+const listeners = new Set<() => void>();
+const emit = () => listeners.forEach((l) => l());
+function subscribe(cb: () => void): () => void {
+  listeners.add(cb);
+  const onStorage = (ev: StorageEvent) => {
+    if (ev.key !== null && ev.key !== STORAGE_KEY) return;
+    memory = undefined;
+    cb();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(cb);
+    window.removeEventListener("storage", onStorage);
+  };
+}
 function snapshot(): string | null {
+  if (memory !== undefined) return memory;
   try {
     return localStorage.getItem(STORAGE_KEY);
   } catch {
@@ -54,16 +71,16 @@ function snapshot(): string | null {
  */
 export function useFitPrefs(): [FitPrefs, (next: Partial<FitPrefs>) => void] {
   const stored = useSyncExternalStore(subscribe, snapshot, () => null);
-  const [chosen, setChosen] = useState<string | null>(null);
-  const prefs = useMemo(() => parsePrefs(chosen ?? stored), [chosen, stored]);
+  const prefs = useMemo(() => parsePrefs(stored), [stored]);
   function update(next: Partial<FitPrefs>) {
     const raw = JSON.stringify({ ...prefs, ...next });
-    setChosen(raw);
     try {
       localStorage.setItem(STORAGE_KEY, raw);
+      memory = undefined;
     } catch {
-      /* not remembered beyond this page view */
+      memory = raw; /* not remembered beyond this page view */
     }
+    emit();
   }
   return [prefs, update];
 }

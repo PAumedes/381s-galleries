@@ -292,9 +292,12 @@ export function PhotoReorder({
                     key={id}
                     data-photo-id={id}
                     draggable
-                    onPointerEnter={(ev) => quick.start(id, ev.currentTarget)}
+                    onPointerEnter={(ev) =>
+                      quick.hover(id, ev.currentTarget, ev.pointerType)
+                    }
+                    onPointerDownCapture={quick.pointerDown}
                     onPointerLeave={quick.stop}
-                    onFocus={(ev) => quick.start(id, ev.currentTarget)}
+                    onFocus={(ev) => quick.focus(id, ev.currentTarget)}
                     onBlur={quick.stop}
                     onDragStart={(ev) => {
                       dragging.current = id;
@@ -515,7 +518,10 @@ export function PhotoReorder({
           names={byId}
           current={viewing}
           onChange={setViewing}
-          onClose={() => setViewing(null)}
+          onClose={() => {
+            quick.quiet();
+            setViewing(null);
+          }}
         />
       )}
     </div>

@@ -238,6 +238,28 @@ describe("Fotos: quick look", () => {
     expect(lookImgs()).toHaveLength(0);
   });
 
+  it("ignores touch pointers even when the device reports hover (iPad with a mouse)", async () => {
+    await ready();
+    fireEvent.pointerEnter(tile("p2"), { pointerType: "touch" });
+    act(() => void vi.advanceTimersByTime(2000));
+    expect(lookImgs()).toHaveLength(0);
+    fireEvent.pointerEnter(tile("p2"), { pointerType: "mouse" });
+    act(() => void vi.advanceTimersByTime(400));
+    expect(lookImgs()).toHaveLength(1);
+  });
+
+  it("real click order (pointerdown, focus, click) does not reopen the look", async () => {
+    await ready();
+    const btn = within(tile("p3")).getByRole("button", { name: "square" });
+    fireEvent.pointerEnter(tile("p3"), { pointerType: "mouse" });
+    act(() => void vi.advanceTimersByTime(400));
+    fireEvent.pointerDown(btn, { pointerType: "mouse" });
+    fireEvent.focus(btn);
+    fireEvent.click(btn);
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(lookImgs()).toHaveLength(0);
+  });
+
   it("stays inside the viewport and does not shift layout (fixed box)", async () => {
     await ready();
     vi.spyOn(tile("p4"), "getBoundingClientRect").mockReturnValue({
