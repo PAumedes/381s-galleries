@@ -123,7 +123,7 @@ describe("PIN limiter", () => {
       (await unlockGallery(post("1234", "9.9.9.9"), "boda", env)).status,
     ).toBe(429);
   });
-  it("a correct PIN clears the gallery counter", async () => {
+  it("a correct PIN does not reset the gallery counter (only refunds its own hit)", async () => {
     await env.DB.prepare(
       "INSERT INTO rate_limits (key, count, window_start) VALUES ('pinG:gP', 99, strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
     ).run();
@@ -131,9 +131,9 @@ describe("PIN limiter", () => {
       (await unlockGallery(post("1234", "8.8.8.8"), "boda", env)).status,
     ).toBe(303);
     const row = await env.DB.prepare(
-      "SELECT 1 AS x FROM rate_limits WHERE key = 'pinG:gP'",
-    ).first();
-    expect(row).toBeNull();
+      "SELECT count FROM rate_limits WHERE key = 'pinG:gP'",
+    ).first<{ count: number }>();
+    expect(row?.count).toBe(99);
   });
 });
 

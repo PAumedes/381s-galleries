@@ -401,11 +401,14 @@ describe("unlockGallery", () => {
     expect(row.count).toBe(1);
   });
 
-  it("a successful unlock clears the counter", async () => {
+  it("a successful unlock clears the per-visitor counter and keeps the gallery one at the wrong-guess count", async () => {
     await addGallery({ pinHash: await hashPin("1234") });
     await unlockGallery(post("bad"), "boda-ana", env);
     await unlockGallery(post("1234"), "boda-ana", env);
-    expect(await db.select().from(schema.rateLimits)).toHaveLength(0);
+    const rows = await db.select().from(schema.rateLimits);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.key.startsWith("pinG:")).toBe(true);
+    expect(rows[0]?.count).toBe(1);
   });
 
   it("rejects cross-site requests with 403 and does not count them", async () => {
