@@ -67,7 +67,7 @@ Los valores se guardan como **secrets de GitHub**: en el repositorio, **Settings
 
 Es seguro repetirlo: los secretos aleatorios (`SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`) se generan solo la primera vez y nunca se regeneran (hacerlo cerraría las sesiones y obligaría a reconectar Google). Los de los pasos 1–2 se vuelven a cargar en cada Setup si están definidos en GitHub.
 
-**Verificá:** abrí <https://gallery.381studios.ar>: debe verse la página con el logo. El Worker no responde en `workers.dev` a propósito.
+**Verificá:** abrí <https://gallery.381studios.ar>: debe verse la página con el logo (el predeterminado; se cambia desde **Ajustes → Logo** en `/admin/setup`, sin tocar el código). El Worker no responde en `workers.dev` a propósito.
 
 ## 5. Ajustes de seguridad del dominio (una sola vez)
 

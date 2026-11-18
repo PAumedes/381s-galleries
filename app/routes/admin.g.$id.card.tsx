@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useRouteLoaderData } from "react-router";
 
 import { getDb, schema } from "../db";
 import { CardView, type CardLang } from "../components/admin/CardView";
@@ -9,6 +9,7 @@ import { metaT, type MetaMatches } from "../i18n/meta";
 import { adminHeaders, getStudioName } from "../lib/server/admin";
 import { requireAdmin } from "../lib/server/auth";
 import { publicGalleryUrl } from "../lib/server/public-url";
+import type { loader as rootLoader } from "../root";
 import type { Route } from "./+types/admin.g.$id.card";
 
 export const headers = () => adminHeaders();
@@ -50,5 +51,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export default function AdminGalleryCard() {
-  return <CardView {...useLoaderData<typeof loader>()} />;
+  const logo = useRouteLoaderData<typeof rootLoader>("root")?.logo;
+  return <CardView {...useLoaderData<typeof loader>()} logo={logo} />;
 }

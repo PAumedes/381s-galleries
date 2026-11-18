@@ -1,3 +1,4 @@
+import { logoSource } from "../Logo";
 import { formatEventDate } from "../../lib/event-date";
 import { QrCode } from "./QrCode";
 
@@ -10,6 +11,8 @@ export interface CardData {
   hasPin: boolean;
   studioName: string;
   lang: CardLang;
+  /** Uploaded-logo versions from the root loader (null = bundled). */
+  logo?: { onLight: string | null; onDark: string | null };
 }
 
 const TEXT = {
@@ -25,6 +28,7 @@ export function CardView({
   hasPin,
   studioName,
   lang,
+  logo,
 }: CardData) {
   const t = TEXT[lang];
   const date = formatEventDate(eventDate, lang);
@@ -54,7 +58,11 @@ export function CardView({
         lang={lang}
         className="print-card flex flex-col items-center justify-between bg-white text-black"
       >
-        <img src="/brand/logo-black.svg" alt="" className="h-[9mm] w-auto" />
+        <img
+          src={logoSource("dark", logo).src}
+          alt=""
+          className="h-[9mm] w-auto"
+        />
         <div className="flex min-w-0 max-w-full flex-col items-center gap-[2mm] text-center">
           <h1 className="line-clamp-3 min-w-0 max-w-full break-words text-[4.2mm] font-light uppercase tracking-[0.2em]">
             {title}
