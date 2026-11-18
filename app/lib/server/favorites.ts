@@ -107,7 +107,7 @@ export async function createAnonVisitor(
   env: FavEnv,
   g: GalleryRow,
 ): Promise<{ visitor: VisitorRow; cookie: string } | null> {
-  const ipHash = await clientIpHash(request, env);
+  const ipHash = await clientIpHash(request, env, { prefix64: true });
   if (!ipHash) return null;
   if (
     !(await rateLimit(
@@ -171,7 +171,7 @@ export async function handleVisitor(
     return reply({ ok: true });
   }
 
-  const ipHash = await clientIpHash(request, env);
+  const ipHash = await clientIpHash(request, env, { prefix64: true });
   if (!ipHash) return reply({ error: "rate_limited" }, 429);
   if (
     !(await rateLimit(

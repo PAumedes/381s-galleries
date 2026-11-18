@@ -371,7 +371,8 @@ export async function serveImage(
 
   // R2 miss: about to spend Drive quota. Hits above are free and unlimited.
   if (!opts.admin) {
-    const ipHash = (await clientIpHash(request, env)) ?? "noip";
+    const ipHash =
+      (await clientIpHash(request, env, { prefix64: true })) ?? "noip";
     const key = `${ipHash}:${gallery.id}`;
     if (!(await rateLimit(env, "img", key, IMG_MISS_MAX, IMG_MISS_WINDOW_MS))) {
       return new Response("Too many requests", {

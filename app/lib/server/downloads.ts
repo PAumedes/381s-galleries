@@ -162,7 +162,7 @@ async function finishGate(
   variant: DlVariant,
   body: Record<string, unknown>,
 ): Promise<Gate | Response> {
-  const ipHash = await clientIpHash(request, env);
+  const ipHash = await clientIpHash(request, env, { prefix64: true });
   const limitedReply = async (scope: string, windowMs: number) =>
     reply({ error: "rate_limited" }, 429, undefined, {
       "Retry-After": String(
@@ -418,7 +418,7 @@ export async function serveDownload(
         ),
       },
     });
-  const ipHash = await clientIpHash(request, env);
+  const ipHash = await clientIpHash(request, env, { prefix64: true });
   if (
     ipHash &&
     !(await rateLimit(
