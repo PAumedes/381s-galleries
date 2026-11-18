@@ -90,3 +90,24 @@ describe("SetupView", () => {
     expect(await screen.findByText(/30 fotos nuevas/)).toBeTruthy();
   });
 });
+
+describe("SetupView layout (four cards)", () => {
+  it("the four sections are equal cards in a grid: 1 col, 2 at md, 4 at xl", async () => {
+    const { container } = show({});
+    await screen.findByText("No conectado");
+    const grid = container.querySelector("[data-testid=setup-cards]");
+    expect(grid).not.toBeNull();
+    expect(grid!.className).toMatch(/\bgrid-cols-1\b|\bgrid\b/);
+    expect(grid!.className).toContain("md:grid-cols-2");
+    expect(grid!.className).toContain("xl:grid-cols-4");
+    expect(grid!.className).not.toMatch(/items-start/);
+    const cards = Array.from(grid!.children);
+    expect(cards).toHaveLength(4);
+    for (const c of cards) {
+      expect(c.tagName).toBe("SECTION");
+      expect(c.className).toMatch(/\bborder\b/);
+      expect(c.className).toMatch(/\bp-\d/);
+      expect(c.className).toContain("min-w-0");
+    }
+  });
+});

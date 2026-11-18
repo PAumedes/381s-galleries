@@ -42,7 +42,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-grey-200 flex min-w-0 flex-col gap-3 border-t pt-6">
+    <section className="border-grey-200 flex min-w-0 flex-col gap-3 border p-5">
       <h2 className="text-micro uppercase text-grey-700">{title}</h2>
       {children}
     </section>
@@ -131,7 +131,10 @@ export function SetupView({
     <div className="flex flex-col gap-8">
       <h1 className="text-title text-ink">{t("admin.setup.title")}</h1>
 
-      <div className="grid items-start gap-x-12 gap-y-8 xl:grid-cols-2">
+      <div
+        data-testid="setup-cards"
+        className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4"
+      >
         <Section title={t("admin.setup.section.drive")}>
           <p className="text-body">
             {data.mock
