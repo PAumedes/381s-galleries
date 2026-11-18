@@ -4,6 +4,7 @@ Client photo galleries for **381 Studios** — a free, self-hosted Pixieset alte
 
 - Capture One exports every size (high-res 2048, web 1200, ig 1080, thumb 600, optional watermarked preview) into a Google Drive folder.
 - The app reads that folder and serves branded galleries at `https://gallery.381studios.ar/<slug>`: PIN, expiry, QR sharing, favorites, multi-size downloads and download tracking.
+- The studio logo is bundled (`public/brand/`) and can be replaced from **Ajustes → Logo** (PNG, JPEG, WebP or a plain SVG, up to 512 KB; validated on the server and served from `/brand/logo/<variant>` with a sandboxing CSP). "Restablecer" goes back to the bundled one.
 - Runs on Cloudflare Workers + D1 + R2 (cache). No servers.
 
 See [PLAN.md](PLAN.md) for the full spec and task list, and [DEPLOY.md](DEPLOY.md) (Spanish) for the step-by-step deployment guide (browser-only: GitHub Actions deploys; run the **Setup** workflow once, then merges to `main` deploy automatically).

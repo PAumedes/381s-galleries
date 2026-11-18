@@ -18,6 +18,7 @@ import { es } from "./i18n/es";
 import { messagesForRequest } from "./i18n/dictionaries";
 import { isAdminPath, langCookie } from "./i18n/lang";
 import { validPublicOrigin } from "./lib/server/public-url";
+import { getLogoVersions } from "./lib/server/logo";
 import { pwaMeta } from "./lib/pwa";
 import { makeT } from "./i18n/t";
 
@@ -33,6 +34,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     // Public canonical origin (not a secret): used by the client share URL.
     origin: validPublicOrigin(env) ?? undefined,
     studioName: await getStudioName(env, request),
+    // Cache-busting versions of the uploaded logos (null = bundled logo).
+    logo: await getLogoVersions(env),
     // CSP nonce for the inline A2HS script (the browser hides it from the DOM
     // after parsing, and only the server render needs it).
     nonce: context.get(nonceContext),

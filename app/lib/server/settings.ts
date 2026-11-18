@@ -18,6 +18,9 @@ export const SETTINGS_KEYS = {
   driveRootName: "drive_root_name",
   /** Studio name override (admin setup); env STUDIO_NAME is the fallback. */
   studioName: "studio_name",
+  /** Uploaded logo metadata `{t: type, v: version}` per variant (file in R2 under brand/). */
+  logoOnLight: "logo_on_light",
+  logoOnDark: "logo_on_dark",
   /** Cache-warm lock `<iso>|<uuid>` (expiry + owner), like sync_lock. */
   warmLock: "warm_lock",
   /** ISO time until which the warm cron skips its scan (nothing was stale). */

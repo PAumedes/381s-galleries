@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { Form, useNavigation } from "react-router";
 
-import { Logo } from "../Logo";
+import { logoSource } from "../Logo";
 import { useFormat } from "../../i18n/use-format";
 import { useT } from "../../i18n/use-t";
 
@@ -12,6 +13,8 @@ export interface SetupViewData {
   lastSyncAt: string | null;
   /** Photos whose R2 cache is warm vs visible photos. */
   cacheWarm?: { warmed: number; total: number };
+  /** Versions of the uploaded logos (null = bundled). */
+  logo?: { onLight: string | null; onDark: string | null };
   lastError: { at: string; message: string } | null;
 }
 
@@ -113,6 +116,168 @@ function SyncSummary({
       </li>
       <li>{t("admin.setup.sync.issues", { n: number(result.issues) })}</li>
     </ul>
+  );
+}
+
+const LOGO_ACCEPT = "image/png,image/jpeg,image/webp,image/svg+xml";
+
+type Pending = { onLight?: string; onDark?: string };
+
+function LogoUploadForm({
+  variant,
+  label,
+  onPick,
+  busy,
+}: {
+  variant: "on-light" | "on-dark";
+  label: string;
+  onPick: (file: File | undefined) => void;
+  busy: boolean;
+}) {
+  const t = useT();
+  return (
+    <Form
+      method="post"
+      encType="multipart/form-data"
+      className="flex min-w-0 flex-col gap-3"
+    >
+      <input type="hidden" name="intent" value="logo" />
+      <input type="hidden" name="variant" value={variant} />
+      <label className="text-small flex flex-col gap-1">
+        {label}
+        <input
+          type="file"
+          name="file"
+          required
+          accept={LOGO_ACCEPT}
+          onChange={(ev) => onPick(ev.currentTarget.files?.[0])}
+          className={input}
+        />
+      </label>
+      <div>
+        <button type="submit" className={btnPrimary} disabled={busy}>
+          {t("admin.setup.logo.upload")}
+        </button>
+      </div>
+    </Form>
+  );
+}
+
+function Swatch({
+  testId,
+  label,
+  dark,
+  src,
+  invert,
+}: {
+  testId: string;
+  label: string;
+  dark: boolean;
+  src: string;
+  invert: boolean;
+}) {
+  const t = useT();
+  return (
+    <figure data-testid={testId} className="flex min-w-0 flex-col gap-1">
+      <div
+        className={`border-grey-300 flex h-28 items-center justify-center border p-3 ${dark ? "bg-black" : "bg-white"}`}
+      >
+        <img
+          src={src}
+          alt={t("admin.setup.logo.previewAlt")}
+          className={`max-h-full max-w-full object-contain ${invert ? "brightness-0 invert" : ""}`}
+          draggable={false}
+        />
+      </div>
+      <figcaption className="text-small text-grey-600">{label}</figcaption>
+    </figure>
+  );
+}
+
+function LogoCard({
+  logo,
+  actionData,
+  busy,
+}: {
+  logo: NonNullable<SetupViewData["logo"]>;
+  actionData: SetupActionData | undefined;
+  busy: boolean;
+}) {
+  const t = useT();
+  const [pending, setPending] = useState<Pending>({});
+  // Local blob: previews only; revoked when replaced or on unmount.
+  useEffect(
+    () => () => {
+      for (const u of Object.values(pending)) URL.revokeObjectURL(u);
+    },
+    [pending],
+  );
+  const pick = (key: keyof Pending) => (file: File | undefined) =>
+    setPending((p) => ({
+      ...p,
+      [key]: file ? URL.createObjectURL(file) : undefined,
+    }));
+  const custom = Boolean(logo.onLight || logo.onDark);
+  const onLight = pending.onLight
+    ? { src: pending.onLight, invert: false }
+    : logoSource("dark", logo);
+  const onDark = pending.onDark
+    ? { src: pending.onDark, invert: false }
+    : pending.onLight
+      ? { src: pending.onLight, invert: !logo.onDark }
+      : logoSource("light", logo);
+  return (
+    <section className="border-grey-200 flex min-w-0 flex-col gap-4 border p-5">
+      <h2 className="text-micro uppercase text-grey-700">
+        {t("admin.setup.section.logo")}
+      </h2>
+      <p className="text-small text-grey-600">{t("admin.setup.logo.hint")}</p>
+      <p className="text-small text-grey-700">
+        {custom ? t("admin.setup.logo.custom") : t("admin.setup.logo.default")}
+      </p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Swatch
+          testId="logo-preview-light"
+          label={t("admin.setup.logo.previewLight")}
+          dark={false}
+          {...onLight}
+        />
+        <Swatch
+          testId="logo-preview-dark"
+          label={t("admin.setup.logo.previewDark")}
+          dark
+          {...onDark}
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <LogoUploadForm
+          variant="on-light"
+          label={t("admin.setup.logo.onLight")}
+          onPick={pick("onLight")}
+          busy={busy}
+        />
+        <LogoUploadForm
+          variant="on-dark"
+          label={t("admin.setup.logo.onDark")}
+          onPick={pick("onDark")}
+          busy={busy}
+        />
+      </div>
+      <Feedback data={actionData} intent="logo" />
+      <Form
+        method="post"
+        onSubmit={(ev) => {
+          if (!window.confirm(t("admin.setup.logo.resetConfirm")))
+            ev.preventDefault();
+        }}
+      >
+        <input type="hidden" name="intent" value="logoReset" />
+        <button type="submit" className={btn} disabled={busy || !custom}>
+          {t("admin.setup.logo.reset")}
+        </button>
+      </Form>
+      <Feedback data={actionData} intent="logoReset" />
+    </section>
   );
 }
 
@@ -254,14 +419,6 @@ export function SetupView({
         </Section>
 
         <Section title={t("admin.setup.section.brand")}>
-          <Logo
-            variant="dark"
-            className="h-16 self-start"
-            name={data.studioName}
-          />
-          <p className="text-small text-grey-600">
-            {t("admin.setup.brand.logoFixed")}
-          </p>
           <Form method="post" className="flex flex-col gap-3">
             <input type="hidden" name="intent" value="studio" />
             <label className="text-small flex flex-col gap-1">
@@ -284,6 +441,12 @@ export function SetupView({
           <Feedback data={actionData} intent="studio" />
         </Section>
       </div>
+
+      <LogoCard
+        logo={data.logo ?? { onLight: null, onDark: null }}
+        actionData={actionData}
+        busy={busy}
+      />
     </div>
   );
 }

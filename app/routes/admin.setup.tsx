@@ -10,11 +10,21 @@ import {
   validStudioName,
 } from "../lib/server/admin";
 import { requestT } from "../i18n/dictionaries";
-import type { TFunction } from "../i18n/t";
+import type { TFunction, TKey } from "../i18n/t";
 import { requireAdmin } from "../lib/server/auth";
 import { getDrive } from "../lib/server/drive-factory";
 import { DriveError, FOLDER_MIME } from "../lib/server/drive-types";
 import type { DriveClient } from "../lib/server/drive-types";
+import {
+  isLogoVariant,
+  getLogoVersions,
+  LOGO_MAX_BYTES,
+  readBodyLimited,
+  resetLogos,
+  saveLogo,
+  SETUP_BODY_MAX_BYTES,
+} from "../lib/server/logo";
+import type { LogoError } from "../lib/server/logo";
 import { disconnectGoogle, isGoogleConnected } from "../lib/server/google-auth";
 import {
   deleteSetting,
@@ -50,6 +60,7 @@ export async function setupData(request: Request, e: Env) {
     studioName: await getStudioName(e, request),
     lastSyncAt: (await getSetting(e, SETTINGS_KEYS.syncLastOk)) ?? null,
     cacheWarm: await warmProgress(e),
+    logo: await getLogoVersions(e),
     lastError,
   };
 }
@@ -130,6 +141,51 @@ async function syncNow(
   }
 }
 
+const LOGO_ERRORS: Record<LogoError, TKey> = {
+  empty: "admin.msg.logoMissing",
+  too_large: "admin.msg.logoTooLarge",
+  unsupported: "admin.msg.logoInvalid",
+  corrupt: "admin.msg.logoInvalid",
+  svg_unsafe: "admin.msg.logoSvgUnsafe",
+};
+
+async function uploadLogo(
+  e: Env,
+  form: FormData,
+  t: TFunction,
+): Promise<SetupActionResult> {
+  const variant = form.get("variant");
+  if (!isLogoVariant(variant))
+    return fail("logo", t("admin.msg.unknownAction"));
+  const file = form.get("file");
+  if (typeof file === "string" || file === null || file.size === 0)
+    return fail("logo", t("admin.msg.logoMissing"));
+  if (file.size > LOGO_MAX_BYTES)
+    return fail("logo", t("admin.msg.logoTooLarge"));
+  const saved = await saveLogo(
+    e,
+    variant,
+    new Uint8Array(await file.arrayBuffer()),
+  );
+  if (!saved.ok) return fail("logo", t(LOGO_ERRORS[saved.error]));
+  return { intent: "logo", ok: true, message: t("admin.msg.logoSaved") };
+}
+
+/** Reads the form with a hard body cap (the only large body is a logo file). */
+async function readForm(request: Request): Promise<FormData | null> {
+  const body = await readBodyLimited(request, SETUP_BODY_MAX_BYTES);
+  if (!body) return null;
+  try {
+    return await new Request(request.url, {
+      method: "POST",
+      headers: { "Content-Type": request.headers.get("Content-Type") ?? "" },
+      body,
+    }).formData();
+  } catch {
+    return new FormData();
+  }
+}
+
 export async function setupAction(
   request: Request,
   e: Env,
@@ -137,7 +193,8 @@ export async function setupAction(
 ): Promise<SetupActionResult> {
   await adminAction(request, e);
   const t = requestT(request);
-  const form = await request.formData();
+  const form = await readForm(request);
+  if (!form) return fail("logo", t("admin.msg.logoTooLarge"));
   const intent = String(form.get("intent") ?? "");
   switch (intent) {
     case "disconnect":
@@ -159,6 +216,11 @@ export async function setupAction(
       await putSetting(e, SETTINGS_KEYS.studioName, name);
       return { intent, ok: true, message: t("admin.msg.nameSaved") };
     }
+    case "logo":
+      return uploadLogo(e, form, t);
+    case "logoReset":
+      await resetLogos(e);
+      return { intent, ok: true, message: t("admin.msg.logoReset") };
     default:
       return fail(intent, t("admin.msg.unknownAction"));
   }
