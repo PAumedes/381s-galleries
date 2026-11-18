@@ -10,6 +10,8 @@ Esta guía es para un fotógrafo o fotógrafa que quiere tener **su propia copia
 > **Permiso de uso.** El código es privado y de uso reservado: "todos los derechos reservados" (ver el archivo `LICENSE` del repositorio). No podés copiarlo ni usarlo sin **permiso escrito del dueño del código**. Pedile ese permiso antes de empezar. Esto no es asesoramiento legal.
 
 > **Versión del código.** Esta guía necesita una versión del código preparada para que otras personas la instalen (sin datos del dueño dentro de las pruebas automáticas). Si en el paso 8 la ejecución falla en **Checks** con una prueba llamada `has both custom-domain routes and the vars`, tu copia es anterior a esa preparación: avisale al dueño del código y esperá la versión nueva.
+>
+> En palabras simples: esta guía solo funciona cuando las pruebas automáticas del propio repositorio ya no controlan el dominio del dueño original. Es una corrección de código que el dueño está decidiendo. **Agentes de IA:** antes del paso 8, verificá si el fork contiene esa corrección (preguntale al dueño o mirá el resultado de la ejecución de **CI**); si no la tiene, detenete y avisale a la persona.
 
 ---
 
@@ -50,7 +52,7 @@ Marcá cada punto antes de empezar:
 | GitHub | **Gratis** | Repositorio público: Actions gratis. Privado: 2.000 minutos por mes gratis; cada despliegue usa unos pocos minutos. |
 | Dominio | **USD 10–15 por año** aprox. | Según la terminación y el registrador. |
 
-Precios según las páginas oficiales consultadas en noviembre de 2026; pueden cambiar.
+Los precios son orientativos y cambian: revisalos en la página de precios de Cloudflare antes de empezar.
 
 ## Tus valores
 
@@ -66,6 +68,7 @@ Elegí estos valores **una sola vez** y anotalos. En el resto de la guía aparec
 | `<ACCESS_TEAM>` | Nombre de "equipo" en Cloudflare Zero Trust (letras y guiones). | `estudioluz` |
 | `<GOOGLE_PROJECT>` | Nombre del proyecto en Google Cloud. | `estudioluz-galerias` |
 | `<GITHUB_USER>` | Tu usuario de GitHub. | `estudioluz` |
+| `<CONTACT_EMAIL>` | Opcional. Email público de contacto que se muestra en tu página `/privacy`. | `hola@estudioluz.com` |
 
 **Secrets** (claves secretas). No los elegís vos: los copiás de Google y Cloudflare durante la guía y los pegás **directamente** en GitHub. **Nunca** los pegues en un chat, un email, un documento ni en el código.
 
@@ -115,10 +118,15 @@ Si `<ROOT_DOMAIN>` ya aparece en tu panel de Cloudflare como **Active**, saltá 
 Vas a editar un solo archivo, `wrangler.jsonc`, desde el navegador.
 
 1. En tu repositorio, abrí el archivo `wrangler.jsonc` y tocá el **lápiz** (Edit this file).
-2. Buscá el bloque que empieza con `"routes": [` y termina con `],` (unas 5 líneas, incluida una línea de comentario que empieza con `//`). **Reemplazá todo ese bloque** por esta única línea (con dos espacios al principio):
+2. Buscá el bloque que empieza con `"routes": [` y termina con `],` (unas 5 líneas, incluida una línea de comentario que empieza con `//`). **Reemplazá todo ese bloque** (líneas de comentario incluidas) por estas cinco líneas, exactamente así (misma sangría, un elemento por línea):
 
    ```jsonc
-     "routes": [{ "pattern": "<GALLERY_HOST>", "custom_domain": true }],
+     "routes": [
+       {
+         "pattern": "<GALLERY_HOST>",
+         "custom_domain": true,
+       },
+     ],
    ```
 
 3. Más abajo, dentro de `"vars"`, cambiá solo lo que está entre comillas a la derecha de estas tres líneas, para que queden así:
@@ -129,12 +137,14 @@ Vas a editar un solo archivo, `wrangler.jsonc`, desde el navegador.
        "LEGACY_HOSTS": "",
    ```
 
+   Opcional: si querés un email público de contacto en tu página `/privacy`, agregá una línea más en el mismo lugar, con una coma al final: `"PUBLIC_CONTACT_EMAIL": "<CONTACT_EMAIL>",`. Sin ella, `/privacy` muestra un texto genérico ("para consultas, contactá al estudio por los canales habituales") en lugar de un email.
+
 4. **No toques** nada más (ni `database_id`: se completa solo en el paso 8). Respetá las comillas y las comas del final de cada línea.
 5. Tocá **Commit changes…** → mensaje "Mis valores" → **Commit changes**.
 
-**Qué vas a ver después:** en la pestaña **Actions** aparece una ejecución de **Deploy** con una cruz roja. **Es normal** antes del paso 8 (todavía no existe tu base de datos ni tus claves). Ignorala.
+**Qué vas a ver después:** en la pestaña **Actions** aparece una ejecución de **Deploy**. Puede fallar (cruz roja) hasta que hayas corrido Setup en el paso 8. Es esperable: puede fallar en **Checks** (ver Problemas comunes) o por un error de la base de datos (D1), porque la app todavía no está instalada del todo. No intentes arreglarlo ahora; seguí y juzgá el resultado después del paso 8.
 
-**Tu logo (opcional, podés hacerlo después):** los logos están en `public/brand/logo-black.svg` (sobre fondo claro) y `public/brand/logo-white.svg` (sobre fondo oscuro). En GitHub, abrí la carpeta `public/brand` → **Add file → Upload files** → subí tus dos archivos SVG **con esos mismos nombres** → **Commit changes**. El ícono de la pestaña del navegador es `public/favicon.svg`. Los íconos de "agregar a pantalla de inicio" (`public/icons/*.png`, `public/apple-touch-icon.png`, `public/favicon.ico`) los tiene que regenerar alguien con la computadora preparada (por ejemplo, el modo agente); mientras tanto quedan los originales.
+**Tu nombre y tu logo (opcionales, podés hacerlos después):** `STUDIO_NAME` es el nombre que se muestra en las páginas públicas (como texto descriptivo del logo, en el pie y en la página de privacidad), en las vistas previas de los links, en el nombre de la app cuando un cliente agrega una galería a la pantalla de inicio y en el panel. También lo podés cambiar después en el panel (**Ajustes**), y ese valor tiene prioridad sobre el de `wrangler.jsonc`. **No cambia ninguna imagen ni archivo:** el logo, los íconos y el archivo genérico de la app `public/manifest.webmanifest` (conserva el nombre original hasta que edites su `name` y `short_name`) quedan como vinieron. Además, un texto de ayuda en la lista vacía de galerías del panel menciona el nombre de carpeta original; ignoralo. Los logos están en `public/brand/logo-black.svg` (sobre fondo claro) y `public/brand/logo-white.svg` (sobre fondo oscuro). En GitHub, abrí la carpeta `public/brand` → **Add file → Upload files** → subí tus dos archivos SVG **con esos mismos nombres** → **Commit changes**. El ícono de la pestaña del navegador es `public/favicon.svg`. Los íconos de "agregar a pantalla de inicio" (`public/icons/*.png`, `public/apple-touch-icon.png`, `public/favicon.ico`) los tiene que regenerar alguien con la computadora preparada (por ejemplo, el modo agente); mientras tanto quedan los originales.
 
 ## Paso 4. Google Cloud (acceso de solo lectura a tu Drive)
 
@@ -149,7 +159,7 @@ La app necesita permiso para **leer** tu Drive. Nunca escribe ni borra nada.
    - **Clients:** **Create client** → tipo **Web application** → nombre `galerias`. En **Authorized redirect URIs** → **Add URI** → exactamente:
      `https://<GALLERY_HOST>/admin/google/callback`
      → **Create**.
-4. Google muestra el **Client ID** y el **Client secret**. Dejá esa pestaña abierta: los vas a pegar en GitHub en el paso 7. (Si la cerraste, el Client ID se ve en **Clients**; si perdiste el secret, creá uno nuevo desde el mismo cliente.)
+4. Google muestra el **Client ID** y el **Client secret**. **Cargalos en GitHub ahora**, siguiendo el procedimiento del paso 7 (abrí GitHub en otra pestaña): creá `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` y después cerrá la pestaña de Google. (Si la cerraste antes, el Client ID se ve en **Clients**; si perdiste el secret, creá uno nuevo desde el mismo cliente.)
 
 **Cómo saber que funcionó:** en **Audience** dice **In production**, y en **Clients** tu cliente tiene la URI de redirección.
 
@@ -167,9 +177,10 @@ Esto protege el panel de administración (`/admin`): solo vos podés entrar. Las
    - igual, path `api/admin`
    - igual, path `admin.data`
 5. **Access policies** → crear una nueva: nombre `Solo yo`, acción **Allow**, regla **Include → Emails** = `<ADMIN_EMAIL>`.
-6. **Login methods:** las cuentas nuevas traen el login con tu cuenta de Cloudflare; no hace falta configurar nada. (Opcional: **Integrations → Identity providers → Add → One-time PIN** para entrar con un código por email.)
+6. **Login methods:** las cuentas nuevas traen el login con tu cuenta de Cloudflare; no hace falta configurar nada. Con ese login por defecto, el email permitido en la política (y el secret `ADMIN_EMAIL`) **tiene que ser el mismo email de tu cuenta de Cloudflare**, si no, no vas a poder entrar. (Opcional: **Integrations → Identity providers → Add → One-time PIN** para entrar con un código por email.)
 7. **Session Duration:** 24 horas → **Create** (o **Save**).
 8. En la lista de aplicaciones, **Configure** en `<STUDIO_NAME> Admin` → **Basic information** (o **Overview**) → copiá el **Application Audience (AUD) Tag**. Es el valor del secret `ACCESS_AUD`.
+9. **Cargá en GitHub ahora**, siguiendo el procedimiento del paso 7: creá `ACCESS_AUD` (el AUD tag), `ADMIN_EMAIL` (tu `<ADMIN_EMAIL>`) y `ACCESS_TEAM_DOMAIN` (`<ACCESS_TEAM>.cloudflareaccess.com`, sin `https://`).
 
 **Cómo saber que funcionó:** la aplicación figura en la lista con tres hostnames y la política `Solo yo`.
 
@@ -193,14 +204,15 @@ Esto protege el panel de administración (`/admin`): solo vos podés entrar. Las
    - **Zone → DNS → Edit**
    - **Zone → Zone → Read**
 3. **Account Resources:** Include → tu cuenta. **Zone Resources:** Include → **Specific zone** → `<ROOT_DOMAIN>`.
-4. **Continue to summary → Create Token.** Cloudflare muestra el token **una sola vez**: dejá la pestaña abierta para el paso 7.
-5. **Account ID:** Cloudflare → **Workers & Pages** (o la página principal de la cuenta) → **Account ID** → copiar.
+4. **Continue to summary → Create Token.** Cloudflare muestra el token **una sola vez**: cargalo en GitHub ahora mismo (punto siguiente).
+5. **Account ID:** Cloudflare → **Workers & Pages** → **Account details** (o la barra lateral derecha) → copiá el Account ID.
+6. **Cargá en GitHub ahora**, siguiendo el procedimiento del paso 7: creá `CLOUDFLARE_API_TOKEN` y `CLOUDFLARE_ACCOUNT_ID`, y después cerrá la pestaña de Cloudflare que mostró el token.
 
 ## Paso 7. Cargá los secrets en GitHub
 
 1. En tu repositorio: **Settings → Secrets and variables → Actions → New repository secret**.
-2. Creá uno por uno los siete secrets de la tabla de [Tus valores](#tus-valores). En **Name** va el nombre exacto (en mayúsculas); en **Secret**, el valor copiado **directamente** de la pestaña de Google o Cloudflare. Para `ACCESS_TEAM_DOMAIN` poné `<ACCESS_TEAM>.cloudflareaccess.com` (sin `https://`).
-3. Cuando termines, podés cerrar las pestañas de Google y Cloudflare que tenían valores secretos.
+2. Creá uno por uno los secrets de la tabla de [Tus valores](#tus-valores), **al final de los pasos 4, 5 y 6** como te indican esos pasos (así ningún valor secreto queda abierto en pantalla mucho tiempo). Si lo hiciste, acá solo revisás la lista. En **Name** va el nombre exacto (en mayúsculas); en **Secret**, el valor copiado **directamente** de la pestaña de Google o Cloudflare. Para `ACCESS_TEAM_DOMAIN` poné `<ACCESS_TEAM>.cloudflareaccess.com` (sin `https://`).
+3. Cuando termines, cerrá las pestañas de Google y Cloudflare que tenían valores secretos.
 
 **Cómo saber que funcionó:** en **Repository secrets** ves los siete nombres. GitHub nunca vuelve a mostrar los valores; eso es lo esperado.
 
@@ -215,8 +227,10 @@ Esto protege el panel de administración (`/admin`): solo vos podés entrar. Las
 
 **Cómo saber que funcionó:**
 - La ejecución tiene tilde verde.
-- `https://<GALLERY_HOST>` abre una página con tu logo (puede tardar unos minutos la primera vez mientras se emite el certificado).
+- `https://<GALLERY_HOST>` abre una página. Muestra el logo que viene con el código hasta que subas el tuyo (paso 3), y tu `<STUDIO_NAME>` en los textos. La primera vez puede tardar unos minutos mientras se emite el certificado.
 - `https://<GALLERY_HOST>/admin` te lleva a la pantalla de login de Cloudflare.
+
+Si algo no coincide, mirá la fila correspondiente de [Problemas comunes](#problemas-comunes) ("abre pero muestra otro logo u otro nombre", "no abre", "el login entra en bucle").
 
 Podés repetir Setup cuantas veces quieras: no borra nada y no cambia las claves generadas.
 
@@ -241,7 +255,7 @@ Por qué: la app solo permite sus propios scripts. Esas funciones de Cloudflare 
 4. **Sincronizar ahora.** Cada subcarpeta de `<DRIVE_FOLDER>` aparece como una galería en borrador.
 5. Abrí una galería → **Publicar** → en **Compartir**, copiá el link o descargá el QR.
 
-**Cómo saber que funcionó:** el link `https://<GALLERY_HOST>/<nombre-de-la-galería>` abre la galería en una ventana de incógnito.
+**Cómo saber que funcionó:** el link `https://<GALLERY_HOST>/<nombre-de-la-galería>` abre la galería en una ventana de incógnito. Si no abre, mirá "El link de la galería no abre en una ventana de incógnito" en [Problemas comunes](#problemas-comunes).
 
 Nota: el panel muestra las fechas y horas en **hora de Buenos Aires** (UTC−3). Si estás en otra zona horaria, tenelo en cuenta al poner vencimientos.
 
@@ -283,14 +297,16 @@ Creá estas recetas de proceso (Process Recipes), todas habilitadas, formato **J
 | Síntoma | Qué hacer |
 |---|---|
 | Setup o Deploy falla en **Checks** con `has both custom-domain routes and the vars` | Tu copia del código todavía no está preparada para otras personas (ver "Versión del código" al principio). Avisale al dueño. |
-| Falla en **Checks** con un error de formato (`prettier`, `Code style issues`) en `wrangler.jsonc` | La edición del paso 3 no quedó exacta. Revisá que `routes` sea **una sola línea** como en el ejemplo, sin espacios de más al final de las líneas, y que cada línea termine en coma. |
+| Falla en **Checks** con un error de formato (`prettier`, `Code style issues`) en `wrangler.jsonc` | La edición del paso 3 no quedó exacta. Revisá que `routes` tenga exactamente las cinco líneas del paso 3 (el objeto abierto en varias líneas, no apretado en una), sin espacios de más al final de las líneas, y que cada línea termine en coma. |
 | Error "Authentication error" o código 10000 | Al token le falta un permiso o es de otra cuenta. Revisá las siete filas del paso 6b, que la zona sea `<ROOT_DOMAIN>` y que `CLOUDFLARE_ACCOUNT_ID` sea el de la misma cuenta. |
 | Error que menciona R2 (por ejemplo, "enable R2") | Falta el paso 6a. Activá R2 y volvé a ejecutar Setup. |
 | "DNS record already exists" / "externally managed DNS records" | Ya existe un registro DNS para `<GALLERY_HOST>`. Borralo en **DNS → Records** y volvé a ejecutar Setup. |
 | Setup termina con algún `MISSING` | Falta ese secret en GitHub. Agregalo (paso 7) y volvé a ejecutar Setup. |
 | Setup falla en "Commit database id" | Volvé a ejecutarlo. Si sigue, en **Settings → Branches** permití que `github-actions` haga push a `main`. |
 | Setup aparece como "cancelled" | Volvé a ejecutarlo (Setup y Deploy comparten una cola). |
-| La primera ejecución de Deploy tiene cruz roja | Normal antes de correr Setup. |
+| La primera ejecución de Deploy tiene cruz roja | Puede pasar hasta que Setup se haya ejecutado (ver paso 3). Ejecutá Setup (paso 8) y juzgá el resultado de esa ejecución. Si Setup también falla, abrí el paso que falló y buscá su mensaje en esta tabla. |
+| `https://<GALLERY_HOST>` abre, pero muestra otro logo u otro nombre | El logo y los íconos son los que vienen con el código hasta que subas los tuyos (paso 3). Para el nombre: revisá `STUDIO_NAME` en `wrangler.jsonc` y el nombre guardado en el panel (**Ajustes**), que tiene prioridad. Después ejecutá Setup o Deploy otra vez y refrescá con Ctrl+Shift+R. |
+| El link de la galería no abre en una ventana de incógnito | La galería sigue en borrador, archivada o vencida: abrila en el panel y **Publicar**. Si pide un PIN, es normal. Revisá también que el link sea `https://<GALLERY_HOST>/<nombre-de-la-galería>` y que hayas hecho **Sincronizar ahora**. |
 | `https://<GALLERY_HOST>` no abre | Esperá 10–15 minutos (certificado). Revisá que el dominio esté **Active** en Cloudflare. |
 | El login de `/admin` entra en bucle o da 403 / "Unauthorized" | `ADMIN_EMAIL`, `ACCESS_AUD` o `ACCESS_TEAM_DOMAIN` no coinciden con el paso 5, o el email no es el de la política. Corregí el secret y volvé a ejecutar Setup. |
 | Google dice `redirect_uri_mismatch` | La URI del paso 4 no es exactamente `https://<GALLERY_HOST>/admin/google/callback`. |
@@ -299,6 +315,9 @@ Creá estas recetas de proceso (Process Recipes), todas habilitadas, formato **J
 | Error de CPU, "too many subrequests" o "too many API requests" al sincronizar | Biblioteca grande para el plan gratis. Pasá a **Workers Paid (USD 5/mes)**. La sincronización se detiene sin dañar nada. |
 | Error 429 / "rate limit" | Google limita las llamadas a Drive. Esperá unos minutos. |
 | Las imágenes tardan la primera vez | Normal: la app las copia a R2 de a poco (unos minutos por galería nueva). |
+| "Fotos en caché: N / M" no llega a M | Es el precalentamiento: una tarea programada (cron) de cada minuto (gratis, no consume tu cuota de Drive) copia las versiones chicas de cada foto nueva a R2, hasta 20 fotos por minuto. Una galería nueva tarda unos minutos en quedar lista; mientras tanto cada foto carga desde Drive en su primera visita. Si no avanza, revisá que existan ambos crons (`*/15 * * * *` y `* * * * *`) en Cloudflare → el Worker → **Settings → Triggers**. |
+| Las imágenes no se ven | Falta el bucket R2 (el que figura en `r2_buckets` de `wrangler.jsonc`). Ejecutá Setup de nuevo; lo crea si no existe. |
+| Error al navegar entre páginas del panel pero no al recargar | Falta el path `admin.data` en tu aplicación de Access (paso 5, punto 4). Agregalo como tercer public hostname. |
 
 ---
 
@@ -309,7 +328,7 @@ Instrucciones para un agente de IA con acceso al navegador y/o a una terminal qu
 ### Reglas (siempre)
 
 1. **Permiso:** antes de nada, preguntá si la persona tiene **permiso escrito** del dueño del código. Si no, **detenete**.
-2. **Secrets:** nunca imprimas, registres, resumas ni repitas un secret (los siete del paso 7, el token, el Client secret, `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`). **Nunca** pidas que la persona pegue un secret en el chat. Los secrets van de la página del proveedor a la página de secrets de GitHub, copiados por la persona; o con `gh secret set <NOMBRE>` ejecutado **por la persona en su propia terminal** (la entrada queda oculta). No uses `set -x`, `echo` de variables secretas ni archivos temporales con secrets.
+2. **Secrets:** nunca imprimas, registres, resumas ni repitas un secret (los siete del paso 7, el token, el Client secret, `SESSION_SECRET`, `DOWNLOAD_SECRET`, `TOKEN_KEY`). **Nunca** pidas que la persona pegue un secret en el chat. Los secrets van de la página del proveedor a la página de secrets de GitHub, copiados por la persona; o con `gh secret set <NOMBRE>` ejecutado **por la persona en su propia terminal**, dejando que `gh` pida el valor (la entrada queda oculta) o haciendo que la persona lo escriba. **Nunca** pases el valor con `--body` ni con `< archivo`. No uses `set -x`, `echo` de variables secretas ni archivos temporales con secrets.
 3. **Consentimiento:** iniciar sesión, aceptar términos, cargar medios de pago, cambiar nameservers, publicar la app de Google ("In production") y aceptar el permiso de Google en el paso 10 los hace **la persona**. Podés guiar y mostrar dónde tocar, pero no lo hagas sin que ella lo confirme en el momento.
 4. **No cambies código de la app** ni pruebas. El único archivo que editás es `wrangler.jsonc` (paso 3) y, si la persona lo pide, los logos. Nunca crees `ALLOW_DEV_ADMIN` en producción ni subas `.dev.vars`.
 5. **Idempotencia:** antes de crear algo, verificá si ya existe. Setup se puede repetir.
@@ -317,7 +336,7 @@ Instrucciones para un agente de IA con acceso al navegador y/o a una terminal qu
 
 ### Paso 0 del agente: preguntar
 
-Pedí a la persona (son datos no secretos) los valores de la tabla [Tus valores](#tus-valores): `<STUDIO_NAME>`, `<ROOT_DOMAIN>`, `<GALLERY_HOST>`, `<ADMIN_EMAIL>`, `<DRIVE_FOLDER>`, `<ACCESS_TEAM>`, `<GOOGLE_PROJECT>`, `<GITHUB_USER>` y la dirección del repositorio original. Confirmá:
+Pedí a la persona (son datos no secretos) los valores de la tabla [Tus valores](#tus-valores): `<STUDIO_NAME>`, `<ROOT_DOMAIN>`, `<GALLERY_HOST>`, `<ADMIN_EMAIL>`, `<DRIVE_FOLDER>`, `<ACCESS_TEAM>`, `<GOOGLE_PROJECT>`, `<GITHUB_USER>`, opcionalmente `<CONTACT_EMAIL>`, y la dirección del repositorio original. Confirmá:
 - `<GALLERY_HOST>` termina en `.<ROOT_DOMAIN>` y no está en uso.
 - `<ADMIN_EMAIL>` es el email de su cuenta de Cloudflare.
 - `<STUDIO_NAME>` no tiene comillas dobles ni barras invertidas.
@@ -326,7 +345,7 @@ Pedí a la persona (son datos no secretos) los valores de la tabla [Tus valores]
 
 | Paso | Agente por CLI/API | Agente en el navegador (con la sesión de la persona) | Solo la persona |
 |---|---|---|---|
-| 1 Fork | `gh repo fork <owner>/<repo> --default-branch-only --clone=false` (tras `gh auth login` hecho por la persona) | Habilitar Actions en el fork | Login en GitHub |
+| 1 Fork | **Preguntale primero a la persona** (esto crea un repositorio en su cuenta) y después `gh repo fork <owner>/<repo> --default-branch-only --clone=false` (tras `gh auth login` hecho por la persona) | Habilitar Actions en el fork | Login en GitHub |
 | 2 Dominio | Verificar nameservers con `dig` | Agregar el dominio en Cloudflare | Cambiar nameservers en el registrador; medio de pago |
 | 3 Config | Editar `wrangler.jsonc`, `prettier --check`, commit y push | o editar en la web de GitHub | — |
 | 4 Google | `gcloud projects create <GOOGLE_PROJECT>` y `gcloud services enable drive.googleapis.com --project <GOOGLE_PROJECT>` (si la persona ya hizo `gcloud auth login`) | Branding, Audience, Data Access, Clients (no hay CLI para el cliente OAuth web) | **Publish app**; copiar Client ID/secret a GitHub |
@@ -371,7 +390,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://<GALLERY_HOST>/privacy     # 2
 curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' http://<GALLERY_HOST>/   # 301 hacia https
 ```
 
-El log de Setup filtrado con `grep` solo muestra nombres de secrets y su estado; GitHub además enmascara los valores. No imprimas el log completo en el chat si no hace falta.
+El log de Setup filtrado con `grep` solo muestra nombres de secrets y su estado; GitHub además enmascara los valores. **Siempre** pasá `gh run view --log` por `grep` como arriba y nunca imprimas el log completo.
 
 ### Condiciones para detenerse
 
@@ -380,8 +399,8 @@ Detenete y explicale a la persona qué pasó (sin secrets) si:
 - No hay permiso escrito del dueño del código.
 - El dominio no está **Active** en Cloudflare después de 24 horas.
 - `prettier --check` falla después de dos intentos de editar `wrangler.jsonc`.
-- Setup falla en **Checks** por una prueba (no por formato): la copia del código necesita una versión nueva del dueño. No modifiques las pruebas.
+- Antes del paso 8, el fork no contiene la corrección de código descripta al principio (pruebas que ya no controlan el dominio del dueño original), o Setup falla en **Checks** por una prueba (no por formato): la copia del código necesita una versión nueva del dueño. No modifiques las pruebas.
 - Setup falla dos veces seguidas con el mismo error de permisos de Cloudflare.
 - Un paso pide algo que no está en esta guía (otro permiso, otro pago, otro tipo de cuenta).
 - Cualquier herramienta está por mostrar un valor secreto.
-- `https://<GALLERY_HOST>/admin` responde 200 sin pasar por el login de Cloudflare: **es una falla de seguridad**. Pedile a la persona que desconecte el dominio (Cloudflare → Workers & Pages → el Worker → **Settings → Domains & Routes** → quitar `<GALLERY_HOST>`) y avise al dueño del código.
+- `https://<GALLERY_HOST>/admin` responde 200 sin pasar por el login de Cloudflare: **es una falla de seguridad**. Quitar el dominio del Worker (Cloudflare → Workers & Pages → el Worker → **Settings → Domains & Routes** → quitar `<GALLERY_HOST>`) es **un "preguntale primero a la persona" explícito**: explicale el problema, dejá que ella decida y lo haga, y pedile que avise al dueño del código.
