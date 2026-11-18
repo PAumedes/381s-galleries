@@ -261,7 +261,7 @@ export async function loadGallery(
   if (!session?.viewed) {
     try {
       if (shouldLogView(request)) {
-        const info = await visitorInfo(request, env);
+        const info = await visitorInfo(request, env, g.id);
         if (!session?.visitorId && !info.ipHash) {
           // Cookieless request with no client IP (never happens behind
           // Cloudflare): skip logging rather than allow unbounded inflation.

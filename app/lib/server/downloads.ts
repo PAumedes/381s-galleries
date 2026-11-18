@@ -345,7 +345,7 @@ export async function handleBulk(
     visitorId: visitor.id,
     variant,
     kind: "bulk",
-    ...(await visitorInfo(request, env)),
+    ...(await visitorInfo(request, env, g.id)),
     ua: rawUserAgent(request),
     bulkScope:
       scope === "set"
@@ -470,7 +470,7 @@ export async function serveDownload(
   const isHead = request.method === "HEAD";
   const log = async () => {
     if (isHead) return;
-    const info = await visitorInfo(request, env);
+    const info = await visitorInfo(request, env, gallery.id);
     await db
       .insert(schema.downloads)
       .values({

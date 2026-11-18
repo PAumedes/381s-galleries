@@ -110,13 +110,13 @@ export const es = {
     "La fecha y la hora; el país, la región, la ciudad, el continente y la zona horaria aproximados (los informa Cloudflare según tu conexión); el número y el nombre de la red de tu proveedor de internet; el idioma principal de tu navegador; el sitio desde el que llegaste (solo el dominio, sin ruta ni parámetros); el navegador y su versión principal, el sistema operativo y el tipo de dispositivo; y, en las descargas, los primeros 200 caracteres del identificador de tu navegador (User-Agent).",
   "privacy.ip.title": "Tu dirección IP",
   "privacy.ip.body":
-    "Nunca guardamos tu dirección IP. Solo guardamos un código calculado con una clave secreta (un hash de una sola vía, que no permite recuperar la IP), que usamos para contar visitas únicas y detectar abusos.",
+    "Nunca guardamos tu dirección IP. Solo guardamos un código calculado con una clave secreta (un hash de una sola vía, que no permite recuperar la IP). El código es distinto en cada galería, así que no se puede vincular tu visita entre galerías. Lo usamos para contar visitas únicas y detectar abusos.",
   "privacy.purpose.title": "Para qué lo usamos",
   "privacy.purpose.body":
     "Para entregar las fotos, para que el estudio vea la actividad y las estadísticas de cada galería (por ejemplo, desde qué países y dispositivos se mira) y para detectar abusos y proteger la galería.",
   "privacy.retention.title": "Cuánto tiempo",
   "privacy.retention.body":
-    "Mientras exista la galería: se eliminan cuando el estudio elimina la galería.",
+    "Guardamos el historial de visitas y descargas; no se elimina automáticamente. Si querés que se borre, pedíselo al estudio.",
   "privacy.sharing.title": "Venta y terceros",
   "privacy.sharing.body": "No vendemos ni compartimos tus datos.",
   "privacy.contact.title": "Contacto",

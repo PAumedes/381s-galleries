@@ -116,6 +116,7 @@ describe("visitorInfo", () => {
         },
       ),
       ENV,
+      "g1",
     );
     expect(info).toMatchObject({
       country: "AR",
@@ -137,12 +138,12 @@ describe("visitorInfo", () => {
   });
 
   it("falls back to regionCode", async () => {
-    const info = await visitorInfo(req({}, { regionCode: "B" }), ENV);
+    const info = await visitorInfo(req({}, { regionCode: "B" }), ENV, "g1");
     expect(info.region).toBe("B");
   });
 
   it("without request.cf everything cf-derived is null and nothing throws", async () => {
-    const info = await visitorInfo(req({}), ENV);
+    const info = await visitorInfo(req({}), ENV, "g1");
     expect(info).toMatchObject({
       country: null,
       region: null,
@@ -175,6 +176,7 @@ describe("visitorInfo", () => {
         },
       ),
       ENV,
+      "g1",
     );
     expect(info.country).toBeNull();
     expect(info.region?.length).toBe(100);
@@ -188,12 +190,14 @@ describe("visitorInfo", () => {
 
   it("asn must be a safe non-negative integer", async () => {
     for (const asn of [-1, 1.5, NaN, Infinity, 2 ** 40, null])
-      expect((await visitorInfo(req({}, { asn }), ENV)).asn).toBeNull();
-    expect((await visitorInfo(req({}, { asn: 64512 }), ENV)).asn).toBe(64512);
+      expect((await visitorInfo(req({}, { asn }), ENV, "g1")).asn).toBeNull();
+    expect((await visitorInfo(req({}, { asn: 64512 }), ENV, "g1")).asn).toBe(
+      64512,
+    );
   });
 
   it("ipHash is null without a client IP outside mock mode", async () => {
     const live = { ...(ENV as object), DRIVE_MODE: "google" } as never;
-    expect((await visitorInfo(req({}), live)).ipHash).toBeNull();
+    expect((await visitorInfo(req({}), live, "g1")).ipHash).toBeNull();
   });
 });

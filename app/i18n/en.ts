@@ -112,13 +112,13 @@ export const en = {
     "The date and time; your approximate country, region, city, continent and time zone (reported by Cloudflare from your connection); the number and name of your internet provider's network; your browser's main language; the site you came from (domain only, no path or parameters); your browser and its major version, operating system and type of device; and, for downloads, the first 200 characters of your browser's identifier (User-Agent).",
   "privacy.ip.title": "Your IP address",
   "privacy.ip.body":
-    "We never store your IP address. We only keep a code computed with a secret key (a one-way hash that cannot be reversed into the IP), used to count unique visits and detect abuse.",
+    "We never store your IP address. We only keep a code computed with a secret key (a one-way hash that cannot be reversed into the IP). The code is different in each gallery, so your visits cannot be linked across galleries. We use it to count unique visits and detect abuse.",
   "privacy.purpose.title": "Why",
   "privacy.purpose.body":
     "To deliver the photos, to let the studio see the activity and statistics of each gallery (for example, which countries and devices it is viewed from), and to detect abuse and protect the gallery.",
   "privacy.retention.title": "How long",
   "privacy.retention.body":
-    "For as long as the gallery exists: it is all deleted when the studio deletes the gallery.",
+    "We keep the visit and download history; nothing is deleted automatically. If you want it removed, ask the studio.",
   "privacy.sharing.title": "Selling and third parties",
   "privacy.sharing.body": "We do not sell or share your data.",
   "privacy.contact.title": "Contact",

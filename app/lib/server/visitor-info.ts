@@ -6,6 +6,7 @@
  * characters and length-capped here, and the DB has CHECKs as a second wall.
  */
 import { wellFormed } from "../text";
+import { hashIp } from "./crypto";
 import { clientIpHash, type AccessEnv } from "./access";
 import { parseUserAgent, type Device } from "./user-agent";
 
@@ -110,11 +111,27 @@ type CfProps = Partial<Record<string, unknown>>;
 
 /** The visitor's raw User-Agent as stored in `downloads.ua` (cleaned, capped). */
 export const rawUserAgent = (request: Request): string | null =>
-  cleanText(request.headers.get("User-Agent"), CAPS.ua);
+  cleanText(
+    scrubIps(request.headers.get("User-Agent")?.slice(0, MAX_HEADER)),
+    CAPS.ua,
+  );
+
+const IPV4 = /\b\d{1,3}(?:\.\d{1,3}){3}\b/g;
+// Any run of hex groups with at least two colons (covers `::`, `::1`, full and v4-mapped forms).
+const IPV6 =
+  /(?<![\w:])(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}(?:\.\d{1,3}){0,3}(?![\w:])/gi;
+
+/** Replaces IPv4/IPv6 literals with "[ip]": the UA is stored raw and some clients/proxies embed the address. */
+function scrubIps(v: string | null | undefined): string | null | undefined {
+  return typeof v === "string"
+    ? v.replace(IPV6, "[ip]").replace(IPV4, "[ip]")
+    : v;
+}
 
 export async function visitorInfo(
   request: Request,
   env: AccessEnv & { PUBLIC_ORIGIN?: string },
+  galleryId: string,
 ): Promise<VisitorInfo> {
   const cf: CfProps = (request as { cf?: CfProps }).cf ?? {};
   const own = [new URL(request.url).hostname];
@@ -124,9 +141,13 @@ export async function visitorInfo(
     /* a bad PUBLIC_ORIGIN just means no second own host */
   }
   const ua = parseUserAgent(request.headers.get("User-Agent"));
+  // Stored hash is salted per gallery so one visitor cannot be linked across galleries.
+  const base = await clientIpHash(request, env, { prefix64: true });
   return {
     country: upperCode(cf.country),
-    ipHash: await clientIpHash(request, env),
+    ipHash: base
+      ? await hashIp(`${galleryId}:${base}`, env.SESSION_SECRET)
+      : null,
     region: cleanText(cf.region ?? cf.regionCode, CAPS.region),
     city: cleanText(cf.city, CAPS.city),
     continent: upperCode(cf.continent),
