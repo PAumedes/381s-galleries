@@ -3,6 +3,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
@@ -45,8 +46,35 @@ const srcSetOf = (imgUrl: ImgUrlFn) => (id: string, v?: string) => {
   return lg === sm ? `${sm} 1200w` : `${sm} 1200w, ${lg} 2048w`;
 };
 
-const BTN =
-  "flex size-11 items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white disabled:pointer-events-none disabled:opacity-25";
+const FOCUS =
+  "focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white";
+
+const BTN = `flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white ${FOCUS} disabled:pointer-events-none disabled:opacity-25`;
+
+// Previous/next: wide full-height side zones (15% of the width, 64px at
+// least) that start below the top bar. Always clickable, even while the chrome
+// is faded, and never pointer-events-none when disabled, so a click can't fall
+// through to the backdrop and close the lightbox. Phones swipe instead.
+const NAV_ZONE = `absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 ${FOCUS} disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:hidden`;
+
+const TOP_BAR_PX = 64;
+const SIDE_ZONE_FRACTION = 0.18; // slightly wider than the 15vw arrows
+
+/**
+ * Backdrop click rule: closes only on clearly empty backdrop, that is the
+ * stage itself (not the photo, shield or a control), horizontally between the
+ * two navigation zones and below the top bar. A miss near an arrow or the
+ * controls does nothing instead of closing.
+ */
+const isEmptyBackdropClick = (e: ReactMouseEvent<HTMLElement>) => {
+  if (e.target !== e.currentTarget) return false;
+  const w = window.innerWidth;
+  return (
+    e.clientX > w * SIDE_ZONE_FRACTION &&
+    e.clientX < w * (1 - SIDE_ZONE_FRACTION) &&
+    e.clientY > TOP_BAR_PX
+  );
+};
 
 const FOCUSABLE =
   "button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])";
@@ -348,7 +376,7 @@ function LightboxView({
         onPointerUp={endDrag}
         onPointerCancel={(e) => endDrag(e, true)}
         onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
+          if (isEmptyBackdropClick(e)) onClose();
         }}
       >
         {failed ? (
@@ -360,7 +388,7 @@ function LightboxView({
             <span>{t("lightbox.loadError")}</span>
             <button
               type="button"
-              className="flex min-h-11 items-center gap-2 px-3 underline hover:text-white"
+              className="flex min-h-11 cursor-pointer items-center gap-2 px-3 underline hover:text-white"
               onClick={() => {
                 setFailedId(null);
                 setRetryState((r) => ({
@@ -475,21 +503,21 @@ function LightboxView({
 
       <button
         type="button"
-        className={`${BTN} absolute top-1/2 left-2 -translate-y-1/2 pointer-coarse:hidden ${chrome}`}
+        className={`${NAV_ZONE} left-0`}
         aria-label={t("lightbox.previous")}
         disabled={!hasPrev}
         onClick={prev}
       >
-        <ChevronLeft />
+        <ChevronLeft className={`size-12 ${chrome}`} />
       </button>
       <button
         type="button"
-        className={`${BTN} absolute top-1/2 right-2 -translate-y-1/2 pointer-coarse:hidden ${chrome}`}
+        className={`${NAV_ZONE} right-0`}
         aria-label={t("lightbox.next")}
         disabled={!hasNext}
         onClick={next}
       >
-        <ChevronRight />
+        <ChevronRight className={`size-12 ${chrome}`} />
       </button>
     </div>
   );
