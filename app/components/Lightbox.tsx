@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
@@ -501,24 +502,48 @@ function LightboxView({
         </div>
       </div>
 
-      <button
-        type="button"
-        className={`${NAV_ZONE} left-0`}
-        aria-label={t("lightbox.previous")}
-        disabled={!hasPrev}
+      <NavZone
+        side="left"
+        label={t("lightbox.previous")}
+        enabled={hasPrev}
         onClick={prev}
       >
         <ChevronLeft className={`size-12 ${chrome}`} />
-      </button>
-      <button
-        type="button"
-        className={`${NAV_ZONE} right-0`}
-        aria-label={t("lightbox.next")}
-        disabled={!hasNext}
+      </NavZone>
+      <NavZone
+        side="right"
+        label={t("lightbox.next")}
+        enabled={hasNext}
         onClick={next}
       >
         <ChevronRight className={`size-12 ${chrome}`} />
-      </button>
+      </NavZone>
     </div>
+  );
+}
+
+function NavZone({
+  side,
+  label,
+  enabled,
+  onClick,
+  children,
+}: {
+  side: "left" | "right";
+  label: string;
+  enabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      className={`${NAV_ZONE} ${side}-0`}
+      aria-label={label}
+      disabled={!enabled}
+      onClick={onClick}
+    >
+      {children}
+    </button>
   );
 }
