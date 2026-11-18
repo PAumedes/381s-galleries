@@ -53,6 +53,22 @@ export async function resetRateLimit(
     .run();
 }
 
+/**
+ * Give back one hit (never below 0). Used to refund a gallery-wide attempt
+ * that turned out to be a correct PIN, so only wrong guesses consume it.
+ */
+export async function refundRateLimit(
+  env: LimitEnv,
+  scope: string,
+  key: string,
+): Promise<void> {
+  await env.DB.prepare(
+    "UPDATE rate_limits SET count = count - 1 WHERE key = ?1 AND count > 0",
+  )
+    .bind(`${scope}:${key}`)
+    .run();
+}
+
 /** Whole seconds (>= 1) until the counter's current window ends. */
 export async function retryAfterSeconds(
   env: LimitEnv,

@@ -16,7 +16,7 @@ import {
 import { verifyPin } from "./crypto";
 import { imageVersionToken } from "./images";
 import { asLang } from "../../i18n/lang";
-import { rateLimit, resetRateLimit } from "./rate-limit";
+import { rateLimit, refundRateLimit, resetRateLimit } from "./rate-limit";
 
 type GalleryEnv = AccessEnv;
 
@@ -307,9 +307,10 @@ export async function unlockGallery(
   if (!ok || !pin) return { status: 400 };
 
   await resetRateLimit(env, "pin", `${ipHash}:${g.id}`);
-  // Only wrong guesses should exhaust the gallery budget: a correct PIN means
-  // the guests are legitimate (many unlock at once at an event).
-  await resetRateLimit(env, "pinG", g.id);
+  // Only wrong guesses consume the gallery-wide budget: refund just this
+  // attempt's hit. Never reset the counter, or a correct PIN would hand
+  // guessers a fresh budget (PLAN §6: 100 wrong guesses / 10 min / gallery).
+  await refundRateLimit(env, "pinG", g.id);
   const setCookie = await updateSession(request, g, { unlocked: true }, env);
   return { status: 303, location, setCookie };
 }
