@@ -26,6 +26,7 @@ export function PhotoViewer({
 }) {
   const t = useT();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const i = ids.indexOf(current);
   const prev = i > 0 ? ids[i - 1] : undefined;
   const next = i >= 0 && i < ids.length - 1 ? ids[i + 1] : undefined;
@@ -38,7 +39,21 @@ export function PhotoViewer({
   }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Tab") {
+        const nodes = Array.from(
+          dialogRef.current?.querySelectorAll<HTMLElement>(
+            "button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex='-1'])",
+          ) ?? [],
+        );
+        if (nodes.length === 0) return;
+        const first = nodes[0]!;
+        const last = nodes[nodes.length - 1]!;
+        const active = document.activeElement;
+        if (!dialogRef.current?.contains(active)) first.focus();
+        else if (e.shiftKey && active === first) last.focus();
+        else if (!e.shiftKey && active === last) first.focus();
+        else return;
+      } else if (e.key === "Escape") onClose();
       else if (e.key === "ArrowLeft" && prev) onChange(prev);
       else if (e.key === "ArrowRight" && next) onChange(next);
       else return;
@@ -50,6 +65,7 @@ export function PhotoViewer({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label={name}

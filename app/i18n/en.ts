@@ -510,6 +510,10 @@ export const en = {
   "admin.cover.change": "Change photo",
   "admin.cover.useNamed": "Use {name}",
   "admin.design.unsaved": "Unsaved changes",
+  "admin.design.leaveConfirm":
+    "You have unsaved design changes. Leave and discard them?",
+  "admin.cover.mobileNoWm":
+    "The chosen mobile cover has no watermarked version: in Proofing, phones will use the desktop cover.",
   "admin.design.saved": "No pending changes",
   "admin.design.discard": "Discard",
   "admin.edit.preview": "Preview",

@@ -24,3 +24,12 @@ BEGIN
 	UPDATE `galleries` SET `cover_photo_id_mobile` = NULL, `cover_focus_mobile_x` = NULL, `cover_focus_mobile_y` = NULL
 	WHERE `id` = OLD.`gallery_id` AND `cover_photo_id_mobile` = OLD.`id`;
 END;
+--> statement-breakpoint
+-- Moving a photo to another gallery must not leave it as a cross-gallery
+-- mobile cover of the gallery it left: clear it (with its focal point).
+CREATE TRIGGER `photos_clear_cover_mobile_on_move` AFTER UPDATE OF `gallery_id` ON `photos`
+WHEN OLD.`gallery_id` <> NEW.`gallery_id`
+BEGIN
+	UPDATE `galleries` SET `cover_photo_id_mobile` = NULL, `cover_focus_mobile_x` = NULL, `cover_focus_mobile_y` = NULL
+	WHERE `id` = OLD.`gallery_id` AND `cover_photo_id_mobile` = OLD.`id`;
+END;

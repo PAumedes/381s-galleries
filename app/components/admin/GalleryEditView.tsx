@@ -1,5 +1,11 @@
-import { useId, useState } from "react";
-import { Form, Link, useNavigation, useSearchParams } from "react-router";
+import { useEffect, useId, useState } from "react";
+import {
+  Form,
+  Link,
+  useBlocker,
+  useNavigation,
+  useSearchParams,
+} from "react-router";
 
 import { useT } from "../../i18n/use-t";
 import type { MessageKey } from "../../i18n/t";
@@ -144,7 +150,19 @@ function Check({
   );
 }
 
-export function GalleryEditView({
+/**
+ * Keyed by gallery id: the local copies of title / mode / design / device
+ * must not survive a navigation between two galleries.
+ */
+export function GalleryEditView(props: {
+  data: GalleryEditData;
+  origin?: string;
+  actionData: GalleryActionResult | undefined;
+}) {
+  return <GalleryEditViewInner key={props.data.gallery.id} {...props} />;
+}
+
+function GalleryEditViewInner({
   data,
   origin,
   actionData,
@@ -187,6 +205,27 @@ export function GalleryEditView({
     setDesign(saved);
   }
   const designDirty = JSON.stringify(design) !== savedKey;
+  // Leaving the editor (another page, the list, reload) with unsaved design
+  // changes asks first. Tabs and the save submit stay on the same pathname.
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      designDirty && currentLocation.pathname !== nextLocation.pathname,
+  );
+  const leaveMsg = t("admin.design.leaveConfirm");
+  useEffect(() => {
+    if (blocker.state !== "blocked") return;
+    if (window.confirm(leaveMsg)) blocker.proceed();
+    else blocker.reset();
+  }, [blocker, leaveMsg]);
+  useEffect(() => {
+    if (!designDirty) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [designDirty]);
   // One device for every preview of the editor (switching tabs keeps it).
   const [device, setDevice] = useState<PreviewDevice>("desktop");
   // Not offered while the home query would hide the gallery anyway.
@@ -796,6 +835,7 @@ export function GalleryEditView({
                 }
               : null
           }
+          mobileNoWm={"mobileCoverNoWm" in g && g.mobileCoverNoWm === true}
           photos={data.photos}
           coverAuto={g.coverPhotoId === null}
           device={device}

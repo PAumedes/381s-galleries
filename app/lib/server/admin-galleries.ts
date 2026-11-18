@@ -171,6 +171,19 @@ export async function loadGalleryEdit(env: Env, id: string) {
   // Proofing serves only preview-wm: photos without it 404 for clients.
   const noWm = ps.filter((p) => !p.hasWm);
   const issues = groupIssues(g.syncIssuesJson);
+  const proofing = g.mode === "proofing";
+  // Mirror of the public payload (gallery.ts): in Prueba only photos with a
+  // preview-wm can be a cover; a mobile cover without one is dropped (desktop
+  // cover used) and a desktop cover without one falls to the first that has it.
+  const chosenCover = ps.find((p) => p.id === g.coverPhotoId);
+  const firstWm = ps.find((p) => p.hasWm);
+  const baseCover = chosenCover ?? ps[0];
+  const coverPhotoId =
+    proofing && baseCover && !baseCover.hasWm && firstWm
+      ? firstWm.id
+      : (chosenCover?.id ?? null);
+  const mobileRow = ps.find((p) => p.id === g.coverPhotoIdMobile);
+  const mobileCoverNoWm = proofing && !!mobileRow && !mobileRow.hasWm;
   if (g.mode === "proofing" && noWm.length > 0) {
     issues.groups.push({
       type: "missing_wm",
@@ -200,19 +213,19 @@ export async function loadGalleryEdit(env: Env, id: string) {
       gridGap: g.gridGap,
       hasPin: g.pinHash !== null,
       showOnHome: g.showOnHome,
-      coverPhotoId: ps.some((p) => p.id === g.coverPhotoId)
-        ? g.coverPhotoId
-        : null,
+      coverPhotoId,
       coverFocus:
         g.coverFocusX !== null && g.coverFocusY !== null
           ? { x: g.coverFocusX, y: g.coverFocusY }
           : null,
       // Optional mobile cover: only while that photo is visible.
-      coverPhotoIdMobile: ps.some((p) => p.id === g.coverPhotoIdMobile)
-        ? g.coverPhotoIdMobile
-        : null,
+      coverPhotoIdMobile: mobileRow && !mobileCoverNoWm ? mobileRow.id : null,
+      ...(mobileCoverNoWm ? { mobileCoverNoWm: true as const } : {}),
       coverFocusMobile:
-        g.coverFocusMobileX !== null && g.coverFocusMobileY !== null
+        mobileRow &&
+        !mobileCoverNoWm &&
+        g.coverFocusMobileX !== null &&
+        g.coverFocusMobileY !== null
           ? { x: g.coverFocusMobileX, y: g.coverFocusMobileY }
           : null,
     },

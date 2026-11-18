@@ -131,7 +131,7 @@ export async function buildOpenData(
     if (last?.name === p.set) last.count++;
     else sets.push({ name: p.set, count: 1 });
   }
-  const cover =
+  const baseCover =
     g.coverPhotoId && rows.some((p) => p.id === g.coverPhotoId)
       ? g.coverPhotoId
       : (rows[0]?.id ?? null);
@@ -139,6 +139,12 @@ export async function buildOpenData(
   // In proofing, crawlers only get /view-sm of a photo that has a
   // preview-wm; otherwise the og:image URL would 404.
   const proofing = g.mode === "proofing";
+  // In Prueba a cover without a preview-wm would 404 (blank hero): use the
+  // first photo that has one (Entrega is unchanged).
+  const cover =
+    proofing && !rows.some((p) => p.id === baseCover && p.driveWmId)
+      ? (rows.find((p) => p.driveWmId)?.id ?? baseCover)
+      : baseCover;
   // Optional mobile cover: a visible photo of this gallery; in Prueba only
   // one with a preview-wm (else /img 404s), so it falls back to the desktop
   // cover instead of a broken image.

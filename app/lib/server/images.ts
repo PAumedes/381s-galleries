@@ -321,11 +321,13 @@ export async function serveImage(
     return notFound();
 
   const proofing = gallery.mode === "proofing";
-  // Admin sees clean previews; those must not share R2 keys with the
-  // watermarked public objects, so they bypass the cache entirely.
-  const adminClean = !!opts.admin && (proofing || adminWm);
   const src = resolveSource(photo, adminWm || (proofing && !opts.admin), v);
   if (!src) return notFound();
+  // Admin clean files in Prueba, and admin watermarked files outside Prueba,
+  // must not share R2 keys with the public objects (clean vs watermarked), so
+  // they bypass the cache. A watermarked file in Prueba is exactly what the
+  // public gets: it reads (validated by isValidHit) and fills the same key.
+  const adminClean = !!opts.admin && (src.watermark ? !proofing : proofing);
   const { fileId, watermark, version } = src;
 
   if (env.DRIVE_MODE === "mock") {

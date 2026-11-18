@@ -59,6 +59,7 @@ export function CoverPreview({
   initialFocus,
   actionData,
   mobileCover = null,
+  mobileNoWm = false,
   photos = [],
   coverAuto = false,
   device: deviceProp,
@@ -78,6 +79,8 @@ export function CoverPreview({
   actionData?: GalleryActionResult;
   /** Optional mobile cover (own photo + focal point). */
   mobileCover?: MobileCover | null;
+  /** Prueba: the chosen mobile cover has no preview-wm (desktop one is used). */
+  mobileNoWm?: boolean;
   /** Photos offered by "Cambiar foto". */
   photos?: readonly ChooserPhoto[];
   /** The desktop cover is automatic (first photo). */
@@ -220,6 +223,14 @@ export function CoverPreview({
           </button>
         ))}
       </div>
+      {mobileNoWm && (
+        <p
+          role="alert"
+          className="text-small text-ink border-ink border-l-2 pl-3"
+        >
+          {t("admin.cover.mobileNoWm")}
+        </p>
+      )}
       {device === "mobile" && !mobileCover && coverId && (
         <p className="text-small text-grey-700 border-grey-300 border-l-2 pl-3">
           {t("admin.cover.mobileFallback")}

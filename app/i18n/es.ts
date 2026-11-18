@@ -510,6 +510,10 @@ export const es = {
   "admin.cover.change": "Cambiar foto",
   "admin.cover.useNamed": "Usar {name}",
   "admin.design.unsaved": "Cambios sin guardar",
+  "admin.design.leaveConfirm":
+    "Hay cambios de diseño sin guardar. ¿Salir y descartarlos?",
+  "admin.cover.mobileNoWm":
+    "La portada para móviles elegida no tiene versión con marca de agua: en Prueba los móviles usarán la portada de escritorio.",
   "admin.design.saved": "Sin cambios pendientes",
   "admin.design.discard": "Descartar",
   "admin.edit.preview": "Vista previa",
