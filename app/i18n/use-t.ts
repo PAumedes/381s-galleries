@@ -1,7 +1,7 @@
 import { useContext, useMemo } from "react";
 import { UNSAFE_DataRouterDataContext } from "react-router";
 
-import { es } from "./es";
+import { fallbackMessages } from "./fallback";
 import { DEFAULT_LANG, type Lang } from "./lang";
 import { makeT, type Messages, type TFunction } from "./t";
 
@@ -24,6 +24,6 @@ export function useLang(): Lang {
 export function useT(): TFunction {
   const data = useRootData();
   const lang = data?.lang ?? DEFAULT_LANG;
-  const messages = data?.messages ?? es;
+  const messages = data?.messages ?? fallbackMessages();
   return useMemo(() => makeT(lang, messages), [lang, messages]);
 }

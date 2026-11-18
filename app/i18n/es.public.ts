@@ -1,0 +1,127 @@
+/** Public-site messages (shipped to every visitor). Admin strings live in es.admin.ts. */
+export const esPublic = {
+  "gallery.view": "Ver galería",
+  "gallery.all": "Todas",
+  "gallery.sets": "Secciones",
+  "gallery.share": "Compartir",
+  "gallery.shareMessage": "Mirá las fotos de {title}:",
+  "gallery.shareWhatsapp": "WhatsApp",
+  "gallery.shareCopy": "Copiar enlace",
+  "gallery.shareClose": "Cerrar",
+  "gallery.shareCopyFailed": "No se pudo copiar",
+  "pwa.ios": "Tocá Compartir y luego 'Agregar a inicio'",
+  "pwa.install": "Agregar a inicio",
+  "pwa.dismiss": "Cerrar",
+  "pwa.androidText": "Tené esta galería a un toque en tu pantalla de inicio",
+  "gallery.linkCopied": "Enlace copiado",
+
+  "pin.placeholder": "PIN",
+  "pin.submit": "Entrar",
+  "pin.wrong": "PIN incorrecto",
+  "pin.tooManyAttempts": "Demasiados intentos. Probá de nuevo en unos minutos.",
+  "pin.forbidden": "Solicitud no permitida.",
+
+  "unavailable.title": "Galería no disponible",
+  "unavailable.message": "Esta galería no está disponible en este momento.",
+
+  "favorites.title": "Favoritas",
+  "favorites.add": "Agregar a favoritas",
+  "favorites.remove": "Quitar de favoritas",
+  "favorites.empty": "Todavía no marcaste ninguna foto.",
+
+  "favorites.tab": "Favoritas {n}",
+  "favorites.error": "No se pudo guardar tu favorita. Probá de nuevo.",
+
+  "download.title": "Descargar",
+  "download.photo": "Descargar foto",
+  "download.highres": "Alta resolución · 2048 px",
+  "download.web": "Web · 1200 px",
+  "download.ig": "Instagram · 1080 px",
+  "download.scope": "Qué descargar",
+  "download.scopeAll": "Toda la galería",
+  "download.scopeSet": "Sección · {set}",
+  "download.scopeFavorites": "Favoritas",
+  "download.size": "Tamaño",
+  "download.count.one": "{n} foto",
+  "download.count.other": "{n} fotos",
+  "download.approx": "aprox. {size}",
+  "download.start": "Descargar",
+  "download.cancel": "Cancelar",
+  "download.progress": "{done} / {total}",
+  "download.waiting": "Esperando… se reanuda en {n} s",
+  "download.done": "Descarga completa",
+  "download.cancelled": "Descarga cancelada",
+  "download.failed.one": "{n} archivo no se pudo descargar",
+  "download.failed.other": "{n} archivos no se pudieron descargar",
+  "download.warnLarge":
+    "Esta descarga es grande y tu navegador la guardará en memoria. Descargá por sección o usá una computadora.",
+  "download.warnIos":
+    "Las descargas grandes pueden fallar en iPhone y iPad. Descargá por sección o usá una computadora.",
+  "download.pickerFailed":
+    "No se pudo abrir el diálogo para guardar. ¿Continuar en memoria?",
+  "download.error": "No se pudo descargar. Probá de nuevo.",
+  "download.confirmCancel": "¿Cancelar descarga?",
+  "download.yes": "Sí",
+  "download.no": "No",
+  "download.continue": "Continuar",
+
+  "gate.title": "Ingresá tu email para continuar",
+  "gate.placeholder": "Email",
+  "gate.submit": "Continuar",
+  "gate.reason": "Para guardar tus favoritas",
+  "gate.name": "Nombre (opcional)",
+  "gate.error": "Algo salió mal. Probá de nuevo.",
+  "gate.invalid": "Ingresá un email válido",
+
+  "grid.photo": "Foto {n}",
+
+  "lightbox.close": "Cerrar",
+  "lightbox.previous": "Anterior",
+  "lightbox.next": "Siguiente",
+  "lightbox.counter": "{n} / {total}",
+  "lightbox.loadError": "No se pudo cargar la imagen",
+  "lightbox.retry": "Reintentar",
+
+  "error.notFound.title": "404",
+  "error.notFound.message": "No encontramos la página que buscás.",
+  "error.generic.title": "Error",
+  "error.generic.message": "Ocurrió un error inesperado.",
+  "error.home": "Volver al inicio",
+
+  "footer.langEs": "ES",
+  "footer.langEn": "EN",
+  "footer.language": "Idioma",
+  "footer.copyright": "© {year} {studio}",
+
+  "home.galleries": "Galerías",
+  "footer.privacy": "Privacidad",
+  "privacy.title": "Privacidad",
+  "privacy.back": "Volver al inicio",
+  "privacy.who.title": "Quién está a cargo",
+  "privacy.who.body":
+    "Esta aplicación la gestiona {studio} para entregar fotos a sus clientes.",
+  "privacy.access.title": "A qué accede la aplicación",
+  "privacy.access.body":
+    "Solo lee (acceso de solo lectura) la carpeta de Google Drive del propio estudio donde están las fotos. No accede a datos de Google de los clientes ni de los visitantes.",
+  "privacy.stored.title": "Qué guardamos sobre quienes visitan una galería",
+  "privacy.stored.body":
+    "El email y el nombre que ingreses de forma opcional para usar favoritas o descargas, y tus favoritas. Usamos cookies para el acceso a la galería y para recordar el idioma.",
+  "privacy.purpose.title": "Para qué lo usamos",
+  "privacy.purpose.body":
+    "Para entregar las fotos, para que el estudio vea la actividad y las estadísticas de cada galería (por ejemplo, desde qué países y dispositivos se mira) y para detectar abusos y proteger la galería.",
+  "privacy.retention.title": "Cuánto tiempo",
+  "privacy.retention.body":
+    "Guardamos el historial de visitas y descargas; no se elimina automáticamente. Si querés que se borre, pedíselo al estudio.",
+  "privacy.sharing.title": "Venta y terceros",
+  "privacy.sharing.body": "No vendemos ni compartimos tus datos.",
+  "privacy.contact.title": "Contacto",
+  "privacy.contact.generic":
+    "Para consultas, contactá al estudio por los medios habituales.",
+  "privacy.contact.lead": "Para consultas, escribí a",
+  "privacy.visit.title": "Qué registramos de cada visita y descarga",
+  "privacy.visit.body":
+    "La fecha y la hora; el país, la región, la ciudad, el continente y la zona horaria aproximados (los informa Cloudflare según tu conexión); el número y el nombre de la red de tu proveedor de internet; el idioma principal de tu navegador; el sitio desde el que llegaste (solo el dominio, sin ruta ni parámetros); el navegador y su versión principal, el sistema operativo y el tipo de dispositivo; y, en las descargas, los primeros 200 caracteres del identificador de tu navegador (User-Agent).",
+  "privacy.ip.title": "Tu dirección IP",
+  "privacy.ip.body":
+    "Nunca guardamos tu dirección IP. Solo guardamos un código calculado con una clave secreta (un hash de una sola vía, que no permite recuperar la IP). El código es distinto en cada galería, así que no se puede vincular tu visita entre galerías. Lo usamos para contar visitas únicas y detectar abusos.",
+} as const;

@@ -5,6 +5,7 @@ import {
   applySecurityHeaders,
   makeNonce,
 } from "../app/lib/server/security-headers";
+import { adminAssetResponse } from "../app/lib/server/admin-assets";
 import { legacyRedirect } from "../app/lib/server/legacy-redirect";
 import { dispatchScheduled } from "../app/lib/server/scheduled";
 
@@ -18,6 +19,10 @@ export default {
     // Old hostnames redirect before anything else (React Router, /img, API).
     const moved = legacyRedirect(request, env);
     if (moved) return moved;
+    // Admin-only JS: Static Assets runs the Worker first for /admin-assets/*
+    // (wrangler.jsonc); only a verified admin gets the file.
+    const adminAsset = await adminAssetResponse(request, env);
+    if (adminAsset) return adminAsset;
     // Config error (reused secret): fail loudly rather than run with it.
     assertDistinctSecrets(env);
     const nonce = makeNonce();

@@ -158,7 +158,8 @@ const appFiles = import.meta.glob("../app/**/*.{ts,tsx,css}", {
 describe("config", () => {
   const cfg = JSON.parse(
     wranglerRaw
-      .replace(/\/\*[\s\S]*?\*\//g, "")
+      // block comments only at line start: "/admin-assets/*" is a string, not a comment
+      .replace(/^\s*\/\*[\s\S]*?\*\//gm, "")
       .replace(/^\s*\/\/.*$/gm, "")
       .replace(/,(\s*[}\]])/g, "$1"),
   );

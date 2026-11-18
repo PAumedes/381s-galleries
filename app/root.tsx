@@ -14,7 +14,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { nonceContext } from "./lib/server/context";
 import { getStudioName } from "./lib/server/admin";
-import { es } from "./i18n/es";
+import { fallbackMessages } from "./i18n/fallback";
 import { messagesForRequest } from "./i18n/dictionaries";
 import { isAdminPath, langCookie } from "./i18n/lang";
 import { validPublicOrigin } from "./lib/server/public-url";
@@ -103,7 +103,10 @@ export default function App() {
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   const loaderData = useRouteLoaderData<typeof loader>("root");
-  const t = makeT(loaderData?.lang ?? "es", loaderData?.messages ?? es);
+  const t = makeT(
+    loaderData?.lang ?? "es",
+    loaderData?.messages ?? fallbackMessages(),
+  );
 
   const notFound = isRouteErrorResponse(error) && error.status === 404;
   const title = notFound ? t("error.notFound.title") : t("error.generic.title");
