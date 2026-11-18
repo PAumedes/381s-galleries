@@ -114,7 +114,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
       <h1 className="text-title text-ink">{title}</h1>
       <p className="text-body text-grey-600">{message}</p>
-      <a href="/" className="text-micro-label text-grey-600 hover:text-ink">
+      <a
+        href="/"
+        className="text-micro-label text-grey-600 hover:text-ink inline-flex min-h-tap items-center"
+      >
         {t("error.home")}
       </a>
       {stack && (

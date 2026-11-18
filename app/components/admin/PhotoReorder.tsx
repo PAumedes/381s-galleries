@@ -290,7 +290,11 @@ export function PhotoReorder({
         );
       })}
 
-      <Form method="post" className="flex flex-wrap items-center gap-2">
+      {/* Phones: the list is long, so the save bar stays in view. */}
+      <Form
+        method="post"
+        className="bg-paper border-grey-200 sticky bottom-0 z-10 flex flex-wrap items-center gap-2 border-t py-3 md:static md:border-t-0 md:bg-transparent md:py-0"
+      >
         <input type="hidden" name="intent" value="reorder" />
         <input type="hidden" name="version" value={version} />
         <input type="hidden" name="order" value={JSON.stringify(orders)} />

@@ -85,7 +85,7 @@ function Actions({
       <button type="button" className={btn} onClick={copy}>
         {t("admin.favorites.copyCapture")}
       </button>
-      <a href={href} className={btn}>
+      <a href={href} data-tap className={btn}>
         {t("admin.favorites.downloadTxt")}
       </a>
       <span role="status" className="text-small text-grey-700">
@@ -175,7 +175,7 @@ export function FavoritesView({ data }: { data: FavoritesViewData }) {
       <div className="flex flex-wrap items-center gap-4">
         <Link
           to="/admin"
-          className="text-micro text-grey-700 uppercase hover:text-ink"
+          className="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0"
         >
           {t("admin.backToGalleries")}
         </Link>

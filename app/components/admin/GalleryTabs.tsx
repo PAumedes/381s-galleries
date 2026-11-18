@@ -20,13 +20,13 @@ export function GalleryTabs({
 }) {
   const t = useT();
   return (
-    <nav aria-label={t("admin.tabs.label")} className="flex gap-6">
+    <nav aria-label={t("admin.tabs.label")} className="flex gap-2 md:gap-6">
       {TABS.map((tab) => (
         <Link
           key={tab.key}
           to={`/admin/g/${id}${tab.path}`}
           aria-current={tab.key === current ? "page" : undefined}
-          className={`text-micro border-b pb-1 uppercase ${
+          className={`text-micro flex min-h-tap items-center border-b px-2 uppercase md:min-h-0 md:px-0 md:pb-1 ${
             tab.key === current
               ? "border-ink text-ink"
               : "text-grey-700 hover:text-ink border-transparent"

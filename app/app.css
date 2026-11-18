@@ -281,3 +281,33 @@ html:has([data-page][data-theme="gris"]) {
     break-inside: avoid;
   }
 }
+
+/* Admin on phones (T6.11): every control is at least 44px tall and form fields
+   are 16px (iOS Safari zooms into anything smaller). Unlayered on purpose, so
+   it beats per-element text-* utilities; limited to < md (768px), so the desktop
+   density is unchanged. Opt out of one element with `data-compact`. */
+@media (max-width: 47.9375rem) {
+  [data-admin] [data-tap] {
+    display: inline-flex;
+    min-height: var(--spacing-tap);
+    align-items: center;
+  }
+  [data-admin]
+    :is(
+      button,
+      select,
+      textarea,
+      input:not(
+        [type="checkbox"],
+        [type="radio"],
+        [type="hidden"],
+        [type="range"]
+      )
+    ):not([data-compact]) {
+    min-height: var(--spacing-tap);
+  }
+  [data-admin]
+    :is(select, textarea, input:not([type="checkbox"], [type="radio"])) {
+    font-size: 1rem;
+  }
+}

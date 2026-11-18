@@ -130,9 +130,12 @@ function Check({
         defaultChecked={checked}
         disabled={disabled}
         aria-describedby={describedBy}
-        className="size-4"
+        className="size-6 md:size-4"
       />
-      <label htmlFor={id} className="text-small">
+      <label
+        htmlFor={id}
+        className="text-small flex min-h-tap flex-1 items-center md:min-h-0"
+      >
         {label}
       </label>
     </div>
@@ -180,7 +183,7 @@ export function GalleryEditView({
       <div className="flex flex-wrap items-center gap-4">
         <Link
           to="/admin"
-          className="text-micro text-grey-700 uppercase hover:text-ink"
+          className="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0"
         >
           {t("admin.backToGalleries")}
         </Link>
@@ -458,10 +461,13 @@ export function GalleryEditView({
                   defaultChecked={g.showOnHome}
                   disabled={homeBlocked}
                   aria-describedby="show-on-home-hint"
-                  className="mt-1 size-4"
+                  className="mt-2.5 size-6 md:mt-1 md:size-4"
                 />
                 <div>
-                  <label htmlFor="show-on-home" className="text-small">
+                  <label
+                    htmlFor="show-on-home"
+                    className="text-small flex min-h-tap items-center md:min-h-0"
+                  >
                     {t("admin.edit.home.label")}
                   </label>
                   <p
@@ -505,10 +511,13 @@ export function GalleryEditView({
                     checked={!proofing}
                     onChange={() => setMode("delivery")}
                     aria-describedby="mode-delivery-note"
-                    className="mt-1 size-4"
+                    className="mt-2.5 size-6 md:mt-1 md:size-4"
                   />
                   <div>
-                    <label htmlFor="mode-delivery" className="text-small">
+                    <label
+                      htmlFor="mode-delivery"
+                      className="text-small flex min-h-tap items-center md:min-h-0"
+                    >
                       {t("admin.mode.delivery")}
                     </label>
                     <p
@@ -528,10 +537,13 @@ export function GalleryEditView({
                     checked={proofing}
                     onChange={() => setMode("proofing")}
                     aria-describedby="mode-proofing-note"
-                    className="mt-1 size-4"
+                    className="mt-2.5 size-6 md:mt-1 md:size-4"
                   />
                   <div>
-                    <label htmlFor="mode-proofing" className="text-small">
+                    <label
+                      htmlFor="mode-proofing"
+                      className="text-small flex min-h-tap items-center md:min-h-0"
+                    >
                       {t("admin.mode.proofing")}
                     </label>
                     <p

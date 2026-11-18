@@ -1,4 +1,5 @@
-import { NavLink } from "react-router";
+import { useEffect, useId, useRef, useState } from "react";
+import { NavLink, useLocation } from "react-router";
 
 import { useFormat } from "../../i18n/use-format";
 import { useT } from "../../i18n/use-t";
@@ -66,29 +67,75 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const t = useT();
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const { pathname } = useLocation();
+  // Phones: the menu closes after navigating and with Escape.
+  const [openAt, setOpenAt] = useState(pathname);
+  if (openAt !== pathname) {
+    setOpenAt(pathname);
+    setOpen(false);
+  }
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      // The panel turns display:none below md; keep focus on the toggle.
+      toggleRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
   const link = ({ isActive }: { isActive: boolean }) =>
-    `text-micro uppercase px-3 py-2 ${isActive ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`;
+    `text-micro flex min-h-tap items-center px-3 uppercase md:min-h-0 md:py-2 ${isActive ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`;
   return (
-    <div className="bg-paper text-ink min-h-dvh md:flex">
-      <aside className="border-grey-200 flex flex-col gap-4 border-b p-4 md:min-h-dvh md:w-64 md:shrink-0 md:gap-8 md:border-r md:border-b-0 md:p-6">
-        <div className="flex items-center justify-between md:block">
-          <a href="/admin" aria-label={t("admin.nav.label")}>
+    <div className="bg-paper text-ink min-h-dvh md:flex" data-admin>
+      <aside className="border-grey-200 flex flex-col border-b md:min-h-dvh md:w-64 md:shrink-0 md:border-r md:border-b-0 md:p-6">
+        <div className="flex items-center justify-between px-4 py-2 md:block md:p-0">
+          <a
+            href="/admin"
+            aria-label={t("admin.nav.label")}
+            className="flex min-h-tap min-w-tap items-center md:min-h-0 md:min-w-0"
+          >
             <Logo variant="dark" className="h-8" />
           </a>
+          <button
+            ref={toggleRef}
+            type="button"
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={() => setOpen((o) => !o)}
+            className="text-micro border-grey-300 min-h-tap border px-4 uppercase md:hidden"
+          >
+            {t("admin.nav.menu")}
+          </button>
+        </div>
+        <div
+          id={panelId}
+          className={`${open ? "flex" : "hidden"} flex-col gap-4 px-4 pb-4 md:mt-8 md:flex md:gap-8 md:p-0`}
+        >
           <nav
             aria-label={t("admin.nav.label")}
-            className="flex gap-1 md:mt-8 md:flex-col"
+            className="flex flex-col gap-1"
           >
             {NAV.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.end} className={link}>
+              <NavLink
+                key={n.to}
+                to={n.to}
+                end={n.end}
+                className={link}
+                onClick={() => setOpen(false)}
+              >
                 {t(n.label)}
               </NavLink>
             ))}
           </nav>
-        </div>
-        <div className="flex flex-col gap-4">
-          <StatusLine status={status} />
-          <AdminLangToggle />
+          <div className="flex flex-col gap-4">
+            <StatusLine status={status} />
+            <AdminLangToggle />
+          </div>
         </div>
       </aside>
       <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>

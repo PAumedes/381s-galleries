@@ -187,7 +187,7 @@ export function CoverPreview({
             onClick={onClick}
             onKeyDown={onKeyDown}
             style={shown}
-            className="absolute cursor-crosshair focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="absolute cursor-crosshair touch-manipulation focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             <img
               src={src}
