@@ -14,6 +14,8 @@ export function useFavorites(
   slug: string,
   requireEmail: boolean,
   onError?: () => void,
+  /** Admin preview: favourites live in memory only (no API calls, no visitor). */
+  offline = false,
 ) {
   const base = `/api/g/${encodeURIComponent(slug)}`;
   const [ids, setIds] = useState<ReadonlySet<string>>(new Set());
@@ -34,6 +36,7 @@ export function useFavorites(
   const touched = useRef(new Set<string>());
 
   useEffect(() => {
+    if (offline) return;
     const ctl = new AbortController();
     (async () => {
       try {
@@ -58,7 +61,7 @@ export function useFavorites(
       }
     })();
     return () => ctl.abort();
-  }, [base, setVisitor]);
+  }, [base, setVisitor, offline]);
 
   const send = useCallback(
     async (photoId: string, on: boolean): Promise<"ok" | "email" | "fail"> => {
@@ -107,13 +110,22 @@ export function useFavorites(
   const toggle = useCallback(
     (photoId: string) => {
       const on = !ids.has(photoId);
+      if (offline) {
+        setIds((cur) => {
+          const next = new Set(cur);
+          if (on) next.add(photoId);
+          else next.delete(photoId);
+          return next;
+        });
+        return Promise.resolve();
+      }
       return ensure(async () => {
         const r = await send(photoId, on);
         if (r === "email") throw new EmailRequiredError();
         if (r === "fail") flashError();
       });
     },
-    [ids, ensure, send, flashError],
+    [ids, ensure, send, flashError, offline],
   );
 
   return {

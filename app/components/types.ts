@@ -13,7 +13,10 @@ export type GalleryPhoto = {
 
 export type ImgVariant = "thumb" | "view-sm" | "view-lg";
 
-export const imgUrl = (id: string, variant: ImgVariant, v?: string): string =>
+/** Builds an image URL; the admin preview swaps in `/admin/img` (see img-url.tsx). */
+export type ImgUrlFn = (id: string, variant: ImgVariant, v?: string) => string;
+
+export const imgUrl: ImgUrlFn = (id, variant, v) =>
   `/img/${encodeURIComponent(id)}/${variant}${v ? `?v=${encodeURIComponent(v)}` : ""}`;
 
 /** Client-safe gallery summary (no Drive ids, no PIN hash). */
@@ -25,6 +28,13 @@ export type OpenGallery = {
   coverPhotoId: string | null;
   /** Cover focal point: a point on the image, in percent of its width/height (u,v); null = automatic. */
   coverFocus?: { x: number; y: number } | null;
+  /**
+   * Optional mobile cover (narrow viewports), a visible photo of this gallery;
+   * null/absent = the desktop cover with its own focal point.
+   */
+  coverPhotoIdMobile?: string | null;
+  /** Focal point of the mobile cover (same meaning as `coverFocus`). */
+  coverFocusMobile?: { x: number; y: number } | null;
   allowBulk: boolean;
   allowHighres: boolean;
   allowWeb: boolean;

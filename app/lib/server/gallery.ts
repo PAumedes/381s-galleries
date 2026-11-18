@@ -81,31 +81,31 @@ async function versionField(
   return v ? { v } : {};
 }
 
-export async function loadGallery(
-  request: Request,
-  slug: string,
-  env: GalleryEnv,
-): Promise<LoadResult> {
-  // Slugs with a dot are files (favicon.ico, robots.txt, ...), never galleries.
-  if (slug.includes(".")) return unavailable();
-  const g = await findGallery(env, slug);
-  if (!isAvailable(g)) return unavailable();
+type GalleryRow = typeof schema.galleries.$inferSelect;
 
-  const open = await openGallery(request, g, env);
-  if (!open) {
-    return {
-      status: 200,
-      data: {
-        state: "locked",
-        slug: g.slug,
-        title: g.title,
-        palette: g.palette,
-      },
-    };
-  }
-  const { session } = open;
+const focusOf = (x: number | null, y: number | null) =>
+  x !== null && y !== null ? { x, y } : null;
 
-  const db = getDb(env as Env);
+/**
+ * The client payload of an open gallery (cover, design, sets, photos with
+ * their `?v=` tokens, link-preview data). No access checks and no side
+ * effects: callers decide who may see it (`loadGallery` for visitors, the
+ * admin preview for the owner). Never carries Drive ids, the client name or
+ * PIN data.
+ */
+export async function buildOpenData(
+  env: Env,
+  g: GalleryRow,
+): Promise<{
+  gallery: OpenGallery;
+  photos: GalleryPhoto[];
+  og: {
+    coverId: string | null;
+    width: number | null;
+    height: number | null;
+  } | null;
+}> {
+  const db = getDb(env);
   const full = await db
     .select()
     .from(schema.photos)
@@ -139,6 +139,14 @@ export async function loadGallery(
   // In proofing, crawlers only get /view-sm of a photo that has a
   // preview-wm; otherwise the og:image URL would 404.
   const proofing = g.mode === "proofing";
+  // Optional mobile cover: a visible photo of this gallery; in Prueba only
+  // one with a preview-wm (else /img 404s), so it falls back to the desktop
+  // cover instead of a broken image.
+  const mobileRow = g.coverPhotoIdMobile
+    ? rows.find(
+        (p) => p.id === g.coverPhotoIdMobile && (!proofing || p.driveWmId),
+      )
+    : undefined;
   const ogCover = proofing
     ? rows.find((p) => p.id === cover && p.driveWmId) ||
       rows.find((p) => p.driveWmId)
@@ -157,6 +165,68 @@ export async function loadGallery(
             ? Math.round(coverRow.height * scale)
             : null,
       };
+
+  return {
+    gallery: {
+      slug: g.slug,
+      requireEmail: g.requireEmail,
+      title: g.title,
+      eventDate: g.eventDate,
+      coverPhotoId: cover,
+      coverFocus: focusOf(g.coverFocusX, g.coverFocusY),
+      coverPhotoIdMobile: mobileRow?.id ?? null,
+      coverFocusMobile: mobileRow
+        ? focusOf(g.coverFocusMobileX, g.coverFocusMobileY)
+        : null,
+      mode: g.mode,
+      // Proofing: no downloads at all (the server refuses them too).
+      allowBulk: !proofing && g.allowBulk,
+      allowHighres: !proofing && g.allowHighres,
+      allowWeb: !proofing && g.allowWeb,
+      allowIg: !proofing && g.allowIg,
+      palette: g.palette,
+      coverLayout: g.coverLayout,
+      gridStyle: g.gridStyle,
+      gridGap: g.gridGap,
+      sets,
+    },
+    photos: await Promise.all(
+      rows.map(async ({ driveWebId, driveIgId, driveWmId: _wm, ...p }, i) => ({
+        ...p,
+        variants: { web: !!driveWebId, ig: !!driveIgId },
+        // Opaque cache-busting token for the image URLs (never a Drive id).
+        ...(await versionField(env, full[i], proofing)),
+      })),
+    ),
+    og,
+  };
+}
+
+export async function loadGallery(
+  request: Request,
+  slug: string,
+  env: GalleryEnv,
+): Promise<LoadResult> {
+  // Slugs with a dot are files (favicon.ico, robots.txt, ...), never galleries.
+  if (slug.includes(".")) return unavailable();
+  const g = await findGallery(env, slug);
+  if (!isAvailable(g)) return unavailable();
+
+  const open = await openGallery(request, g, env);
+  if (!open) {
+    return {
+      status: 200,
+      data: {
+        state: "locked",
+        slug: g.slug,
+        title: g.title,
+        palette: g.palette,
+      },
+    };
+  }
+  const { session } = open;
+  const db = getDb(env as Env);
+  const built = await buildOpenData(env as Env, g);
 
   let setCookie: string | undefined;
   if (!session?.viewed) {
@@ -195,42 +265,7 @@ export async function loadGallery(
 
   return {
     status: 200,
-    data: {
-      state: "open",
-      gallery: {
-        slug: g.slug,
-        requireEmail: g.requireEmail,
-        title: g.title,
-        eventDate: g.eventDate,
-        coverPhotoId: cover,
-        coverFocus:
-          g.coverFocusX !== null && g.coverFocusY !== null
-            ? { x: g.coverFocusX, y: g.coverFocusY }
-            : null,
-        mode: g.mode,
-        // Proofing: no downloads at all (the server refuses them too).
-        allowBulk: !proofing && g.allowBulk,
-        allowHighres: !proofing && g.allowHighres,
-        allowWeb: !proofing && g.allowWeb,
-        allowIg: !proofing && g.allowIg,
-        palette: g.palette,
-        coverLayout: g.coverLayout,
-        gridStyle: g.gridStyle,
-        gridGap: g.gridGap,
-        sets,
-      },
-      photos: await Promise.all(
-        rows.map(
-          async ({ driveWebId, driveIgId, driveWmId: _wm, ...p }, i) => ({
-            ...p,
-            variants: { web: !!driveWebId, ig: !!driveIgId },
-            // Opaque cache-busting token for the image URLs (never a Drive id).
-            ...(await versionField(env as Env, full[i], proofing)),
-          }),
-        ),
-      ),
-      og,
-    },
+    data: { state: "open", ...built },
     ...(setCookie ? { setCookie } : {}),
   };
 }

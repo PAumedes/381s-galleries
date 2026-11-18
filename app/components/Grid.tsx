@@ -12,7 +12,8 @@ import { columnsLayout, squareLayout } from "../lib/grid-layout";
 import { justify } from "../lib/justify";
 import type { TFunction } from "../i18n/t";
 import { Download, Heart, HeartFilled, Retry } from "./icons";
-import { imgUrl, type GalleryPhoto } from "./types";
+import { useImgUrl } from "./img-url";
+import type { GalleryPhoto } from "./types";
 
 /** Width used for server rendering and before the first measurement. */
 export const DEFAULT_GRID_WIDTH = 1200;
@@ -142,6 +143,8 @@ function Tile({
     if (img?.complete && img.naturalWidth > 0) setLoaded(true);
   }, []);
   const label = t("grid.photo", { n: index + 1 });
+  const imgUrl = useImgUrl();
+  const thumb = imgUrl(photo.id, "thumb", photo.v);
   const hasActions = Boolean(onFavorite || onDownload);
 
   const open = (e: MouseEvent<HTMLButtonElement>) => {
@@ -171,7 +174,7 @@ function Tile({
         <img
           ref={imgRef}
           key={retry}
-          src={`${imgUrl(photo.id, "thumb", photo.v)}${retry ? `${imgUrl(photo.id, "thumb", photo.v).includes("?") ? "&" : "?"}r=${retry}` : ""}`}
+          src={`${thumb}${retry ? `${thumb.includes("?") ? "&" : "?"}r=${retry}` : ""}`}
           alt={label}
           loading="lazy"
           decoding="async"

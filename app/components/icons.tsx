@@ -107,3 +107,29 @@ export const Retry = (p: IconProps) => (
     <path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5" />
   </Icon>
 );
+/** Full view (four corners). */
+export const Expand = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />
+  </Icon>
+);
+/** Phone (the mobile cover). */
+export const Phone = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="7" y="3" width="10" height="18" rx="1.5" />
+    <path d="M11 18h2" />
+  </Icon>
+);
+/** Screen (the desktop cover). */
+export const Monitor = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4.5" width="18" height="12" rx="1" />
+    <path d="M9 20h6M12 16.5V20" />
+  </Icon>
+);
+/** Opens elsewhere (new tab). */
+export const External = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10" />
+  </Icon>
+);

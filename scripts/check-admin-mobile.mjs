@@ -5,6 +5,8 @@
 //
 //   node scripts/check-admin-mobile.mjs [--base http://localhost:5173] [--shots DIR] [--allow-remote]
 //
+// Screens: the list, every editor panel (?tab=), activity, favorites, card,
+// setup. (The admin "Vista previa" page is the public gallery itself.)
 // Per screen and width it fails on: horizontal overflow, visible controls
 // smaller than 44x44 CSS px (phone width only), form fields under 16px font
 // (iOS zooms them), and dialogs that do not fit the viewport. Pass --shots to
@@ -88,6 +90,8 @@ function audit({ minTap, phone }) {
     "a[href], button, select, textarea, input:not([type=hidden]), summary, [role=button], [role=tab]";
   for (const el of document.querySelectorAll(sel)) {
     if (!visible(el)) continue;
+    // Inert content (the editor's scaled-down live preview) is not interactive.
+    if (el.closest("[inert]")) continue;
     const s = getComputedStyle(el);
     const r = el.getBoundingClientRect();
     if (r.right > innerWidth + 1 || r.left < -1) {
@@ -157,6 +161,10 @@ const SCREENS = [
   ["list-filtered", "/admin?estado=archivadas"],
   ["list-empty-search", "/admin?q=zzzzzz-no-match"],
   ["editor", `/admin/g/${g}`],
+  ["editor-fotos", `/admin/g/${g}?tab=fotos`],
+  ["editor-portada", `/admin/g/${g}?tab=portada`],
+  ["editor-diseno", `/admin/g/${g}?tab=diseno`],
+  ["editor-compartir", `/admin/g/${g}?tab=compartir`],
   ["activity", `/admin/g/${g}/activity`],
   ["favorites", `/admin/g/${g}/favorites`],
   ["card", `/admin/g/${g}/card`],

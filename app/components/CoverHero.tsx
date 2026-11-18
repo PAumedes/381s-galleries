@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Ref } from "react";
 
 import { coverObjectPosition, type Focus } from "../lib/cover-focus";
@@ -6,6 +6,18 @@ import { isDarkPalette, type CoverLayout, type Palette } from "../lib/design";
 
 import { Logo } from "./Logo";
 import { ChevronDown } from "./icons";
+
+/**
+ * Viewports that get the optional mobile cover (a `<picture>` source, so the
+ * browser downloads only the one it shows).
+ */
+export const MOBILE_COVER_MEDIA = "(max-width: 767px)";
+
+export type CoverImage = {
+  src: string;
+  focus: Focus | null;
+  aspect: number | null;
+};
 
 /**
  * The gallery cover (full-bleed photo, title, date, studio, scroll cue).
@@ -27,6 +39,8 @@ export function CoverHero({
   headerRef,
   layout = "completa",
   palette = "claro",
+  mobile = null,
+  device,
 }: {
   title: string;
   date: string | null;
@@ -46,9 +60,32 @@ export function CoverHero({
   layout?: CoverLayout;
   /** Palette: only the layouts that sit on the page background (not on the photo) use it. */
   palette?: Palette;
+  /** Optional mobile cover (own photo and focal point) for narrow viewports. */
+  mobile?: CoverImage | null;
+  /**
+   * Admin previews: render as this device (the preview frame is not the
+   * viewport). Absent = decide by the viewport (`MOBILE_COVER_MEDIA`).
+   */
+  device?: "desktop" | "mobile";
 }) {
   const Title = embedded ? "p" : "h1";
   const imgRef = useRef<HTMLImageElement>(null);
+  const [narrow, setNarrow] = useState(false);
+  const hasMobile = !!mobile;
+  useEffect(() => {
+    if (device || !hasMobile || typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia(MOBILE_COVER_MEDIA);
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener?.("change", sync);
+    return () => mq.removeEventListener?.("change", sync);
+  }, [device, hasMobile]);
+  const active =
+    mobile && (device ? device === "mobile" : narrow) ? mobile : null;
+  const onMobile = active !== null;
+  const shownSrc = device && active ? active.src : src;
+  const shownFocus = active ? active.focus : focus;
+  const shownAspect = active ? active.aspect : aspect;
   const [frame, setFrame] = useState<{ w: number; h: number } | null>(null);
   // Measure the real frame (the image fills it; layout size is unaffected by
   // the preview's scale transform) so object-position can be computed per
@@ -66,8 +103,8 @@ export function CoverHero({
     const ro = new ResizeObserver(measure);
     ro.observe(node);
     return () => ro.disconnect();
-  }, [src, layout]);
-  const pos = coverObjectPosition(focus, aspect, frame);
+  }, [shownSrc, layout]);
+  const pos = coverObjectPosition(shownFocus, shownAspect, frame);
   const shield = proofing && src && (
     <span
       data-testid="cover-shield"
@@ -76,11 +113,12 @@ export function CoverHero({
       onContextMenu={(e) => e.preventDefault()}
     />
   );
-  const photo = src && (
+  const img = shownSrc && (
     <img
       ref={imgRef}
       data-cover-img=""
-      src={src}
+      data-cover-device={onMobile ? "mobile" : "desktop"}
+      src={shownSrc}
       alt=""
       fetchPriority={embedded ? undefined : "high"}
       draggable={false}
@@ -88,6 +126,16 @@ export function CoverHero({
       className="absolute inset-0 size-full object-cover"
     />
   );
+  // Public page with a mobile cover: the browser picks the file by viewport.
+  const photo =
+    img && mobile && !device ? (
+      <picture>
+        <source media={MOBILE_COVER_MEDIA} srcSet={mobile.src} />
+        {img}
+      </picture>
+    ) : (
+      img
+    );
   const protect = proofing && layout !== "minima" ? " img-protect" : "";
   const noMenu = proofing
     ? (e: React.MouseEvent) => e.preventDefault()

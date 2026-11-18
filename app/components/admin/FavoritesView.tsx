@@ -219,7 +219,7 @@ export function FavoritesView({ data }: { data: FavoritesViewData }) {
             <Thumbs photos={data.all} picks />
           </section>
 
-          <div className="flex flex-col gap-4">
+          <div className="grid items-start gap-4 xl:grid-cols-2">
             {data.visitors.map((v) => (
               <VisitorSection key={v.id} v={v} base={base} comma={comma} />
             ))}

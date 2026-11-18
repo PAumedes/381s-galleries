@@ -52,9 +52,10 @@ function show(
       ),
     },
   ]);
-  return render(<Stub initialEntries={["/admin/g/g1"]} />);
+  return render(<Stub initialEntries={["/admin/g/g1?tab=diseno"]} />);
 }
-const preview = () => screen.findByTestId("cover-preview");
+// The Diseño panel previews the whole gallery (cover + grid) live.
+const preview = () => screen.findByTestId("live-preview");
 const section = async () =>
   (await screen.findByRole("heading", { name: "Diseño" })).closest("section")!;
 
@@ -126,9 +127,11 @@ describe("Diseño section", () => {
     expect(
       (form.querySelector('input[name="intent"]') as HTMLInputElement).value,
     ).toBe("design");
-    expect(
-      within(form).getByRole("button", { name: "Guardar diseño" }),
-    ).toBeTruthy();
+    // The save button sits in the "sin guardar" bar under the preview,
+    // bound to this form with the form attribute.
+    const save = screen.getByRole("button", { name: "Guardar diseño" });
+    expect(save.getAttribute("form")).toBe(form.id);
+    expect(save.getAttribute("type")).toBe("submit");
     expect(form.querySelectorAll('input[type="radio"]:checked')).toHaveLength(
       4,
     );

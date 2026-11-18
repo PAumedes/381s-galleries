@@ -282,7 +282,8 @@ describe("admin image: view-sm-wm", () => {
   });
   it("other -wm variants stay unknown", async () => {
     await seed();
-    for (const v of ["thumb-wm", "view-lg-wm"])
+    // thumb-wm is a known admin variant since T6.12 (Prueba grid previews).
+    for (const v of ["view-lg-wm", "thumb-wm-x", "wm", "-wm"])
       expect((await getG(P1, v)).status).toBe(404);
   });
 });

@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router";
 import { describe, expect, it, vi } from "vitest";
@@ -41,9 +47,11 @@ const base: GalleryEditData = {
   issues: { groups: [], truncated: 0, total: 0 },
 };
 
+// The cover editor lives in the "Portada" panel of the editor.
 function show(
   gallery: Partial<GalleryEditData["gallery"]> = {},
   extra: Partial<GalleryEditData> = {},
+  url = "/admin/g/g1?tab=portada",
 ) {
   const Stub = createRoutesStub([
     {
@@ -56,7 +64,7 @@ function show(
       ),
     },
   ]);
-  return render(<Stub initialEntries={["/admin/g/g1"]} />);
+  return render(<Stub initialEntries={[url]} />);
 }
 const preview = async () => screen.findByTestId("cover-preview");
 const previewImg = (el: HTMLElement) =>
@@ -84,9 +92,11 @@ const hidden = (name: string) =>
   ).value;
 
 describe("single Fotos panel (no duplicate grids)", () => {
+  const fotos = (g: Partial<GalleryEditData["gallery"]> = {}) =>
+    show(g, {}, "/admin/g/g1?tab=fotos");
   it("renders exactly one tile (thumb) per photo and no radio cover picker", async () => {
-    show();
-    await preview();
+    fotos();
+    await screen.findByRole("heading", { name: "Fotos" });
     for (const id of ["p1", "p2", "p3"])
       expect(
         document.querySelectorAll(`img[src="/admin/img/${id}/thumb"]`),
@@ -95,21 +105,20 @@ describe("single Fotos panel (no duplicate grids)", () => {
       document.querySelectorAll("input[type=radio][name=photoId]"),
     ).toHaveLength(0);
     expect(screen.queryByRole("group", { name: "Portada" })).toBeNull();
-    expect(screen.getByRole("heading", { name: "Fotos" })).toBeTruthy();
     expect(
       screen.queryByRole("heading", { name: "Orden de las fotos" }),
     ).toBeNull();
   });
   it("marks the current cover with a badge and offers 'Usar como portada' on the others", async () => {
-    show();
-    await preview();
+    fotos();
+    await screen.findByRole("heading", { name: "Fotos" });
     const tiles = Array.from(document.querySelectorAll("[data-photo-id]"));
     const p2 = tiles.find((t) => t.getAttribute("data-photo-id") === "p2")!;
     const p1 = tiles.find((t) => t.getAttribute("data-photo-id") === "p1")!;
-    expect(within(p2 as HTMLElement).getByText("Portada")).toBeTruthy();
-    expect(within(p1 as HTMLElement).queryByText("Portada")).toBeNull();
+    expect(p2.querySelector('[data-cover-badge="desktop"]')).toBeTruthy();
+    expect(p1.querySelector("[data-cover-badge]")).toBeNull();
     const use = within(p1 as HTMLElement).getByRole("button", {
-      name: /Usar como portada/,
+      name: "Usar como portada",
     });
     const form = use.closest("form")!;
     expect(form.method).toBe("post");
@@ -120,16 +129,23 @@ describe("single Fotos panel (no duplicate grids)", () => {
       (form.querySelector("input[name=photoId]") as HTMLInputElement).value,
     ).toBe("p1");
   });
-  it("automatic cover: the first photo wears the badge", async () => {
-    show({ coverPhotoId: null });
-    await preview();
+  it("automatic cover: the first photo wears the badge and can be pinned", async () => {
+    fotos({ coverPhotoId: null });
+    await screen.findByRole("heading", { name: "Fotos" });
     const p1 = document.querySelector('[data-photo-id="p1"]') as HTMLElement;
-    expect(within(p1).getByText("Portada (automática)")).toBeTruthy();
     expect(
-      within(p1).getByRole("button", { name: "Fijar portada" }),
-    ).toBeTruthy();
+      p1.querySelector('[data-cover-badge="desktop"]')!.getAttribute("title"),
+    ).toBe("Portada automática (primera foto)");
+    const pin = within(p1).getByRole("button", { name: "Usar como portada" });
+    expect(
+      (
+        pin
+          .closest("form")!
+          .querySelector("input[name=photoId]") as HTMLInputElement
+      ).value,
+    ).toBe("p1");
   });
-  it("keeps 'Usar la primera foto' (automatic cover)", async () => {
+  it("keeps 'Usar la primera foto' (automatic cover) in the Portada panel", async () => {
     show();
     await preview();
     const b = screen.getByRole("button", { name: "Usar la primera foto" });
@@ -154,8 +170,9 @@ describe("cover preview", () => {
     expect(el.querySelector('[data-theme="claro"]')).toBeTruthy();
   });
   it("Prueba uses the watermarked variant; switching the mode radio updates it live", async () => {
-    show({ mode: "proofing" });
-    const el = await preview();
+    // The mode radios live in Datos, next to the same live preview.
+    show({ mode: "proofing" }, {}, "/admin/g/g1");
+    const el = await screen.findByTestId("live-preview");
     expect(previewImg(el).getAttribute("src")).toBe("/admin/img/p2/view-sm-wm");
     await userEvent.click(screen.getByLabelText("Entrega"));
     expect(previewImg(el).getAttribute("src")).toBe("/admin/img/p2/view-sm");
@@ -169,11 +186,14 @@ describe("cover preview", () => {
     );
   });
   it("oscuro palette and live title/date edits", async () => {
-    show({ palette: "oscuro" });
-    const el = await preview();
+    show({ palette: "oscuro" }, {}, "/admin/g/g1?tab=diseno");
+    let el = await screen.findByTestId("live-preview");
     expect(el.querySelector('[data-theme="oscuro"]')).toBeTruthy();
     await userEvent.click(screen.getByLabelText("Claro"));
     expect(el.querySelector('[data-theme="claro"]')).toBeTruthy();
+    cleanup();
+    show({}, {}, "/admin/g/g1");
+    el = await screen.findByTestId("live-preview");
     const title = screen.getByLabelText("Título");
     await userEvent.clear(title);
     await userEvent.type(title, "Nuevo");

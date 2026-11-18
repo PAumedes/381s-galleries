@@ -18,10 +18,14 @@ import { CoverHero } from "./CoverHero";
 import { Download, Heart, HeartFilled } from "./icons";
 import { SharePopover } from "./SharePopover";
 import { useFavorites } from "./use-favorites";
-import { imgUrl, type GalleryPhoto, type OpenGallery } from "./types";
+import { useImgUrl } from "./img-url";
+import type { GalleryPhoto, OpenGallery } from "./types";
 
 const ALL = "\u0000all";
 const FAV = "\u0000fav";
+
+const aspectOf = (p: GalleryPhoto | undefined) =>
+  p?.width && p.height ? p.width / p.height : null;
 
 const reducedMotion = () =>
   typeof window !== "undefined" &&
@@ -32,13 +36,20 @@ export function GalleryView({
   gallery,
   photos,
   downloadSlot,
+  preview = false,
 }: {
   gallery: OpenGallery;
   photos: readonly GalleryPhoto[];
   /** Right side of the top bar; Phase 3 puts the download menu here. */
   downloadSlot?: ReactNode;
+  /**
+   * Admin preview: same page, but read-only and offline: favourites stay in
+   * memory, no downloads, no share or install prompts, no API calls.
+   */
+  preview?: boolean;
 }) {
   const t = useT();
+  const imgUrl = useImgUrl();
   const lang = useLang();
   const studio = useStudioName();
   const multi = gallery.sets.length > 1;
@@ -61,8 +72,11 @@ export function GalleryView({
   const gridRef = useRef<HTMLElement>(null);
   const coverRef = useRef<HTMLElement>(null);
 
-  const favs = useFavorites(gallery.slug, gallery.requireEmail, () =>
-    showToast("favorites.error"),
+  const favs = useFavorites(
+    gallery.slug,
+    gallery.requireEmail,
+    () => showToast("favorites.error"),
+    preview,
   );
   const favCount = useMemo(
     () => photos.filter((p) => favs.ids.has(p.id)).length,
@@ -140,7 +154,7 @@ export function GalleryView({
 
   const proofing = gallery.mode === "proofing";
   // Proofing never offers downloads, whatever the payload's allow_* say.
-  const canDownload = !proofing && enabledSizes(gallery).length > 0;
+  const canDownload = !preview && !proofing && enabledSizes(gallery).length > 0;
   const openSingle = canDownload
     ? (id: string) => setSheet({ kind: "single", id })
     : undefined;
@@ -150,6 +164,10 @@ export function GalleryView({
       : undefined;
 
   const date = formatEventDate(gallery.eventDate, lang);
+  const coverPhoto = photos.find((p) => p.id === gallery.coverPhotoId);
+  const mobilePhoto = gallery.coverPhotoIdMobile
+    ? photos.find((p) => p.id === gallery.coverPhotoIdMobile)
+    : undefined;
   const tabs = [
     ...(multi
       ? [
@@ -174,20 +192,24 @@ export function GalleryView({
         date={date}
         studio={studio}
         src={
-          gallery.coverPhotoId
-            ? imgUrl(
-                gallery.coverPhotoId,
-                "view-lg",
-                photos.find((p) => p.id === gallery.coverPhotoId)?.v,
-              )
-            : null
+          coverPhoto
+            ? imgUrl(coverPhoto.id, "view-lg", coverPhoto.v)
+            : gallery.coverPhotoId
+              ? imgUrl(gallery.coverPhotoId, "view-lg")
+              : null
         }
         proofing={proofing}
         focus={gallery.coverFocus ?? null}
-        aspect={(() => {
-          const c = photos.find((p) => p.id === gallery.coverPhotoId);
-          return c?.width && c.height ? c.width / c.height : null;
-        })()}
+        aspect={aspectOf(coverPhoto)}
+        mobile={
+          mobilePhoto
+            ? {
+                src: imgUrl(mobilePhoto.id, "view-lg", mobilePhoto.v),
+                focus: gallery.coverFocusMobile ?? null,
+                aspect: aspectOf(mobilePhoto),
+              }
+            : null
+        }
         scrollLabel={t("gallery.view")}
         onScroll={scrollToGrid}
         layout={gallery.coverLayout}
@@ -269,10 +291,12 @@ export function GalleryView({
               <Heart className="size-5" aria-hidden="true" />
             )}
           </button>
-          <SharePopover
-            title={gallery.title}
-            onCopied={() => showToast("gallery.linkCopied")}
-          />
+          {!preview && (
+            <SharePopover
+              title={gallery.title}
+              onCopied={() => showToast("gallery.linkCopied")}
+            />
+          )}
         </div>
       </nav>
 
@@ -313,7 +337,7 @@ export function GalleryView({
         <LanguageToggle className="text-grey-600" />
       </footer>
 
-      <AddToHomeHint slug={gallery.slug} gridRef={gridRef} />
+      {!preview && <AddToHomeHint slug={gallery.slug} gridRef={gridRef} />}
 
       {toast && (
         <p
