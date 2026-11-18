@@ -13,6 +13,13 @@ export interface LookState {
   height: number;
 }
 
+function canHover(): boolean {
+  return (
+    typeof window.matchMedia === "function" &&
+    window.matchMedia(FINE_POINTER).matches
+  );
+}
+
 /** A 4:3 box beside the tile, always inside the viewport. */
 export function placeLook(
   id: string,
@@ -53,11 +60,7 @@ export function useQuickLook() {
   }
   function start(id: string, el: HTMLElement) {
     stop();
-    if (
-      typeof window.matchMedia !== "function" ||
-      !window.matchMedia(FINE_POINTER).matches
-    )
-      return;
+    if (!canHover()) return;
     const cancel = (ev: Event) => {
       if (ev.type === "keydown" && (ev as KeyboardEvent).key !== "Escape")
         return;
