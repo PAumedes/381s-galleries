@@ -6,6 +6,8 @@ import {
   csvLine,
   fmtBaSeconds,
   namesTxt,
+  visitorDisplay,
+  type VisitorDisplay,
 } from "../admin-activity";
 import { allMessages } from "../../i18n/dictionaries";
 import { DEFAULT_LANG, type Lang } from "../../i18n/lang";
@@ -29,21 +31,12 @@ const BREAKDOWN_COLUMNS = {
 const VARIANTS = ["highres", "web", "ig"] as const;
 type Variant = (typeof VARIANTS)[number];
 
-export interface ActivityRow {
+export interface ActivityRow extends VisitorDisplay {
   id: string;
   createdAt: string;
   /** Null for anonymous / no visitor. */
   email: string | null;
   variant: string;
-  country: string | null;
-  region: string | null;
-  city: string | null;
-  lang: string | null;
-  referrerHost: string | null;
-  browser: string | null;
-  browserVersion: string | null;
-  os: string | null;
-  device: string | null;
   photoId: string | null;
   name: string | null;
   set: string | null;
@@ -114,15 +107,7 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
       createdAt: r.createdAt,
       email: r.email,
       variant: r.variant,
-      country: r.country,
-      region: r.region,
-      city: r.city,
-      lang: r.lang,
-      referrerHost: r.referrerHost,
-      browser: r.browser,
-      browserVersion: r.browserVersion,
-      os: r.os,
-      device: r.device,
+      ...visitorDisplay(r),
       photoId: r.photoId,
       name: p?.name ?? null,
       set: p?.set ?? null,

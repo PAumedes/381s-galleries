@@ -102,13 +102,28 @@ export function bulkTitle(
 /** What the Actividad tab shows about where / on what a visit came from. */
 export interface VisitorDisplay {
   country: string | null;
+  region: string | null;
   city: string | null;
   browser: string | null;
   browserVersion: string | null;
   os: string | null;
   referrerHost: string | null;
   lang: string | null;
+  device: string | null;
 }
+
+/** The display fields of any row that carries the visitor-info columns. */
+export const visitorDisplay = (r: VisitorDisplay): VisitorDisplay => ({
+  country: r.country,
+  region: r.region,
+  city: r.city,
+  lang: r.lang,
+  referrerHost: r.referrerHost,
+  browser: r.browser,
+  browserVersion: r.browserVersion,
+  os: r.os,
+  device: r.device,
+});
 
 const join = (parts: ReadonlyArray<string | null | undefined>, sep: string) =>
   parts.filter(Boolean).join(sep);

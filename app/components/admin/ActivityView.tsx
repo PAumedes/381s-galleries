@@ -10,6 +10,7 @@ import {
   placeLabel,
   softwareLabel,
   sourceLabel,
+  type VisitorDisplay,
 } from "../../lib/admin-activity";
 import type { loadActivity } from "../../lib/server/admin-activity";
 import { GalleryTabs } from "./GalleryTabs";
@@ -65,7 +66,7 @@ function PhotoCell({ r }: { r: Row }) {
 }
 
 /** Place, device and source cells shared by download rows and visit rows. */
-function VisitorCells({ x }: { x: VisitorCellsData }) {
+function VisitorCells({ x }: { x: VisitorDisplay }) {
   const t = useT();
   const device =
     x.device && Object.hasOwn(DEVICE_KEYS, x.device)
@@ -102,10 +103,6 @@ function VisitorCells({ x }: { x: VisitorCellsData }) {
     </>
   );
 }
-
-type VisitorCellsData = Parameters<typeof placeLabel>[0] &
-  Parameters<typeof softwareLabel>[0] &
-  Parameters<typeof sourceLabel>[0] & { device: string | null };
 
 function Breakdown({ data }: { data: ActivityViewData["breakdown"] }) {
   const t = useT();
