@@ -181,6 +181,35 @@ export async function imageVersionToken(
   return shortMac(env.SESSION_SECRET, parts.join("\n"));
 }
 
+/**
+ * Token of everything the ADMIN image routes can serve for `photo`: clean and
+ * watermarked thumb / view-sm (file ids, watermark flags, modified times).
+ * HMAC (SESSION_SECRET, own domain prefix), 16 hex chars, so Drive ids are not
+ * recoverable. Used as `?v=` on `/admin/img` URLs: a matching one lets the
+ * admin's browser keep the image privately; any re-export or file change
+ * changes the token. Null when a served variant has an unknown version (such
+ * a token could not change with the file), or when there is nothing to serve.
+ */
+export async function adminImageToken(
+  env: Pick<Env, "SESSION_SECRET">,
+  photo: SourcePhoto,
+): Promise<string | null> {
+  const parts: string[] = [];
+  for (const proofing of [false, true]) {
+    for (const variant of ["thumb", "view-sm"] as const) {
+      const s = resolveSource(photo, proofing, variant);
+      if (!s) {
+        parts.push("-");
+        continue;
+      }
+      if (!s.version) return null;
+      parts.push(`${s.fileId}|${s.watermark ? 1 : 0}|${s.version}`);
+    }
+  }
+  if (parts.every((x) => x === "-")) return null;
+  return shortMac(env.SESSION_SECRET, `admin\n${parts.join("\n")}`);
+}
+
 function isValidHit(hit: R2Object, src: Source): boolean {
   return (
     !!src.version &&
@@ -350,11 +379,20 @@ export async function serveImage(
   // A request whose ?v= equals the current version token may be cached for a
   // year (the URL changes whenever the file, watermark flag or version does).
   // Otherwise <=10 min browser staleness is accepted (PLAN 5.3).
+  // Admin images: same idea with their own token (`adminImageToken`); without
+  // a matching one they stay `no-store`.
   const asked = new URL(request.url).searchParams.get("v");
+  const current = asked
+    ? opts.admin
+      ? await adminImageToken(env, photo)
+      : await imageVersionToken(env, photo, proofing)
+    : null;
   const cacheControl =
-    asked && asked === (await imageVersionToken(env, photo, proofing))
+    asked && asked === current
       ? IMMUTABLE_CACHE_CONTROL
-      : "private, max-age=600";
+      : opts.admin
+        ? "private, no-store"
+        : "private, max-age=600";
   const wmFlag = watermark ? "1" : "0";
   let hit = adminClean ? null : await env.CACHE.get(key);
   if (hit && !isValidHit(hit, src)) {

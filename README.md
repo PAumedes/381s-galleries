@@ -43,6 +43,12 @@ node scripts/check-admin-mobile.mjs [--base http://localhost:5173] [--shots DIR]
 
 It needs Playwright with a Chromium (`npm i -g playwright`; it uses Chrome if installed), is not part of `pnpm test`, exits non-zero on horizontal overflow, controls under 44px, form fields under 16px or dialogs that overflow, and with `--shots` saves one PNG per screen and width. Photos are faked in the browser, so it works offline. It drives admin pages with dev auth, so it exits 2 unless `--base` points to `localhost`, `127.0.0.1` or `[::1]`; pass `--allow-remote` to override.
 
+Cover-preview latency (Portada tab, Móvil frame) is checked the same way: it adds 2 s to every image request and 0.4 s to the save, then asserts that the chosen photo shows within 200 ms of the click, the old cover never comes back, the big image fades in over the thumbnail and a photo loaded before shows at once. Local hosts only.
+
+```sh
+node scripts/check-cover-latency.mjs [--base http://localhost:5173] [--latency 2000] [--action-latency 400] [--first-ms 200] [--verbose]
+```
+
 ## Routes
 
 - `/:slug`: client gallery (PIN form, grid, lightbox); `?lang=es|en` switches language (also sets a cookie)

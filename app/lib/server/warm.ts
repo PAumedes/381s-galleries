@@ -47,6 +47,61 @@ export interface WarmResult {
   stopped?: "budget" | "cf";
 }
 
+/** Variants a cover can be shown with: grid/admin thumb, admin view, public cover. */
+export const COVER_WARM_VARIANTS: readonly Variant[] = [
+  "thumb",
+  "view-sm",
+  "view-lg",
+];
+/** External subrequests one cover save may spend (Workers Free allows 50). */
+export const COVER_WARM_BUDGET = 8;
+/** A Drive call may cost two subrequests (OAuth refresh + the file). */
+const COVER_CALL_RESERVE = 2;
+
+/**
+ * After a successful cover save: puts that ONE photo's cover variants in R2
+ * (same resolution, validation and metadata as /img, so Prueba stores only
+ * watermarked files and a photo without preview-wm stores nothing). Stops
+ * before the Drive subrequest budget would be exceeded; a failing variant
+ * does not stop the others. Called from `ctx.waitUntil`.
+ */
+export async function warmCoverPhoto(
+  env: Env,
+  drive: DriveClient,
+  galleryId: string,
+  photoId: string,
+): Promise<void> {
+  const [row] = await getDb(env)
+    .select({
+      photo: {
+        id: P.id,
+        driveHighresId: P.driveHighresId,
+        driveWebId: P.driveWebId,
+        driveIgId: P.driveIgId,
+        driveThumbId: P.driveThumbId,
+        driveWmId: P.driveWmId,
+        driveThumbWmId: P.driveThumbWmId,
+        variantVersions: P.variantVersions,
+      },
+      mode: G.mode,
+    })
+    .from(P)
+    .innerJoin(G, eq(G.id, P.galleryId))
+    .where(and(eq(P.id, photoId), eq(P.galleryId, galleryId), photoVisible));
+  if (!row) return;
+  const photo = { ...row.photo, proofing: row.mode === "proofing" };
+  const start = drive.subrequests();
+  for (const variant of COVER_WARM_VARIANTS) {
+    if (drive.subrequests() - start + COVER_CALL_RESERVE > COVER_WARM_BUDGET)
+      break;
+    try {
+      await fillCache(env, photo, variant, drive);
+    } catch {
+      // Next variant; the first real view retries this one.
+    }
+  }
+}
+
 const empty = (): WarmResult => ({ stale: 0, warmed: 0, failed: 0 });
 
 /** Hash of what a fully warmed `photo` looks like (16 hex chars). */

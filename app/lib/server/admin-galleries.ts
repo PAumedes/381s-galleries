@@ -14,6 +14,9 @@ import { isCoverLayout, isGridGap, isGridStyle, isPalette } from "../design";
 import { requestT } from "../../i18n/dictionaries";
 import type { TFunction } from "../../i18n/t";
 import { adminAction } from "./admin";
+import type { DriveClient } from "./drive-types";
+import { adminImageToken } from "./images";
+import { warmCoverPhoto } from "./warm";
 import { hashPin } from "./crypto";
 import { RESERVED_SLUGS } from "./slug";
 import { isExpired } from "./time";
@@ -138,6 +141,11 @@ export interface EditPhoto {
   takenAt: string | null;
   width: number | null;
   height: number | null;
+  /**
+   * Opaque token of the photo's current admin image files (`?v=` on
+   * `/admin/img` URLs, which makes them privately cacheable); null = unknown.
+   */
+  v?: string | null;
 }
 
 export async function loadGalleryEdit(env: Env, id: string) {
@@ -157,6 +165,13 @@ export async function loadGalleryEdit(env: Env, id: string) {
       height: schema.photos.height,
       hasWm: sql<number>`(${schema.photos.driveWmId} IS NOT NULL)`,
       hasThumbWm: sql<number>`(${schema.photos.driveThumbWmId} IS NOT NULL)`,
+      driveHighresId: schema.photos.driveHighresId,
+      driveWebId: schema.photos.driveWebId,
+      driveIgId: schema.photos.driveIgId,
+      driveThumbId: schema.photos.driveThumbId,
+      driveWmId: schema.photos.driveWmId,
+      driveThumbWmId: schema.photos.driveThumbWmId,
+      variantVersions: schema.photos.variantVersions,
     })
     .from(schema.photos)
     .where(and(eq(schema.photos.galleryId, id), photoVisible))
@@ -165,8 +180,16 @@ export async function loadGalleryEdit(env: Env, id: string) {
       asc(schema.photos.sort),
       asc(schema.photos.baseName),
     );
-  const photos: EditPhoto[] = ps.map(
-    ({ hasWm: _w, hasThumbWm: _t, ...p }) => p,
+  const photos: EditPhoto[] = await Promise.all(
+    ps.map(async (p) => ({
+      id: p.id,
+      set: p.set,
+      name: p.name,
+      takenAt: p.takenAt,
+      width: p.width,
+      height: p.height,
+      v: await adminImageToken(env, p),
+    })),
   );
   // Proofing serves only preview-wm: photos without it 404 for clients.
   const noWm = ps.filter((p) => !p.hasWm);
@@ -271,10 +294,18 @@ const str = (f: FormData, k: string) => {
   return typeof v === "string" ? v : "";
 };
 
+/** Optional extras of a gallery action (the route injects them). */
+export interface GalleryActionDeps {
+  ctx?: Pick<ExecutionContext, "waitUntil">;
+  /** Present = warm R2 after a cover save; the route passes none in mock mode. */
+  drive?: DriveClient;
+}
+
 export async function galleryAction(
   request: Request,
   env: Env,
   id: string,
+  deps?: GalleryActionDeps,
 ): Promise<GalleryActionResult> {
   await adminAction(request, env);
   const t = requestT(request);
@@ -305,7 +336,7 @@ export async function galleryAction(
     case "pin":
       return savePin(env, g, form, t);
     case "cover":
-      return saveCover(env, g, form, t);
+      return saveCover(env, g, form, t, deps);
     case "focus":
       return saveFocus(env, g, form, t);
     case "reorder":
@@ -617,7 +648,13 @@ function deviceOf(f: FormData): Device | null {
   return v === "mobile" ? "mobile" : null;
 }
 
-async function saveCover(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
+async function saveCover(
+  env: Env,
+  g: GalleryRow,
+  f: FormData,
+  t: TFunction,
+  deps?: GalleryActionDeps,
+) {
   const intent = "cover";
   const device = deviceOf(f);
   const raw = f.get("photoId");
@@ -665,6 +702,14 @@ async function saveCover(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
         : { ...clear, coverPhotoId: p.id },
     )
     .where(eq(schema.galleries.id, g.id));
+  // The new cover is about to be looked at (here and by clients): fill R2 for
+  // that photo in the background so nobody waits for a cold Drive fetch.
+  if (deps?.ctx && deps.drive)
+    deps.ctx.waitUntil(
+      warmCoverPhoto(env, deps.drive, g.id, p.id).catch(() => {
+        // Best effort: the first view just streams from Drive as before.
+      }),
+    );
   return done(
     intent,
     device === "mobile"

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   Form,
   Link,
@@ -16,11 +16,13 @@ import type {
 } from "../../lib/server/admin-galleries";
 import type { Design } from "../../lib/design";
 import { External } from "../icons";
+import { versionsOf } from "../img-url";
 import { CoverPreview } from "./CoverPreview";
 import { DesignPanel } from "./DesignPanel";
 import { GalleryTabs, isEditorTab, type EditorTab } from "./GalleryTabs";
 import { StatusPill } from "./GalleryList";
-import { LivePreview, type PreviewDevice } from "./LivePreview";
+import { coverSrc, LivePreview, type PreviewDevice } from "./LivePreview";
+import { usePendingCover, withPendingCover } from "./optimistic-cover";
 import { PhotoReorder } from "./PhotoReorder";
 import { SharePanel } from "./SharePanel";
 
@@ -177,7 +179,14 @@ function GalleryEditViewInner({
   const [params] = useSearchParams();
   const rawTab = params.get("tab");
   const tab: EditorTab = isEditorTab(rawTab) ? rawTab : "datos";
-  const g = data.gallery;
+  // A cover choice shows at once (the server confirms, or it rolls back).
+  const photoIds = useMemo(
+    () => new Set(data.photos.map((p) => p.id)),
+    [data.photos],
+  );
+  const pendingCover = usePendingCover(photoIds);
+  const g = withPendingCover(data.gallery, pendingCover);
+  const versions = useMemo(() => versionsOf(data.photos), [data.photos]);
   const errs = (intent: string) =>
     actionData && actionData.intent === intent && !actionData.ok
       ? (actionData.fieldErrors ?? {})
@@ -188,6 +197,16 @@ function GalleryEditViewInner({
   const ge = errs("design");
   const [mode, setMode] = useState<"proofing" | "delivery">(g.mode);
   const proofing = mode === "proofing";
+  useEffect(() => {
+    if (!pendingCover?.photoId) return;
+    // Start fetching what the previews and the picker will ask for.
+    const v = versions[pendingCover.photoId];
+    for (const src of [
+      coverSrc(pendingCover.photoId, proofing, v),
+      coverSrc(pendingCover.photoId, false, v),
+    ])
+      new Image().src = src;
+  }, [pendingCover?.photoId, proofing, versions]);
   const [title, setTitle] = useState(g.title);
   const [eventDate, setEventDate] = useState(g.eventDate ?? "");
   const saved: Design = {
@@ -269,6 +288,7 @@ function GalleryEditViewInner({
           : null
       }
       photos={data.photos}
+      versions={versions}
       device={device}
       onDevice={setDevice}
     >
@@ -815,7 +835,6 @@ function GalleryEditViewInner({
 
       {tab === "portada" && (
         <CoverPreview
-          key={`${coverId ?? "none"}|${g.coverPhotoIdMobile ?? ""}`}
           title={title}
           eventDate={eventDate || null}
           palette={design.palette}
@@ -838,6 +857,7 @@ function GalleryEditViewInner({
           mobileNoWm={"mobileCoverNoWm" in g && g.mobileCoverNoWm === true}
           photos={data.photos}
           coverAuto={g.coverPhotoId === null}
+          versions={versions}
           device={device}
           onDevice={setDevice}
           actionData={actionData}
