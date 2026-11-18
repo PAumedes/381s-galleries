@@ -64,6 +64,7 @@ function mount(
     fail?: boolean;
     initial?: Record<string, unknown>;
     mode?: string;
+    noWm?: string[];
   } = {},
 ) {
   const server: Server = {
@@ -82,7 +83,9 @@ function mount(
         gallery: server.gallery,
         hasWmFiles: true,
         hasThumbWmFiles: true,
-        photos,
+        photos: photos.map((p) =>
+          opts.noWm ? { ...p, hasWm: !opts.noWm.includes(p.id) } : p,
+        ),
         version: "v1",
         issues: { groups: [], truncated: 0, total: 0 },
       }),
@@ -336,5 +339,29 @@ describe("Portada: placeholder, versioned URLs, preload", () => {
     await userEvent.click(screen.getByRole("button", { name: "Usar IMG_3" }));
     await act(async () => {});
     expect(loaded).toContain("/admin/img/p3/view-sm?v=cccc333333333333");
+  });
+});
+
+describe("Portada: edge cases", () => {
+  it("Prueba: a mobile cover photo without preview-wm is not shown optimistically (server falls back to desktop)", async () => {
+    mount("portada", { mode: "proofing", noWm: ["p3"] });
+    await openMobileChooser();
+    expect(mainSrc("mobile")).toContain("/p2/");
+    await userEvent.click(screen.getByRole("button", { name: "Usar IMG_3" }));
+    expect(mainSrc("mobile")).toContain("/p2/");
+    expect(mainSrc("mobile")).not.toContain("/p3/");
+  });
+
+  it("the big image failing to load drops the placeholder and marks a failed state", async () => {
+    mount("portada");
+    await openMobileChooser();
+    await userEvent.click(screen.getByRole("button", { name: "Usar IMG_3" }));
+    const main = frame("mobile")!.querySelector(
+      "img[data-cover-img]",
+    ) as HTMLImageElement;
+    expect(placeholderSrc("mobile")).not.toBeNull();
+    fireEvent.error(main);
+    await waitFor(() => expect(placeholderSrc("mobile")).toBeNull());
+    expect(main.getAttribute("data-failed")).toBe("true");
   });
 });

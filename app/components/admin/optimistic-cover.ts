@@ -21,15 +21,28 @@ export type PendingCover = {
  */
 export function usePendingCover(
   photoIds: ReadonlySet<string>,
+  actionData?: { intent?: string; ok?: boolean },
+  /** Prueba: photos without a preview-wm; the server drops them as mobile cover. */
+  noWmIds?: ReadonlySet<string>,
 ): PendingCover | null {
-  const form = useNavigation().formData;
+  const nav = useNavigation();
+  const form = nav.formData;
   if (!form || form.get("intent") !== "cover") return null;
+  // The form stays on the navigation while the reload runs, but a failed
+  // action has already answered: roll back now, next to the error.
+  if (
+    nav.state === "loading" &&
+    actionData?.intent === "cover" &&
+    actionData.ok === false
+  )
+    return null;
   const device = form.get("device");
   const photo = form.get("photoId");
   if (typeof photo !== "string") return null;
   if (device !== null && device !== "desktop" && device !== "mobile")
     return null;
   if (photo !== "" && !photoIds.has(photo)) return null;
+  if (device === "mobile" && noWmIds?.has(photo)) return null;
   return {
     device: device === "mobile" ? "mobile" : "desktop",
     photoId: photo === "" ? null : photo,

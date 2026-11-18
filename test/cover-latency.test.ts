@@ -133,7 +133,7 @@ const keys = async () =>
   (await env.CACHE.list()).objects.map((o) => o.key).sort();
 
 describe("cover save warms R2 for that photo only", () => {
-  it("desktop cover: thumb, view-sm and view-lg of the chosen photo land in R2", async () => {
+  it("desktop cover: thumb and view-sm of the chosen photo land in R2 (view-lg stays lazy)", async () => {
     await seed();
     const { drive, calls } = fakeDrive();
     const r = recorder();
@@ -142,13 +142,13 @@ describe("cover save warms R2 for that photo only", () => {
     // The answer does not wait for Drive: the work is handed to waitUntil.
     expect(r.count()).toBe(1);
     await r.done();
-    expect(await keys()).toEqual(["p2/thumb", "p2/view-lg", "p2/view-sm"]);
+    expect(await keys()).toEqual(["p2/thumb", "p2/view-sm"]);
     // Only files of that photo were read, nothing of p1 / p3.
     expect(calls.length).toBeGreaterThan(0);
     expect(calls.every((c) => c.endsWith("-p2"))).toBe(true);
-    const head = await env.CACHE.head("p2/view-lg");
+    const head = await env.CACHE.head("p2/view-sm");
     expect(head?.customMetadata?.wm).toBe("0");
-    expect(head?.customMetadata?.fileId).toBe("HI-p2");
+    expect(head?.customMetadata?.fileId).toBe("WEB-p2");
   });
 
   it("mobile cover warms too", async () => {
@@ -161,7 +161,7 @@ describe("cover save warms R2 for that photo only", () => {
     });
     expect(res.ok).toBe(true);
     await r.done();
-    expect(await keys()).toEqual(["p3/thumb", "p3/view-lg", "p3/view-sm"]);
+    expect(await keys()).toEqual(["p3/thumb", "p3/view-sm"]);
     expect(calls.every((c) => c.endsWith("-p3"))).toBe(true);
   });
 
@@ -274,7 +274,30 @@ describe("cover save warms R2 for that photo only", () => {
     const r = recorder();
     await save({ photoId: "p2" }, mockAdmin, { ctx: r.ctx, drive });
     await r.done();
-    expect(calls.length).toBe(2);
+    // A call may cost up to MAX_RETRIES + 2 = 5: the second would not fit.
+    expect(calls.length).toBe(1);
+  });
+
+  it("Prueba without thumb-wm: view-lg (same preview-wm as view-sm) is not fetched a third time", async () => {
+    await seed({ mode: "proofing" }, ["p1"], () => ({ driveThumbWmId: null }));
+    const { drive, calls } = fakeDrive();
+    const r = recorder();
+    await save({ photoId: "p1" }, mockAdmin, { ctx: r.ctx, drive });
+    await r.done();
+    // thumb falls back to preview-wm (own key), view-sm is it; view-lg skipped.
+    expect(calls).toEqual(["WM-p1", "WM-p1"]);
+    expect(await keys()).toEqual(["p1/thumb", "p1/view-sm"]);
+  });
+
+  it("EditPhoto.hasWm tells whether the photo has a preview-wm (no ids leaked)", async () => {
+    await seed({ mode: "proofing" }, ["p1", "p2"], (id) =>
+      id === "p2" ? { driveWmId: null } : {},
+    );
+    const data = await loadGalleryEdit(mockAdmin, G);
+    const by = Object.fromEntries(data!.photos.map((p) => [p.id, p]));
+    expect(by.p1!.hasWm).toBe(true);
+    expect(by.p2!.hasWm).toBe(false);
+    expect(JSON.stringify(data!.photos)).not.toMatch(/WM-p1|WEB-|HI-/);
   });
 
   it("works without a context (tests/other callers): the save still succeeds", async () => {

@@ -184,7 +184,16 @@ function GalleryEditViewInner({
     () => new Set(data.photos.map((p) => p.id)),
     [data.photos],
   );
-  const pendingCover = usePendingCover(photoIds);
+  const noWmIds = useMemo(
+    () =>
+      new Set(
+        data.gallery.mode === "proofing"
+          ? data.photos.filter((p) => p.hasWm === false).map((p) => p.id)
+          : [],
+      ),
+    [data.photos, data.gallery.mode],
+  );
+  const pendingCover = usePendingCover(photoIds, actionData, noWmIds);
   const g = withPendingCover(data.gallery, pendingCover);
   const versions = useMemo(() => versionsOf(data.photos), [data.photos]);
   const errs = (intent: string) =>

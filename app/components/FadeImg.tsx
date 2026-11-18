@@ -16,6 +16,7 @@ export function FadeImg({
   className = "",
   style,
   onLoad,
+  onError,
   ...rest
 }: Omit<ImgHTMLAttributes<HTMLImageElement>, "placeholder"> & {
   placeholder?: string | null;
@@ -23,6 +24,9 @@ export function FadeImg({
   onElement?: (el: HTMLImageElement | null) => void;
 }) {
   const [loaded, setLoaded] = useState<string | null>(null);
+  // The real image failed: drop the placeholder instead of a blurry stand-in forever.
+  const [failed, setFailed] = useState<string | null>(null);
+  const hasFailed = failed === src;
   // A cached image can be complete before React attaches onLoad.
   const setRef = useCallback(
     (el: HTMLImageElement | null) => {
@@ -33,13 +37,13 @@ export function FadeImg({
     [onElement],
   );
   const fade = placeholder
-    ? loaded === src
+    ? loaded === src || hasFailed
       ? " opacity-100 transition-opacity duration-base"
       : " opacity-0"
     : "";
   return (
     <>
-      {placeholder && (
+      {placeholder && !hasFailed && (
         <img
           data-placeholder=""
           src={placeholder}
@@ -54,11 +58,16 @@ export function FadeImg({
         {...rest}
         ref={setRef}
         src={src}
+        data-failed={hasFailed ? "true" : undefined}
         className={className + fade}
         style={style}
         onLoad={(e) => {
           setLoaded(src ?? null);
           onLoad?.(e);
+        }}
+        onError={(e) => {
+          setFailed(src ?? null);
+          onError?.(e);
         }}
       />
     </>

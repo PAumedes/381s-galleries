@@ -146,6 +146,8 @@ export interface EditPhoto {
    * `/admin/img` URLs, which makes them privately cacheable); null = unknown.
    */
   v?: string | null;
+  /** Has a preview-wm (what Prueba serves); no ids. Absent = unknown. */
+  hasWm?: boolean;
 }
 
 export async function loadGalleryEdit(env: Env, id: string) {
@@ -189,6 +191,7 @@ export async function loadGalleryEdit(env: Env, id: string) {
       width: p.width,
       height: p.height,
       v: await adminImageToken(env, p),
+      hasWm: !!p.hasWm,
     })),
   );
   // Proofing serves only preview-wm: photos without it 404 for clients.

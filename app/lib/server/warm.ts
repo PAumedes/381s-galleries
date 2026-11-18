@@ -47,16 +47,22 @@ export interface WarmResult {
   stopped?: "budget" | "cf";
 }
 
-/** Variants a cover can be shown with: grid/admin thumb, admin view, public cover. */
-export const COVER_WARM_VARIANTS: readonly Variant[] = [
-  "thumb",
-  "view-sm",
-  "view-lg",
-];
+/**
+ * Variants the editor shows right after a save. `view-lg` stays lazy: in
+ * Prueba it is the very same preview-wm file as `view-sm` (one more Drive
+ * fetch for the same bytes) and in Entrega it is the full original.
+ */
+export const COVER_WARM_VARIANTS: readonly Variant[] = ["thumb", "view-sm"];
 /** External subrequests one cover save may spend (Workers Free allows 50). */
 export const COVER_WARM_BUDGET = 8;
-/** A Drive call may cost two subrequests (OAuth refresh + the file). */
-const COVER_CALL_RESERVE = 2;
+/**
+ * Worst case of ONE Drive call: the file plus MAX_RETRIES (3) retries of 429/5xx,
+ * plus one OAuth refresh. Reserved before every call so the budget really holds.
+ */
+const COVER_CALL_RESERVE = 3 + 2;
+
+/** Fills in flight in this isolate, so concurrent saves share one Drive fetch. */
+const inFlight = new Map<string, Promise<unknown>>();
 
 /**
  * After a successful cover save: puts that ONE photo's cover variants in R2
@@ -94,8 +100,16 @@ export async function warmCoverPhoto(
   for (const variant of COVER_WARM_VARIANTS) {
     if (drive.subrequests() - start + COVER_CALL_RESERVE > COVER_WARM_BUDGET)
       break;
+    const key = `${photo.id}/${variant}`;
+    let fill = inFlight.get(key);
+    if (!fill) {
+      fill = fillCache(env, photo, variant, drive).finally(() =>
+        inFlight.delete(key),
+      );
+      inFlight.set(key, fill);
+    }
     try {
-      await fillCache(env, photo, variant, drive);
+      await fill;
     } catch {
       // Next variant; the first real view retries this one.
     }
