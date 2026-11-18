@@ -11,13 +11,21 @@ import { allMessages } from "../../i18n/dictionaries";
 import { DEFAULT_LANG, type Lang } from "../../i18n/lang";
 import { makeT } from "../../i18n/t";
 import { isAnon } from "./access";
-import { activityQuery } from "./activity";
+import { activityQuery, visitorFields } from "./activity";
 import { adminHeaders } from "./admin";
 
 export const ACTIVITY_PAGE = 50;
 const CHILD_CAP = 1000;
 const VIEWS_CAP = 50;
 const CSV_CHUNK = 200;
+const BREAKDOWN_CAP = 5;
+/** Per-gallery summary: key -> `gallery_views` column (fixed list, never user input). */
+const BREAKDOWN_COLUMNS = {
+  countries: "country",
+  devices: "device",
+  browsers: "browser",
+  referrers: "referrer_host",
+} as const;
 const VARIANTS = ["highres", "web", "ig"] as const;
 type Variant = (typeof VARIANTS)[number];
 
@@ -28,6 +36,14 @@ export interface ActivityRow {
   email: string | null;
   variant: string;
   country: string | null;
+  region: string | null;
+  city: string | null;
+  lang: string | null;
+  referrerHost: string | null;
+  browser: string | null;
+  browserVersion: string | null;
+  os: string | null;
+  device: string | null;
   photoId: string | null;
   name: string | null;
   set: string | null;
@@ -99,6 +115,14 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
       email: r.email,
       variant: r.variant,
       country: r.country,
+      region: r.region,
+      city: r.city,
+      lang: r.lang,
+      referrerHost: r.referrerHost,
+      browser: r.browser,
+      browserVersion: r.browserVersion,
+      os: r.os,
+      device: r.device,
       photoId: r.photoId,
       name: p?.name ?? null,
       set: p?.set ?? null,
@@ -167,7 +191,7 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
   const views = await db
     .select({
       createdAt: schema.galleryViews.createdAt,
-      country: schema.galleryViews.country,
+      ...visitorFields(schema.galleryViews),
       email: sql<
         string | null
       >`CASE WHEN ${schema.visitors.email} LIKE '%@anon.invalid' THEN NULL ELSE ${schema.visitors.email} END`,
@@ -184,8 +208,11 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
     .orderBy(desc(schema.galleryViews.createdAt))
     .limit(VIEWS_CAP);
 
+  const breakdown = await visitBreakdown(env, id);
+
   return {
     gallery: g,
+    breakdown,
     summary: {
       views: sum.views,
       visitors: sum.visitors,
@@ -198,6 +225,28 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
     visitorOptions: opts.results.map((r) => r.email),
     views,
   };
+}
+
+export interface BreakdownEntry {
+  value: string;
+  count: number;
+}
+
+/** Top values of each visit dimension for one gallery (nulls skipped). */
+async function visitBreakdown(env: Env, galleryId: string) {
+  const entries = Object.entries(BREAKDOWN_COLUMNS);
+  const results = await env.DB.batch<BreakdownEntry>(
+    entries.map(([, col]) =>
+      env.DB.prepare(
+        `SELECT ${col} AS value, COUNT(*) AS count FROM gallery_views
+          WHERE gallery_id = ?1 AND ${col} IS NOT NULL
+          GROUP BY ${col} ORDER BY count DESC, value LIMIT ${BREAKDOWN_CAP}`,
+      ).bind(galleryId),
+    ),
+  );
+  return Object.fromEntries(
+    entries.map(([key], i) => [key, results[i].results]),
+  ) as Record<keyof typeof BREAKDOWN_COLUMNS, BreakdownEntry[]>;
 }
 
 /** CSV of every download row, newest first, streamed in keyset pages. */
@@ -246,6 +295,18 @@ export async function activityCsv(
                 t("admin.export.col.kind"),
                 t("admin.export.col.bulkId"),
                 t("admin.export.col.country"),
+                t("admin.export.col.region"),
+                t("admin.export.col.city"),
+                t("admin.export.col.continent"),
+                t("admin.export.col.timezone"),
+                t("admin.export.col.asn"),
+                t("admin.export.col.asOrg"),
+                t("admin.export.col.lang"),
+                t("admin.export.col.referrer"),
+                t("admin.export.col.browser"),
+                t("admin.export.col.browserVersion"),
+                t("admin.export.col.os"),
+                t("admin.export.col.device"),
               ]),
           ),
         );
@@ -269,6 +330,18 @@ export async function activityCsv(
           kindLabel(r.kind),
           r.photoId === null ? r.id : r.bulkId,
           r.country,
+          r.region,
+          r.city,
+          r.continent,
+          r.timezone,
+          r.asn,
+          r.asOrg,
+          r.lang,
+          r.referrerHost,
+          r.browser,
+          r.browserVersion,
+          r.os,
+          r.device,
         ]);
       }
       if (out) ctrl.enqueue(enc.encode(out));

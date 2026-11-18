@@ -24,6 +24,7 @@ import {
 } from "./favorites";
 import { jsonReply } from "./http";
 import { rateLimit, retryAfterSeconds } from "./rate-limit";
+import { rawUserAgent, visitorInfo } from "./visitor-info";
 
 export const DL_TOKEN_TTL_SECONDS = 10 * 60;
 export const DL_WINDOW_MS = 10 * 60 * 1000;
@@ -344,6 +345,8 @@ export async function handleBulk(
     visitorId: visitor.id,
     variant,
     kind: "bulk",
+    ...(await visitorInfo(request, env)),
+    ua: rawUserAgent(request),
     bulkScope:
       scope === "set"
         ? `set:${photos[0].setName ?? (set as string)}`
@@ -467,7 +470,7 @@ export async function serveDownload(
   const isHead = request.method === "HEAD";
   const log = async () => {
     if (isHead) return;
-    const country = (request as { cf?: { country?: string } }).cf?.country;
+    const info = await visitorInfo(request, env);
     await db
       .insert(schema.downloads)
       .values({
@@ -478,8 +481,8 @@ export async function serveDownload(
         kind: claims.b ? "bulk" : "single",
         tokenId: claims.jti,
         bulkId: claims.b && claims.b !== "multi" ? claims.b : null,
-        country: country ?? null,
-        ua: request.headers.get("User-Agent")?.slice(0, 200) ?? null,
+        ...info,
+        ua: rawUserAgent(request),
       })
       .onConflictDoNothing();
   };

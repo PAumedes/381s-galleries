@@ -313,6 +313,12 @@ describe("admin screens in English", () => {
     const activity: ActivityViewData = {
       gallery: { id: "g1", title: "Boda", slug: "boda" },
       summary: { views: 1, visitors: 1, photos: 1, bulks: 1 },
+      breakdown: {
+        countries: [{ value: "AR", count: 2 }],
+        devices: [{ value: "tablet", count: 1 }],
+        browsers: [],
+        referrers: [],
+      },
       rows: [
         {
           id: "h1",
@@ -338,6 +344,9 @@ describe("admin screens in English", () => {
     ).toBeTruthy();
     expect(screen.getByText("Anonymous")).toBeTruthy();
     expect(screen.getByText("No visits yet.")).toBeTruthy();
+    expect(screen.getByText("Visit summary")).toBeTruthy();
+    expect(screen.getByText("Tablet")).toBeTruthy();
+    expect(screen.getAllByText("No data yet.").length).toBe(2);
   });
 
   it("favorites: anonymous label is built client-side", async () => {

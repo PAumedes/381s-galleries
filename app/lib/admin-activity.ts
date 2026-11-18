@@ -98,3 +98,39 @@ export function bulkTitle(
     photos: t("admin.count.photos", { count }),
   });
 }
+
+/** What the Actividad tab shows about where / on what a visit came from. */
+export interface VisitorDisplay {
+  country: string | null;
+  city: string | null;
+  browser: string | null;
+  browserVersion: string | null;
+  os: string | null;
+  referrerHost: string | null;
+  lang: string | null;
+}
+
+const join = (parts: ReadonlyArray<string | null | undefined>, sep: string) =>
+  parts.filter(Boolean).join(sep);
+
+/** "Villa Luro, AR" (either part may be missing; "" when both are). */
+export const placeLabel = (v: Pick<VisitorDisplay, "city" | "country">) =>
+  join([v.city, v.country], ", ");
+
+/** "Safari 17 · iOS". */
+export const softwareLabel = (
+  v: Pick<VisitorDisplay, "browser" | "browserVersion" | "os">,
+) => join([join([v.browser, v.browserVersion], " "), v.os], " · ");
+
+/** "l.instagram.com · es-AR". */
+export const sourceLabel = (v: Pick<VisitorDisplay, "referrerHost" | "lang">) =>
+  join([v.referrerHost, v.lang], " · ");
+
+/** Message key of each device type. */
+export const DEVICE_KEYS: Record<string, MessageKey> = {
+  mobile: "admin.device.mobile",
+  tablet: "admin.device.tablet",
+  desktop: "admin.device.desktop",
+  bot: "admin.device.bot",
+  unknown: "admin.device.unknown",
+};

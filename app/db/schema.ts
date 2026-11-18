@@ -242,6 +242,28 @@ export const favorites = sqliteTable(
 );
 
 // Stats tables intentionally have no FKs so history survives gallery deletion.
+/**
+ * What we learn about a visitor's request (0018_visitor_data). Never the raw
+ * IP: `ip_hash` is a keyed one-way hash. All nullable; the length / enum
+ * CHECKs live in the migration (column-level, like 0014/0017).
+ */
+const visitorColumns = () => ({
+  region: text("region"),
+  city: text("city"),
+  continent: text("continent"),
+  timezone: text("timezone"),
+  asn: integer("asn"),
+  asOrg: text("as_org"),
+  lang: text("lang"),
+  referrerHost: text("referrer_host"),
+  browser: text("browser"),
+  browserVersion: text("browser_version"),
+  os: text("os"),
+  device: text("device", {
+    enum: ["mobile", "tablet", "desktop", "bot", "unknown"],
+  }),
+});
+
 export const downloads = sqliteTable(
   "downloads",
   {
@@ -259,6 +281,8 @@ export const downloads = sqliteTable(
     bulkScope: text("bulk_scope"),
     country: text("country"),
     ua: text("ua"),
+    ipHash: text("ip_hash"),
+    ...visitorColumns(),
     createdAt: createdAt(),
   },
   (t) => [
@@ -280,6 +304,7 @@ export const galleryViews = sqliteTable(
     visitorId: text("visitor_id"),
     country: text("country"),
     ipHash: text("ip_hash"),
+    ...visitorColumns(),
     createdAt: createdAt(),
   },
   (t) => [

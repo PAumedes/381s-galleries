@@ -127,6 +127,13 @@
       "when": 1795024676708,
       "tag": "0017_mobile_cover",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1795034805246,
+      "tag": "0018_visitor_data",
+      "breakpoints": true
     }
   ]
 }

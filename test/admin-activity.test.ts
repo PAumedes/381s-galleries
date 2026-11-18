@@ -313,17 +313,17 @@ describe("activity CSV", () => {
     expect(text.charCodeAt(0)).toBe(0xfeff);
     const lines = text.slice(1).split("\r\n");
     expect(lines[0]).toBe(
-      "Fecha (UTC),Fecha (AR),Email del visitante,Foto,Set,Tamaño,Tipo,ID descarga completa,País",
+      "Fecha (UTC),Fecha (AR),Email del visitante,Foto,Set,Tamaño,Tipo,ID descarga completa,País,Región,Ciudad,Continente,Zona horaria,ASN,Organización de red,Idioma,Origen,Navegador,Versión,Sistema,Dispositivo",
     );
     // newest first
     expect(lines[1]).toBe(
-      "2026-01-01T12:00:02Z,2026-01-01 09:00:02,,IMG_3,Fiesta,Alta resolución,completa,h1,",
+      "2026-01-01T12:00:02Z,2026-01-01 09:00:02,,IMG_3,Fiesta,Alta resolución,completa,h1,,,,,,,,,,,,,",
     );
     expect(lines[2]).toBe(
-      "2026-01-01T12:00:01Z,2026-01-01 09:00:01,,,,Web,completa,h1,",
+      "2026-01-01T12:00:01Z,2026-01-01 09:00:01,,,,Web,completa,h1,,,,,,,,,,,,,",
     );
     expect(lines[3]).toBe(
-      "2026-01-01T12:00:00Z,2026-01-01 09:00:00,ana@example.com,IMG_1,Highlights,Web,individual,,AR",
+      "2026-01-01T12:00:00Z,2026-01-01 09:00:00,ana@example.com,IMG_1,Highlights,Web,individual,,AR,,,,,,,,,,,,",
     );
     expect(lines[4]).toBe("");
     expect(lines).toHaveLength(5);

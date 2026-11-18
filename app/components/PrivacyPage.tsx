@@ -7,6 +7,8 @@ const SECTIONS = [
   ["privacy.who.title", "privacy.who.body"],
   ["privacy.access.title", "privacy.access.body"],
   ["privacy.stored.title", "privacy.stored.body"],
+  ["privacy.visit.title", "privacy.visit.body"],
+  ["privacy.ip.title", "privacy.ip.body"],
   ["privacy.purpose.title", "privacy.purpose.body"],
   ["privacy.retention.title", "privacy.retention.body"],
   ["privacy.sharing.title", "privacy.sharing.body"],

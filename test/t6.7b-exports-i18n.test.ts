@@ -87,9 +87,9 @@ async function text(res: Response) {
 }
 
 const CSV_ES =
-  "Fecha (UTC),Fecha (AR),Email del visitante,Foto,Set,Tamaño,Tipo,ID descarga completa,País";
+  "Fecha (UTC),Fecha (AR),Email del visitante,Foto,Set,Tamaño,Tipo,ID descarga completa,País,Región,Ciudad,Continente,Zona horaria,ASN,Organización de red,Idioma,Origen,Navegador,Versión,Sistema,Dispositivo";
 const CSV_EN =
-  "Date (UTC),Date (AR),Visitor email,Photo,Set,Size,Type,Bulk ID,Country";
+  "Date (UTC),Date (AR),Visitor email,Photo,Set,Size,Type,Bulk ID,Country,Region,City,Continent,Time zone,ASN,Network organization,Language,Referrer,Browser,Version,OS,Device";
 
 describe("activity CSV follows the admin language", () => {
   it.each([
@@ -105,10 +105,10 @@ describe("activity CSV follows the admin language", () => {
     const lines = (await text(res)).slice(1).split("\r\n");
     expect(lines[0]).toBe(CSV_ES);
     expect(lines[1]).toBe(
-      "2026-01-01T12:00:01Z,2026-01-01 09:00:01,ana@example.com,,,Web,completa,h1,",
+      "2026-01-01T12:00:01Z,2026-01-01 09:00:01,ana@example.com,,,Web,completa,h1,,,,,,,,,,,,,",
     );
     expect(lines[2]).toBe(
-      "2026-01-01T12:00:00Z,2026-01-01 09:00:00,ana@example.com,IMG_1,Highlights,Alta resolución,individual,,",
+      "2026-01-01T12:00:00Z,2026-01-01 09:00:00,ana@example.com,IMG_1,Highlights,Alta resolución,individual,,,,,,,,,,,,,,",
     );
   });
 
@@ -124,10 +124,10 @@ describe("activity CSV follows the admin language", () => {
     const lines = (await text(res)).slice(1).split("\r\n");
     expect(lines[0]).toBe(CSV_EN);
     expect(lines[1]).toBe(
-      "2026-01-01T12:00:01Z,2026-01-01 09:00:01,ana@example.com,,,Web,bulk,h1,",
+      "2026-01-01T12:00:01Z,2026-01-01 09:00:01,ana@example.com,,,Web,bulk,h1,,,,,,,,,,,,,",
     );
     expect(lines[2]).toBe(
-      "2026-01-01T12:00:00Z,2026-01-01 09:00:00,ana@example.com,IMG_1,Highlights,High resolution,single,,",
+      "2026-01-01T12:00:00Z,2026-01-01 09:00:00,ana@example.com,IMG_1,Highlights,High resolution,single,,,,,,,,,,,,,,",
     );
   });
 
