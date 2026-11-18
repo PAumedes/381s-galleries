@@ -6,7 +6,15 @@ import { movePhoto, moveTo, sortPhotos } from "../../lib/admin-gallery";
 import type { MoveDir } from "../../lib/admin-gallery";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
 import { Expand, Monitor, Phone } from "../icons";
+import {
+  FRAME_BY_MODE,
+  GRID_BY_SIZE,
+  IMG_BY_MODE,
+  useFitPrefs,
+} from "./photo-fit";
+import type { FitMode, TileSize } from "./photo-fit";
 import { PhotoViewer } from "./PhotoViewer";
+import { QuickLook, useQuickLook } from "./QuickLook";
 
 export interface ReorderPhoto {
   id: string;
@@ -31,9 +39,75 @@ function groupBySet(photos: ReorderPhoto[]): Orders {
   return out;
 }
 
+function Choice<T extends string>({
+  label,
+  value,
+  options,
+  onPick,
+}: {
+  label: string;
+  value: T;
+  options: { value: T; text: string; name?: string }[];
+  onPick: (v: T) => void;
+}) {
+  return (
+    <div role="group" aria-label={label} className="flex items-center gap-1.5">
+      <span aria-hidden="true" className="text-micro text-grey-700 uppercase">
+        {label}
+      </span>
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          aria-pressed={value === o.value}
+          aria-label={o.name}
+          onClick={() => onPick(o.value)}
+          className={`${tool} min-w-tap ${value === o.value ? "bg-ink border-ink text-paper hover:text-paper" : ""}`}
+        >
+          {o.text}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Whole picture or cropped fill, and the tile size: remembered per viewer. */
+function FitControls({
+  prefs,
+  onChange,
+}: {
+  prefs: { mode: FitMode; size: TileSize };
+  onChange: (next: { mode?: FitMode; size?: TileSize }) => void;
+}) {
+  const t = useT();
+  return (
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+      <Choice
+        label={t("admin.reorder.view")}
+        value={prefs.mode}
+        onPick={(mode) => onChange({ mode })}
+        options={[
+          { value: "fit", text: t("admin.reorder.fit") },
+          { value: "fill", text: t("admin.reorder.fill") },
+        ]}
+      />
+      <Choice
+        label={t("admin.reorder.size")}
+        value={prefs.size}
+        onPick={(size) => onChange({ size })}
+        options={[
+          { value: "s", text: "S", name: t("admin.reorder.sizeS") },
+          { value: "m", text: "M", name: t("admin.reorder.sizeM") },
+          { value: "l", text: "L", name: t("admin.reorder.sizeL") },
+        ]}
+      />
+    </div>
+  );
+}
+
 /**
- * "Fotos": a dense grid of uniform square thumbnails (cropped; they are only
- * for ordering and picking) per set. Mouse: drag a thumb onto another.
+ * "Fotos": a dense grid per set of tiles showing each whole picture
+ * (letterboxed; "Rellenar" crops to a square instead). Mouse: drag a thumb onto another.
  * Keyboard/touch: Enter/Space (or tap) selects a photo, then arrow keys /
  * Home / End or the "Mover antes/después" buttons move it; Escape deselects.
  * Nothing is written until "Guardar orden". The current cover wears a small
@@ -67,6 +141,8 @@ export function PhotoReorder({
   const dragging = useRef<string | null>(null);
   const focusId = useRef<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
+  const [prefs, setPrefs] = useFitPrefs();
+  const quick = useQuickLook();
   const busy = useNavigation().state !== "idle";
 
   const byId = new Map(photos.map((p) => [p.id, p]));
@@ -157,6 +233,7 @@ export function PhotoReorder({
       <p role="status" className="sr-only">
         {announce}
       </p>
+      <FitControls prefs={prefs} onChange={setPrefs} />
 
       {Object.entries(orders).map(([set, ids]) => {
         const idx = selected ? ids.indexOf(selected) : -1;
@@ -203,7 +280,7 @@ export function PhotoReorder({
             </div>
             <ul
               data-set={set}
-              className="grid grid-cols-3 gap-1.5 sm:grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))]"
+              className={`grid gap-1.5 ${GRID_BY_SIZE[prefs.size]}`}
             >
               {ids.map((id, i) => {
                 const p = byId.get(id)!;
@@ -215,6 +292,10 @@ export function PhotoReorder({
                     key={id}
                     data-photo-id={id}
                     draggable
+                    onPointerEnter={(ev) => quick.start(id, ev.currentTarget)}
+                    onPointerLeave={quick.stop}
+                    onFocus={(ev) => quick.start(id, ev.currentTarget)}
+                    onBlur={quick.stop}
                     onDragStart={(ev) => {
                       dragging.current = id;
                       ev.dataTransfer?.setData?.("text/plain", id);
@@ -247,7 +328,7 @@ export function PhotoReorder({
                   >
                     <div
                       data-thumb-frame=""
-                      className={`bg-grey-100 relative aspect-square overflow-hidden ${isSel ? "outline-ink outline-2 outline-offset-2" : ""}`}
+                      className={`bg-grey-100 relative ${FRAME_BY_MODE[prefs.mode]} overflow-hidden ${isSel ? "outline-ink outline-2 outline-offset-2" : ""}`}
                     >
                       <div
                         role="button"
@@ -265,8 +346,9 @@ export function PhotoReorder({
                           src={`/admin/img/${id}/thumb`}
                           alt={p.name}
                           loading="lazy"
+                          decoding="async"
                           draggable={false}
-                          className="size-full object-cover select-none"
+                          className={`size-full ${IMG_BY_MODE[prefs.mode]} select-none`}
                         />
                       </div>
                       <div
@@ -304,7 +386,10 @@ export function PhotoReorder({
                             aria-label={t("admin.reorder.viewFull")}
                             aria-describedby={`photo-${id}`}
                             title={t("admin.reorder.viewFull")}
-                            onClick={() => setViewing(id)}
+                            onClick={() => {
+                              quick.stop();
+                              setViewing(id);
+                            }}
                             className={over}
                           >
                             <Expand aria-hidden="true" className="size-4" />
@@ -421,6 +506,8 @@ export function PhotoReorder({
       {feedback?.ok && (
         <p className="text-small text-grey-700">{feedback.message}</p>
       )}
+
+      <QuickLook look={quick.look} />
 
       {viewing && (
         <PhotoViewer
