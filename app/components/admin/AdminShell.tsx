@@ -138,7 +138,12 @@ export function AdminShell({
           </div>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>
+      <main className="min-w-0 flex-1 p-4 md:p-8 2xl:px-12">
+        {/* Every admin screen shares one width: the whole desktop, capped on very wide screens. */}
+        <div data-admin-content="" className="mx-auto w-full max-w-[96rem]">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

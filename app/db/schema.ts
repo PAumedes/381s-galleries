@@ -55,6 +55,12 @@ export const galleries = sqliteTable(
     /** Cover focal point, percent 0-100 (object-position); null = centered. */
     coverFocusX: real("cover_focus_x"),
     coverFocusY: real("cover_focus_y"),
+    // Optional per-device cover (0017): used on narrow viewports. Same rules
+    // as the desktop one (same-gallery triggers, CHECK 0-100); null = the
+    // desktop cover with its own focal point.
+    coverPhotoIdMobile: text("cover_photo_id_mobile"),
+    coverFocusMobileX: real("cover_focus_mobile_x"),
+    coverFocusMobileY: real("cover_focus_mobile_y"),
     allowHighres: integer("allow_highres", { mode: "boolean" })
       .notNull()
       .default(true),

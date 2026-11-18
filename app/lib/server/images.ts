@@ -251,6 +251,15 @@ export interface ImageDeps {
 
 /** Admin-only extra variant: the watermarked view-sm (cover preview in Prueba). */
 export const ADMIN_WM_VARIANT = "view-sm-wm";
+/**
+ * Admin-only watermarked variants (the admin previews of a Prueba gallery
+ * show what clients get): `view-sm-wm` = preview-wm, `thumb-wm` = thumb-wm,
+ * else preview-wm. Never a clean fallback; never cached in R2.
+ */
+export const ADMIN_WM_VARIANTS: Record<string, Variant> = {
+  [ADMIN_WM_VARIANT]: "view-sm",
+  "thumb-wm": "thumb",
+};
 
 export interface ImageOptions {
   /**
@@ -283,7 +292,8 @@ export async function serveImage(
   opts: ImageOptions = {},
 ): Promise<Response> {
   const { photoId, variant } = params;
-  const adminWm = !!opts.admin && variant === ADMIN_WM_VARIANT;
+  const adminWm =
+    !!opts.admin && !!variant && Object.hasOwn(ADMIN_WM_VARIANTS, variant);
   if (
     !photoId ||
     !variant ||
@@ -292,7 +302,7 @@ export async function serveImage(
         (opts.admin && variant === "view-lg")))
   )
     return notFound();
-  const v = (adminWm ? "view-sm" : variant) as Variant;
+  const v = (adminWm ? ADMIN_WM_VARIANTS[variant] : variant) as Variant;
 
   const rows = await getDb(env)
     .select({ photo: schema.photos, gallery: schema.galleries })
@@ -311,11 +321,13 @@ export async function serveImage(
     return notFound();
 
   const proofing = gallery.mode === "proofing";
-  // Admin sees clean previews; those must not share R2 keys with the
-  // watermarked public objects, so they bypass the cache entirely.
-  const adminClean = !!opts.admin && (proofing || adminWm);
   const src = resolveSource(photo, adminWm || (proofing && !opts.admin), v);
   if (!src) return notFound();
+  // Admin clean files in Prueba, and admin watermarked files outside Prueba,
+  // must not share R2 keys with the public objects (clean vs watermarked), so
+  // they bypass the cache. A watermarked file in Prueba is exactly what the
+  // public gets: it reads (validated by isValidHit) and fills the same key.
+  const adminClean = !!opts.admin && (src.watermark ? !proofing : proofing);
   const { fileId, watermark, version } = src;
 
   if (env.DRIVE_MODE === "mock") {

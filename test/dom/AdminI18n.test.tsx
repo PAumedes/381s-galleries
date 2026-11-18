@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub, Outlet } from "react-router";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -166,22 +166,33 @@ describe("admin screens in English", () => {
   });
 
   it("gallery editor: sections, mode names Proof/Delivery, stored values unchanged", async () => {
-    app(
-      <GalleryEditView data={galleryBase} actionData={undefined} />,
-      "/admin/g/g1",
-    );
-    expect(await screen.findByRole("heading", { name: "Photos" })).toBeTruthy();
-    for (const h of [
+    const at = (tab: string) => {
+      cleanup();
+      return app(
+        <GalleryEditView data={galleryBase} actionData={undefined} />,
+        `/admin/g/g1${tab}`,
+      );
+    };
+    at("");
+    expect(
+      await screen.findByRole("heading", { name: "Details" }),
+    ).toBeTruthy();
+    for (const h of ["Status", "Access PIN", "Public home", "Options"])
+      expect(screen.getByRole("heading", { name: h }), h).toBeTruthy();
+    const nav = screen.getByRole("navigation", { name: /./ });
+    expect(
+      within(nav)
+        .getAllByRole("link")
+        .map((a) => a.textContent),
+    ).toEqual([
       "Details",
+      "Photos",
+      "Cover",
       "Design",
       "Share",
-      "Status",
-      "Access PIN",
-      "Public home",
-      "Options",
-      "Sync notices",
-    ])
-      expect(screen.getByRole("heading", { name: h }), h).toBeTruthy();
+      "Activity",
+      "Favorites",
+    ]);
     const proof = screen.getByLabelText("Proof") as HTMLInputElement;
     const delivery = screen.getByLabelText("Delivery") as HTMLInputElement;
     expect(proof.value).toBe("proofing");
@@ -191,9 +202,29 @@ describe("admin screens in English", () => {
     expect(screen.queryByText("Entrega")).toBeNull();
     expect(screen.getByRole("button", { name: "Save details" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Publish" })).toBeTruthy();
+    expect(screen.getByLabelText("Title")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "How it looks" })).toBeTruthy();
+
+    at("?tab=fotos");
+    expect(await screen.findByRole("heading", { name: "Photos" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Sync notices" })).toBeTruthy();
     expect(screen.getByText("Missing web version (1)")).toBeTruthy();
     expect(screen.getByText("…and 2 more notices.")).toBeTruthy();
-    expect(screen.getByLabelText("Title")).toBeTruthy();
+
+    at("?tab=diseno");
+    expect(await screen.findByRole("heading", { name: "Design" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Discard" })).toBeTruthy();
+
+    at("?tab=portada");
+    expect(
+      await screen.findByRole("heading", { name: "1. Pick the focal point" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "2. How it looks" }),
+    ).toBeTruthy();
+
+    at("?tab=compartir");
+    expect(await screen.findByRole("heading", { name: "Share" })).toBeTruthy();
   });
 
   it("server errors arrive already translated and are shown as-is", async () => {

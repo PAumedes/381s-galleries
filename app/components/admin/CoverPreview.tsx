@@ -1,46 +1,51 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { Form, useNavigation } from "react-router";
 
-import { useLang, useT } from "../../i18n/use-t";
-import type { MessageKey } from "../../i18n/t";
-import { localeFor } from "../../i18n/format";
-import { formatEventDate } from "../../lib/event-date";
-import { useStudioName } from "../../lib/use-studio-name";
+import { useT } from "../../i18n/use-t";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
 import type { CoverLayout, Palette } from "../../lib/design";
-import { CoverHero } from "../CoverHero";
-import { paletteKey } from "./DesignPanel";
+import { ChevronDown, Monitor, Phone } from "../icons";
+import { coverSrc, LivePreview, type PreviewDevice } from "./LivePreview";
 
 type Focus = { x: number; y: number };
 type Size = { w: number; h: number };
 
 const STEP = 5;
-/** Virtual viewports the real cover is laid out in, then scaled down. */
-const FRAMES = {
-  desktop: {
-    w: 1280,
-    h: 720,
-    ratio: "16 / 9",
-    label: "admin.cover.desktop",
-  },
-  mobile: { w: 390, h: 823, ratio: "9 / 19", label: "admin.cover.mobile" },
-} as const satisfies Record<
-  string,
-  { w: number; h: number; ratio: string; label: MessageKey }
->;
-
 const clamp = (n: number) => Math.min(100, Math.max(0, n));
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 const btn =
-  "text-micro uppercase border border-ink px-3 py-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
+  "text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10";
+const seg =
+  "text-micro flex min-h-tap flex-1 items-center justify-center gap-2 px-3 uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-9";
+
+export type MobileCover = {
+  id: string;
+  width: number | null;
+  height: number | null;
+  focus: Focus | null;
+};
+export type ChooserPhoto = { id: string; name: string };
+
+/** Keeps a local copy of a server value, replaced when the server's changes. */
+function useSynced(value: Focus | null) {
+  const [local, setLocal] = useState<Focus | null>(value);
+  const [seen, setSeen] = useState(value);
+  if (seen?.x !== value?.x || seen?.y !== value?.y) {
+    setSeen(value);
+    setLocal(value);
+  }
+  return [local, setLocal] as const;
+}
 
 /**
- * Cover editor: a picker showing the WHOLE photo (uncropped) where a click, tap
- * or arrow keys set the focal point (a point on the image, in percent of its
- * width/height), beside a live, scaled-down render of the client cover (the
- * same `CoverHero` the public gallery uses) in desktop/mobile frames. The
- * point is only stored when "Guardar punto focal" is pressed.
+ * "Portada": two connected cards. 1. Elegí el punto focal: the WHOLE photo
+ * (uncropped) of the cover being edited (desktop, or the optional mobile one)
+ * with a crosshair; a click, tap or arrow keys set the focal point (a point
+ * on the image, percent of its width/height), stored only with "Guardar
+ * punto focal". 2. Así se ve: the real `CoverHero` at a desktop or phone
+ * size. One device switch drives both cards. Without a mobile cover, phones
+ * show the desktop cover with its own focal point (the picker then edits it).
  */
 export function CoverPreview({
   title,
@@ -53,6 +58,12 @@ export function CoverPreview({
   coverHeight = null,
   initialFocus,
   actionData,
+  mobileCover = null,
+  mobileNoWm = false,
+  photos = [],
+  coverAuto = false,
+  device: deviceProp,
+  onDevice,
 }: {
   title: string;
   eventDate: string | null;
@@ -66,44 +77,47 @@ export function CoverPreview({
   coverHeight?: number | null;
   initialFocus: Focus | null;
   actionData?: GalleryActionResult;
+  /** Optional mobile cover (own photo + focal point). */
+  mobileCover?: MobileCover | null;
+  /** Prueba: the chosen mobile cover has no preview-wm (desktop one is used). */
+  mobileNoWm?: boolean;
+  /** Photos offered by "Cambiar foto". */
+  photos?: readonly ChooserPhoto[];
+  /** The desktop cover is automatic (first photo). */
+  coverAuto?: boolean;
+  /** Controlled device (optional; shared with the editor's other previews). */
+  device?: PreviewDevice;
+  onDevice?: (d: PreviewDevice) => void;
 }) {
-  const studio = useStudioName();
   const t = useT();
-  // The admin language (admin_lang cookie, via the root loader): dates in the
-  // preview follow it.
-  const lang = useLang();
   const busy = useNavigation().state !== "idle";
-  const [view, setView] = useState<keyof typeof FRAMES>("desktop");
-  const [focus, setFocus] = useState<Focus | null>(initialFocus);
-  const [seen, setSeen] = useState(initialFocus);
-  // A saved/reset focus coming back from the server replaces the local one.
-  if (seen?.x !== initialFocus?.x || seen?.y !== initialFocus?.y) {
-    setSeen(initialFocus);
-    setFocus(initialFocus);
-  }
-  const frameRef = useRef<HTMLDivElement>(null);
+  const stepId = useId();
+  const [ownDevice, setOwnDevice] = useState<PreviewDevice>("desktop");
+  const device = deviceProp ?? ownDevice;
+  const setDevice = (d: PreviewDevice) => {
+    setOwnDevice(d);
+    onDevice?.(d);
+  };
+  const [focus, setFocus] = useSynced(initialFocus);
+  const [mobileFocus, setMobileFocus] = useSynced(mobileCover?.focus ?? null);
   const boxRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.3);
   const [box, setBox] = useState<Size | null>(null);
-  const [natural, setNatural] = useState<Size | null>(null);
-  const f = FRAMES[view];
+  const [natural, setNatural] = useState<Record<string, Size>>({});
 
-  const imgW = coverWidth && coverHeight ? coverWidth : natural?.w;
-  const imgH = coverWidth && coverHeight ? coverHeight : natural?.h;
-  const aspect = imgW && imgH ? imgW / imgH : null;
-
-  useLayoutEffect(() => {
-    const el = frameRef.current;
-    if (!el) return;
-    const measure = () => {
-      if (el.clientWidth > 0) setScale(el.clientWidth / f.w);
-    };
-    measure();
-    if (typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [f.w]);
+  // Which cover the picker edits: the mobile one only when it exists.
+  const editing: "desktop" | "mobile" =
+    device === "mobile" && mobileCover ? "mobile" : "desktop";
+  const pickId = editing === "mobile" ? mobileCover!.id : coverId;
+  const sizeOf = (id: string | null, w: number | null, h: number | null) =>
+    w && h ? { w, h } : id ? natural[id] : undefined;
+  const deskSize = sizeOf(coverId, coverWidth, coverHeight);
+  const mobSize = mobileCover
+    ? sizeOf(mobileCover.id, mobileCover.width, mobileCover.height)
+    : undefined;
+  const aspectOf = (s: Size | undefined) => (s ? s.w / s.h : null);
+  const pickAspect = aspectOf(editing === "mobile" ? mobSize : deskSize);
+  const cur = editing === "mobile" ? mobileFocus : focus;
+  const setCur = editing === "mobile" ? setMobileFocus : setFocus;
 
   useLayoutEffect(() => {
     const el = boxRef.current;
@@ -120,13 +134,13 @@ export function CoverPreview({
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [coverId]);
+  }, [pickId]);
 
   // The uncropped image, letterboxed (object-fit: contain) inside the box.
   let shown: React.CSSProperties = { inset: 0 };
-  if (aspect && box) {
-    const w = Math.min(box.w, box.h * aspect);
-    const h = w / aspect;
+  if (pickAspect && box) {
+    const w = Math.min(box.w, box.h * pickAspect);
+    const h = w / pickAspect;
     shown = {
       left: (box.w - w) / 2,
       top: (box.h - h) / 2,
@@ -138,7 +152,7 @@ export function CoverPreview({
   function onClick(ev: React.MouseEvent) {
     const r = ev.currentTarget.getBoundingClientRect();
     if (!r.width || !r.height) return;
-    setFocus({
+    setCur({
       x: round1(clamp(((ev.clientX - r.left) / r.width) * 100)),
       y: round1(clamp(((ev.clientY - r.top) / r.height) * 100)),
     });
@@ -156,27 +170,77 @@ export function CoverPreview({
               : null;
     if (!d) return;
     ev.preventDefault();
-    setFocus((cur) => ({
-      x: round1(clamp((cur?.x ?? 50) + d[0]!)),
-      y: round1(clamp((cur?.y ?? 50) + d[1]!)),
+    setCur((c) => ({
+      x: round1(clamp((c?.x ?? 50) + d[0]!)),
+      y: round1(clamp((c?.y ?? 50) + d[1]!)),
     }));
   }
 
-  const fb = actionData?.intent === "focus" ? actionData : undefined;
-  const src = coverId
-    ? `/admin/img/${encodeURIComponent(coverId)}/${proofing ? "view-sm-wm" : "view-sm"}`
-    : null;
-  const fx = focus?.x ?? 50;
-  const fy = focus?.y ?? 50;
+  const fb =
+    actionData?.intent === "focus" || actionData?.intent === "cover"
+      ? actionData
+      : undefined;
+  const fx = cur?.x ?? 50;
+  const fy = cur?.y ?? 50;
   const valueText = t("admin.cover.focalValue", { x: fx, y: fy });
+  const nameOf = (id: string | null) =>
+    photos.find((p) => p.id === id)?.name ?? "";
 
-  return (
-    <div data-testid="cover-preview" className="flex flex-col gap-3">
-      {src && (
+  const picker = (
+    <section
+      aria-labelledby={`${stepId}-1`}
+      className="border-grey-200 flex min-w-0 flex-col gap-4 border bg-white p-4 md:p-6"
+    >
+      <div className="flex flex-col gap-1">
+        <h2 id={`${stepId}-1`} className="text-micro text-ink uppercase">
+          {t("admin.cover.step1")}
+        </h2>
+        <p className="text-small text-grey-600">{t("admin.cover.step1Hint")}</p>
+      </div>
+      <div
+        role="group"
+        aria-label={t("admin.cover.whichCover")}
+        className="border-grey-300 flex border"
+      >
+        {(["desktop", "mobile"] as const).map((d) => (
+          <button
+            key={d}
+            type="button"
+            aria-pressed={device === d}
+            onClick={() => setDevice(d)}
+            className={`${seg} ${device === d ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`}
+          >
+            {d === "desktop" ? (
+              <Monitor aria-hidden="true" className="size-4" />
+            ) : (
+              <Phone aria-hidden="true" className="size-4" />
+            )}
+            {t(
+              d === "desktop"
+                ? "admin.cover.deviceDesktop"
+                : "admin.cover.deviceMobile",
+            )}
+          </button>
+        ))}
+      </div>
+      {mobileNoWm && (
+        <p
+          role="alert"
+          className="text-small text-ink border-ink border-l-2 pl-3"
+        >
+          {t("admin.cover.mobileNoWm")}
+        </p>
+      )}
+      {device === "mobile" && !mobileCover && coverId && (
+        <p className="text-small text-grey-700 border-grey-300 border-l-2 pl-3">
+          {t("admin.cover.mobileFallback")}
+        </p>
+      )}
+      {pickId ? (
         <div
           ref={boxRef}
           data-testid="focus-box"
-          className="bg-grey-100 relative h-64 w-full"
+          className="bg-grey-100 relative h-72 w-full md:h-80"
         >
           <div
             role="application"
@@ -187,126 +251,185 @@ export function CoverPreview({
             onClick={onClick}
             onKeyDown={onKeyDown}
             style={shown}
-            className="absolute cursor-crosshair touch-manipulation focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="focus-visible:outline-ink absolute cursor-crosshair touch-manipulation focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             <img
-              src={src}
+              src={coverSrc(pickId, false)}
               alt=""
               draggable={false}
-              onLoad={(e) =>
-                setNatural({
-                  w: e.currentTarget.naturalWidth,
-                  h: e.currentTarget.naturalHeight,
-                })
-              }
+              onLoad={(e) => {
+                const w = e.currentTarget.naturalWidth;
+                const h = e.currentTarget.naturalHeight;
+                if (w && h)
+                  setNatural((n) =>
+                    n[pickId]?.w === w && n[pickId]?.h === h
+                      ? n
+                      : { ...n, [pickId]: { w, h } },
+                  );
+              }}
               className="pointer-events-none size-full object-contain select-none"
+            />
+            {/* Crosshair: thin lines through the point + a ring on it. */}
+            <span
+              aria-hidden="true"
+              style={{ left: `${fx}%` }}
+              className="pointer-events-none absolute inset-y-0 w-px -translate-x-1/2 bg-white/70 mix-blend-difference"
+            />
+            <span
+              aria-hidden="true"
+              style={{ top: `${fy}%` }}
+              className="pointer-events-none absolute inset-x-0 h-px -translate-y-1/2 bg-white/70 mix-blend-difference"
             />
             <span
               data-testid="focus-marker"
               aria-hidden="true"
               style={{ left: `${fx}%`, top: `${fy}%` }}
-              className="pointer-events-none absolute size-4 -translate-1/2 rounded-full border-2 border-white bg-black/40 shadow"
+              className="pointer-events-none absolute size-6 -translate-1/2 rounded-full border-2 border-white bg-black/30 shadow"
             />
           </div>
         </div>
+      ) : (
+        <p className="text-small text-grey-600">{t("admin.cover.noPhotos")}</p>
       )}
       <p role="status" aria-live="polite" className="text-small text-grey-700">
         {valueText}
         {fb?.ok ? ` · ${fb.message}` : ""}
       </p>
-      <div className="flex flex-wrap items-center gap-2">
-        {(Object.keys(FRAMES) as (keyof typeof FRAMES)[]).map((k) => (
-          <button
-            key={k}
-            type="button"
-            aria-pressed={view === k}
-            onClick={() => setView(k)}
-            className={`${btn} ${view === k ? "bg-ink text-paper" : ""}`}
-          >
-            {t(FRAMES[k].label)}
-          </button>
-        ))}
-      </div>
-      <div
-        ref={frameRef}
-        data-frame={view}
-        style={{ aspectRatio: f.ratio }}
-        className={`border-grey-300 relative w-full overflow-hidden border ${view === "mobile" ? "max-w-[13rem]" : ""}`}
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute top-0 left-0 origin-top-left select-none"
-          style={{
-            width: f.w,
-            height: f.h,
-            transform: `scale(${scale})`,
-          }}
-        >
-          <div data-theme={palette} className="bg-paper text-ink size-full">
-            <CoverHero
-              embedded
-              layout={coverLayout}
-              palette={palette}
-              title={title}
-              date={formatEventDate(eventDate, localeFor(lang))}
-              studio={studio}
-              src={src}
-              proofing={false}
-              focus={focus}
-              aspect={aspect}
-              scrollLabel={t("gallery.view")}
-            />
-          </div>
-        </div>
-      </div>
-      <div
-        data-theme={palette}
-        className="bg-paper text-ink text-micro border-grey-300 flex items-center justify-between border px-3 py-2 uppercase"
-      >
-        <span>
-          {t("admin.cover.palette", { name: t(paletteKey(palette)) })}
-        </span>
-        <span>
-          {proofing ? t("admin.cover.proofing") : t("admin.cover.delivery")}
-        </span>
-      </div>
-      <p className="text-small text-grey-600">
-        {coverId ? t("admin.cover.help") : t("admin.cover.noPhotos")}
-      </p>
       <Form method="post" className="flex flex-wrap items-center gap-2">
         <input type="hidden" name="intent" value="focus" />
-        <input
-          type="hidden"
-          name="focusX"
-          value={focus ? String(focus.x) : ""}
-        />
-        <input
-          type="hidden"
-          name="focusY"
-          value={focus ? String(focus.y) : ""}
-        />
+        <input type="hidden" name="device" value={editing} />
+        <input type="hidden" name="focusX" value={cur ? String(cur.x) : ""} />
+        <input type="hidden" name="focusY" value={cur ? String(cur.y) : ""} />
         <button
           type="submit"
           className={`${btn} bg-ink text-paper`}
-          disabled={busy || !coverId}
+          disabled={busy || !pickId}
         >
           {t("admin.cover.save")}
         </button>
         <button
           type="button"
           className={btn}
-          disabled={!focus}
-          onClick={() => setFocus(null)}
+          disabled={!cur}
+          onClick={() => setCur(null)}
         >
           {t("admin.cover.center")}
         </button>
       </Form>
       {fb && !fb.ok && (
-        <p role="alert" className="border-ink border p-3 text-small">
+        <p role="alert" className="border-ink text-small border p-3">
           {fb.error}
         </p>
       )}
-      {fb?.ok && <p className="text-small text-grey-700">{fb.message}</p>}
+
+      {photos.length > 0 && (
+        <div className="border-grey-200 flex flex-col gap-3 border-t pt-4">
+          <p className="text-small">
+            {editing === "mobile"
+              ? t("admin.cover.photoMobile", { name: nameOf(pickId) })
+              : coverAuto
+                ? t("admin.cover.photoAuto", { name: nameOf(pickId) })
+                : t("admin.cover.photo", { name: nameOf(pickId) })}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {device === "desktop" && !coverAuto && (
+              <Form method="post">
+                <input type="hidden" name="intent" value="cover" />
+                <input type="hidden" name="photoId" value="" />
+                <button type="submit" className={btn} disabled={busy}>
+                  {t("admin.edit.photos.useFirst")}
+                </button>
+              </Form>
+            )}
+            {device === "mobile" && mobileCover && (
+              <Form method="post">
+                <input type="hidden" name="intent" value="cover" />
+                <input type="hidden" name="device" value="mobile" />
+                <input type="hidden" name="photoId" value="" />
+                <button type="submit" className={btn} disabled={busy}>
+                  {t("admin.cover.useDesktop")}
+                </button>
+              </Form>
+            )}
+          </div>
+          <details
+            className="group/choose"
+            open={device === "mobile" && !mobileCover ? true : undefined}
+          >
+            <summary className="text-micro text-ink flex min-h-tap cursor-pointer list-none items-center gap-2 uppercase underline-offset-4 hover:underline md:min-h-8 [&::-webkit-details-marker]:hidden">
+              {device === "mobile" && !mobileCover
+                ? t("admin.cover.chooseMobile")
+                : t("admin.cover.change")}
+              <ChevronDown
+                aria-hidden="true"
+                className="size-4 transition-transform group-open/choose:rotate-180"
+              />
+            </summary>
+            <ul className="mt-3 grid max-h-80 grid-cols-4 gap-1 overflow-y-auto sm:grid-cols-6">
+              {photos.map((p) => (
+                <li key={p.id} className="list-none">
+                  <Form method="post">
+                    <input type="hidden" name="intent" value="cover" />
+                    {device === "mobile" && (
+                      <input type="hidden" name="device" value="mobile" />
+                    )}
+                    <input type="hidden" name="photoId" value={p.id} />
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      aria-label={t("admin.cover.useNamed", { name: p.name })}
+                      aria-current={p.id === pickId ? "true" : undefined}
+                      className={`bg-grey-100 focus-visible:outline-ink block aspect-square w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 ${p.id === pickId ? "outline-ink outline-2 outline-offset-1" : ""}`}
+                    >
+                      <img
+                        src={`/admin/img/${encodeURIComponent(p.id)}/thumb`}
+                        alt=""
+                        loading="lazy"
+                        draggable={false}
+                        className="size-full object-cover"
+                      />
+                    </button>
+                  </Form>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </div>
+      )}
+    </section>
+  );
+
+  return (
+    <div
+      data-testid="cover-preview"
+      className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10"
+    >
+      {picker}
+      <div className="border-grey-200 flex min-w-0 flex-col border bg-white p-4 md:p-6 lg:sticky lg:top-6">
+        <LivePreview
+          heading={t("admin.cover.step2")}
+          hint={t("admin.cover.step2Hint")}
+          title={title}
+          eventDate={eventDate}
+          palette={palette}
+          coverLayout={coverLayout}
+          proofing={proofing}
+          cover={
+            coverId ? { id: coverId, aspect: aspectOf(deskSize), focus } : null
+          }
+          mobileCover={
+            mobileCover
+              ? {
+                  id: mobileCover.id,
+                  aspect: aspectOf(mobSize),
+                  focus: mobileFocus,
+                }
+              : null
+          }
+          device={device}
+          onDevice={setDevice}
+        />
+      </div>
     </div>
   );
 }

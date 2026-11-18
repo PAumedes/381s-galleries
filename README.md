@@ -53,9 +53,10 @@ It needs Playwright with a Chromium (`npm i -g playwright`; it uses Chrome if in
 - `/admin`: galleries list (`?estado=todas|publicadas|borradores|archivadas`), Cloudflare Access
 - `/admin/setup`: connect Google, root folder, studio name, "Sync now"
 - `/admin/google/connect`, `/admin/google/callback`: Google OAuth flow
-- `/admin/g/:id`: edit gallery (details, PIN, expiry, status, flags, cover, reorder, share panel + QR)
+- `/admin/g/:id`: edit gallery; panels via `?tab=datos|fotos|portada|diseno|compartir` (details, PIN, expiry, status, flags; photo order; desktop + mobile cover and focal point; design with live preview; share panel + QR)
+- `/admin/g/:id/preview`: the real client gallery for the admin only (drafts and PIN galleries too; no views or visitors logged, `no-store`, `noindex`)
 - `/admin/g/:id/card`: printable A6 card (`?lang=es|en`)
 - `/admin/g/:id/activity`: views and downloads; `/admin/g/:id/activity.csv`: CSV export
 - `/admin/g/:id/favorites`: favorites per visitor; `/admin/g/:id/favorites.txt`: base names for Capture One
-- `/admin/img/:photoId/:variant`: admin thumbnails (`thumb`, `view-sm`), `private, no-store`
+- `/admin/img/:photoId/:variant`: admin images (`thumb`, `view-sm`, and the watermarked `thumb-wm` / `view-sm-wm` for Prueba previews), `private, no-store`
 - `/api/admin/sync`: "Sync now" (POST, admin only, same-origin only)

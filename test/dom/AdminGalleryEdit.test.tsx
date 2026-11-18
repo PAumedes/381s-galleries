@@ -50,7 +50,11 @@ const base: GalleryEditData = {
   },
 };
 
-function show(data: Partial<GalleryEditData> = {}, actionData?: unknown) {
+function show(
+  data: Partial<GalleryEditData> = {},
+  actionData?: unknown,
+  url = "/admin/g/g1",
+) {
   const Stub = createRoutesStub([
     {
       path: "/admin/g/g1",
@@ -62,7 +66,7 @@ function show(data: Partial<GalleryEditData> = {}, actionData?: unknown) {
       ),
     },
   ]);
-  return render(<Stub initialEntries={["/admin/g/g1"]} />);
+  return render(<Stub initialEntries={[url]} />);
 }
 const gal = (over: Partial<GalleryEditData["gallery"]>) => ({
   gallery: { ...base.gallery, ...over },
@@ -267,14 +271,18 @@ describe("GalleryEditView", () => {
     ).toBe(true);
   });
 
-  it("sync issues grouped with labels and file names", async () => {
-    show();
+  it("sync issues grouped with labels and file names (Fotos panel)", async () => {
+    show({}, undefined, "/admin/g/g1?tab=fotos");
     expect(await screen.findByText(/Falta la versión web/)).toBeTruthy();
     expect(screen.getByText(/IMG_9/)).toBeTruthy();
     expect(screen.getByText(/Fiesta/)).toBeTruthy();
   });
-  it("no issues: says so", async () => {
-    show({ issues: { groups: [], truncated: 0, total: 0 } });
+  it("no issues: says so (Fotos panel)", async () => {
+    show(
+      { issues: { groups: [], truncated: 0, total: 0 } },
+      undefined,
+      "/admin/g/g1?tab=fotos",
+    );
     expect(await screen.findByText(/Sin avisos/)).toBeTruthy();
   });
 

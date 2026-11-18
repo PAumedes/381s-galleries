@@ -171,6 +171,19 @@ export async function loadGalleryEdit(env: Env, id: string) {
   // Proofing serves only preview-wm: photos without it 404 for clients.
   const noWm = ps.filter((p) => !p.hasWm);
   const issues = groupIssues(g.syncIssuesJson);
+  const proofing = g.mode === "proofing";
+  // Mirror of the public payload (gallery.ts): in Prueba only photos with a
+  // preview-wm can be a cover; a mobile cover without one is dropped (desktop
+  // cover used) and a desktop cover without one falls to the first that has it.
+  const chosenCover = ps.find((p) => p.id === g.coverPhotoId);
+  const firstWm = ps.find((p) => p.hasWm);
+  const baseCover = chosenCover ?? ps[0];
+  const coverPhotoId =
+    proofing && baseCover && !baseCover.hasWm && firstWm
+      ? firstWm.id
+      : (chosenCover?.id ?? null);
+  const mobileRow = ps.find((p) => p.id === g.coverPhotoIdMobile);
+  const mobileCoverNoWm = proofing && !!mobileRow && !mobileRow.hasWm;
   if (g.mode === "proofing" && noWm.length > 0) {
     issues.groups.push({
       type: "missing_wm",
@@ -200,12 +213,20 @@ export async function loadGalleryEdit(env: Env, id: string) {
       gridGap: g.gridGap,
       hasPin: g.pinHash !== null,
       showOnHome: g.showOnHome,
-      coverPhotoId: ps.some((p) => p.id === g.coverPhotoId)
-        ? g.coverPhotoId
-        : null,
+      coverPhotoId,
       coverFocus:
         g.coverFocusX !== null && g.coverFocusY !== null
           ? { x: g.coverFocusX, y: g.coverFocusY }
+          : null,
+      // Optional mobile cover: only while that photo is visible.
+      coverPhotoIdMobile: mobileRow && !mobileCoverNoWm ? mobileRow.id : null,
+      ...(mobileCoverNoWm ? { mobileCoverNoWm: true as const } : {}),
+      coverFocusMobile:
+        mobileRow &&
+        !mobileCoverNoWm &&
+        g.coverFocusMobileX !== null &&
+        g.coverFocusMobileY !== null
+          ? { x: g.coverFocusMobileX, y: g.coverFocusMobileY }
           : null,
     },
     hasWmFiles: ps.some((p) => p.hasWm),
@@ -284,7 +305,7 @@ export async function galleryAction(
     case "pin":
       return savePin(env, g, form, t);
     case "cover":
-      return saveCover(env, g, str(form, "photoId"), t);
+      return saveCover(env, g, form, t);
     case "focus":
       return saveFocus(env, g, form, t);
     case "reorder":
@@ -583,20 +604,46 @@ async function savePin(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   return done(intent, t("admin.msg.pinSaved"));
 }
 
-async function saveCover(
-  env: Env,
-  g: GalleryRow,
-  photoId: string,
-  t: TFunction,
-) {
+type Device = "desktop" | "mobile";
+
+/**
+ * Which cover a cover/focus form targets: absent or "desktop" = the desktop
+ * cover, "mobile" = the optional mobile cover. Anything else (other strings,
+ * files) is refused.
+ */
+function deviceOf(f: FormData): Device | null {
+  const v = f.get("device");
+  if (v === null || v === "desktop") return "desktop";
+  return v === "mobile" ? "mobile" : null;
+}
+
+async function saveCover(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   const intent = "cover";
+  const device = deviceOf(f);
+  const raw = f.get("photoId");
+  if (!device || (raw !== null && typeof raw !== "string"))
+    return fail(intent, t("admin.msg.invalidRequest"));
+  const photoId = raw ?? "";
   const db = getDb(env);
+  const clear =
+    device === "mobile"
+      ? {
+          coverPhotoIdMobile: null,
+          coverFocusMobileX: null,
+          coverFocusMobileY: null,
+        }
+      : { coverPhotoId: null, coverFocusX: null, coverFocusY: null };
   if (photoId === "") {
     await db
       .update(schema.galleries)
-      .set({ coverPhotoId: null, coverFocusX: null, coverFocusY: null })
+      .set(clear)
       .where(eq(schema.galleries.id, g.id));
-    return done(intent, t("admin.msg.coverAuto"));
+    return done(
+      intent,
+      device === "mobile"
+        ? t("admin.msg.coverMobileCleared")
+        : t("admin.msg.coverAuto"),
+    );
   }
   const [p] = await db
     .select({ id: schema.photos.id })
@@ -609,11 +656,21 @@ async function saveCover(
       ),
     );
   if (!p) return fail(intent, t("admin.msg.coverNotInGallery"));
+  // A new photo resets that device's focal point to the center.
   await db
     .update(schema.galleries)
-    .set({ coverPhotoId: p.id, coverFocusX: null, coverFocusY: null })
+    .set(
+      device === "mobile"
+        ? { ...clear, coverPhotoIdMobile: p.id }
+        : { ...clear, coverPhotoId: p.id },
+    )
     .where(eq(schema.galleries.id, g.id));
-  return done(intent, t("admin.msg.coverSaved"));
+  return done(
+    intent,
+    device === "mobile"
+      ? t("admin.msg.coverMobileSaved")
+      : t("admin.msg.coverSaved"),
+  );
 }
 
 // A plain decimal (optional sign/exponent); no hex, no Infinity/NaN words.
@@ -632,6 +689,24 @@ async function saveFocus(
   t: TFunction,
 ) {
   const intent = "focus";
+  const device = deviceOf(form);
+  if (!device) return fail(intent, t("admin.msg.invalidRequest"));
+  if (device === "mobile") {
+    // A mobile focal point only means something for a (visible) mobile cover.
+    const [p] = g.coverPhotoIdMobile
+      ? await getDb(env)
+          .select({ id: schema.photos.id })
+          .from(schema.photos)
+          .where(
+            and(
+              eq(schema.photos.id, g.coverPhotoIdMobile),
+              eq(schema.photos.galleryId, g.id),
+              photoVisible,
+            ),
+          )
+      : [];
+    if (!p) return fail(intent, t("admin.msg.focusNoMobileCover"));
+  }
   const rx = str(form, "focusX").trim();
   const ry = str(form, "focusY").trim();
   let x: number | null = null;
@@ -649,7 +724,11 @@ async function saveFocus(
   }
   await getDb(env)
     .update(schema.galleries)
-    .set({ coverFocusX: x, coverFocusY: y })
+    .set(
+      device === "mobile"
+        ? { coverFocusMobileX: x, coverFocusMobileY: y }
+        : { coverFocusX: x, coverFocusY: y },
+    )
     .where(eq(schema.galleries.id, g.id));
   return done(
     intent,

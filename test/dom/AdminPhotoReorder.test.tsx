@@ -208,14 +208,18 @@ describe("PhotoReorder cover controls", () => {
     render(<Stub initialEntries={["/admin/g/g1"]} />);
     const tiles = await screen.findAllByRole("listitem");
     const b = tiles.find((t) => t.getAttribute("data-photo-id") === "b")!;
-    expect(b.textContent).toContain("Portada");
+    // A small badge (icon + accessible label), once, on the cover tile.
+    expect(b.querySelector('[data-cover-badge="desktop"]')!.textContent).toBe(
+      "Portada",
+    );
+    expect(document.querySelectorAll("[data-cover-badge]")).toHaveLength(1);
     expect(
-      Array.from(b.querySelectorAll("button")).some((x) =>
-        /Usar como portada/.test(x.textContent ?? ""),
+      Array.from(b.querySelectorAll("button")).some(
+        (x) => x.textContent === "Usar como portada",
       ),
     ).toBe(false);
     expect(
-      screen.getAllByRole("button", { name: /Usar como portada/ }),
+      screen.getAllByRole("button", { name: "Usar como portada" }),
     ).toHaveLength(photos.length - 1);
     // Not nested inside the select/drag handle (no interactive-in-interactive).
     for (const btn of screen.getAllByRole("button", {
@@ -226,7 +230,7 @@ describe("PhotoReorder cover controls", () => {
 });
 
 describe("PhotoReorder automatic cover", () => {
-  it("badge says automatic and the tile offers 'Fijar portada' (cover form with its id)", async () => {
+  it("badge says automatic and the tile still offers to pin it (cover form with its id)", async () => {
     const Stub = createRoutesStub([
       {
         path: "/admin/g/g1",
@@ -243,9 +247,11 @@ describe("PhotoReorder automatic cover", () => {
     render(<Stub initialEntries={["/admin/g/g1"]} />);
     const tiles = await screen.findAllByRole("listitem");
     const b = tiles.find((t) => t.getAttribute("data-photo-id") === "b")!;
-    expect(b.textContent).toContain("Portada (automática)");
+    expect(
+      b.querySelector('[data-cover-badge="desktop"]')!.getAttribute("title"),
+    ).toBe("Portada automática (primera foto)");
     const pin = Array.from(b.querySelectorAll("button")).find(
-      (x) => x.textContent === "Fijar portada",
+      (x) => x.textContent === "Usar como portada",
     )!;
     const form = pin.closest("form")!;
     expect(

@@ -16,7 +16,8 @@ import {
   HeartFilled,
   Retry,
 } from "./icons";
-import { imgUrl, type GalleryPhoto } from "./types";
+import { useImgUrl } from "./img-url";
+import type { GalleryPhoto, ImgUrlFn } from "./types";
 
 const SWIPE_DISTANCE = 50;
 const SWIPE_VELOCITY = 0.5; // px per ms
@@ -37,8 +38,12 @@ export type LightboxProps = {
   protect?: boolean;
 };
 
-const srcSet = (id: string, v?: string) =>
-  `${imgUrl(id, "view-sm", v)} 1200w, ${imgUrl(id, "view-lg", v)} 2048w`;
+const srcSetOf = (imgUrl: ImgUrlFn) => (id: string, v?: string) => {
+  const sm = imgUrl(id, "view-sm", v);
+  const lg = imgUrl(id, "view-lg", v);
+  // The admin preview has no 2048 px variant: a single candidate then.
+  return lg === sm ? `${sm} 1200w` : `${sm} 1200w, ${lg} 2048w`;
+};
 
 const BTN =
   "flex size-11 items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white disabled:pointer-events-none disabled:opacity-25";
@@ -81,6 +86,8 @@ function LightboxView({
   isFavorite,
   protect = false,
 }: LightboxProps) {
+  const imgUrl = useImgUrl();
+  const srcSet = srcSetOf(imgUrl);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [visible, setVisible] = useState(true);
@@ -194,7 +201,7 @@ function LightboxView({
       img.onload = done;
       img.onerror = done;
       img.sizes = "(min-width: 768px) 92vw, 100vw";
-      img.srcset = srcSet(p.id, p.v);
+      img.srcset = srcSetOf(imgUrl)(p.id, p.v);
       img.src = imgUrl(p.id, "view-sm", p.v);
       inflight.push(img);
     }
@@ -206,7 +213,7 @@ function LightboxView({
         img.src = "";
       }
     };
-  }, [photos, index]);
+  }, [photos, index, imgUrl]);
 
   // Auto-hide controls on pointer devices.
   useEffect(() => () => clearTimeout(idleTimer.current), []);
