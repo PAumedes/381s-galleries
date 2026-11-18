@@ -21,13 +21,20 @@ export function publicMessages(lang: Lang): Messages {
   ) as Messages);
 }
 
-/** Language and messages to ship with the page for this request (root loader). */
-export function messagesForRequest(request: Request): {
+/**
+ * Language and messages to ship with the page for this request (root loader).
+ * The admin strings go out only when `verifiedAdmin` (requireAdmin passed) and
+ * the path is an admin one; the URL alone never unlocks them.
+ */
+export function messagesForRequest(
+  request: Request,
+  verifiedAdmin = false,
+): {
   lang: Lang;
   messages: Messages;
 } {
   const lang = getRequestLang(request);
-  const admin = isAdminPath(new URL(request.url).pathname);
+  const admin = verifiedAdmin && isAdminPath(new URL(request.url).pathname);
   return {
     lang,
     messages: admin ? allMessages(lang) : publicMessages(lang),

@@ -41,7 +41,7 @@ Los valores se guardan como **secrets de GitHub**: en el repositorio, **Settings
    - `ACCESS_TEAM_DOMAIN`: `<equipo>.cloudflareaccess.com` (sin `https://`).
    - `ACCESS_AUD`: el AUD tag.
 
-> El JavaScript del admin **no es público**: vive en `/admin-assets/`, y el Worker solo lo entrega si tu sesión de Access es válida (usa la cookie `CF_Authorization`, que el navegador manda a todo el dominio). **No hace falta agregar ningún path nuevo en Access** para esto; los tres paths de arriba no cambian.
+> El JavaScript del admin **no es público**: vive en `/admin-assets/`, y el Worker solo lo entrega si tu sesión de Access es válida (usa la cookie `CF_Authorization`, que el navegador manda a todo el dominio). **No hace falta agregar ningún path nuevo en Access** para esto; los tres paths de arriba no cambian. Lo que **no** se oculta: los nombres de las rutas del admin y de sus archivos (visibles en `/__manifest` y en `assets/manifest-*.js`); solo el código y el diccionario de textos del admin están protegidos. El diccionario del admin tampoco se envía a quien no sea admin verificado (ni en `/admin.data` ni en la página 401). `pnpm run deploy` corre `check:bundles` después del build y aborta si algo del admin quedó fuera de `/admin-assets/`.
 
 > **Nunca** cargues `ALLOW_DEV_ADMIN` (desactiva el login del admin). Si existiera en producción, el workflow Setup lo borra y avisa.
 

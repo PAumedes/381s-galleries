@@ -9,24 +9,61 @@ import { fileURLToPath } from "node:url";
 
 export const ADMIN_DIR = "admin-assets";
 
-const ADMIN_INTENTS =
-  "disconnect|root|studio|sync|details|flags|design|reorder|focus|archive|restore|publish|draft|status";
 const Q = "[`\"']";
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const APP_DIR = path.join(HERE, "..", "app");
 
-/** Distinctive strings that only admin code contains. */
+/**
+ * Form/action intents, read from the admin sources themselves (so the list
+ * cannot rot): `name="intent" value="x"`, `intent="x"`, `intent: "x"`,
+ * `intent === "x"`.
+ */
+export function adminIntents(appDir = APP_DIR) {
+  const files = [];
+  const routes = path.join(appDir, "routes");
+  for (const f of readdirSync(routes))
+    if (/^(admin|api\.admin).*\.tsx$/.test(f)) files.push(path.join(routes, f));
+  const comps = path.join(appDir, "components", "admin");
+  for (const f of readdirSync(comps))
+    if (f.endsWith(".tsx")) files.push(path.join(comps, f));
+  const found = new Set();
+  const patterns = [
+    /name="intent"\s+value="([A-Za-z]+)"/g,
+    /\bintent="([A-Za-z]+)"/g,
+    /\bintent:\s*"([A-Za-z]+)"/g,
+    /\bintent\s*===\s*"([A-Za-z]+)"/g,
+  ];
+  for (const file of files) {
+    const src = readFileSync(file, "utf8");
+    for (const re of patterns)
+      for (const m of src.matchAll(re)) found.add(m[1]);
+  }
+  if (found.size === 0) {
+    throw new Error("check-bundles: no admin intents found in app/ sources");
+  }
+  return [...found].sort();
+}
+
+/**
+ * Distinctive strings that only admin code contains. Every marker is a string
+ * that survives minification (i18n keys, URLs, intent values), and
+ * `calibrate()` proves each one still matches the real admin bundle.
+ * `calibration: "build"` means the marker is only expected somewhere in the
+ * build (not necessarily inside admin-assets/).
+ */
+const INTENTS = adminIntents().join("|");
+
 export const MARKERS = [
   {
     name: "admin dictionary key",
     regex: /[`"']admin\.[A-Za-z]+\.[A-Za-z_.]*[A-Za-z_][`"']/,
   },
-  { name: "/api/admin", regex: /\/api\/admin/ },
-  { name: "admin asset path", regex: /admin-assets/ },
-  { name: "adminAction", regex: /\badminAction\b/ },
-  { name: "requireAdmin", regex: /\brequireAdmin\b/ },
+  { name: "admin asset path", regex: /admin-assets/, calibration: "build" },
+  { name: "admin page path", regex: /[`"']\/admin\/(?:setup|google\/)/ },
   {
     name: "admin form intent",
     regex: new RegExp(
-      `name:${Q}intent${Q},\\s*value:${Q}(?:${ADMIN_INTENTS})${Q}|\\bintent:${Q}(?:${ADMIN_INTENTS})${Q}`,
+      `name:${Q}intent${Q},\\s*value:${Q}(?:${INTENTS})${Q}|\\bintent:${Q}(?:${INTENTS})${Q}`,
     ),
   },
 ];
@@ -35,7 +72,11 @@ export const MARKERS = [
 // where its chunk lives: names only, no code. It is exempt from the markers
 // that merely name admin routes/files.
 const MANIFEST = /^assets\/manifest-[0-9a-f]+\.js$/;
-const MANIFEST_EXEMPT = new Set(["admin dictionary key", "admin asset path"]);
+const MANIFEST_EXEMPT = new Set([
+  "admin dictionary key",
+  "admin asset path",
+  "admin page path",
+]);
 const BINARY = /\.(woff2?|png|jpe?g|gif|webp|ico)$/i;
 
 function* walk(dir) {
@@ -52,7 +93,19 @@ const DICT_ENTRY = /^\s*"([^"\\]+)":\s*("(?:[^"\\]|\\.)*")\s*,?$/gm;
 export function adminDictionaryKeys(i18nDir) {
   const read = (file) => {
     const src = readFileSync(path.join(i18nDir, file), "utf8");
-    return [...src.matchAll(DICT_ENTRY)].map((m) => [m[1], JSON.parse(m[2])]);
+    const entries = [...src.matchAll(DICT_ENTRY)].map((m) => [
+      m[1],
+      JSON.parse(m[2]),
+    ]);
+    // Format drift (quote style, multi-line values) must not silently shrink
+    // what the guard covers: every line that looks like an admin key counts.
+    const expected = (src.match(/^\s*["'`]admin\./gm) ?? []).length;
+    if (entries.length === 0 || entries.length < expected) {
+      throw new Error(
+        `check-bundles: parsed ${entries.length} of ${expected} admin keys in ${file}; update DICT_ENTRY`,
+      );
+    }
+    return entries;
   };
   const admin = read("es.admin.ts");
   const publicText = read("es.public.ts")
@@ -108,8 +161,33 @@ export function checkBundles(clientDir, { literals = [] } = {}) {
   return { ok: problems.length === 0, problems: [...new Set(problems)] };
 }
 
+/**
+ * Every marker must match at least one built file (inside admin-assets/, or
+ * anywhere for `calibration: "build"`), otherwise it can never fail and the
+ * guard is blind to what it claims to cover.
+ */
+export function calibrate(clientDir, markers = MARKERS) {
+  const adminDir = path.join(clientDir, ADMIN_DIR);
+  const read = (dir) =>
+    existsSync(dir)
+      ? [...walk(dir)]
+          .filter((f) => !BINARY.test(f))
+          .map((f) => readFileSync(f, "utf8"))
+      : [];
+  const adminTexts = read(adminDir);
+  const allTexts = read(clientDir);
+  return markers
+    .filter(
+      (m) =>
+        !(m.calibration === "build" ? allTexts : adminTexts).some((t) =>
+          m.regex.test(t),
+        ),
+    )
+    .map((m) => `marker matches nothing: ${m.name}`);
+}
+
 export function main(argv = process.argv.slice(2)) {
-  const here = path.dirname(fileURLToPath(import.meta.url));
+  const here = HERE;
   const clientDir = path.resolve(
     argv[0] ?? path.join(here, "..", "build", "client"),
   );
@@ -119,6 +197,12 @@ export function main(argv = process.argv.slice(2)) {
   const { ok, problems } = checkBundles(clientDir, {
     literals: [...keys.map((k) => k), ...values],
   });
+  const stale = calibrate(clientDir);
+  if (stale.length > 0) {
+    console.error("check-bundles: guard is blind:");
+    for (const p of stale) console.error(`  - ${p}`);
+    return 1;
+  }
   if (!ok) {
     console.error(
       "check-bundles: admin-only code found outside admin-assets/:",

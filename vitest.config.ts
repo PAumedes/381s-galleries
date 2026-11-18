@@ -49,7 +49,10 @@ export default defineConfig(async () => {
           test: {
             name: "scripts",
             environment: "node",
-            include: ["test/scripts/**/*.test.mjs"],
+            include: [
+              "test/scripts/**/*.test.mjs",
+              "test/adversarial/**/*.node.test.mjs",
+            ],
           },
         },
         {

@@ -7,6 +7,8 @@ import {
   ADMIN_DIR,
   MARKERS,
   adminDictionaryKeys,
+  adminIntents,
+  calibrate,
   checkBundles,
 } from "../../scripts/check-bundles.mjs";
 
@@ -37,10 +39,7 @@ describe("checkBundles", () => {
   });
 
   it("admin markers are fine inside the admin directory", () => {
-    put(
-      `${ADMIN_DIR}/admin.g._id-x.js`,
-      'fetch("/api/admin/sync"); adminAction(); `admin.nav.label`',
-    );
+    put(`${ADMIN_DIR}/admin.g._id-x.js`, " adminAction(); `admin.nav.label`");
     expect(checkBundles(dir).ok).toBe(true);
   });
 
@@ -48,9 +47,9 @@ describe("checkBundles", () => {
     "dictionary key": "x = {`admin.setup.title`: 1}",
     "dictionary key (double quotes)":
       'x = {"admin.nav.label":"Administración"}',
-    "admin api": 'fetch("/api/admin/sync")',
     "admin asset dir reference": 'import("/admin-assets/admin-abc.js")',
-    "admin action": "export async function adminAction() {}",
+    "admin page path": 'location.href = "/admin/setup"',
+    "admin intent derived from sources (cover)": "{intent:`cover`}",
     "admin form intent": "{name:`intent`,value:`reorder`}",
     "admin form intent (quotes)": '{name:"intent",value:"disconnect"}',
     "admin result intent": "{data:t,intent:`studio`}",
@@ -67,7 +66,7 @@ describe("checkBundles", () => {
   }
 
   it("scans css, html and every nested file outside the admin dir", () => {
-    put("assets/nested/deep/a.css", "/* /api/admin */");
+    put("assets/nested/deep/a.css", '/* "/admin/setup" */');
     put("page.html", "<script>x('admin.nav.label')</script>");
     const r = checkBundles(dir);
     expect(r.problems.join("\n")).toContain("assets/nested/deep/a.css");
@@ -75,7 +74,7 @@ describe("checkBundles", () => {
   });
 
   it("does not print the matched code, only file and marker name", () => {
-    put("assets/shared-1.js", 'const secret = "/api/admin/very-secret-path"');
+    put("assets/shared-1.js", 'const secret = "/admin/setup/very-secret-path"');
     const r = checkBundles(dir);
     expect(r.problems.join("\n")).not.toContain("very-secret-path");
   });
@@ -90,9 +89,11 @@ describe("checkBundles", () => {
     expect(checkBundles(dir).ok).toBe(false);
   });
 
-  it("the manifest is still checked for admin dictionary text and APIs", () => {
-    put("assets/manifest-0a1b2c3d.js", 'x="/api/admin/sync"');
-    expect(checkBundles(dir).ok).toBe(false);
+  it("the manifest is still checked for admin dictionary text", () => {
+    put("assets/manifest-0a1b2c3d.js", 'x="Guardar punto focal"');
+    expect(checkBundles(dir, { literals: ["Guardar punto focal"] }).ok).toBe(
+      false,
+    );
   });
 
   it("fails when the admin directory is missing", () => {
@@ -123,11 +124,19 @@ describe("checkBundles", () => {
   });
 
   it("MARKERS are named", () => {
-    expect(MARKERS.length).toBeGreaterThanOrEqual(5);
+    expect(MARKERS.length).toBeGreaterThanOrEqual(4);
     for (const m of MARKERS) {
       expect(typeof m.name).toBe("string");
       expect(m.regex).toBeInstanceOf(RegExp);
     }
+  });
+});
+
+describe("adminIntents", () => {
+  it("is derived from the admin sources", () => {
+    const intents = adminIntents();
+    for (const i of ["cover", "home", "pin", "focus", "sync", "root"])
+      expect(intents).toContain(i);
   });
 });
 
@@ -141,13 +150,40 @@ describe("adminDictionaryKeys", () => {
   });
 });
 
+describe("calibrate", () => {
+  it("reports markers that match nothing in admin-assets", () => {
+    const stale = calibrate(dir);
+    expect(stale.join("\n")).toContain(
+      "marker matches nothing: admin page path",
+    );
+  });
+  it("is silent when every marker is present", () => {
+    putFullAdmin();
+    expect(calibrate(dir)).toEqual([]);
+  });
+});
+
+function putFullAdmin() {
+  put(
+    `${ADMIN_DIR}/admin.full-x.js`,
+    'a(`admin.nav.label`);b("/admin/setup");c({name:`intent`,value:`reorder`});import("/admin-assets/x.js")',
+  );
+}
+
 describe("CLI", () => {
+  it("exits 1 when a marker matches nothing (blind guard)", () => {
+    const r = spawnSync("node", [SCRIPT, dir], { encoding: "utf8" });
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain("marker matches nothing");
+  });
   it("exits 0 on a clean build", () => {
+    putFullAdmin();
     const r = spawnSync("node", [SCRIPT, dir], { encoding: "utf8" });
     expect(r.status).toBe(0);
   });
   it("exits 1 and names the file on a leak", () => {
-    put("assets/shared-1.js", 'fetch("/api/admin/sync")');
+    putFullAdmin();
+    put("assets/shared-1.js", 'location.href = "/admin/setup"');
     const r = spawnSync("node", [SCRIPT, dir], { encoding: "utf8" });
     expect(r.status).toBe(1);
     expect(r.stderr).toContain("assets/shared-1.js");

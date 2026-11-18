@@ -29,6 +29,8 @@ describe("T6.7 adversarial: admin_lang cookie scope", () => {
     const req = new Request("https://x.test/Admin/setup", {
       headers: { cookie: "admin_lang=en" },
     });
-    expect(messagesForRequest(req).messages).toHaveProperty("admin.lang.label");
+    expect(messagesForRequest(req, true).messages).toHaveProperty(
+      "admin.lang.label",
+    );
   });
 });
