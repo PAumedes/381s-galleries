@@ -269,7 +269,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T5.6 Privacy page:** public `/privacy` (canonical, registered in the Google OAuth consent screen; es/en by lang; Logo, studio name from settings; optional `PUBLIC_CONTACT_EMAIL` var, unset by default, else a generic contact line); `/privacidad` 301-redirects to it (keeps `?lang`). Both reserved slugs. "Privacidad" footer link on gallery pages and home (`SiteFooter`).
 
 ### Phase 6 — Feedback round (after first real use)
-- [x] **T6.1 Lightbox rapid navigation** — fast prev/next clicks or key repeats leave the lightbox in a broken state; fix races (stale loads, fades, preloads).
+- [x] **T6.1 Lightbox rapid navigation** — fast prev/next clicks or key repeats leave the lightbox in a broken state; fix races (stale loads, fades, preloads). Follow-up: arrows are 15vw full-height side zones (min 64px, glyph 48px, hidden on touch), pointer cursors, and backdrop click closes only on empty backdrop between the zones below the top bar.
 - [x] **T6.2 Image speed** — cache warming + versioned image URLs. See §5.3 (warming, versioned URLs, why no edge cache). Migration 0012 adds `photos.cache_warm_key`; second cron `* * * * *`; "Fotos en caché: N / M" on the setup page.
 - [x] **T6.6 Public portfolio home** — per-gallery "Mostrar en la portada" (published, no PIN only); home shows a cover grid. See §5.8 "Public home (T6.6)". Migration 0016_show_on_home.
 - [x] **T6.7 Admin in English** — ES/EN toggle in the admin. See §5.7 "T6.7 decisions".
