@@ -15,7 +15,8 @@ import { LanguageToggle } from "./LanguageToggle";
 import { Lightbox } from "./Lightbox";
 import { Logo } from "./Logo";
 import { CoverHero } from "./CoverHero";
-import { Download, Heart, HeartFilled, Share } from "./icons";
+import { Download, Heart, HeartFilled } from "./icons";
+import { SharePopover } from "./SharePopover";
 import { useFavorites } from "./use-favorites";
 import { imgUrl, type GalleryPhoto, type OpenGallery } from "./types";
 
@@ -136,17 +137,6 @@ export function GalleryView({
       block: "start",
     });
   }, []);
-
-  const share = useCallback(async () => {
-    const url = new URL(window.location.href);
-    const link = `${url.origin}${url.pathname}`;
-    try {
-      await navigator.clipboard.writeText(link);
-      showToast("gallery.linkCopied");
-    } catch {
-      /* clipboard unavailable: nothing to confirm */
-    }
-  }, [showToast]);
 
   const proofing = gallery.mode === "proofing";
   // Proofing never offers downloads, whatever the payload's allow_* say.
@@ -279,14 +269,10 @@ export function GalleryView({
               <Heart className="size-5" aria-hidden="true" />
             )}
           </button>
-          <button
-            type="button"
-            onClick={share}
-            aria-label={t("gallery.share")}
-            className="text-grey-600 hover:text-ink flex size-11 items-center justify-center"
-          >
-            <Share className="size-5" aria-hidden="true" />
-          </button>
+          <SharePopover
+            title={gallery.title}
+            onCopied={() => showToast("gallery.linkCopied")}
+          />
         </div>
       </nav>
 

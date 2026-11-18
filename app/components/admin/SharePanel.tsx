@@ -1,7 +1,8 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { useT } from "../../i18n/use-t";
 import { downloadBlob, qrPngBlob } from "../../lib/qr";
+import { canNativeShare, nativeShare, whatsappHref } from "../../lib/share";
 import { QrCode } from "./QrCode";
 
 const btn =
@@ -10,21 +11,32 @@ const btn =
 export function SharePanel({
   url,
   slug,
+  title,
   status,
   hasPin,
   cardHref,
 }: {
   url: string;
   slug: string;
+  title?: string;
   status: "draft" | "published" | "archived";
   hasPin: boolean;
   cardHref?: string;
 }) {
   const t = useT();
+  const published = status === "published";
   const id = useId();
   const [copied, setCopied] = useState<"ok" | "fail" | null>(null);
+  const sharing = useRef(false);
   const [svg, setSvg] = useState("");
   const [err, setErr] = useState(false);
+  const native = useSyncExternalStore(
+    () => () => {},
+    canNativeShare,
+    () => false,
+  );
+  // Never include the PIN: it is shared separately.
+  const message = t("admin.share.message", { title: title ?? slug });
 
   async function copy() {
     try {
@@ -53,6 +65,44 @@ export function SharePanel({
           <button type="button" className={btn} onClick={copy}>
             {t("admin.share.copy")}
           </button>
+        </div>
+        <div className="flex flex-wrap gap-2 pt-1">
+          {native && (
+            <button
+              type="button"
+              className={btn}
+              disabled={!published}
+              onClick={async () => {
+                if (sharing.current) return;
+                sharing.current = true;
+                try {
+                  await nativeShare({
+                    title: title ?? slug,
+                    text: message,
+                    url,
+                  });
+                } finally {
+                  sharing.current = false;
+                }
+              }}
+            >
+              {t("admin.share.native")}
+            </button>
+          )}
+          {published ? (
+            <a
+              href={whatsappHref(message, url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={btn}
+            >
+              {t("admin.share.whatsapp")}
+            </a>
+          ) : (
+            <span aria-disabled="true" className={`${btn} opacity-40`}>
+              {t("admin.share.whatsapp")}
+            </span>
+          )}
         </div>
         <p role="status" className="text-small text-grey-700 min-h-5">
           {copied === "ok" && t("admin.share.copied")}
