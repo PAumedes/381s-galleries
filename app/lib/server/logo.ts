@@ -19,14 +19,27 @@ export type LogoType = (typeof LOGO_TYPES)[number];
 export const LOGO_VARIANTS = ["on-light", "on-dark"] as const;
 export type LogoVariant = (typeof LOGO_VARIANTS)[number];
 
-/** Fixed R2 keys and settings rows per variant: never taken from user input. */
-const SLOTS: Record<LogoVariant, { r2Key: string; setting: string }> = {
+/**
+ * Fixed R2 key prefixes and settings rows per variant. The object key is
+ * `<prefix>-<v>` where `v` is the server-computed content hash: nothing in a
+ * key comes from user input.
+ */
+const SLOTS: Record<LogoVariant, { r2Prefix: string; setting: string }> = {
   "on-light": {
-    r2Key: "brand/logo-on-light",
+    r2Prefix: "brand/logo-on-light",
     setting: SETTINGS_KEYS.logoOnLight,
   },
-  "on-dark": { r2Key: "brand/logo-on-dark", setting: SETTINGS_KEYS.logoOnDark },
+  "on-dark": {
+    r2Prefix: "brand/logo-on-dark",
+    setting: SETTINGS_KEYS.logoOnDark,
+  },
 };
+const r2KeyOf = (variant: LogoVariant, v: string) =>
+  `${SLOTS[variant].r2Prefix}-${v}`;
+/** Largest accepted raster side, in pixels (decode-bomb guard). */
+const MAX_SIDE = 4096;
+const sideOk = (w: number, h: number) =>
+  w >= 1 && h >= 1 && w <= MAX_SIDE && h <= MAX_SIDE;
 
 export const isLogoVariant = (v: unknown): v is LogoVariant =>
   typeof v === "string" && (LOGO_VARIANTS as readonly string[]).includes(v);
@@ -52,6 +65,7 @@ function checkPng(b: Uint8Array): LogoCheck {
   let pos = 8;
   let first = true;
   let idat = false;
+  let idatDone = false;
   while (pos + 12 <= b.length) {
     const len = u32be(b, pos);
     const type = String.fromCharCode(...b.slice(pos + 4, pos + 8));
@@ -62,10 +76,13 @@ function checkPng(b: Uint8Array): LogoCheck {
       if (type !== "IHDR" || len !== 13) return bad("corrupt");
       const w = u32be(b, pos + 8);
       const h = u32be(b, pos + 12);
-      if (w < 1 || h < 1 || w > 16384 || h > 16384) return bad("corrupt");
+      if (!sideOk(w, h)) return bad("corrupt");
       first = false;
-    }
-    if (type === "IDAT") idat = true;
+    } else if (type === "IHDR") return bad("corrupt");
+    if (type === "IDAT") {
+      if (idatDone) return bad("corrupt"); // IDAT chunks must be consecutive
+      idat = true;
+    } else if (idat) idatDone = true;
     if (type === "IEND")
       return len === 0 && end === b.length && idat
         ? { ok: true, type: "image/png" }
@@ -75,15 +92,62 @@ function checkPng(b: Uint8Array): LogoCheck {
   return bad("corrupt");
 }
 
+const JPEG_SOF = new Set([
+  0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf,
+]);
+
+/** Walks the marker segments from SOI to a final EOI; no stray bytes anywhere. */
 function checkJpeg(b: Uint8Array): LogoCheck {
-  return b.length >= 6 && b[b.length - 2] === 0xff && b[b.length - 1] === 0xd9
-    ? { ok: true, type: "image/jpeg" }
-    : bad("corrupt");
+  const corrupt = bad("corrupt");
+  let pos = 2;
+  while (pos < b.length) {
+    if (b[pos] !== 0xff) return corrupt;
+    while (b[pos] === 0xff) pos++; // fill bytes
+    const m = b[pos++];
+    if (m === 0xd9)
+      return pos === b.length ? { ok: true, type: "image/jpeg" } : corrupt;
+    if (m === 0x00 || m === 0x01 || (m >= 0xd0 && m <= 0xd8)) continue;
+    if (pos + 2 > b.length) return corrupt;
+    const len = (b[pos] << 8) | b[pos + 1];
+    if (len < 2 || pos + len > b.length) return corrupt;
+    if (JPEG_SOF.has(m)) {
+      if (len < 8) return corrupt;
+      const h = (b[pos + 3] << 8) | b[pos + 4];
+      const w = (b[pos + 5] << 8) | b[pos + 6];
+      if (!sideOk(w, h)) return corrupt;
+    }
+    pos += len;
+    if (m === 0xda) {
+      // entropy-coded data: runs until a marker that is not a stuffed 0xFF00 or RSTn
+      while (pos < b.length) {
+        const n = b[pos + 1];
+        if (b[pos] === 0xff && n !== 0x00 && !(n >= 0xd0 && n <= 0xd7)) break;
+        pos++;
+      }
+    }
+  }
+  return corrupt;
+}
+
+function webpSize(b: Uint8Array): [number, number] | null {
+  if (ascii(b, 12, "VP8X") && b.length >= 30)
+    return [
+      (b[24] | (b[25] << 8) | (b[26] << 16)) + 1,
+      (b[27] | (b[28] << 8) | (b[29] << 16)) + 1,
+    ];
+  if (ascii(b, 12, "VP8L") && b.length >= 25 && b[20] === 0x2f) {
+    const bits = u32le(b, 21);
+    return [(bits & 0x3fff) + 1, ((bits >>> 14) & 0x3fff) + 1];
+  }
+  if (ascii(b, 12, "VP8 ") && b.length >= 30 && b[23] === 0x9d)
+    return [(b[26] | (b[27] << 8)) & 0x3fff, (b[28] | (b[29] << 8)) & 0x3fff];
+  return null;
 }
 
 function checkWebp(b: Uint8Array): LogoCheck {
-  const sub = ["VP8 ", "VP8L", "VP8X"].some((f) => ascii(b, 12, f));
-  return b.length >= 20 && u32le(b, 4) === b.length - 8 && sub
+  if (b.length < 20 || u32le(b, 4) !== b.length - 8) return bad("corrupt");
+  const size = webpSize(b);
+  return size && sideOk(size[0], size[1])
     ? { ok: true, type: "image/webp" }
     : bad("corrupt");
 }
@@ -111,7 +175,6 @@ const SVG_ELEMENTS = new Set([
   "style",
   "text",
   "tspan",
-  "use",
   "symbol",
 ]);
 const TEXT_ELEMENTS = new Set(["title", "desc", "style", "text", "tspan"]);
@@ -179,6 +242,7 @@ const SVG_ATTRS = new Set([
   "xlink:href",
   "xmlns",
   "xmlns:xlink",
+  "type",
 ]);
 const ATTR_PATTERNS: Record<string, RegExp> = {
   id: /^[\w.-]{1,64}$/,
@@ -191,6 +255,7 @@ const ATTR_PATTERNS: Record<string, RegExp> = {
   "xlink:href": /^#[A-Za-z_][\w.-]{0,63}$/,
   xmlns: /^http:\/\/www\.w3\.org\/2000\/svg$/,
   "xmlns:xlink": /^http:\/\/www\.w3\.org\/1999\/xlink$/,
+  type: /^text\/css$/,
 };
 const MAX_ELEMENTS = 5000;
 const MAX_DEPTH = 32;
@@ -209,6 +274,8 @@ const SCHEMES = /(?:java|vb)script:|data:/i;
 /** CSS / paint values: no escapes, at-rules, entities or any url() but `url(#id)`. */
 function safeCss(v: string): boolean {
   if (/[@\\&<]|expression|behavior|binding|import/i.test(v)) return false;
+  // CSS functions that fetch a URL without a url() token.
+  if (/(?:image-set|cross-fade|src|element|paint)\s*\(/i.test(v)) return false;
   return !/url\s*\(/i.test(v.replace(/url\(\s*#[\w.-]+\s*\)/gi, ""));
 }
 
@@ -234,6 +301,7 @@ function checkSvg(b: Uint8Array): LogoCheck {
   let elements = 0;
   let rootClosed = false;
   let sawRoot = false;
+  let rootNs = false;
   XML_DECL.lastIndex = 0;
   if (text.startsWith("<?xml")) {
     if (!XML_DECL.test(text)) return unsafe;
@@ -244,7 +312,7 @@ function checkSvg(b: Uint8Array): LogoCheck {
       const next = text.indexOf("<", i);
       const chunk = text.slice(i, next < 0 ? text.length : next);
       if (/&/.test(chunk)) return unsafe;
-      if (chunk.trim() !== "") {
+      if (/[^ \t\r\n]/.test(chunk)) {
         const top = stack[stack.length - 1];
         if (!top || !TEXT_ELEMENTS.has(top)) return unsafe;
         if (top === "style" && !safeCss(chunk)) return unsafe;
@@ -284,7 +352,10 @@ function checkSvg(b: Uint8Array): LogoCheck {
       seen.add(attr);
       if (!SVG_ATTRS.has(attr) || !safeAttr(attr, value)) return unsafe;
       if (attr.startsWith("xmlns") && sawRoot) return unsafe;
+      if (attr === "type" && name !== "style") return unsafe;
+      if (attr === "xmlns" && !sawRoot) rootNs = true;
     }
+    if (!sawRoot && !rootNs) return unsafe; // the SVG namespace is required
     sawRoot = true;
     i = OPEN_TAG.lastIndex;
     if (selfClose) {
@@ -306,7 +377,7 @@ export function validateLogo(b: Uint8Array): LogoCheck {
   // SVG text: the first non-space byte is "<" (an optional BOM aside).
   const start = b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf ? 3 : 0;
   if (
-    /^\s*<(?:\?xml|!--|svg)/.test(
+    /^[ \t\r\n]*<(?:\?xml|!--|svg)/.test(
       new TextDecoder().decode(b.slice(start, start + 64)),
     )
   ) {
@@ -351,7 +422,7 @@ export async function readBodyLimited(
   return out;
 }
 
-// ---- storage (R2 object + settings row `{t: type, v: version}`) ----
+// ---- storage (R2 object `<prefix>-<v>` + settings row `{t: type, v: version}`) ----
 
 interface LogoMeta {
   t: LogoType;
@@ -417,7 +488,11 @@ async function versionOf(b: Uint8Array<ArrayBuffer>): Promise<string> {
     .join("");
 }
 
-/** Validates, then stores. The caller has already enforced admin + same-site. */
+/**
+ * Validates, then stores. Objects are versioned (`<prefix>-<v>`), so a new
+ * upload never overwrites the one the pointer names: put the object, write the
+ * pointer (the commit point), then drop the old object best-effort.
+ */
 export async function saveLogo(
   env: Pick<Env, "DB" | "CACHE">,
   variant: LogoVariant,
@@ -426,22 +501,38 @@ export async function saveLogo(
   const check = validateLogo(bytes);
   if (!check.ok) return check;
   const v = await versionOf(bytes);
-  const slot = SLOTS[variant];
-  await env.CACHE.put(slot.r2Key, bytes, {
+  const key = r2KeyOf(variant, v);
+  await env.CACHE.put(key, bytes, {
     httpMetadata: { contentType: check.type },
     customMetadata: { v },
   });
-  await putSetting(env, slot.setting, JSON.stringify({ t: check.type, v }));
+  const previous = (await readMetas(env))[variant];
+  try {
+    await putSetting(
+      env,
+      SLOTS[variant].setting,
+      JSON.stringify({ t: check.type, v }),
+    );
+  } catch (err) {
+    // Not committed: the old pointer and its object are untouched.
+    if (previous?.v !== v) await env.CACHE.delete(key).catch(() => {});
+    throw err;
+  }
+  if (previous && previous.v !== v)
+    await env.CACHE.delete(r2KeyOf(variant, previous.v)).catch(() => {});
   return check;
 }
 
-/** Back to the bundled logos: drops both settings rows and both R2 objects. */
+/** Back to the bundled logos: clears the pointers first, then the objects. */
 export async function resetLogos(
   env: Pick<Env, "DB" | "CACHE">,
 ): Promise<void> {
-  for (const variant of LOGO_VARIANTS) {
+  const metas = await readMetas(env);
+  for (const variant of LOGO_VARIANTS)
     await deleteSetting(env, SLOTS[variant].setting);
-    await env.CACHE.delete(SLOTS[variant].r2Key);
+  for (const variant of LOGO_VARIANTS) {
+    const m = metas[variant];
+    if (m) await env.CACHE.delete(r2KeyOf(variant, m.v)).catch(() => {});
   }
 }
 
@@ -462,7 +553,7 @@ export async function serveLogo(
   if (!isLogoVariant(variant)) return notFound();
   const meta = (await readMetas(env))[variant];
   if (!meta) return notFound();
-  const obj = await env.CACHE.get(SLOTS[variant].r2Key);
+  const obj = await env.CACHE.get(r2KeyOf(variant, meta.v));
   if (!obj || obj.customMetadata?.v !== meta.v) return notFound();
   const asked = new URL(request.url).searchParams.get("v");
   return new Response(obj.body, {

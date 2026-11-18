@@ -123,15 +123,20 @@ describe("validateLogo: raster formats by magic bytes", () => {
 describe("validateLogo: SVG is accepted only when trivially safe", () => {
   const ok = (s: string | Uint8Array) =>
     validateLogo(typeof s === "string" ? bytes(s) : s);
-  it("accepts a typical export (xml decl, comment, style, gradient, use #id, BOM)", () => {
+  it("accepts a typical export (xml decl, comment, style, gradient, BOM)", () => {
     const doc =
       '<?xml version="1.0" encoding="UTF-8"?>\n<!-- made by tool -->\n' +
       svg(
-        '<defs><style>.a{fill:#000;stroke:rgb(0,0,0)}</style><linearGradient id="g"><stop offset="0" stop-color="#000"/></linearGradient><path id="p" d="M0 0h1"/></defs><g class="a" transform="translate(1 2)"><use href="#p"/><rect width="4" height="4" fill="url(#g)"/><title>38 1S</title></g>',
+        '<defs><style>.a{fill:#000;stroke:rgb(0,0,0)}</style><linearGradient id="g"><stop offset="0" stop-color="#000"/></linearGradient><path id="p" d="M0 0h1"/></defs><g class="a" transform="translate(1 2)"><rect width="4" height="4" fill="url(#g)"/><title>38 1S</title></g>',
         ' xmlns:xlink="http://www.w3.org/1999/xlink"',
       );
     expect(ok(doc)).toMatchObject({ ok: true });
     expect(ok(bytes([0xef, 0xbb, 0xbf], doc))).toMatchObject({ ok: true });
+  });
+  it("refuses <use> entirely (expansion bombs)", () => {
+    expect(ok(svg('<path id="p" d="M0 0h1"/><use href="#p"/>'))).toMatchObject({
+      ok: false,
+    });
   });
   it.each([
     ["script element", svg("<script>alert(1)</script>")],
@@ -259,19 +264,19 @@ describe("readBodyLimited", () => {
 });
 
 describe("setup action: logo upload", () => {
-  it("stores a valid PNG under a fixed key and records type + version", async () => {
+  it("stores a valid PNG under a server-built versioned key and records type + version", async () => {
     const r = await setupAction(upload(PNG), e);
     expect(r).toMatchObject({ intent: "logo", ok: true });
-    expect(await r2Keys()).toEqual(["brand/logo-on-light"]);
     const v = await getLogoVersions(e);
+    expect(await r2Keys()).toEqual([`brand/logo-on-light-${v.onLight}`]);
     expect(v.onLight).toMatch(/^[0-9a-f]{16}$/);
     expect(v.onDark).toBeNull();
     expect(JSON.stringify(r)).not.toContain("brand/");
   });
   it("stores the dark variant independently", async () => {
     await setupAction(upload(WEBP, { variant: "on-dark" }), e);
-    expect(await r2Keys()).toEqual(["brand/logo-on-dark"]);
     const v = await getLogoVersions(e);
+    expect(await r2Keys()).toEqual([`brand/logo-on-dark-${v.onDark}`]);
     expect(v.onLight).toBeNull();
     expect(v.onDark).not.toBeNull();
   });
@@ -387,6 +392,27 @@ describe("setup action: logo upload", () => {
       e,
     );
     expect(r.ok).toBe(true);
+  });
+});
+
+describe("logo storage: versioned keys", () => {
+  it("replacing a logo leaves exactly the new object", async () => {
+    await setupAction(upload(PNG), e);
+    await setupAction(upload(JPEG, { type: "image/jpeg" }), e);
+    const v = (await getLogoVersions(e)).onLight;
+    expect(await r2Keys()).toEqual([`brand/logo-on-light-${v}`]);
+  });
+  it("re-uploading identical bytes keeps the object", async () => {
+    await setupAction(upload(PNG), e);
+    await setupAction(upload(PNG), e);
+    expect(await r2Keys()).toHaveLength(1);
+    const v = (await getLogoVersions(e)).onLight;
+    const res = await serveLogo(
+      new Request(`http://localhost/brand/logo/on-light?v=${v}`),
+      "on-light",
+      e,
+    );
+    expect(res.status).toBe(200);
   });
 });
 
@@ -540,7 +566,8 @@ describe("GET /brand/logo/:variant", () => {
   });
   it("404 when the R2 object does not match the recorded version", async () => {
     await setupAction(upload(PNG), e);
-    await env.CACHE.put("brand/logo-on-light", "<script>x</script>", {
+    const v = (await getLogoVersions(e)).onLight;
+    await env.CACHE.put(`brand/logo-on-light-${v}`, "<script>x</script>", {
       customMetadata: { v: "ffffffffffffffff" },
     });
     expect((await get("on-light")).status).toBe(404);

@@ -205,26 +205,28 @@ function LogoCard({
 }) {
   const t = useT();
   const [pending, setPending] = useState<Pending>({});
-  // Local blob: previews only; revoked when replaced or on unmount.
-  useEffect(
-    () => () => {
-      for (const u of Object.values(pending)) URL.revokeObjectURL(u);
-    },
-    [pending],
-  );
-  const pick = (key: keyof Pending) => (file: File | undefined) =>
-    setPending((p) => ({
-      ...p,
-      [key]: file ? URL.createObjectURL(file) : undefined,
-    }));
+  // Local blob: previews only. Each is revoked when its own slot is replaced
+  // (never while still shown) and all of them on unmount.
+  const [urls] = useState<Pending>(() => ({}));
+  useEffect(() => {
+    return () => {
+      for (const u of Object.values(urls)) if (u) URL.revokeObjectURL(u);
+    };
+  }, [urls]);
+  const pick = (key: keyof Pending) => (file: File | undefined) => {
+    const old = urls[key];
+    if (old) URL.revokeObjectURL(old);
+    urls[key] = file ? URL.createObjectURL(file) : undefined;
+    setPending({ ...urls });
+  };
   const custom = Boolean(logo.onLight || logo.onDark);
   const onLight = pending.onLight
     ? { src: pending.onLight, invert: false }
     : logoSource("dark", logo);
   const onDark = pending.onDark
     ? { src: pending.onDark, invert: false }
-    : pending.onLight
-      ? { src: pending.onLight, invert: !logo.onDark }
+    : pending.onLight && !logo.onDark
+      ? { src: pending.onLight, invert: true }
       : logoSource("light", logo);
   return (
     <section className="border-grey-200 flex min-w-0 flex-col gap-4 border p-5">

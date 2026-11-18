@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { createRoutesStub } from "react-router";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import type { ReactNode } from "react";
 import { es } from "../../app/i18n/es";
 import { Logo, logoSource } from "../../app/components/Logo";
@@ -127,6 +127,17 @@ function setup(data: Partial<SetupViewData> = {}, actionData?: unknown) {
   return render(<Stub initialEntries={["/admin/setup"]} />);
 }
 
+const origCreate = URL.createObjectURL;
+const origRevoke = URL.revokeObjectURL;
+afterEach(() => {
+  URL.createObjectURL = origCreate;
+  URL.revokeObjectURL = origRevoke;
+});
+const png = () =>
+  new File([new Uint8Array([1])], "a.png", { type: "image/png" });
+const previewSrc = (id: string) =>
+  screen.getByTestId(id).querySelector("img")!.getAttribute("src");
+
 describe("Logo card in Ajustes", () => {
   it("has two multipart upload forms with restricted accept, 16px-capable inputs and a reset", async () => {
     setup();
@@ -234,5 +245,84 @@ describe("Logo card in Ajustes", () => {
     );
     expect(await screen.findByRole("alert")).toBeTruthy();
     expect(screen.getByText("El archivo supera los 512 KB.")).toBeTruthy();
+  });
+  it("a second pick (dark) keeps the light preview and revokes nothing in use", async () => {
+    const revoked: string[] = [];
+    let n = 0;
+    URL.createObjectURL = () => `blob:p-${n++}`;
+    URL.revokeObjectURL = (u: string) => void revoked.push(u);
+    setup();
+    const light = await screen.findByLabelText("Logo para fondos claros");
+    fireEvent.change(light, { target: { files: [png()] } });
+    fireEvent.change(screen.getByLabelText(/Logo para fondos oscuros/), {
+      target: { files: [png()] },
+    });
+    expect(previewSrc("logo-preview-light")).toBe("blob:p-0");
+    expect(previewSrc("logo-preview-dark")).toBe("blob:p-1");
+    expect(revoked).toEqual([]);
+  });
+  it("re-picking a slot revokes only that slot's previous blob", async () => {
+    const revoked: string[] = [];
+    let n = 0;
+    URL.createObjectURL = () => `blob:q-${n++}`;
+    URL.revokeObjectURL = (u: string) => void revoked.push(u);
+    setup();
+    const light = await screen.findByLabelText("Logo para fondos claros");
+    fireEvent.change(light, { target: { files: [png()] } });
+    fireEvent.change(light, { target: { files: [png()] } });
+    expect(revoked).toEqual(["blob:q-0"]);
+    expect(previewSrc("logo-preview-light")).toBe("blob:q-1");
+  });
+  it("revokes every remaining blob on unmount", async () => {
+    const revoked: string[] = [];
+    let n = 0;
+    URL.createObjectURL = () => `blob:u-${n++}`;
+    URL.revokeObjectURL = (u: string) => void revoked.push(u);
+    const { unmount } = setup();
+    const light = await screen.findByLabelText("Logo para fondos claros");
+    fireEvent.change(light, { target: { files: [png()] } });
+    fireEvent.change(screen.getByLabelText(/Logo para fondos oscuros/), {
+      target: { files: [png()] },
+    });
+    unmount();
+    expect(revoked.sort()).toEqual(["blob:u-0", "blob:u-1"]);
+  });
+  it("a dark-only pick previews on the dark swatch and leaves the light one alone", async () => {
+    URL.createObjectURL = () => "blob:dark-only";
+    URL.revokeObjectURL = () => {};
+    setup();
+    await screen.findByLabelText("Logo para fondos claros");
+    fireEvent.change(screen.getByLabelText(/Logo para fondos oscuros/), {
+      target: { files: [png()] },
+    });
+    expect(previewSrc("logo-preview-dark")).toBe("blob:dark-only");
+    expect(previewSrc("logo-preview-light")).toBe("/brand/logo-black.svg");
+  });
+  it("a new light pick is inverted on the dark swatch when there is no dark logo", async () => {
+    URL.createObjectURL = () => "blob:l";
+    URL.revokeObjectURL = () => {};
+    setup({ logo: { onLight: V, onDark: null } });
+    await screen.findByLabelText("Logo para fondos claros");
+    fireEvent.change(screen.getByLabelText("Logo para fondos claros"), {
+      target: { files: [png()] },
+    });
+    const img = screen.getByTestId("logo-preview-dark").querySelector("img")!;
+    expect(img.getAttribute("src")).toBe("blob:l");
+    expect(img.className).toMatch(/invert/);
+  });
+  it("asks for confirmation before resetting (window.confirm); declining submits nothing", async () => {
+    const orig = window.confirm;
+    const asked: string[] = [];
+    window.confirm = (m?: string) => (asked.push(String(m)), false);
+    try {
+      setup({ logo: { onLight: V, onDark: null } });
+      await screen.findByLabelText("Logo para fondos claros");
+      const btn = screen.getByRole("button", { name: "Restablecer" });
+      const ok = fireEvent.submit(btn.closest("form")!);
+      expect(asked).toHaveLength(1);
+      expect(ok).toBe(false); // preventDefault called
+    } finally {
+      window.confirm = orig;
+    }
   });
 });
