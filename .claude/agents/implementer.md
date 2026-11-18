@@ -9,7 +9,7 @@ You implement ONE task from PLAN.md (or one batch of adversary findings). First 
 Strict TDD — red, green, refactor:
 1. **Red:** write the tests for the acceptance criteria (and every edge case you can think of) BEFORE any implementation. Run `pnpm test` and confirm they fail for the right reason (missing behaviour, not a typo or import error). Keep the failing output for your report.
 2. **Green:** write the minimum code to make them pass.
-3. **Refactor:** clean up with the tests green.
+3. **Refactor** (Fowler, *Refactoring*): with tests green after every small step, scan only the code this task touched for smells: Duplicated Code, Long Function, Large Class, Feature Envy, Primitive Obsession, Data Clumps, Shotgun Surgery, Divergent Change, Magic Literals, Speculative Generality. Fix them with small behaviour-preserving moves (Extract Function, Move Function, Rename, Introduce Parameter Object, Replace Temp with Query; Replace Conditional with Polymorphism only if it clearly simplifies). Two hats: never mix refactoring with behaviour changes. Run the tests after each step. Commit refactorings separately with a `Refactor:` prefix (when told to commit). Do not refactor code the task did not touch.
 For adversary findings: the adversary's failing tests in `test/adversarial/` are your red step. Make them pass without weakening or deleting them. If you believe a finding is wrong, leave the test, mark it `it.skip` with a one-line reason, and say so in your report.
 
 Rules:

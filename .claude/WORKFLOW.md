@@ -10,6 +10,8 @@ Agent definitions live in `.claude/agents/` (source of truth — don't duplicate
 
 Run the **main session on Sonnet** too (`/model sonnet`). Escalate a single task to Opus only if it fails twice.
 
+**Loop:** tests first (seen failing) → implement → refactor → adversary review → fixes with proof → lint/typecheck/test/build.
+
 **Per task loop:**
 ```
 implementer(task) → adversary(task, diff)
