@@ -9,6 +9,7 @@ import { adminHeaders } from "../lib/server/admin";
 import { countGalleries, listGalleries } from "../lib/server/admin-galleries";
 import { requireAdmin } from "../lib/server/auth";
 import { isGoogleConnected } from "../lib/server/google-auth";
+import { getSetting, SETTINGS_KEYS } from "../lib/server/settings";
 import type { Route } from "./+types/admin._index";
 
 /** `?reason=` codes from the Google callback -> message keys. */
@@ -51,6 +52,7 @@ export async function adminIndexData(request: Request, env: Env) {
     q: search,
     galleries: await listGalleries(env, filter, search),
     total: await countGalleries(env),
+    rootName: (await getSetting(env, SETTINGS_KEYS.driveRootName)) ?? null,
   };
 }
 
@@ -71,6 +73,7 @@ export default function AdminIndex({ loaderData }: Route.ComponentProps) {
         filter={loaderData.filter}
         q={loaderData.q}
         total={loaderData.total}
+        rootName={loaderData.rootName}
       />
     </div>
   );

@@ -97,7 +97,7 @@ describe("GalleryEditView", () => {
       (screen.getByLabelText("Vence (hora)") as HTMLInputElement).value,
     ).toBe("18:30");
     expect(screen.getByText(/dejarán de funcionar/)).toBeTruthy();
-    expect(screen.getByText(/Buenos Aires/)).toBeTruthy();
+    expect(screen.getByText(/Hora local del estudio/)).toBeTruthy();
   });
 
   it("shows inline Spanish field errors next to the field", async () => {

@@ -23,9 +23,12 @@ export function csvLine(
   return cells.map(csvCell).join(",") + "\r\n";
 }
 
-/** UTC ISO -> `YYYY-MM-DD HH:MM:SS` in Buenos Aires; "" if invalid. */
-export function fmtStudioSeconds(iso: string | null | undefined): string {
-  const p = studioParts(iso);
+/** UTC ISO -> `YYYY-MM-DD HH:MM:SS` in studio time; "" if invalid. */
+export function fmtStudioSeconds(
+  iso: string | null | undefined,
+  tz?: string,
+): string {
+  const p = studioParts(iso, tz);
   return p ? `${p.date} ${p.time}` : "";
 }
 

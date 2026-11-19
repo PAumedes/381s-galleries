@@ -20,9 +20,9 @@ const NAV: { to: string; label: MessageKey; end: boolean }[] = [
   { to: "/admin/setup", label: "admin.nav.settings", end: false },
 ];
 
-/** "2026-11-16T13:00:00Z" -> "16/11/2026 10:00" (Buenos Aires time, Spanish format). */
-export function fmtTime(iso: string): string {
-  return fmtStudio(iso) || iso;
+/** "2026-11-16T13:00:00Z" -> "16/11/2026 10:00" (studio time, Spanish format). */
+export function fmtTime(iso: string, tz?: string): string {
+  return fmtStudio(iso, tz) || iso;
 }
 
 export function StatusLine({ status }: { status: AdminStatus }) {

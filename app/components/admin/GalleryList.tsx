@@ -4,6 +4,8 @@ import { useFormat } from "../../i18n/use-format";
 import { useT } from "../../i18n/use-t";
 import { withCode } from "../../i18n/rich";
 import type { MessageKey } from "../../i18n/t";
+import { SAMPLE_ROOT_NAME } from "../../lib/sample-root-name";
+import { useStudioTimezone } from "../../lib/use-studio-timezone";
 import { FILTERS, FILTER_KEYS, utcIsoToLocal } from "../../lib/admin-gallery";
 import type { Filter } from "../../lib/admin-gallery";
 import type { GalleryListRow } from "../../lib/server/admin-galleries";
@@ -50,9 +52,12 @@ function filterHref(f: Filter, q: string): string {
 }
 
 /** Folder layout shown to new users; folder names are literal, the notes are translated. */
-function folderTree(t: ReturnType<typeof useT>): string {
+function folderTree(
+  t: ReturnType<typeof useT>,
+  rootName: string | null | undefined,
+): string {
   const rows: [string, string][] = [
-    ["381studios/", t("admin.list.empty.rootNote")],
+    [`${rootName || SAMPLE_ROOT_NAME}/`, t("admin.list.empty.rootNote")],
     [`└─ ${t("admin.list.empty.albumName")}/`, t("admin.list.empty.albumNote")],
     ["   ├─ high-res/", t("admin.list.empty.highresNote")],
     ["   ├─ web/", "1200 px"],
@@ -63,7 +68,7 @@ function folderTree(t: ReturnType<typeof useT>): string {
   return rows.map(([dir, note]) => `${dir.padEnd(29)}${note}`).join("\n");
 }
 
-function EmptyLibrary() {
+function EmptyLibrary({ rootName }: { rootName?: string | null }) {
   const t = useT();
   return (
     <div className="border-grey-200 flex max-w-2xl flex-col gap-4 border p-6">
@@ -78,7 +83,7 @@ function EmptyLibrary() {
         .
       </p>
       <pre className="bg-grey-50 text-small overflow-x-auto p-4 leading-6">
-        {folderTree(t)}
+        {folderTree(t, rootName)}
       </pre>
       <p className="text-small text-grey-600">
         {withCode(t("admin.list.empty.sets"))}
@@ -92,22 +97,27 @@ export function GalleryList({
   filter,
   total,
   q = "",
+  rootName,
 }: {
   galleries: GalleryListItem[];
   filter: Filter;
   total: number;
   /** Current search text (server-side `?q=`). */
   q?: string;
+  /** Saved Drive root folder name (settings); a neutral sample when unset. */
+  rootName?: string | null;
 }) {
   const navigate = useNavigate();
   const t = useT();
   const fmt = useFormat();
+  const tz = useStudioTimezone();
   const expiry = (iso: string | null) => {
     if (!iso) return t("admin.list.noExpiry");
-    const l = utcIsoToLocal(iso);
+    const l = utcIsoToLocal(iso, tz);
     return l ? fmt.localDateTime(l.date, l.time) : "—";
   };
-  if (total === 0 && galleries.length === 0) return <EmptyLibrary />;
+  if (total === 0 && galleries.length === 0)
+    return <EmptyLibrary rootName={rootName} />;
   return (
     <div className="flex flex-col gap-4">
       <Form

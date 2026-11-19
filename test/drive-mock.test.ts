@@ -36,10 +36,10 @@ describe("tree shape", () => {
   const fx = buildFixtures();
   const d = createMockDrive(fx);
 
-  it("root is 381studios with 3 albums", async () => {
+  it("root is the sample folder with 3 albums", async () => {
     const root = await d.getMeta(fx.rootId);
     expect(root.name).toBe(FIXTURE_ROOT_NAME);
-    expect(root.name).toBe("381studios");
+    expect(root.name).toBe("studio-galleries");
     expect(isFolder(root)).toBe(true);
     const names = (await d.listChildren(fx.rootId)).map((f) => f.name).sort();
     expect(names).toEqual(

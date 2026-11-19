@@ -2,6 +2,7 @@ import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { redirect } from "react-router";
 import { getDb, photoVisible, schema } from "../../db";
 import type { Db } from "../../db";
+import { validTimezone } from "../studio-time";
 import {
   localToUtcIso,
   groupIssues,
@@ -231,7 +232,7 @@ export async function loadGalleryEdit(env: Env, id: string) {
       slug: g.slug,
       clientName: g.clientName,
       eventDate: g.eventDate,
-      expires: utcIsoToLocal(g.expiresAt),
+      expires: utcIsoToLocal(g.expiresAt, validTimezone(env.TIMEZONE)),
       status: g.status,
       allowHighres: g.allowHighres,
       allowWeb: g.allowWeb,
@@ -429,8 +430,14 @@ async function saveDetails(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
         max: EXPIRY_YEAR_MAX,
       });
     else {
-      // A date without a time means "until the end of that day" (Buenos Aires).
-      expiresAt = expDate ? localToUtcIso(expDate, expTime || "23:59") : null;
+      // A date without a time means "until the end of that day" (studio time).
+      expiresAt = expDate
+        ? localToUtcIso(
+            expDate,
+            expTime || "23:59",
+            validTimezone(env.TIMEZONE),
+          )
+        : null;
       if (!expiresAt)
         errors.expires = expDate
           ? t("admin.msg.expiryInvalid")

@@ -51,7 +51,9 @@ describe("csvLine / BOM", () => {
 describe("Buenos Aires time", () => {
   it("formats UTC as UTC-3 wall clock", () => {
     expect(fmtStudio("2026-11-16T02:30:00Z")).toBe("15/11/2026 23:30");
-    expect(fmtStudioSeconds("2026-11-16T02:30:05Z")).toBe("2026-11-15 23:30:05");
+    expect(fmtStudioSeconds("2026-11-16T02:30:05Z")).toBe(
+      "2026-11-15 23:30:05",
+    );
     expect(fmtStudio("garbage")).toBe("");
   });
 });

@@ -28,6 +28,8 @@
   "vars": {
     "DRIVE_MODE": "google",
     "STUDIO_NAME": "381 Studios",
+    // IANA timezone of the studio (admin dates, expiry, CSV). Invalid = Buenos Aires.
+    "TIMEZONE": "America/Argentina/Buenos_Aires",
     // Canonical origin for public links/QR (never derived from the Host header).
     "PUBLIC_ORIGIN": "https://gallery.381studios.ar",
     // Comma-separated hosts that 301 to PUBLIC_ORIGIN (unset = no redirect).

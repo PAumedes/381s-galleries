@@ -1,3 +1,4 @@
+import { SAMPLE_ROOT_NAME } from "../sample-root-name";
 /**
  * Deterministic fixture tree for the mock Drive (PLAN §3 / §5.9).
  * No Math.random(): a seeded PRNG drives orientation, sizes and times.
@@ -5,7 +6,7 @@
 import { FOLDER_MIME, SHORTCUT_MIME } from "./drive-types";
 import type { DriveFile } from "./drive-types";
 
-export const FIXTURE_ROOT_NAME = "381studios";
+export const FIXTURE_ROOT_NAME = SAMPLE_ROOT_NAME;
 
 /** A Drive entry plus the bookkeeping the mock needs (never leaves the mock). */
 export interface MockEntry extends DriveFile {

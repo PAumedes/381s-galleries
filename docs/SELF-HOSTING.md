@@ -60,6 +60,7 @@ Elegí estos valores **una sola vez** y anotalos. En el resto de la guía aparec
 
 | Valor | Qué es | Ejemplo |
 |---|---|---|
+| `<TIMEZONE>` | Tu zona horaria como nombre IANA (lista: Wikipedia "tz database time zones"). | `America/Mexico_City` |
 | `<STUDIO_NAME>` | Nombre de tu estudio, como lo ven tus clientes. Sin comillas dobles. | `Estudio Luz` |
 | `<ROOT_DOMAIN>` | Tu dominio (sin `www`, sin `https://`). | `estudioluz.com` |
 | `<GALLERY_HOST>` | La dirección de las galerías: un subdominio de tu dominio que **no uses** para otra cosa. | `fotos.estudioluz.com` |
@@ -133,6 +134,7 @@ Vas a editar un solo archivo, `wrangler.jsonc`, desde el navegador.
 
    ```jsonc
        "STUDIO_NAME": "<STUDIO_NAME>",
+       "TIMEZONE": "<TIMEZONE>",
        "PUBLIC_ORIGIN": "https://<GALLERY_HOST>",
        "LEGACY_HOSTS": "",
    ```
@@ -257,7 +259,7 @@ Por qué: la app solo permite sus propios scripts. Esas funciones de Cloudflare 
 
 **Cómo saber que funcionó:** el link `https://<GALLERY_HOST>/<nombre-de-la-galería>` abre la galería en una ventana de incógnito. Si no abre, mirá "El link de la galería no abre en una ventana de incógnito" en [Problemas comunes](#problemas-comunes).
 
-Nota: el panel muestra las fechas y horas en **hora de Buenos Aires** (UTC−3). Si estás en otra zona horaria, tenelo en cuenta al poner vencimientos.
+Nota: el panel muestra las fechas y horas (vencimientos, actividad, exportación CSV) en la zona horaria del estudio, que se define con la variable `TIMEZONE` de `wrangler.jsonc` (un nombre IANA como `America/Mexico_City` o `Europe/Madrid`; el horario de verano se maneja solo). Si falta o es inválida, se usa la hora de Buenos Aires. Volvé a ejecutar Setup o Deploy después de cambiarla. La columna del CSV titulada "Fecha (AR)" también usa esta zona.
 
 ## Paso 11. Capture One y Drive para escritorio
 
