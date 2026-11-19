@@ -319,9 +319,9 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 2. Acceptance criteria pass.
 3. `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green.
 4. **Adversarial review:** the task was reviewed adversarially and either reported `No findings` or every finding has a test in `test/adversarial/` that now passes (or is skipped with a stated reason the orchestrator accepted).
-6. **Test scaffolding:** shared test helpers live in `test/support/` (`d1.ts`: `migrateDb()`, `testMigrations()`, `resetTables(...)`; `cache.ts`: `clearCache()`); do not re-copy `applyD1Migrations` or table/R2 reset code into test files.
 5. Only the task's files changed (plus its checkbox in §7 and `test/adversarial/`).
 6. One commit per task (implementation + adversary fixes), message `T<x.y>: <summary>`.
+7. **Test scaffolding:** shared test helpers live in `test/support/` (`d1.ts`: `migrateDb()`, `testMigrations()`, `resetTables(...)`; `cache.ts`: `clearCache()`); do not re-copy `applyD1Migrations` or table/R2 reset code into test files.
 
 ## 9. Workflow
 See `.claude/WORKFLOW.md`.
