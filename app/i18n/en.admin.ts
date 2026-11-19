@@ -116,12 +116,16 @@ export const enAdmin = {
     "Photos without a watermark and with downloads enabled.",
   "admin.edit.mode.proofingNote":
     "Everything watermarked and no downloads: the client only picks favorites.",
-  "admin.edit.mode.noWm":
+  "admin.edit.mode.noWm.one":
+    "This gallery has no preview-wm files (the photo has none): in Proof mode clients won't see any photo. Export that recipe from Capture One.",
+  "admin.edit.mode.noWm.other":
     "This gallery has no preview-wm files (none of the {count} photos): in Proof mode clients won't see any photo. Export that recipe from Capture One.",
-  "admin.edit.mode.someNoWm":
-    "{missing} of {count} photos have no preview-wm: in Proof mode they won't appear (404).",
+  "admin.edit.mode.someNoWm.one":
+    "{missing} of {count} photo has no preview-wm: in Proof mode clients will see it as unavailable (blank).",
+  "admin.edit.mode.someNoWm.other":
+    "{missing} of {count} photos have no preview-wm: in Proof mode clients will see them as unavailable (blank).",
   "admin.edit.mode.homeReminder":
-    "This gallery is still in Proof mode (watermarked) and shown on the home page.",
+    "This gallery is saved as shown on the home page and is still in Proof mode (watermarked).",
   "admin.edit.mode.homeNeedsWm":
     "On the home page only if it has a watermarked cover (preview-wm).",
   "admin.edit.mode.noThumbWm":

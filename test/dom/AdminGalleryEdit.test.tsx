@@ -285,7 +285,7 @@ describe("GalleryEditView", () => {
       wmCount: 3,
     });
     const note = await screen.findByText(
-      /sigue en modo Prueba.*página de inicio/,
+      /guardada para mostrarse en la página de inicio.*modo Prueba/,
     );
     expect(note.getAttribute("role")).toBe("status");
   });
@@ -303,7 +303,9 @@ describe("GalleryEditView", () => {
   it("T6.19 no home reminder in Entrega or when not on the home", async () => {
     show({ gallery: { ...base.gallery, showOnHome: true } });
     await screen.findByLabelText(/Prueba/);
-    expect(screen.queryByText(/sigue en modo Prueba/)).toBeNull();
+    expect(
+      screen.queryByText(/guardada para mostrarse en la página de inicio/),
+    ).toBeNull();
   });
   it("Prueba with preview-wm but no thumb-wm warns about the heavier grid", async () => {
     show({

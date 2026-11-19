@@ -193,11 +193,11 @@ const COVER_TABLE: [
   ["proofing", "mixed", "p1", ["p2", "p2", "p2", "p2"]],
   ["proofing", "mixed", "p2", ["p2", "p2", "p2", "p2"]],
   ["proofing", "mixed", "p3", ["p2", "p2", "p2", "p2"]],
-  ["proofing", "nowm", "foreign", [null, null, null, "p1"]],
-  ["proofing", "nowm", "none", [null, null, null, "p1"]],
-  ["proofing", "nowm", "p1", [null, "p1", null, "p1"]],
-  ["proofing", "nowm", "p2", [null, "p2", null, "p2"]],
-  ["proofing", "nowm", "p3", [null, null, null, "p1"]],
+  ["proofing", "nowm", "foreign", [null, null, null, null]],
+  ["proofing", "nowm", "none", [null, null, null, null]],
+  ["proofing", "nowm", "p1", [null, "p1", null, null]],
+  ["proofing", "nowm", "p2", [null, "p2", null, null]],
+  ["proofing", "nowm", "p3", [null, null, null, null]],
 ];
 /** Mobile cover per view: [public payload, edit loader, edit "mobileCoverNoWm" flag]. */
 const MOBILE_TABLE: [
@@ -280,12 +280,12 @@ describe("cover rule: known disagreements (current behaviour)", () => {
     expect(v.list).toBe("p2");
   });
 
-  it("D2 (fixed) proofing with no preview-wm at all: public page names no cover (it would 404), home hides the gallery, list shows p1", async () => {
+  it("D2 (fixed) proofing with no preview-wm at all: public page names no cover (it would 404), home and list name none", async () => {
     await seed("proofing", "nowm", "p1", "none");
     const v = await views();
     expect(v.public.cover).toBeNull();
     expect(v.home).toBeNull();
-    expect(v.list).toBe("p1");
+    expect(v.list).toBeNull();
   });
 
   it("D3 edit loader reports only the CHOSEN cover (null when none/hidden/foreign) where public, home and list fall back to the first photo", async () => {
