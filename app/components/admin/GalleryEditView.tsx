@@ -8,20 +8,16 @@ import {
 } from "react-router";
 
 import { useT } from "../../i18n/use-t";
-import type { MessageKey } from "../../i18n/t";
 import { ISSUE_KEYS } from "../../lib/admin-gallery";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
-import {
-  btn,
-  btnPrimary,
-  Check,
-  Feedback,
-  Field,
-  inputCls,
-  Section,
-} from "./gallery-edit/ui";
+import { btn, btnPrimary, Feedback, Section } from "./gallery-edit/ui";
 import type { GalleryEditData } from "./gallery-edit/types";
 import { DetailsSection } from "./gallery-edit/DetailsSection";
+import { StatusSection } from "./gallery-edit/StatusSection";
+import { PinSection } from "./gallery-edit/PinSection";
+import { HomeSection } from "./gallery-edit/HomeSection";
+import { OptionsSection } from "./gallery-edit/OptionsSection";
+import { DangerSection } from "./gallery-edit/DangerSection";
 import type { Design } from "../../lib/design";
 import { External } from "../icons";
 import { versionsOf } from "../img-url";
@@ -140,8 +136,6 @@ function GalleryEditViewInner({
   }, [designDirty]);
   // One device for every preview of the editor (switching tabs keeps it).
   const [device, setDevice] = useState<PreviewDevice>("desktop");
-  // Not offered while the home query would hide the gallery anyway.
-  const homeBlocked = g.hasPin || g.status !== "published";
   const coverId = g.coverPhotoId ?? data.photos[0]?.id ?? null;
   const coverPhoto = data.photos.find((p) => p.id === coverId);
   const mobilePhoto = g.coverPhotoIdMobile
@@ -287,319 +281,37 @@ function GalleryEditViewInner({
               busy={busy}
               actionData={actionData}
             />
-            <Section title={t("admin.edit.section.status")}>
-              <p className="text-small text-grey-700">
-                {t("admin.edit.statusNote")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {(
-                  {
-                    draft: [
-                      ["publish", "admin.edit.action.publish"],
-                      ["archive", "admin.edit.action.archive"],
-                    ],
-                    published: [
-                      ["draft", "admin.edit.action.draft"],
-                      ["archive", "admin.edit.action.archive"],
-                    ],
-                    archived: [["restore", "admin.edit.action.restore"]],
-                  } as const satisfies Record<
-                    string,
-                    readonly (readonly [string, MessageKey])[]
-                  >
-                )[g.status].map(([to, label]) => (
-                  <Form method="post" key={to}>
-                    <input type="hidden" name="intent" value="status" />
-                    <input type="hidden" name="to" value={to} />
-                    <button
-                      type="submit"
-                      className={to === "publish" ? btnPrimary : btn}
-                      disabled={busy}
-                    >
-                      {t(label)}
-                    </button>
-                  </Form>
-                ))}
-              </div>
-              <Feedback data={actionData} intent="status" />
-            </Section>
+            <StatusSection
+              status={g.status}
+              busy={busy}
+              actionData={actionData}
+            />
 
-            <Section title={t("admin.edit.section.pin")}>
-              <p className="text-body">
-                {g.hasPin
-                  ? t("admin.edit.pin.active")
-                  : t("admin.edit.pin.none")}
-              </p>
-              <p className="text-small text-grey-600">
-                {t("admin.edit.pin.note")}
-              </p>
-              <Form method="post" className="flex flex-col gap-3">
-                <input type="hidden" name="intent" value="pin" />
-                <input type="hidden" name="mode" value="set" />
-                <Field
-                  label={t("admin.edit.pin.new")}
-                  error={pe.pin}
-                  hint={t("admin.edit.pin.hint")}
-                >
-                  {(p) => (
-                    <input
-                      {...p}
-                      type="password"
-                      name="pin"
-                      required
-                      minLength={6}
-                      maxLength={32}
-                      autoComplete="new-password"
-                      className={inputCls}
-                    />
-                  )}
-                </Field>
-                <div>
-                  <button type="submit" className={btnPrimary} disabled={busy}>
-                    {g.hasPin
-                      ? t("admin.edit.pin.change")
-                      : t("admin.edit.pin.save")}
-                  </button>
-                </div>
-              </Form>
-              {g.hasPin && (
-                <Form method="post">
-                  <input type="hidden" name="intent" value="pin" />
-                  <input type="hidden" name="mode" value="remove" />
-                  <button type="submit" className={btn} disabled={busy}>
-                    {t("admin.edit.pin.remove")}
-                  </button>
-                </Form>
-              )}
-              <Feedback data={actionData} intent="pin" />
-            </Section>
+            <PinSection
+              hasPin={g.hasPin}
+              errors={pe}
+              busy={busy}
+              actionData={actionData}
+            />
 
-            <Section title={t("admin.edit.section.home")}>
-              <Form method="post" className="flex flex-col gap-3">
-                <input type="hidden" name="intent" value="home" />
-                {/* A checkbox submits nothing when off: the hidden 0 comes first. */}
-                <input type="hidden" name="showOnHome" value="0" />
-                <div className="flex items-start gap-2">
-                  <input
-                    id="show-on-home"
-                    type="checkbox"
-                    name="showOnHome"
-                    value="1"
-                    defaultChecked={g.showOnHome}
-                    disabled={homeBlocked}
-                    aria-describedby="show-on-home-hint"
-                    className="mt-2.5 size-6 md:mt-1 md:size-4"
-                  />
-                  <div>
-                    <label
-                      htmlFor="show-on-home"
-                      className="text-small flex min-h-tap items-center md:min-h-0"
-                    >
-                      {t("admin.edit.home.label")}
-                    </label>
-                    <p
-                      id="show-on-home-hint"
-                      className="text-small text-grey-600"
-                    >
-                      {g.hasPin
-                        ? t("admin.edit.home.hintPin")
-                        : g.status !== "published"
-                          ? t("admin.edit.home.hintUnpublished")
-                          : t("admin.edit.home.hint")}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <button
-                    type="submit"
-                    className={btnPrimary}
-                    disabled={busy || homeBlocked}
-                  >
-                    {t("admin.edit.home.save")}
-                  </button>
-                </div>
-                <Feedback data={actionData} intent="home" />
-              </Form>
-            </Section>
+            <HomeSection g={g} busy={busy} actionData={actionData} />
 
-            <Section title={t("admin.edit.section.options")}>
-              <Form method="post" className="flex flex-col gap-3">
-                <input type="hidden" name="intent" value="flags" />
-                <fieldset className="flex flex-col gap-2">
-                  <legend className="text-small font-medium">
-                    {t("admin.edit.mode.legend")}
-                  </legend>
-                  <div className="flex items-start gap-2">
-                    <input
-                      id="mode-delivery"
-                      type="radio"
-                      name="mode"
-                      value="delivery"
-                      checked={!proofing}
-                      onChange={() => setMode("delivery")}
-                      aria-describedby="mode-delivery-note"
-                      className="mt-2.5 size-6 md:mt-1 md:size-4"
-                    />
-                    <div>
-                      <label
-                        htmlFor="mode-delivery"
-                        className="text-small flex min-h-tap items-center md:min-h-0"
-                      >
-                        {t("admin.mode.delivery")}
-                      </label>
-                      <p
-                        id="mode-delivery-note"
-                        className="text-small text-grey-600"
-                      >
-                        {t("admin.edit.mode.deliveryNote")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <input
-                      id="mode-proofing"
-                      type="radio"
-                      name="mode"
-                      value="proofing"
-                      checked={proofing}
-                      onChange={() => setMode("proofing")}
-                      aria-describedby="mode-proofing-note"
-                      className="mt-2.5 size-6 md:mt-1 md:size-4"
-                    />
-                    <div>
-                      <label
-                        htmlFor="mode-proofing"
-                        className="text-small flex min-h-tap items-center md:min-h-0"
-                      >
-                        {t("admin.mode.proofing")}
-                      </label>
-                      <p
-                        id="mode-proofing-note"
-                        className="text-small text-grey-600"
-                      >
-                        {t("admin.edit.mode.proofingNote")}
-                      </p>
-                    </div>
-                  </div>
-                </fieldset>
-                {fe.mode && (
-                  <p role="alert" className="text-small text-ink font-medium">
-                    {fe.mode}
-                  </p>
-                )}
-                {proofing && data.wmCount === 0 && data.photoCount > 0 && (
-                  <p role="status" className="text-small text-ink font-medium">
-                    {t("admin.edit.mode.noWm", { count: data.photoCount })}
-                  </p>
-                )}
-                {proofing &&
-                  data.wmCount > 0 &&
-                  data.wmCount < data.photoCount && (
-                    <p
-                      role="status"
-                      className="text-small text-ink font-medium"
-                    >
-                      {t("admin.edit.mode.someNoWm", {
-                        missing: data.photoCount - data.wmCount,
-                        count: data.photoCount,
-                      })}
-                    </p>
-                  )}
-                {proofing && g.showOnHome && (
-                  <p role="status" className="text-small text-ink font-medium">
-                    {t("admin.edit.mode.homeReminder")}
-                    {data.wmCount === 0 &&
-                      ` ${t("admin.edit.mode.homeNeedsWm")}`}
-                  </p>
-                )}
-                {proofing && data.hasWmFiles && !data.hasThumbWmFiles && (
-                  <p role="status" className="text-small text-grey-700">
-                    {t("admin.edit.mode.noThumbWm")}
-                  </p>
-                )}
-                <Check
-                  name="allowHighres"
-                  label={t("admin.edit.opt.highres")}
-                  checked={g.allowHighres}
-                  disabled={proofing}
-                />
-                <Check
-                  name="allowWeb"
-                  label={t("admin.edit.opt.web")}
-                  checked={g.allowWeb}
-                  disabled={proofing}
-                />
-                <Check
-                  name="allowIg"
-                  label={t("admin.edit.opt.ig")}
-                  checked={g.allowIg}
-                  disabled={proofing}
-                />
-                <Check
-                  name="allowBulk"
-                  label={t("admin.edit.opt.bulk")}
-                  checked={g.allowBulk}
-                  disabled={proofing}
-                />
-                {proofing && (
-                  <p className="text-small text-grey-600">
-                    {t("admin.edit.opt.proofingNote")}
-                  </p>
-                )}
-                <Check
-                  name="requireEmail"
-                  label={t("admin.edit.opt.requireEmail")}
-                  checked={g.requireEmail}
-                />
-                <p className="text-small text-grey-600">
-                  {t("admin.edit.opt.revokeNote")}
-                </p>
-                <div>
-                  <button type="submit" className={btnPrimary} disabled={busy}>
-                    {t("admin.edit.opt.save")}
-                  </button>
-                </div>
-                <Feedback data={actionData} intent="flags" />
-              </Form>
-            </Section>
+            <OptionsSection
+              g={g}
+              data={data}
+              proofing={proofing}
+              onMode={setMode}
+              errors={fe}
+              busy={busy}
+              actionData={actionData}
+            />
 
-            <Section title={t("admin.edit.section.danger")}>
-              <Form
-                method="post"
-                className="border-ink flex flex-col gap-3 border-2 p-4"
-                onSubmit={(ev) => {
-                  if (!window.confirm(t("admin.edit.delete.confirm")))
-                    ev.preventDefault();
-                }}
-              >
-                <input type="hidden" name="intent" value="delete" />
-                <p className="text-small text-grey-700">
-                  {t("admin.edit.delete.warning")}
-                </p>
-                {(data.deleting || actionData?.continuing) && (
-                  <p role="status" className="text-small">
-                    {t("admin.edit.delete.continuing")}
-                  </p>
-                )}
-                <label className="text-small flex flex-col gap-1">
-                  {t("admin.edit.delete.label", { slug: g.slug })}
-                  <input
-                    name="slug"
-                    required
-                    maxLength={120}
-                    autoComplete="off"
-                    spellCheck={false}
-                    className={inputCls}
-                  />
-                </label>
-                <div>
-                  <button type="submit" className={btn} disabled={busy}>
-                    {t("admin.edit.delete.button")}
-                  </button>
-                </div>
-                <Feedback data={actionData} intent="delete" />
-              </Form>
-            </Section>
+            <DangerSection
+              slug={g.slug}
+              deleting={data.deleting}
+              busy={busy}
+              actionData={actionData}
+            />
           </>,
           preview({
             heading: t("admin.preview.heading"),
