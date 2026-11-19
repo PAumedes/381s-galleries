@@ -477,6 +477,33 @@ async function flushR2(
 const issueCmp = (a: SyncIssue, b: SyncIssue) =>
   cmp(a.type, b.type) || cmp(a.set ?? "", b.set ?? "") || cmp(a.name, b.name);
 
+/**
+ * Lock (expiry-based; only an expired lock can be taken over).
+ * The one timestamp that is not a bare ISO value: `<iso>|<uuid>` (expiry + owner token).
+ */
+const newLockValue = (now: Date) =>
+  `${nowIso(new Date(now.getTime() + LOCK_MS))}|${crypto.randomUUID()}`;
+
+async function acquireLock(
+  env: SyncEnv,
+  lockValue: string,
+  now: Date,
+): Promise<boolean> {
+  const got = await env.DB.prepare(
+    "INSERT INTO settings (key, value) VALUES (?1, ?2) ON CONFLICT(key) DO UPDATE SET value = excluded.value WHERE settings.value < ?3",
+  )
+    .bind(LOCK_KEY, lockValue, nowIso(now))
+    .run();
+  return Boolean(got.meta.changes);
+}
+
+/** Releases only our own lock (the value carries the owner token). */
+async function releaseLock(env: SyncEnv, lockValue: string): Promise<void> {
+  await env.DB.prepare("DELETE FROM settings WHERE key = ?1 AND value = ?2")
+    .bind(LOCK_KEY, lockValue)
+    .run();
+}
+
 export async function runSync(
   env: SyncEnv,
   opts: SyncOptions,
@@ -498,15 +525,9 @@ export async function runSync(
     if (cfOps > CF_SUBREQUEST_CAP) throw new SyncBudgetError();
   };
 
-  // 1. Lock (expiry-based; only an expired lock can be taken over).
-  // The one timestamp that is not a bare ISO value: `<iso>|<uuid>` (expiry + owner token).
-  const lockValue = `${nowIso(new Date(now.getTime() + LOCK_MS))}|${crypto.randomUUID()}`;
-  const got = await env.DB.prepare(
-    "INSERT INTO settings (key, value) VALUES (?1, ?2) ON CONFLICT(key) DO UPDATE SET value = excluded.value WHERE settings.value < ?3",
-  )
-    .bind(LOCK_KEY, lockValue, nowIso(now))
-    .run();
-  if (!got.meta.changes) return { ...result, skipped: "locked" };
+  const lockValue = newLockValue(now);
+  if (!(await acquireLock(env, lockValue, now)))
+    return { ...result, skipped: "locked" };
   op();
 
   try {
@@ -854,9 +875,7 @@ export async function runSync(
     result.subrequests = drive.subrequests() - startSubs;
     return result;
   } finally {
-    await env.DB.prepare("DELETE FROM settings WHERE key = ?1 AND value = ?2")
-      .bind(LOCK_KEY, lockValue)
-      .run();
+    await releaseLock(env, lockValue);
   }
 }
 
