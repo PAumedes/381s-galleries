@@ -1,5 +1,4 @@
 import {
-  useCallback,
   useEffect,
   useRef,
   useState,
@@ -18,6 +17,9 @@ import {
   Retry,
 } from "./icons";
 import { useImgUrl } from "./img-url";
+import { useLightboxKeys } from "./lightbox/useLightboxKeys";
+import { useLightboxNav } from "./lightbox/useLightboxNav";
+import { useModalLock } from "./lightbox/useModalLock";
 import { srcSetOf } from "./lightbox/srcset";
 import { usePreloadNeighbours } from "./lightbox/usePreloadNeighbours";
 import { NavZone } from "./lightbox/NavZone";
@@ -66,19 +68,6 @@ const isEmptyBackdrop = (
     y > TOP_BAR_PX
   );
 };
-
-/** Real layout visibility (display:none on the node or an ancestor). */
-const isRendered = (el: HTMLElement, root: HTMLElement) => {
-  for (let n: HTMLElement | null = el; n; n = n.parentElement) {
-    const cs = getComputedStyle(n);
-    if (cs.display === "none" || cs.visibility === "hidden") return false;
-    if (n === root) break;
-  }
-  return true;
-};
-
-const FOCUSABLE =
-  "button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])";
 
 export function Lightbox(props: LightboxProps) {
   const { photos, onClose } = props;
@@ -151,77 +140,14 @@ function LightboxView({
     currentId.current = photo.id;
   });
   const total = photos.length;
-  const hasPrev = index > 0;
-  const hasNext = index < total - 1;
-
-  // Keep the latest handlers reachable from stable listeners.
-  const latest = useRef({ index, hasPrev, hasNext, onClose, onIndexChange });
-  useEffect(() => {
-    latest.current = { index, hasPrev, hasNext, onClose, onIndexChange };
+  const { hasPrev, hasNext, prev, next, close } = useLightboxNav({
+    index,
+    total,
+    onClose,
+    onIndexChange,
   });
-
-  const prev = useCallback(() => {
-    const l = latest.current;
-    if (l.hasPrev) l.onIndexChange(l.index - 1);
-  }, []);
-  const next = useCallback(() => {
-    const l = latest.current;
-    if (l.hasNext) l.onIndexChange(l.index + 1);
-  }, []);
-
-  // Focus in, restore on unmount; lock body scroll.
-  useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      if (opener && opener !== document.body && opener.isConnected) {
-        opener.focus();
-      }
-    };
-  }, []);
-
-  // Keyboard + focus trap.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      // A sheet/modal opened above the lightbox owns the keyboard.
-      const other =
-        (e.target as Element | null)?.closest?.('[role="dialog"]') ??
-        document.activeElement?.closest?.('[role="dialog"]');
-      if (other && other !== dialogRef.current) return;
-      if (e.key === "Escape") {
-        e.preventDefault();
-        latest.current.onClose();
-      } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-        if (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) return;
-        if (e.key === "ArrowLeft") prev();
-        else next();
-      } else if (e.key === "Tab") {
-        const root = dialogRef.current;
-        const nodes = Array.from(
-          root?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [],
-        ).filter((n) => root && isRendered(n, root));
-        if (nodes.length === 0) return;
-        const first = nodes[0];
-        const last = nodes[nodes.length - 1];
-        const active = document.activeElement;
-        if (!dialogRef.current?.contains(active)) {
-          e.preventDefault();
-          first.focus();
-        } else if (e.shiftKey && active === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && active === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [prev, next]);
+  useModalLock(closeRef);
+  useLightboxKeys(dialogRef, close, prev, next);
 
   usePreloadNeighbours(photos, index, imgUrl);
 
