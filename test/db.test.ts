@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, describe, expect, it } from "vitest";
 import { and, eq } from "drizzle-orm";
@@ -30,10 +30,7 @@ async function seed() {
 
 describe("db", () => {
   beforeAll(async () => {
-    await applyD1Migrations(
-      env.DB,
-      (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-    );
+    await migrateDb();
   });
 
   it("inserts and reads gallery + photos with defaults", async () => {
@@ -172,10 +169,7 @@ describe("db", () => {
 
 describe("cover photo trigger", () => {
   it("deleting the cover photo nulls cover_photo_id", async () => {
-    await applyD1Migrations(
-      env.DB,
-      (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-    );
+    await migrateDb();
     await env.DB.prepare(
       "INSERT INTO galleries (id, drive_folder_id, slug, title) VALUES ('cv-g','cv-f','cv-s','T')",
     ).run();
@@ -202,10 +196,7 @@ describe("nowIso / photoVisible", () => {
   });
 
   it("photoVisible hides photos in their sync grace period", async () => {
-    await applyD1Migrations(
-      env.DB,
-      (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-    );
+    await migrateDb();
     const g = await seed();
     await db
       .update(schema.photos)

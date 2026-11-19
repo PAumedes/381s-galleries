@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -424,10 +424,7 @@ describe("requireAdmin via CF_Authorization cookie", () => {
     ).resolves.toBeUndefined();
   });
   it("admin index loader (/admin.data) works with only the cookie", async () => {
-    await applyD1Migrations(
-      env.DB,
-      (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-    );
+    await migrateDb();
     const jwt = await makeJwt(pair.privateKey, {});
     const e = { ...env, ...google } as unknown as Env;
     const r = await adminIndexData(withCookie(`CF_Authorization=${jwt}`), e);

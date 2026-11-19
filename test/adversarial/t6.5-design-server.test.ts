@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, describe, expect, it } from "vitest";
 import { galleryAction } from "../../app/lib/server/admin-galleries";
@@ -7,10 +7,7 @@ import { loadGallery } from "../../app/lib/server/gallery";
 const e = { ...env, DRIVE_MODE: "mock", ALLOW_DEV_ADMIN: "1" } as Env;
 const G = "eeeeeeee-0000-0000-0000-0000000000e1";
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
   await env.DB.prepare(
     "INSERT INTO galleries (id, drive_folder_id, slug, title, status, theme, client_name) VALUES (?,?,?,?,?,?,?)",
   )
