@@ -324,6 +324,20 @@ describe("activity CSV", () => {
     expect(lines).toHaveLength(5);
   });
 
+  it("T6.21 studio-time column uses the configured TIMEZONE", async () => {
+    await db.insert(schema.downloads).values([dl("d1", 0, { country: "AR" })]);
+    const ny = { ...e, TIMEZONE: "America/New_York" } as Env;
+    const text = await readAll(await csvResponse(req("activity.csv"), ny, G));
+    expect(text.split("\r\n")[1]).toContain(
+      "2026-01-01T12:00:00Z,2026-01-01 07:00:00,",
+    );
+    const bad = { ...e, TIMEZONE: "Mars/Olympus" } as Env;
+    const t2 = await readAll(await csvResponse(req("activity.csv"), bad, G));
+    expect(t2.split("\r\n")[1]).toContain(
+      "2026-01-01T12:00:00Z,2026-01-01 09:00:00,",
+    );
+  });
+
   it("escapes commas/quotes and neutralises formulas in names and emails", async () => {
     await db
       .insert(schema.photos)

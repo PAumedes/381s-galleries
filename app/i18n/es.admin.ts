@@ -82,7 +82,7 @@ export const esAdmin = {
   "admin.edit.field.expiresDate": "Vence (fecha)",
   "admin.edit.field.expiresTime": "Vence (hora)",
   "admin.edit.hint.expires":
-    "Hora de Buenos Aires. Vacío = nunca vence. Sin hora, vence al final del día.",
+    "Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.",
   "admin.edit.saveDetails": "Guardar datos",
   "admin.edit.saveDesign": "Guardar diseño",
   "admin.edit.designNote":

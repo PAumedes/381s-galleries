@@ -1,4 +1,4 @@
-import { baParts } from "../lib/ba-time";
+import { studioParts } from "../lib/studio-time";
 import type { Lang } from "./lang";
 
 /** Formatting locale per UI language. */
@@ -37,18 +37,19 @@ function fmtWallTime(lang: Lang, hhmm: string): string {
   return timeFmt(lang).format(new Date(Date.UTC(2000, 0, 1, +h, +m)));
 }
 
-/** Buenos Aires date + time of a UTC ISO instant ("" when invalid). */
-export function fmtBaDateTime(
+/** Studio-time date + time of a UTC ISO instant ("" when invalid). */
+export function fmtStudioDateTime(
   lang: Lang,
   iso: string | null | undefined,
+  tz?: string,
 ): string {
-  const p = baParts(iso);
+  const p = studioParts(iso, tz);
   if (!p) return "";
   const sep = lang === "en" ? ", " : " ";
   return `${fmtPlainDate(lang, p.date)}${sep}${fmtWallTime(lang, p.time.slice(0, 5))}`;
 }
 
-/** Buenos Aires wall-clock `YYYY-MM-DD` + `HH:MM` pair, formatted like fmtBaDateTime. */
+/** Studio wall-clock `YYYY-MM-DD` + `HH:MM` pair, formatted like fmtStudioDateTime. */
 export function fmtLocalDateTime(
   lang: Lang,
   date: string,

@@ -28,12 +28,18 @@ function show(
   galleries: GalleryListItem[],
   filter: Filter = "todas",
   total = galleries.length,
+  rootName?: string | null,
 ) {
   const Stub = createRoutesStub([
     {
       path: "/admin",
       Component: () => (
-        <GalleryList galleries={galleries} filter={filter} total={total} />
+        <GalleryList
+          galleries={galleries}
+          filter={filter}
+          total={total}
+          rootName={rootName}
+        />
       ),
     },
     { path: "/admin/g/:id", Component: () => <p>edit page</p> },
@@ -106,7 +112,7 @@ describe("GalleryList", () => {
     expect(await screen.findByText(/Todavía no hay galerías/)).toBeTruthy();
     const text = document.body.textContent ?? "";
     for (const w of [
-      "381studios",
+      "studio-galleries",
       "high-res",
       "web",
       "thumb",
@@ -118,6 +124,15 @@ describe("GalleryList", () => {
       screen.getByRole("link", { name: /Ajustes/ }).getAttribute("href"),
     ).toBe("/admin/setup");
     expect(screen.queryByRole("table")).toBeNull();
+    expect(text).not.toContain("381studios");
+  });
+
+  it("empty library: shows the saved Drive root folder name", async () => {
+    show([], "todas", 0, "Mi Estudio");
+    expect(await screen.findByText(/Todavía no hay galerías/)).toBeTruthy();
+    const text = document.body.textContent ?? "";
+    expect(text).toContain("Mi Estudio/");
+    expect(text).not.toContain("studio-galleries");
   });
 
   it("empty filter: short message, not the convention", async () => {

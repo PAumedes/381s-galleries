@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  baLocalToUtcIso,
+  localToUtcIso,
   groupIssues,
   movePhoto,
   parseFilter,
   sortPhotos,
-  utcIsoToBaLocal,
+  utcIsoToLocal,
 } from "../app/lib/admin-gallery";
 
 describe("parseFilter", () => {
@@ -22,25 +22,25 @@ describe("parseFilter", () => {
 
 describe("Buenos Aires time conversion", () => {
   it("local -> UTC (+3h, stored in nowIso format)", () => {
-    expect(baLocalToUtcIso("2026-12-24", "18:30")).toBe("2026-12-24T21:30:00Z");
-    expect(baLocalToUtcIso("2026-12-31", "23:30")).toBe("2027-01-01T02:30:00Z");
-    expect(baLocalToUtcIso("2028-02-28", "22:00")).toBe("2028-02-29T01:00:00Z");
+    expect(localToUtcIso("2026-12-24", "18:30")).toBe("2026-12-24T21:30:00Z");
+    expect(localToUtcIso("2026-12-31", "23:30")).toBe("2027-01-01T02:30:00Z");
+    expect(localToUtcIso("2028-02-28", "22:00")).toBe("2028-02-29T01:00:00Z");
   });
   it("rejects invalid dates/times", () => {
-    expect(baLocalToUtcIso("2026-02-30", "10:00")).toBeNull();
-    expect(baLocalToUtcIso("2026-13-01", "10:00")).toBeNull();
-    expect(baLocalToUtcIso("2026-01-01", "25:00")).toBeNull();
-    expect(baLocalToUtcIso("2026-01-01", "10:60")).toBeNull();
-    expect(baLocalToUtcIso("26-01-01", "10:00")).toBeNull();
-    expect(baLocalToUtcIso("2026-01-01", "")).toBeNull();
+    expect(localToUtcIso("2026-02-30", "10:00")).toBeNull();
+    expect(localToUtcIso("2026-13-01", "10:00")).toBeNull();
+    expect(localToUtcIso("2026-01-01", "25:00")).toBeNull();
+    expect(localToUtcIso("2026-01-01", "10:60")).toBeNull();
+    expect(localToUtcIso("26-01-01", "10:00")).toBeNull();
+    expect(localToUtcIso("2026-01-01", "")).toBeNull();
   });
   it("UTC -> local round trip", () => {
-    expect(utcIsoToBaLocal("2027-01-01T02:30:00Z")).toEqual({
+    expect(utcIsoToLocal("2027-01-01T02:30:00Z")).toEqual({
       date: "2026-12-31",
       time: "23:30",
     });
-    expect(utcIsoToBaLocal(null)).toBeNull();
-    expect(utcIsoToBaLocal("garbage")).toBeNull();
+    expect(utcIsoToLocal(null)).toBeNull();
+    expect(utcIsoToLocal("garbage")).toBeNull();
   });
 });
 

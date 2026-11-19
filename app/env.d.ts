@@ -15,6 +15,8 @@ interface __SecretEnv {
   GOOGLE_CLIENT_SECRET: string;
   /** Local dev only ("1" enables the header-less admin bypass in mock mode). */
   ALLOW_DEV_ADMIN?: string;
+  /** Studio IANA timezone for admin dates (invalid/unset = Buenos Aires). */
+  TIMEZONE?: string;
   /** Optional public contact email shown on /privacy (unset by default). */
   PUBLIC_CONTACT_EMAIL?: string;
 }

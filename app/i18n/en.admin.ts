@@ -84,7 +84,7 @@ export const enAdmin = {
   "admin.edit.field.expiresDate": "Expires (date)",
   "admin.edit.field.expiresTime": "Expires (time)",
   "admin.edit.hint.expires":
-    "Buenos Aires time. Empty = never expires. Without a time, it expires at the end of the day.",
+    "Studio time. Empty = never expires. Without a time, it expires at the end of the day.",
   "admin.edit.saveDetails": "Save details",
   "admin.edit.saveDesign": "Save design",
   "admin.edit.designNote":

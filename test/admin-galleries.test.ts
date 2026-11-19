@@ -968,3 +968,37 @@ describe("reorder action", () => {
     ).toBe(9);
   });
 });
+
+describe("T6.21 expiry uses the configured TIMEZONE", () => {
+  const ok = (over: Record<string, string> = {}) => ({
+    intent: "details",
+    title: "Boda",
+    slug: "boda-tz",
+    clientName: "",
+    eventDate: "",
+    expiresDate: "",
+    expiresTime: "",
+    ...over,
+  });
+  const ny = { ...e, TIMEZONE: "America/New_York" } as Env;
+  it("saves local -> UTC in the zone; end of day = 23:59 local", async () => {
+    const g = await gallery();
+    await act(g, ok({ expiresDate: "2026-07-15", expiresTime: "18:30" }), ny);
+    expect((await row(g))!.expiresAt).toBe("2026-07-15T22:30:00Z");
+    await act(g, ok({ expiresDate: "2026-01-15", expiresTime: "" }), ny);
+    expect((await row(g))!.expiresAt).toBe("2026-01-16T04:59:00Z");
+  });
+  it("loadGalleryEdit shows the stored instant in the zone", async () => {
+    const g = await gallery({ expiresAt: "2026-07-15T22:30:00Z" });
+    expect((await loadGalleryEdit(ny, g))!.gallery.expires).toEqual({
+      date: "2026-07-15",
+      time: "18:30",
+    });
+  });
+  it("an invalid TIMEZONE falls back to Buenos Aires", async () => {
+    const g = await gallery();
+    const bad = { ...e, TIMEZONE: "Mars/Olympus" } as Env;
+    await act(g, ok({ expiresDate: "2026-12-24", expiresTime: "18:30" }), bad);
+    expect((await row(g))!.expiresAt).toBe("2026-12-24T21:30:00Z");
+  });
+});

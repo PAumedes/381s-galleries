@@ -4,11 +4,12 @@ import {
   CSV_BOM,
   anonLabel,
   csvLine,
-  fmtBaSeconds,
+  fmtStudioSeconds,
   namesTxt,
   visitorDisplay,
   type VisitorDisplay,
 } from "../admin-activity";
+import { validTimezone } from "../studio-time";
 import { allMessages } from "../../i18n/dictionaries";
 import { DEFAULT_LANG, type Lang } from "../../i18n/lang";
 import { makeT } from "../../i18n/t";
@@ -258,6 +259,7 @@ export async function activityCsv(
         ? t("admin.export.kind.bulk")
         : v;
   const db = getDb(env);
+  const tz = validTimezone(env.TIMEZONE);
   const photos = await photoMap(env, id);
   const enc = new TextEncoder();
   let cursor: { createdAt: string; id: string } | undefined;
@@ -307,7 +309,7 @@ export async function activityCsv(
         const p = r.photoId ? photos.get(r.photoId) : undefined;
         out += csvLine([
           r.createdAt,
-          fmtBaSeconds(r.createdAt),
+          fmtStudioSeconds(r.createdAt, tz),
           r.email,
           p?.name,
           p?.set,
