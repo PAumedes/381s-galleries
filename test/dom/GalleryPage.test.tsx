@@ -118,8 +118,8 @@ describe("UnavailableScreen", () => {
 describe("gallery theme", () => {
   const logos = () =>
     Array.from(
-      document.querySelectorAll<HTMLImageElement>('img[src^="/brand/logo"]'),
-    ).map((i) => i.getAttribute("src"));
+      document.querySelectorAll<HTMLElement>("[data-logo=wordmark]"),
+    ).map((i) => (/text-white/.test(i.className) ? "white" : "black"));
 
   it("dark: data-theme on the root and the light logo in the top bar", async () => {
     stub(
@@ -127,9 +127,25 @@ describe("gallery theme", () => {
     );
     await screen.findByRole("heading", { level: 1, name: "Boda Ana" });
     expect(document.querySelector('[data-theme="oscuro"]')).toBeTruthy();
-    expect(logos().every((s) => s === "/brand/logo-white.svg")).toBe(true);
+    expect(logos().every((s) => s === "white")).toBe(true);
     // cover is unchanged
     expect(document.querySelector('img[src="/img/Cer0/view-lg"]')).toBeTruthy();
+  });
+
+  it("T6.22: the top-bar wordmark is hidden on phones and clipped in its grid column", async () => {
+    stub(<GalleryView gallery={gallery()} photos={photos} />);
+    await screen.findByRole("heading", { level: 1, name: "Boda Ana" });
+    const bar = document.querySelector("nav [data-logo=wordmark]")!;
+    const cls = bar.className.split(/\s+/);
+    expect(cls).toEqual(
+      expect.arrayContaining([
+        "hidden",
+        "sm:block",
+        "min-w-0",
+        "overflow-hidden",
+      ]),
+    );
+    expect(cls).not.toContain("inline-flex");
   });
 
   it("claro: data-theme claro and the black logo in the top bar", async () => {
@@ -137,7 +153,7 @@ describe("gallery theme", () => {
     await screen.findByRole("heading", { level: 1, name: "Boda Ana" });
     expect(document.querySelector('[data-theme="claro"]')).toBeTruthy();
     expect(document.querySelector("[data-page]")).toBeTruthy();
-    expect(logos()).toContain("/brand/logo-black.svg");
+    expect(logos()).toContain("black");
   });
 
   it("PIN and unavailable screens follow the theme when known", async () => {
@@ -146,7 +162,7 @@ describe("gallery theme", () => {
     expect(
       document.querySelector('[data-theme="oscuro"][data-page]'),
     ).toBeTruthy();
-    expect(logos()).toEqual(["/brand/logo-white.svg"]);
+    expect(logos()).toEqual(["white"]);
   });
 
   it("PIN screen follows Arena / Gris and defaults to claro", async () => {
@@ -159,7 +175,7 @@ describe("gallery theme", () => {
     stub(<PinScreen title="Boda" />);
     await screen.findByRole("heading", { name: "Boda" });
     expect(document.querySelector('[data-theme="claro"]')).toBeTruthy();
-    expect(logos()).toEqual(["/brand/logo-black.svg"]);
+    expect(logos()).toEqual(["black"]);
   });
 });
 

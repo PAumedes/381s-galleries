@@ -146,10 +146,8 @@ describe("CardView", () => {
     expect(screen.getByRole("heading", { name: "Boda Ana" })).toBeTruthy();
     expect(screen.getByText("1 de noviembre de 2026")).toBeTruthy();
     expect(screen.getByText(URL_)).toBeTruthy();
-    expect(screen.getByText("381 Studios")).toBeTruthy();
-    expect(
-      document.querySelector('img[src="/brand/logo-black.svg"]'),
-    ).not.toBeNull();
+    expect(screen.getAllByText("381 Studios")).toHaveLength(2); // wordmark + footer
+    expect(document.querySelector("article img")).toBeNull();
     const box = await screen.findByTestId("qr");
     await waitFor(() => expect(box.querySelector("svg path")).not.toBeNull());
     expect(spy.mock.calls[0][0]).toBe(URL_);

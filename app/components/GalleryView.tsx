@@ -217,13 +217,13 @@ export function GalleryView({
       />
 
       <nav
-        className={`bg-paper/80 duration-base ease-out-soft sticky top-0 z-(--z-topbar) grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 sm:grid-cols-[1fr_auto_1fr] sm:gap-4 backdrop-blur transition-transform ${
+        className={`bg-paper/80 duration-base ease-out-soft sticky top-0 z-(--z-topbar) grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-4 backdrop-blur transition-transform ${
           hidden ? "-translate-y-full" : "translate-y-0"
         }`}
       >
         <Logo
           variant={isDarkPalette(gallery.palette) ? "light" : "dark"}
-          className="hidden h-7 justify-self-start sm:block"
+          className="hidden h-7 min-w-0 justify-self-start overflow-hidden sm:block"
         />
         {tabs.length === 0 ? (
           <div aria-hidden="true" />

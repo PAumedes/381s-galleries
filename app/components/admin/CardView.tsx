@@ -1,4 +1,4 @@
-import { logoSource } from "../Logo";
+import { logoSource, Wordmark } from "../Logo";
 import { formatEventDate } from "../../lib/event-date";
 import { QrCode } from "./QrCode";
 
@@ -32,6 +32,7 @@ export function CardView({
 }: CardData) {
   const t = TEXT[lang];
   const date = formatEventDate(eventDate, lang);
+  const cardLogo = logoSource("dark", logo);
   return (
     <div
       data-admin
@@ -58,11 +59,15 @@ export function CardView({
         lang={lang}
         className="print-card flex flex-col items-center justify-between bg-white text-black"
       >
-        <img
-          src={logoSource("dark", logo).src}
-          alt=""
-          className="h-[9mm] w-auto"
-        />
+        {cardLogo ? (
+          <img src={cardLogo.src} alt="" className="h-[9mm] w-auto" />
+        ) : (
+          <Wordmark
+            name={studioName}
+            className="h-[9mm] leading-[9mm]"
+            fontSize="4mm"
+          />
+        )}
         <div className="flex min-w-0 max-w-full flex-col items-center gap-[2mm] text-center">
           <h1 className="line-clamp-3 min-w-0 max-w-full break-words text-[4.2mm] font-light uppercase tracking-[0.2em]">
             {title}

@@ -74,8 +74,6 @@ describe("HomePage", () => {
     await screen.findByRole("heading", { level: 1 });
     expect(document.querySelector("ul")).toBeNull();
     expect(screen.getByRole("link", { name: "Privacidad" })).toBeTruthy();
-    expect(document.querySelector("img")?.getAttribute("src")).toContain(
-      "/brand/logo",
-    );
+    expect(document.querySelector("[data-logo=wordmark]")).not.toBeNull();
   });
 });

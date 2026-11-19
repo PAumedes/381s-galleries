@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Form, useNavigation } from "react-router";
 
-import { logoSource } from "../Logo";
+import { logoSource, Wordmark } from "../Logo";
 import { useFormat } from "../../i18n/use-format";
 import { useT } from "../../i18n/use-t";
+import { useStudioName } from "../../lib/use-studio-name";
 
 export interface SetupViewData {
   connected: boolean;
@@ -165,6 +166,9 @@ function LogoUploadForm({
   );
 }
 
+/** Swatch content when nothing is uploaded: the name as text. */
+const NO_LOGO = { src: null, invert: false };
+
 function Swatch({
   testId,
   label,
@@ -175,21 +179,30 @@ function Swatch({
   testId: string;
   label: string;
   dark: boolean;
-  src: string;
+  src: string | null;
   invert: boolean;
 }) {
   const t = useT();
+  const studio = useStudioName();
   return (
     <figure data-testid={testId} className="flex min-w-0 flex-col gap-1">
       <div
         className={`border-grey-300 flex h-28 items-center justify-center border p-3 ${dark ? "bg-black" : "bg-white"}`}
       >
-        <img
-          src={src}
-          alt={t("admin.setup.logo.previewAlt")}
-          className={`max-h-full max-w-full object-contain ${invert ? "brightness-0 invert" : ""}`}
-          draggable={false}
-        />
+        {src ? (
+          <img
+            src={src}
+            alt={t("admin.setup.logo.previewAlt")}
+            className={`max-h-full max-w-full object-contain ${invert ? "brightness-0 invert" : ""}`}
+            draggable={false}
+          />
+        ) : (
+          <Wordmark
+            name={studio}
+            variant={dark ? "light" : "dark"}
+            className="h-12"
+          />
+        )}
       </div>
       <figcaption className="text-small text-grey-600">{label}</figcaption>
     </figure>
@@ -224,12 +237,12 @@ function LogoCard({
   const custom = Boolean(logo.onLight || logo.onDark);
   const onLight = pending.onLight
     ? { src: pending.onLight, invert: false }
-    : logoSource("dark", logo);
+    : (logoSource("dark", logo) ?? NO_LOGO);
   const onDark = pending.onDark
     ? { src: pending.onDark, invert: false }
     : pending.onLight && !logo.onDark
       ? { src: pending.onLight, invert: true }
-      : logoSource("light", logo);
+      : (logoSource("light", logo) ?? NO_LOGO);
   return (
     <section className="border-grey-200 flex min-w-0 flex-col gap-4 border p-5">
       <h2 className="text-micro uppercase text-grey-700">

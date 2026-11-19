@@ -97,7 +97,7 @@ export function AdminShell({
           <a
             href="/admin"
             aria-label={t("admin.nav.label")}
-            className="flex min-h-tap min-w-tap items-center md:min-h-0 md:min-w-0"
+            className="flex min-h-tap min-w-0 items-center overflow-hidden md:min-h-0"
           >
             <Logo variant="dark" className="h-8" />
           </a>

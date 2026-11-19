@@ -166,7 +166,9 @@ describe("cover preview", () => {
     const el = await preview();
     expect(within(el).getByText("Boda Ana")).toBeTruthy();
     expect(within(el).getByText(/1 de noviembre de 2026/)).toBeTruthy();
-    expect(within(el).getByText(DEFAULT_STUDIO_NAME)).toBeTruthy();
+    expect(el.querySelector("[data-logo=wordmark]")?.textContent).toBe(
+      DEFAULT_STUDIO_NAME,
+    );
     expect(previewImg(el).getAttribute("src")).toBe("/admin/img/p2/view-sm");
     expect(el.querySelector('[data-theme="claro"]')).toBeTruthy();
   });
