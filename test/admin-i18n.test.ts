@@ -13,7 +13,7 @@ import {
   requestT,
 } from "../app/i18n/dictionaries";
 import {
-  fmtBaDateTime,
+  fmtStudioDateTime,
   fmtNumber,
   fmtPlainDate,
   localeFor,
@@ -161,16 +161,16 @@ describe("formats", () => {
     expect(localeFor("en")).toBe("en");
   });
   it("BA date-time per language", () => {
-    expect(fmtBaDateTime("es", "2026-11-16T13:05:09Z")).toBe(
+    expect(fmtStudioDateTime("es", "2026-11-16T13:05:09Z")).toBe(
       "16/11/2026 10:05",
     );
     expect(
-      fmtBaDateTime("en", "2026-11-16T13:05:09Z").replace(/\s/g, " "),
+      fmtStudioDateTime("en", "2026-11-16T13:05:09Z").replace(/\s/g, " "),
     ).toBe("Nov 16, 2026, 10:05 AM");
-    expect(fmtBaDateTime("es", "2026-11-16T02:30:00Z")).toBe(
+    expect(fmtStudioDateTime("es", "2026-11-16T02:30:00Z")).toBe(
       "15/11/2026 23:30",
     );
-    expect(fmtBaDateTime("en", "garbage")).toBe("");
+    expect(fmtStudioDateTime("en", "garbage")).toBe("");
   });
   it("plain dates and numbers", () => {
     expect(fmtPlainDate("es", "2026-11-01")).toBe("01/11/2026");

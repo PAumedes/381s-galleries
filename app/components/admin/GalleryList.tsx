@@ -4,7 +4,7 @@ import { useFormat } from "../../i18n/use-format";
 import { useT } from "../../i18n/use-t";
 import { withCode } from "../../i18n/rich";
 import type { MessageKey } from "../../i18n/t";
-import { FILTERS, FILTER_KEYS, utcIsoToBaLocal } from "../../lib/admin-gallery";
+import { FILTERS, FILTER_KEYS, utcIsoToLocal } from "../../lib/admin-gallery";
 import type { Filter } from "../../lib/admin-gallery";
 import type { GalleryListRow } from "../../lib/server/admin-galleries";
 
@@ -104,7 +104,7 @@ export function GalleryList({
   const fmt = useFormat();
   const expiry = (iso: string | null) => {
     if (!iso) return t("admin.list.noExpiry");
-    const l = utcIsoToBaLocal(iso);
+    const l = utcIsoToLocal(iso);
     return l ? fmt.localDateTime(l.date, l.time) : "—";
   };
   if (total === 0 && galleries.length === 0) return <EmptyLibrary />;

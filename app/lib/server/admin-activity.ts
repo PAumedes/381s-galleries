@@ -4,7 +4,7 @@ import {
   CSV_BOM,
   anonLabel,
   csvLine,
-  fmtBaSeconds,
+  fmtStudioSeconds,
   namesTxt,
   visitorDisplay,
   type VisitorDisplay,
@@ -307,7 +307,7 @@ export async function activityCsv(
         const p = r.photoId ? photos.get(r.photoId) : undefined;
         out += csvLine([
           r.createdAt,
-          fmtBaSeconds(r.createdAt),
+          fmtStudioSeconds(r.createdAt),
           r.email,
           p?.name,
           p?.set,

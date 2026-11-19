@@ -3,12 +3,12 @@ import { redirect } from "react-router";
 import { getDb, photoVisible, schema } from "../../db";
 import type { Db } from "../../db";
 import {
-  baLocalToUtcIso,
+  localToUtcIso,
   groupIssues,
   ISSUE_LABELS,
   isValidDate,
   normalizeSearch,
-  utcIsoToBaLocal,
+  utcIsoToLocal,
 } from "../admin-gallery";
 import type { Filter } from "../admin-gallery";
 import { isCoverLayout, isGridGap, isGridStyle, isPalette } from "../design";
@@ -231,7 +231,7 @@ export async function loadGalleryEdit(env: Env, id: string) {
       slug: g.slug,
       clientName: g.clientName,
       eventDate: g.eventDate,
-      expires: utcIsoToBaLocal(g.expiresAt),
+      expires: utcIsoToLocal(g.expiresAt),
       status: g.status,
       allowHighres: g.allowHighres,
       allowWeb: g.allowWeb,
@@ -430,7 +430,7 @@ async function saveDetails(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
       });
     else {
       // A date without a time means "until the end of that day" (Buenos Aires).
-      expiresAt = expDate ? baLocalToUtcIso(expDate, expTime || "23:59") : null;
+      expiresAt = expDate ? localToUtcIso(expDate, expTime || "23:59") : null;
       if (!expiresAt)
         errors.expires = expDate
           ? t("admin.msg.expiryInvalid")

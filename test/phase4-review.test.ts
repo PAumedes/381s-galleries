@@ -17,7 +17,7 @@ import { loader as connect } from "../app/routes/admin.google.connect";
 import { loader as callback } from "../app/routes/admin.google.callback";
 import { fmtTime } from "../app/components/admin/AdminShell";
 import { formatEventDate } from "../app/lib/event-date";
-import { fmtBa } from "../app/lib/ba-time";
+import { fmtStudio } from "../app/lib/studio-time";
 
 const e = { ...env, DRIVE_MODE: "mock", ALLOW_DEV_ADMIN: "1" } as Env;
 const db = getDb(env);
@@ -111,8 +111,8 @@ describe("shared helpers", () => {
   it("fmtTime shows Buenos Aires time, no UTC", () => {
     expect(fmtTime("2026-11-16T13:05:09Z")).toBe("16/11/2026 10:05");
   });
-  it("ba-time exports fmtBa", () => {
-    expect(fmtBa("2026-01-01T02:30:00Z")).toBe("31/12/2025 23:30");
+  it("studio-time exports fmtStudio", () => {
+    expect(fmtStudio("2026-01-01T02:30:00Z")).toBe("31/12/2025 23:30");
   });
   it("formatEventDate formats in the language, UTC, null for bad", () => {
     expect(formatEventDate("2026-11-01", "es")).toMatch(

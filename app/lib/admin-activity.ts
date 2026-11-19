@@ -3,9 +3,9 @@
 
 import { es } from "../i18n/es";
 import { makeT, type MessageKey, type TFunction } from "../i18n/t";
-import { baParts } from "./ba-time";
+import { studioParts } from "./studio-time";
 
-export { fmtBa } from "./ba-time";
+export { fmtStudio } from "./studio-time";
 
 export const CSV_BOM = "﻿";
 
@@ -24,8 +24,8 @@ export function csvLine(
 }
 
 /** UTC ISO -> `YYYY-MM-DD HH:MM:SS` in Buenos Aires; "" if invalid. */
-export function fmtBaSeconds(iso: string | null | undefined): string {
-  const p = baParts(iso);
+export function fmtStudioSeconds(iso: string | null | undefined): string {
+  const p = studioParts(iso);
   return p ? `${p.date} ${p.time}` : "";
 }
 

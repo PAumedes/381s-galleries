@@ -28,7 +28,7 @@ export function parseFilter(v: string | null | undefined): Filter {
 }
 
 // ----------------------------------------------------- Buenos Aires time
-export { baLocalToUtcIso, isValidDate, utcIsoToBaLocal } from "./ba-time";
+export { localToUtcIso, isValidDate, utcIsoToLocal } from "./studio-time";
 
 /** `2026-11-01` -> `01/11/2026` (es) / `Nov 1, 2026` (en); unchanged when not a plain date. */
 export function fmtDate(date: string | null, lang: Lang = "es"): string {
