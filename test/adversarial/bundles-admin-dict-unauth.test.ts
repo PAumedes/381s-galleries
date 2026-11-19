@@ -1,15 +1,11 @@
-import { applyD1Migrations } from "cloudflare:test";
-import { env } from "cloudflare:workers";
+import { migrateDb } from "../support/d1";
 import { RouterContextProvider } from "react-router";
 import { beforeAll, describe, expect, it } from "vitest";
 import { loader as rootLoader } from "../../app/root";
 import { nonceContext } from "../../app/lib/server/context";
 
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 
 // The dictionary split keeps admin strings out of the public JS, but the root

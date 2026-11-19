@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -12,10 +12,7 @@ import type { DriveClient } from "../../app/lib/server/drive-types";
 const db = getDb(env);
 const googleEnv = { ...env, DRIVE_MODE: "google" } as Env;
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 const post = (path: string, body: unknown, ip: string) =>
   new Request(`https://s.test${path}`, {

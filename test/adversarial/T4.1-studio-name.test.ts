@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, describe, expect, it } from "vitest";
 import { getStudioName, validStudioName } from "../../app/lib/server/admin";
@@ -6,10 +6,7 @@ import { putSetting, SETTINGS_KEYS } from "../../app/lib/server/settings";
 import { loader as homeLoader } from "../../app/routes/home";
 
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 
 describe("T4.1 studio name", () => {
