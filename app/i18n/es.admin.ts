@@ -115,7 +115,13 @@ export const esAdmin = {
   "admin.edit.mode.proofingNote":
     "Todo con marca de agua y sin descargas: el cliente solo elige favoritas.",
   "admin.edit.mode.noWm":
-    "Esta galería no tiene archivos preview-wm: en modo Prueba los clientes no verán ninguna foto. Exportá esa receta desde Capture One.",
+    "Esta galería no tiene archivos preview-wm (ninguna de las {count} fotos): en modo Prueba los clientes no verán ninguna foto. Exportá esa receta desde Capture One.",
+  "admin.edit.mode.someNoWm":
+    "{missing} de {count} fotos no tienen preview-wm: en modo Prueba no se mostrarán (404).",
+  "admin.edit.mode.homeReminder":
+    "Esta galería sigue en modo Prueba (con marca de agua) y se muestra en la página de inicio.",
+  "admin.edit.mode.homeNeedsWm":
+    "En la página de inicio aparece solo si tiene una portada con marca de agua (preview-wm).",
   "admin.edit.mode.noThumbWm":
     "No hay miniaturas thumb-wm: la grilla usará la vista de 2048 px, más pesada.",
   "admin.edit.opt.highres": "Alta resolución (2048 px)",

@@ -670,6 +670,19 @@ describe("flags action", () => {
     expect(after.allowBulk).toBe(true);
     expect(after.allowIg).toBe(false);
   });
+  it("T6.19 loadGalleryEdit reports numeric photo/preview-wm counts from current data (and nothing else)", async () => {
+    const g = await gallery();
+    await photos(g, 2, { driveWmId: "wm-secret-id" });
+    await photos(g, 3, {});
+    const d = (await loadGalleryEdit(env, g))!;
+    expect(d.photoCount).toBe(5);
+    expect(d.wmCount).toBe(2);
+    // after a sync drops previews, the counts follow
+    await db.update(schema.photos).set({ driveWmId: null });
+    const d2 = (await loadGalleryEdit(env, g))!;
+    expect([d2.photoCount, d2.wmCount]).toEqual([5, 0]);
+    expect(JSON.stringify(d2)).not.toContain("wm-secret-id");
+  });
   it("loadGalleryEdit reports mode, wm/thumb-wm coverage and a 'falta preview-wm' issue in proofing", async () => {
     const g = await gallery();
     await photos(g, 2, {});

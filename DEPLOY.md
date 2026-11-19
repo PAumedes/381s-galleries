@@ -148,7 +148,7 @@ Creá hasta seis recetas de proceso (las dos con marca de agua son opcionales) (
 ## 10. Copias de seguridad
 
 - Los **originales y los tamaños** viven en tu Drive: la base solo guarda galerías, ajustes, visitas y favoritos.
-- **D1 Time Travel** permite volver la base a cualquier momento de los últimos 30 días: `npx wrangler d1 time-travel info DB`.
+- **D1 Time Travel** permite volver la base a cualquier momento de los últimos 7 días en Workers Free (30 días en el plan Paid): `npx wrangler d1 time-travel info DB`.
 - Exportar a un archivo:
 
 ```sh

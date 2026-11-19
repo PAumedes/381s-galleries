@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { createRoutesStub } from "react-router";
 import { describe, expect, it } from "vitest";
 import {
@@ -32,6 +32,8 @@ const base: GalleryEditData = {
   },
   hasWmFiles: false,
   hasThumbWmFiles: false,
+  photoCount: 2,
+  wmCount: 0,
   photos: [
     { id: "p1", set: "Highlights", name: "IMG_1", takenAt: null },
     { id: "p2", set: "Highlights", name: "IMG_2", takenAt: null },
@@ -205,6 +207,7 @@ describe("GalleryEditView", () => {
       gallery: { ...base.gallery, mode: "proofing" },
       hasWmFiles: true,
       hasThumbWmFiles: true,
+      wmCount: 2,
     });
     for (const re of [
       /Alta resolución/,
@@ -227,13 +230,87 @@ describe("GalleryEditView", () => {
   it("Prueba without preview-wm warns", async () => {
     show({ gallery: { ...base.gallery, mode: "proofing" }, hasWmFiles: false });
     const alert = await screen.findByText(/no tiene archivos preview-wm/);
-    expect(alert.getAttribute("role")).toBe("alert");
+    expect(alert.getAttribute("role")).toBe("status");
+  });
+  it("T6.19 Prueba with no preview-wm: non-blocking note with the count", async () => {
+    show({
+      gallery: { ...base.gallery, mode: "proofing" },
+      hasWmFiles: false,
+      photoCount: 7,
+      wmCount: 0,
+    });
+    const note = await screen.findByText(/ninguna de las 7 fotos/);
+    expect(note.getAttribute("role")).toBe("status");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+  it("T6.19 Prueba with some photos lacking preview-wm: N of M note", async () => {
+    show({
+      gallery: { ...base.gallery, mode: "proofing" },
+      hasWmFiles: true,
+      hasThumbWmFiles: true,
+      photoCount: 10,
+      wmCount: 6,
+    });
+    const note = await screen.findByText(/4 de 10 fotos no tienen preview-wm/);
+    expect(note.getAttribute("role")).toBe("status");
+    expect(screen.queryByText(/ninguna de las/)).toBeNull();
+  });
+  it("T6.19 Prueba with every photo watermarked: no count warning", async () => {
+    show({
+      gallery: { ...base.gallery, mode: "proofing" },
+      hasWmFiles: true,
+      hasThumbWmFiles: true,
+      photoCount: 3,
+      wmCount: 3,
+    });
+    await screen.findByLabelText(/Prueba/);
+    expect(screen.queryByText(/no tienen preview-wm/)).toBeNull();
+  });
+  it("T6.19 switching the Modo radio to Prueba (unsaved) shows the warning at once; back to Entrega hides it", async () => {
+    show({ hasWmFiles: true, photoCount: 10, wmCount: 6 });
+    expect(screen.queryByText(/no tienen preview-wm/)).toBeNull();
+    fireEvent.click(await screen.findByLabelText(/Prueba/));
+    expect(
+      await screen.findByText(/4 de 10 fotos no tienen preview-wm/),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByLabelText(/Entrega/));
+    expect(screen.queryByText(/no tienen preview-wm/)).toBeNull();
+  });
+  it("T6.19 Prueba + shown on the home: reminder; with a watermarked cover available it says so", async () => {
+    show({
+      gallery: { ...base.gallery, mode: "proofing", showOnHome: true },
+      hasWmFiles: true,
+      hasThumbWmFiles: true,
+      photoCount: 3,
+      wmCount: 3,
+    });
+    const note = await screen.findByText(
+      /sigue en modo Prueba.*página de inicio/,
+    );
+    expect(note.getAttribute("role")).toBe("status");
+  });
+  it("T6.19 Prueba + home + no preview-wm: explains the home card needs a watermarked cover", async () => {
+    show({
+      gallery: { ...base.gallery, mode: "proofing", showOnHome: true },
+      hasWmFiles: false,
+      photoCount: 3,
+      wmCount: 0,
+    });
+    expect(
+      await screen.findByText(/solo si tiene una portada con marca de agua/),
+    ).toBeTruthy();
+  });
+  it("T6.19 no home reminder in Entrega or when not on the home", async () => {
+    show({ gallery: { ...base.gallery, showOnHome: true } });
+    await screen.findByLabelText(/Prueba/);
+    expect(screen.queryByText(/sigue en modo Prueba/)).toBeNull();
   });
   it("Prueba with preview-wm but no thumb-wm warns about the heavier grid", async () => {
     show({
       gallery: { ...base.gallery, mode: "proofing" },
       hasWmFiles: true,
       hasThumbWmFiles: false,
+      wmCount: 2,
     });
     expect(
       await screen.findByText(
@@ -247,6 +324,7 @@ describe("GalleryEditView", () => {
       gallery: { ...base.gallery, mode: "proofing" },
       hasWmFiles: true,
       hasThumbWmFiles: true,
+      wmCount: 2,
     });
     await screen.findByLabelText(/Prueba/);
     expect(screen.queryByText(/no tiene archivos preview-wm/)).toBeNull();

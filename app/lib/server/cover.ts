@@ -10,6 +10,7 @@ import type { schema } from "../../db";
  *   else the first visible photo (gallery order) is used.
  * - In Prueba (proofing) only a photo with a preview-wm can be served, so a
  *   cover without one falls to the first photo that has one.
+ * - In Prueba with no preview-wm at all there is no cover (null).
  * - The optional mobile cover follows the same visibility rule; in Prueba one
  *   without a preview-wm is not served (the desktop cover is used instead).
  */
@@ -74,7 +75,10 @@ export function resolveCover(
   const mobileRow = rows.find((p) => p.id === gallery.coverPhotoIdMobile);
   const mobileNoWm = proofing && !!mobileRow && !mobileRow.hasWm;
   return {
-    cover: fallsToWm ? firstWm.id : (base?.id ?? null),
+    // Prueba with no preview-wm at all: nothing can be served, so no cover
+    // (naming one would be a 404).
+    cover:
+      proofing && !firstWm ? null : fallsToWm ? firstWm.id : (base?.id ?? null),
     editCover: fallsToWm ? firstWm.id : (chosen?.id ?? null),
     mobile: mobileRow && !mobileNoWm ? mobileRow.id : null,
     mobileNoWm,

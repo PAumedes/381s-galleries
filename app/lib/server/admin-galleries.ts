@@ -255,6 +255,9 @@ export async function loadGalleryEdit(env: Env, id: string) {
     },
     /** Deletion started but not finished: the editor only offers to continue it. */
     deleting: await isDeleting(env, g.driveFolderId),
+    /** Counts only (never ids): visible photos, and those with a preview-wm. */
+    photoCount: ps.length,
+    wmCount: ps.length - noWm.length,
     hasWmFiles: ps.some((p) => p.hasWm),
     hasThumbWmFiles: ps.some((p) => p.hasThumbWm),
     photos,

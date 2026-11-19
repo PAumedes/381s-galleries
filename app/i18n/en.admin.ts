@@ -117,7 +117,13 @@ export const enAdmin = {
   "admin.edit.mode.proofingNote":
     "Everything watermarked and no downloads: the client only picks favorites.",
   "admin.edit.mode.noWm":
-    "This gallery has no preview-wm files: in Proof mode clients won't see any photo. Export that recipe from Capture One.",
+    "This gallery has no preview-wm files (none of the {count} photos): in Proof mode clients won't see any photo. Export that recipe from Capture One.",
+  "admin.edit.mode.someNoWm":
+    "{missing} of {count} photos have no preview-wm: in Proof mode they won't appear (404).",
+  "admin.edit.mode.homeReminder":
+    "This gallery is still in Proof mode (watermarked) and shown on the home page.",
+  "admin.edit.mode.homeNeedsWm":
+    "On the home page only if it has a watermarked cover (preview-wm).",
   "admin.edit.mode.noThumbWm":
     "There are no thumb-wm thumbnails: the grid will use the heavier 2048 px view.",
   "admin.edit.opt.highres": "High resolution (2048 px)",
