@@ -21,6 +21,7 @@ import { isAdminPath, langCookie } from "./i18n/lang";
 import { validPublicOrigin } from "./lib/server/public-url";
 import { getLogoVersions } from "./lib/server/logo";
 import { pwaMeta } from "./lib/pwa";
+import { DEFAULT_STUDIO_NAME } from "./lib/default-studio-name";
 import { makeT } from "./i18n/t";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -60,7 +61,7 @@ const A2HS_CAPTURE =
 // Generic studio manifest + iOS tags; the gallery route replaces them.
 export function meta({ loaderData }: Route.MetaArgs) {
   return pwaMeta(undefined, {
-    studio: loaderData?.studioName ?? "381 Studios",
+    studio: loaderData?.studioName ?? DEFAULT_STUDIO_NAME,
   });
 }
 

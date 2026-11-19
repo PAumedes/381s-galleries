@@ -33,3 +33,14 @@ export async function handleManifest(
     headers: HEADERS,
   });
 }
+
+/** Generic studio manifest ("/manifest.webmanifest"): name from STUDIO_NAME/settings. */
+export async function handleGenericManifest(
+  request: Request,
+  env: Pick<Env, "DB" | "STUDIO_NAME">,
+): Promise<Response> {
+  const studio = await getStudioName(env, request);
+  return new Response(JSON.stringify(buildManifest({ studio })), {
+    headers: HEADERS,
+  });
+}

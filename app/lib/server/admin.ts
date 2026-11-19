@@ -1,6 +1,7 @@
 import { crossSite } from "./access";
 import { requireAdmin } from "./auth";
 import { getSetting, SETTINGS_KEYS } from "./settings";
+import { DEFAULT_STUDIO_NAME } from "../default-studio-name";
 
 /** Response headers every admin page and action must carry. */
 export function adminHeaders(): Record<string, string> {
@@ -70,6 +71,11 @@ export function validStudioName(input: string): string | null {
   return v;
 }
 
+/** env STUDIO_NAME if valid, else the neutral default (never raw env text). */
+function envStudioName(env: { STUDIO_NAME?: string }): string {
+  return validStudioName(env.STUDIO_NAME ?? "") ?? DEFAULT_STUDIO_NAME;
+}
+
 const nameCache = new WeakMap<Request, Promise<string>>();
 
 /** Studio name: settings first, env STUDIO_NAME fallback; cached per request. */
@@ -82,9 +88,9 @@ export function getStudioName(
   const p = (async () => {
     try {
       const v = await getSetting(env, SETTINGS_KEYS.studioName);
-      return (v && validStudioName(v)) || env.STUDIO_NAME;
+      return (v && validStudioName(v)) || envStudioName(env);
     } catch {
-      return env.STUDIO_NAME;
+      return envStudioName(env);
     }
   })();
   if (request) nameCache.set(request, p);

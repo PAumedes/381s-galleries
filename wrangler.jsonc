@@ -23,7 +23,7 @@
   // Vite plugin fills in `directory` from the client build output.
   "assets": {
     "binding": "ASSETS",
-    "run_worker_first": ["/admin-assets/*"],
+    "run_worker_first": ["/admin-assets/*", "/manifest.webmanifest"],
   },
   "vars": {
     "DRIVE_MODE": "google",

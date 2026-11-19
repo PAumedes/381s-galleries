@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { DEFAULT_STUDIO_NAME } from "../../app/lib/default-studio-name";
 
 const pub = (p: string) => path.join(process.cwd(), "public", p);
 const dims = (p: string) => {
@@ -19,7 +20,7 @@ describe("PWA static assets", () => {
   it("generic manifest is the studio one rooted at /", () => {
     const m = JSON.parse(readFileSync(pub("manifest.webmanifest"), "utf8"));
     expect(m).toMatchObject({
-      name: "381 Studios",
+      name: DEFAULT_STUDIO_NAME,
       start_url: "/",
       display: "standalone",
       background_color: "#FAFAF8",
