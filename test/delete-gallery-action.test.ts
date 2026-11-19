@@ -19,6 +19,7 @@ import {
 } from "../app/lib/server/downloads";
 import {
   deleteGallery,
+  folderHandle,
   ignoredFolders,
 } from "../app/lib/server/gallery-delete";
 import type { DriveClient } from "../app/lib/server/drive-types";
@@ -211,11 +212,16 @@ describe("delete intent: success", () => {
 });
 
 describe("a deletion in progress", () => {
-  it("is hidden from the list and the count, other intents are stale, and a resubmit finishes", async () => {
+  it("stays listed as deleting, other intents are stale, and a resubmit finishes", async () => {
     await env.CACHE.put("p-g/thumb", "x");
     expect(await deleteGallery(e, G, { r2CallsMax: 0 })).toBe("continue");
-    expect((await listGalleries(e, "todas")).map((g) => g.id)).toEqual([H]);
-    expect(await countGalleries(e)).toBe(1);
+    expect(
+      (await listGalleries(e, "todas")).map((g) => [g.id, g.deleting]).sort(),
+    ).toEqual([
+      [G, true],
+      [H, false],
+    ]);
+    expect(await countGalleries(e)).toBe(2);
     const stale = await galleryAction(
       post({ intent: "details", title: "Zombi", slug: "zombi" }),
       e,
@@ -353,18 +359,23 @@ describe("Ajustes: ignored folders", () => {
       body: new URLSearchParams(f),
     });
 
-  it("setupData lists the tombstones (id and date only)", async () => {
+  it("setupData lists the tombstones (opaque handle and date only, never the Drive id)", async () => {
     await deleteGallery(e, G);
     const d = await setupData(new Request(SETUP), e);
     expect(d.ignoredFolders).toHaveLength(1);
     expect(Object.keys(d.ignoredFolders[0]).sort()).toEqual([
       "deletedAt",
-      "driveFolderId",
+      "handle",
     ]);
+    expect(JSON.stringify(d)).not.toContain(FOLDER);
   });
   it("401 non-admin, 403 cross-site, and unconfirmed or unknown requests remove nothing", async () => {
     await deleteGallery(e, G);
-    const f = { intent: "reinclude", folder: FOLDER, confirm: "1" };
+    const f = {
+      intent: "reinclude",
+      handle: await folderHandle(e, FOLDER),
+      confirm: "1",
+    };
     expect((await caught(setupAction(sPost(f), nonAdmin))).status).toBe(401);
     expect(
       (
@@ -374,12 +385,12 @@ describe("Ajustes: ignored folders", () => {
       ).status,
     ).toBe(403);
     const noConfirm = await setupAction(
-      sPost({ intent: "reinclude", folder: FOLDER }),
+      sPost({ intent: "reinclude", handle: await folderHandle(e, FOLDER) }),
       e,
     );
     expect(noConfirm.ok).toBe(false);
     const unknown = await setupAction(
-      sPost({ intent: "reinclude", folder: "nope", confirm: "1" }),
+      sPost({ intent: "reinclude", handle: "nope", confirm: "1" }),
       e,
     );
     expect(unknown.ok).toBe(false);
@@ -388,7 +399,11 @@ describe("Ajustes: ignored folders", () => {
   it("with confirmation it removes the tombstone", async () => {
     await deleteGallery(e, G);
     const r = await setupAction(
-      sPost({ intent: "reinclude", folder: FOLDER, confirm: "1" }),
+      sPost({
+        intent: "reinclude",
+        handle: await folderHandle(e, FOLDER),
+        confirm: "1",
+      }),
       e,
     );
     expect(r.ok).toBe(true);

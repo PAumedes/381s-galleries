@@ -111,7 +111,7 @@ export const esPublic = {
     "Para entregar las fotos, para que el estudio vea la actividad y las estadísticas de cada galería (por ejemplo, desde qué países y dispositivos se mira) y para detectar abusos y proteger la galería.",
   "privacy.retention.title": "Cuánto tiempo",
   "privacy.retention.body":
-    "Guardamos el historial de visitas y descargas mientras exista la galería; no se elimina automáticamente. Cuando el estudio elimina una galería, se eliminan todos los datos asociados a ella (índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y de visitantes). Solo se conserva el identificador de la carpeta de Drive, para que la galería no se vuelva a crear. Si querés que se borre antes, pedíselo al estudio.",
+    "Guardamos el historial de visitas y descargas mientras exista la galería; no se elimina automáticamente. Cuando el estudio elimina una galería, se eliminan todos los datos asociados a ella (índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y de visitantes). Solo se conservan el identificador de la carpeta de Drive y la fecha de eliminación, para que la galería no se vuelva a crear. Si querés que se borre antes, pedíselo al estudio.",
   "privacy.sharing.title": "Venta y terceros",
   "privacy.sharing.body": "No vendemos ni compartimos tus datos.",
   "privacy.contact.title": "Contacto",

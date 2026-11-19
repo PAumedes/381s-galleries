@@ -508,7 +508,7 @@ export const esAdmin = {
     "La eliminación quedó a medias (la galería ya está oculta). Continuando…: enviá de nuevo para terminar.",
   "admin.setup.section.ignored": "Carpetas ignoradas",
   "admin.setup.ignored.note":
-    "Carpetas de galerías eliminadas. La sincronización no las vuelve a crear. De ellas solo se guarda el identificador de la carpeta.",
+    "Carpetas de galerías eliminadas. La sincronización no las vuelve a crear. De ellas solo se guardan el identificador de la carpeta y la fecha de eliminación.",
   "admin.setup.ignored.empty": "No hay carpetas ignoradas.",
   "admin.setup.ignored.deletedAt": "Eliminada el {date}",
   "admin.setup.ignored.reinclude": "Volver a incluir",
@@ -524,4 +524,7 @@ export const esAdmin = {
   "admin.msg.reincluded":
     "Carpeta incluida de nuevo: la próxima sincronización creará la galería desde cero.",
   "admin.msg.reincludeConfirm": "Confirmá para volver a incluir la carpeta.",
+  "admin.msg.deleteFailed":
+    "No se pudo terminar de eliminar la galería (falló un servicio). Ya está oculta; volvé a enviar para continuar.",
+  "admin.list.deleting": "Continuar eliminación",
 } as const;

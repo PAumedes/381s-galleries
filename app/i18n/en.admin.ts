@@ -504,7 +504,7 @@ export const enAdmin = {
     "The deletion stopped halfway (the gallery is already hidden). Continuing…: submit again to finish.",
   "admin.setup.section.ignored": "Ignored folders",
   "admin.setup.ignored.note":
-    "Folders of deleted galleries. Sync does not re-create them. Only the folder identifier is kept for them.",
+    "Folders of deleted galleries. Sync does not re-create them. Only the folder identifier and the deletion date are kept for them.",
   "admin.setup.ignored.empty": "No ignored folders.",
   "admin.setup.ignored.deletedAt": "Deleted on {date}",
   "admin.setup.ignored.reinclude": "Include again",
@@ -520,4 +520,7 @@ export const enAdmin = {
   "admin.msg.reincluded":
     "Folder included again: the next sync will create the gallery from scratch.",
   "admin.msg.reincludeConfirm": "Confirm to include the folder again.",
+  "admin.msg.deleteFailed":
+    "Could not finish deleting the gallery (a service failed). It is already hidden; submit again to continue.",
+  "admin.list.deleting": "Continue deletion",
 } as const satisfies Record<keyof typeof esAdmin, string>;

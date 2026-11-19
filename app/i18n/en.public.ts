@@ -113,7 +113,7 @@ export const enPublic = {
     "To deliver the photos, to let the studio see the activity and statistics of each gallery (for example, which countries and devices it is viewed from), and to detect abuse and protect the gallery.",
   "privacy.retention.title": "How long",
   "privacy.retention.body":
-    "We keep the visit and download history for as long as the gallery exists; nothing is deleted automatically. When the studio deletes a gallery, all data associated with it is deleted (photo index, favorites, visits, downloads, cached images, and PIN and visitor data). Only the Drive folder identifier is kept, so the gallery is not created again. If you want it removed sooner, ask the studio.",
+    "We keep the visit and download history for as long as the gallery exists; nothing is deleted automatically. When the studio deletes a gallery, all data associated with it is deleted (photo index, favorites, visits, downloads, cached images, and PIN and visitor data). Only the Drive folder identifier and the date of deletion are kept, so the gallery is not created again. If you want it removed sooner, ask the studio.",
   "privacy.sharing.title": "Selling and third parties",
   "privacy.sharing.body": "We do not sell or share your data.",
   "privacy.contact.title": "Contact",

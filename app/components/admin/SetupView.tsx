@@ -17,7 +17,7 @@ export interface SetupViewData {
   logo?: { onLight: string | null; onDark: string | null };
   lastError: { at: string; message: string } | null;
   /** Deleted galleries' Drive folders that sync skips (only id + date are kept). */
-  ignoredFolders?: { driveFolderId: string; deletedAt: string }[];
+  ignoredFolders?: { handle: string; deletedAt: string }[];
 }
 
 export interface SetupActionData {
@@ -461,8 +461,7 @@ export function SetupView({
         ) : (
           <ul className="flex flex-col gap-3">
             {(data.ignoredFolders ?? []).map((f) => (
-              <li key={f.driveFolderId} className="flex flex-col gap-1">
-                <span className="text-small break-all">{f.driveFolderId}</span>
+              <li key={f.handle} className="flex flex-col gap-1">
                 <span className="text-small text-grey-600">
                   {t("admin.setup.ignored.deletedAt", {
                     date: dateTime(f.deletedAt),
@@ -477,7 +476,7 @@ export function SetupView({
                 >
                   <input type="hidden" name="intent" value="reinclude" />
                   <input type="hidden" name="confirm" value="1" />
-                  <input type="hidden" name="folder" value={f.driveFolderId} />
+                  <input type="hidden" name="handle" value={f.handle} />
                   <button type="submit" className={btn} disabled={busy}>
                     {t("admin.setup.ignored.reinclude")}
                   </button>
