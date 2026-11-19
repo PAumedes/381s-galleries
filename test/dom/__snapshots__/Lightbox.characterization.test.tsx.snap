@@ -1,0 +1,232 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Lightbox characterization: DOM snapshots > Spanish 1`] = `
+"<div>
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Foto 2" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
+<div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
+<img data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Foto 2" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-0" srcset="/img/p1/view-sm 1200w, /img/p1/view-lg 2048w" src="/img/p1/view-sm">
+</div>
+<div class="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-2 transition-opacity duration-slow ease-out-soft opacity-100">
+<span class="text-micro-label text-white/70">2 / 10</span>
+<div class="flex">
+<button type="button" class="flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-25" aria-label="Agregar a favoritas" aria-pressed="false">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+<path d="M12 20.5s-7.5-4.6-7.5-10.1A4.4 4.4 0 0 1 12 7.6a4.4 4.4 0 0 1 7.5 2.8c0 5.5-7.5 10.1-7.5 10.1Z">
+</path>
+</svg>
+</button>
+<button type="button" class="flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-25" aria-label="Descargar">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14">
+</path>
+</svg>
+</button>
+<button type="button" class="flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-25" aria-label="Cerrar">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+<path d="M6 6l12 12M18 6 6 18">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 left-0" aria-label="Anterior">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft opacity-100">
+<path d="M14.5 5.5 8 12l6.5 6.5">
+</path>
+</svg>
+</button>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 right-0" aria-label="Siguiente">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft opacity-100">
+<path d="M9.5 5.5 16 12l-6.5 6.5">
+</path>
+</svg>
+</button>
+</div>
+</div>"
+`;
+
+exports[`Lightbox characterization: DOM snapshots > controls hidden, mid-drag 1`] = `
+"<div>
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 3" data-theme="oscuro" data-controls="hidden" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white cursor-none" style="z-index: var(--z-lightbox);">
+<div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
+<img data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 3" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-opacity duration-slow motion-reduce:transition-none opacity-0" srcset="/img/p2/view-sm 1200w, /img/p2/view-lg 2048w" src="/img/p2/view-sm" style="transform: translateX(50px);">
+</div>
+<div class="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-2 transition-opacity duration-slow ease-out-soft pointer-events-none opacity-0">
+<span class="text-micro-label text-white/70">3 / 10</span>
+<div class="flex">
+<button type="button" class="flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-25" aria-label="Close">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+<path d="M6 6l12 12M18 6 6 18">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 left-0" aria-label="Previous">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft pointer-events-none opacity-0">
+<path d="M14.5 5.5 8 12l6.5 6.5">
+</path>
+</svg>
+</button>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 right-0" aria-label="Next">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft pointer-events-none opacity-0">
+<path d="M9.5 5.5 16 12l-6.5 6.5">
+</path>
+</svg>
+</button>
+</div>
+</div>"
+`;
+
+exports[`Lightbox characterization: DOM snapshots > default, first photo, no callbacks 1`] = `
+"<div>
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 1" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
+<div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
+<img data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 1" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-0" srcset="/img/p0/view-sm 1200w, /img/p0/view-lg 2048w" src="/img/p0/view-sm">
+</div>
+<div class="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-2 transition-opacity duration-slow ease-out-soft opacity-100">
+<span class="text-micro-label text-white/70">1 / 10</span>
+<div class="flex">
+<button type="button" class="flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-25" aria-label="Close">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+<path d="M6 6l12 12M18 6 6 18">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 left-0" aria-label="Previous" disabled="">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft opacity-100">
+<path d="M14.5 5.5 8 12l6.5 6.5">
+</path>
+</svg>
+</button>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 right-0" aria-label="Next">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft opacity-100">
+<path d="M9.5 5.5 16 12l-6.5 6.5">
+</path>
+</svg>
+</button>
+</div>
+</div>"
+`;
+
+exports[`Lightbox characterization: DOM snapshots > error state 1`] = `
+"<div>
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 3" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
+<div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
+<div role="status" data-testid="lightbox-error" class="flex flex-col items-center gap-2 text-sm text-white/60">
+<span>Couldn't load image</span>
+<button type="button" class="flex min-h-11 cursor-pointer items-center gap-2 px-3 underline hover:text-white">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
+<path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5">
+</path>
+</svg>Retry</button>
+</div>
+</div>
+<div class="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-2 transition-opacity duration-slow ease-out-soft opacity-100">
+<span class="text-micro-label text-white/70">3 / 10</span>
+<div class="flex">
+<button type="button" class="flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-25" aria-label="Close">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+<path d="M6 6l12 12M18 6 6 18">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 left-0" aria-label="Previous">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft opacity-100">
+<path d="M14.5 5.5 8 12l6.5 6.5">
+</path>
+</svg>
+</button>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 right-0" aria-label="Next">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft opacity-100">
+<path d="M9.5 5.5 16 12l-6.5 6.5">
+</path>
+</svg>
+</button>
+</div>
+</div>"
+`;
+
+exports[`Lightbox characterization: DOM snapshots > proofing (protect) at the last photo 1`] = `
+"<div>
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 10" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white  img-protect" style="z-index: var(--z-lightbox);">
+<div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
+<img data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 10" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-0" srcset="/img/p9/view-sm 1200w, /img/p9/view-lg 2048w" src="/img/p9/view-sm">
+<span data-testid="lightbox-shield" aria-hidden="true" class="col-start-1 row-start-1 block h-full w-full">
+</span>
+</div>
+<div class="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-2 transition-opacity duration-slow ease-out-soft opacity-100">
+<span class="text-micro-label text-white/70">10 / 10</span>
+<div class="flex">
+<button type="button" class="flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-25" aria-label="Close">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+<path d="M6 6l12 12M18 6 6 18">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 left-0" aria-label="Previous">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft opacity-100">
+<path d="M14.5 5.5 8 12l6.5 6.5">
+</path>
+</svg>
+</button>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 right-0" aria-label="Next" disabled="">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft opacity-100">
+<path d="M9.5 5.5 16 12l-6.5 6.5">
+</path>
+</svg>
+</button>
+</div>
+</div>"
+`;
+
+exports[`Lightbox characterization: DOM snapshots > with favourite + download, middle photo, loaded 1`] = `
+"<div>
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 5" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
+<div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
+<img data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 5" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-100" srcset="/img/p4/view-sm 1200w, /img/p4/view-lg 2048w" src="/img/p4/view-sm">
+</div>
+<div class="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-2 transition-opacity duration-slow ease-out-soft opacity-100">
+<span class="text-micro-label text-white/70">5 / 10</span>
+<div class="flex">
+<button type="button" class="flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-25" aria-label="Remove from favorites" aria-pressed="true">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+<path d="M12 20.5s-7.5-4.6-7.5-10.1A4.4 4.4 0 0 1 12 7.6a4.4 4.4 0 0 1 7.5 2.8c0 5.5-7.5 10.1-7.5 10.1Z">
+</path>
+</svg>
+</button>
+<button type="button" class="flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-25" aria-label="Download">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14">
+</path>
+</svg>
+</button>
+<button type="button" class="flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-25" aria-label="Close">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+<path d="M6 6l12 12M18 6 6 18">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 left-0" aria-label="Previous">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft opacity-100">
+<path d="M14.5 5.5 8 12l6.5 6.5">
+</path>
+</svg>
+</button>
+<button type="button" class="absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0 right-0" aria-label="Next">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-12 transition-opacity duration-slow ease-out-soft opacity-100">
+<path d="M9.5 5.5 16 12l-6.5 6.5">
+</path>
+</svg>
+</button>
+</div>
+</div>"
+`;
