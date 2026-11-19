@@ -82,16 +82,18 @@ describe("T6.18 tile actions: icon + label bar under the picture", () => {
     expect(all.slice(1)).toEqual(btns);
   });
 
-  it("the current cover shows a pressed, disabled state instead of an action", async () => {
+  it("the current cover shows a pressed, aria-disabled state instead of an action", async () => {
     show();
     await screen.findAllByRole("listitem");
     const [desk, mob] = within(bar("a")).getAllByRole("button");
     expect(desk.getAttribute("aria-pressed")).toBe("true");
-    expect((desk as HTMLButtonElement).disabled).toBe(true);
-    expect(mob.getAttribute("aria-pressed")).toBe("false");
+    expect(desk.getAttribute("aria-disabled")).toBe("true");
+    expect((desk as HTMLButtonElement).disabled).toBe(false);
+    expect(mob.hasAttribute("aria-pressed")).toBe(false);
     const [, mobB] = within(bar("b")).getAllByRole("button");
     expect(mobB.getAttribute("aria-pressed")).toBe("true");
-    expect((mobB as HTMLButtonElement).disabled).toBe(true);
+    expect(mobB.getAttribute("aria-disabled")).toBe("true");
+    expect((mobB as HTMLButtonElement).disabled).toBe(false);
     expect(
       within(tile("a")).queryByRole("button", { name: "Usar como portada" }),
     ).toBeNull();
@@ -107,13 +109,27 @@ describe("T6.18 tile actions: icon + label bar under the picture", () => {
     expect(m.textContent).toBe("Móvil");
   });
 
-  it("narrow tiles restack the bar via a container query, buttons keep >=44px targets", async () => {
+  it("every action keeps a 44px-high target (width contract: see tile-actions-css.test.mjs)", async () => {
     show();
     await screen.findAllByRole("listitem");
-    expect(tile("c").className).toContain("@container");
-    expect(bar("c").className).toContain("@max-");
     for (const x of within(bar("c")).getAllByRole("button"))
       expect(x.className).toContain("min-h-tap");
+  });
+
+  it("the current cover stays focusable and clicking or Enter on it posts nothing", async () => {
+    show();
+    await screen.findAllByRole("listitem");
+    const [desk] = within(bar("a")).getAllByRole("button");
+    desk.focus();
+    expect(document.activeElement).toBe(desk);
+    expect(desk.getAttribute("aria-label")).toBe("Es la portada");
+    expect(desk.closest("form")).toBeNull();
+    const submitted = vi.fn();
+    document.addEventListener("submit", submitted);
+    fireEvent.click(desk);
+    fireEvent.keyDown(desk, { key: "Enter" });
+    document.removeEventListener("submit", submitted);
+    expect(submitted).not.toHaveBeenCalled();
   });
 
   it("the cover form posts exactly what it always posted", async () => {

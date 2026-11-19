@@ -3,10 +3,10 @@ import { Form } from "react-router";
 import { useT } from "../../i18n/use-t";
 import { Expand, Monitor, Phone } from "../icons";
 
-/** Narrow tiles (under 3 x 44px) stack the buttons as full-width rows. */
-const BAR = "grid grid-cols-3 gap-1 @max-[8.25rem]:grid-cols-1";
+/** Narrow tiles (under ~3 x 44px + gaps, 140px; 10.5rem leaves margin) stack the buttons as full-width rows. */
+const BAR = "grid grid-cols-3 gap-1 @max-[10.5rem]:grid-cols-1";
 const ACTION =
-  "text-micro tracking-normal border-grey-300 text-grey-700 hover:border-ink hover:text-ink flex min-h-tap min-w-0 flex-col items-center justify-center gap-0.5 border px-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-default aria-pressed:bg-ink aria-pressed:border-ink aria-pressed:text-paper disabled:aria-pressed:opacity-100 disabled:opacity-50 @max-[8.25rem]:flex-row @max-[8.25rem]:gap-2";
+  "text-micro tracking-normal border-grey-300 text-grey-700 hover:border-ink hover:text-ink flex min-h-tap min-w-0 flex-col items-center justify-center gap-0.5 border px-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-disabled:cursor-default aria-pressed:bg-ink aria-pressed:border-ink aria-pressed:text-paper disabled:opacity-50 @max-[10.5rem]:flex-row @max-[10.5rem]:gap-2";
 
 function Action({
   icon,
@@ -21,7 +21,8 @@ function Action({
   label: string;
   name: string;
   title: string;
-  pressed?: boolean;
+  /** Current state: aria-pressed + aria-disabled (stays focusable, never posts). */
+  pressed?: true;
   describedBy: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
@@ -29,8 +30,11 @@ function Action({
       aria-label={name}
       aria-describedby={describedBy}
       aria-pressed={pressed}
+      aria-disabled={pressed ? true : undefined}
+      onClick={pressed ? (e) => e.preventDefault() : undefined}
       title={title}
       className={ACTION}
+      type="button"
       {...rest}
     >
       {icon}
@@ -44,7 +48,7 @@ function Action({
 /**
  * Per-tile actions under the picture (nothing on top of it): use as cover,
  * use as mobile cover, view whole. Icon + short label; the accessible name is
- * the long text. The current cover shows as a pressed, disabled button.
+ * the long text. The current cover shows as a pressed, aria-disabled (still focusable) button.
  */
 export function TileActions({
   id,
@@ -78,7 +82,6 @@ export function TileActions({
           title={t("admin.reorder.isCover")}
           describedBy={desc}
           pressed
-          disabled
         />
       ) : (
         <Form method="post" className="contents">
@@ -91,7 +94,6 @@ export function TileActions({
             name={t("admin.reorder.useAsCover")}
             title={t("admin.reorder.useAsCover")}
             describedBy={desc}
-            pressed={false}
             disabled={busy}
           />
         </Form>
@@ -104,7 +106,6 @@ export function TileActions({
           title={t("admin.reorder.isMobileCover")}
           describedBy={desc}
           pressed
-          disabled
         />
       ) : (
         <Form method="post" className="contents">
@@ -118,7 +119,6 @@ export function TileActions({
             name={t("admin.reorder.useAsMobileCover")}
             title={t("admin.reorder.useAsMobileCover")}
             describedBy={desc}
-            pressed={false}
             disabled={busy}
           />
         </Form>

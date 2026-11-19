@@ -223,9 +223,6 @@ export function PhotoReorder({
                     key={id}
                     data-photo-id={id}
                     draggable
-                    onPointerEnter={(ev) =>
-                      quick.hover(id, ev.currentTarget, ev.pointerType)
-                    }
                     onPointerDownCapture={quick.pointerDown}
                     onPointerLeave={quick.stop}
                     onFocus={(ev) => quick.focus(id, ev.currentTarget)}
