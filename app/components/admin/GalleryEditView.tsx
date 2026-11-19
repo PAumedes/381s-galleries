@@ -8,7 +8,6 @@ import {
 } from "react-router";
 
 import { useT } from "../../i18n/use-t";
-import { ISSUE_KEYS } from "../../lib/admin-gallery";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
 import { btn, btnPrimary, Feedback, Section } from "./gallery-edit/ui";
 import type { GalleryEditData } from "./gallery-edit/types";
@@ -17,6 +16,7 @@ import { StatusSection } from "./gallery-edit/StatusSection";
 import { PinSection } from "./gallery-edit/PinSection";
 import { HomeSection } from "./gallery-edit/HomeSection";
 import { OptionsSection } from "./gallery-edit/OptionsSection";
+import { PhotosTab } from "./gallery-edit/PhotosTab";
 import { DangerSection } from "./gallery-edit/DangerSection";
 import type { Design } from "../../lib/design";
 import { External } from "../icons";
@@ -27,7 +27,6 @@ import { GalleryTabs, isEditorTab, type EditorTab } from "./GalleryTabs";
 import { StatusPill } from "./GalleryList";
 import { coverSrc, LivePreview, type PreviewDevice } from "./LivePreview";
 import { usePendingCover, withPendingCover } from "./optimistic-cover";
-import { PhotoReorder } from "./PhotoReorder";
 import { SharePanel } from "./SharePanel";
 
 export type { GalleryEditData };
@@ -320,63 +319,12 @@ function GalleryEditViewInner({
         )}
 
       {tab === "fotos" && (
-        <div className="flex flex-col gap-10">
-          <Section title={t("admin.edit.section.photos")}>
-            {data.photos.length === 0 ? (
-              <p className="text-small text-grey-600">
-                {t("admin.edit.photos.empty")}
-              </p>
-            ) : (
-              <>
-                <PhotoReorder
-                  key={data.photos.map((p) => p.id).join(",")}
-                  photos={data.photos}
-                  version={data.version}
-                  coverPhotoId={coverId}
-                  coverAuto={g.coverPhotoId === null}
-                  mobileCoverId={g.coverPhotoIdMobile ?? null}
-                  actionData={actionData}
-                />
-                <Feedback data={actionData} intent="cover" />
-              </>
-            )}
-          </Section>
-          <Section title={t("admin.edit.section.issues")}>
-            {data.issues.total === 0 ? (
-              <p className="text-small text-grey-600">
-                {t("admin.edit.issues.none")}
-              </p>
-            ) : (
-              <div className="flex flex-col gap-4">
-                {data.issues.groups.map((grp) => (
-                  <div key={grp.type}>
-                    <h3 className="text-small font-medium">
-                      {Object.hasOwn(ISSUE_KEYS, grp.type)
-                        ? t(ISSUE_KEYS[grp.type]!)
-                        : t("admin.issue.other")}{" "}
-                      ({grp.items.length})
-                    </h3>
-                    <ul className="text-small text-grey-700 mt-1 list-disc pl-5">
-                      {grp.items.map((it, i) => (
-                        <li key={i}>
-                          {it.set ? `${it.set} / ` : ""}
-                          {it.name}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-                {data.issues.truncated > 0 && (
-                  <p className="text-small text-grey-600">
-                    {t("admin.edit.issues.more", {
-                      count: data.issues.truncated,
-                    })}
-                  </p>
-                )}
-              </div>
-            )}
-          </Section>
-        </div>
+        <PhotosTab
+          data={data}
+          g={g}
+          coverId={coverId}
+          actionData={actionData}
+        />
       )}
 
       {tab === "portada" && (
