@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -10,10 +10,7 @@ import {
 
 const db = getDb(env);
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 
 const post = (pin: string, ip: string) => {
@@ -27,10 +24,7 @@ const post = (pin: string, ip: string) => {
 };
 
 async function setup() {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM rate_limits"),
-    env.DB.prepare("DELETE FROM galleries"),
-  ]);
+  await resetTables("rate_limits", "galleries");
   await db.insert(schema.galleries).values({
     id: "gPIN",
     driveFolderId: "f",

@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { RouterContextProvider } from "react-router";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -17,10 +17,7 @@ afterEach(() => {
 });
 
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 
 const BAD = [

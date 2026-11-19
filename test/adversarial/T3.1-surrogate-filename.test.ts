@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -9,18 +9,11 @@ import { pinFingerprint } from "../../app/lib/server/auth";
 const db = getDb(env);
 const G = "gggggggg-0000-0000-0000-0000000000e1";
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 
 it("a long base_name whose 200th UTF-16 unit splits an emoji still downloads", async () => {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM downloads"),
-    env.DB.prepare("DELETE FROM photos"),
-    env.DB.prepare("DELETE FROM galleries"),
-  ]);
+  await resetTables("downloads", "photos", "galleries");
   await db.insert(schema.galleries).values({
     id: G,
     driveFolderId: "f",

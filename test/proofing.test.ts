@@ -1,4 +1,5 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { clearCache } from "./support/cache";
+import { migrateDb, resetTables } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -26,10 +27,7 @@ const BASE = "https://session.test";
 const JPEG = new Uint8Array([0xff, 0xd8, 1, 2, 3, 4, 5, 0xff, 0xd9]);
 
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 
 const VERSIONS = JSON.stringify({
@@ -96,16 +94,15 @@ async function addPhoto(over: Record<string, unknown> = {}, id = P) {
   });
 }
 beforeEach(async () => {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM downloads"),
-    env.DB.prepare("DELETE FROM visitors"),
-    env.DB.prepare("DELETE FROM rate_limits"),
-    env.DB.prepare("DELETE FROM photos"),
-    env.DB.prepare("DELETE FROM galleries"),
-    env.DB.prepare("DELETE FROM settings"),
-  ]);
-  for (const o of (await env.CACHE.list()).objects)
-    await env.CACHE.delete(o.key);
+  await resetTables(
+    "downloads",
+    "visitors",
+    "rate_limits",
+    "photos",
+    "galleries",
+    "settings",
+  );
+  await clearCache();
 });
 
 async function img(

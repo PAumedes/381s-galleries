@@ -1,13 +1,10 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, describe, expect, it } from "vitest";
 
 describe("T0 adversarial: schema", () => {
   beforeAll(async () => {
-    await applyD1Migrations(
-      env.DB,
-      (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-    );
+    await migrateDb();
   });
 
   it("DB rejects invalid galleries.status (enum only enforced in TS)", async () => {

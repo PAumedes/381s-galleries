@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb, resetTables } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../app/db";
@@ -32,24 +32,19 @@ const H = "cccccccc-0000-4000-8000-000000000002";
 const FOLDER = "drive-folder-secret-ccc1";
 
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 beforeEach(async () => {
-  await env.DB.batch(
-    [
-      "favorites",
-      "downloads",
-      "gallery_views",
-      "visitors",
-      "photos",
-      "galleries",
-      "rate_limits",
-      "ignored_folders",
-      "settings",
-    ].map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
+  await resetTables(
+    "favorites",
+    "downloads",
+    "gallery_views",
+    "visitors",
+    "photos",
+    "galleries",
+    "rate_limits",
+    "ignored_folders",
+    "settings",
   );
   await db.insert(schema.galleries).values([
     {

@@ -1,4 +1,5 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { clearCache } from "../support/cache";
+import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, describe, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -9,10 +10,7 @@ const G = "aaaaaaaa-0000-0000-0000-0000000000b1";
 const P = "pppppppp-0000-0000-0000-0000000000b1";
 const e = { ...env, DRIVE_MODE: "google" } as Env;
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 async function get(d: DriveClient) {
   const pending: Promise<unknown>[] = [];
@@ -39,8 +37,7 @@ const mk = (s: string) =>
 describe("T2.3r2 same Drive id, new content (in-place re-export)", () => {
   it("serves the new bytes after the Drive file is overwritten in place", async () => {
     const db = getDb(env);
-    for (const o of (await env.CACHE.list()).objects)
-      await env.CACHE.delete(o.key);
+    await clearCache();
     await db.delete(schema.galleries);
     await db.insert(schema.galleries).values({
       id: G,

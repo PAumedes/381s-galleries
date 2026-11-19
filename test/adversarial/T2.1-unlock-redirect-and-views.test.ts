@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, nowIso, schema } from "../../app/db";
@@ -9,18 +9,10 @@ const db = getDb(env);
 const G = "gggggggg-0000-0000-0000-0000000000aa";
 
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 beforeEach(async () => {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM gallery_views"),
-    env.DB.prepare("DELETE FROM rate_limits"),
-    env.DB.prepare("DELETE FROM photos"),
-    env.DB.prepare("DELETE FROM galleries"),
-  ]);
+  await resetTables("gallery_views", "rate_limits", "photos", "galleries");
 });
 const add = (over: Partial<typeof schema.galleries.$inferInsert> = {}) =>
   db.insert(schema.galleries).values({

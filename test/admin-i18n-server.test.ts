@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { RouterContextProvider } from "react-router";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -15,10 +15,7 @@ const db = getDb(env);
 const ID = "00000000-0000-4000-8000-000000000a01";
 
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 beforeEach(async () => {
   await db.delete(schema.galleries);

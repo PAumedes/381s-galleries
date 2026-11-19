@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb, resetTables } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../app/db";
@@ -42,22 +42,17 @@ const HDRS = (ip = IP4) => ({
 });
 
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 beforeEach(async () => {
-  await env.DB.batch(
-    [
-      "downloads",
-      "gallery_views",
-      "favorites",
-      "visitors",
-      "rate_limits",
-      "photos",
-      "galleries",
-    ].map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
+  await resetTables(
+    "downloads",
+    "gallery_views",
+    "favorites",
+    "visitors",
+    "rate_limits",
+    "photos",
+    "galleries",
   );
   await db.insert(schema.galleries).values({
     id: G,

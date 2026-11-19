@@ -1,4 +1,5 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { clearCache } from "./support/cache";
+import { migrateDb, resetTables } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -18,27 +19,21 @@ const B = "bbbbbbbb-0000-4000-8000-000000000002";
 const VARIANTS = ["thumb", "view-sm", "view-lg"];
 
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 beforeEach(async () => {
-  await env.DB.batch(
-    [
-      "favorites",
-      "downloads",
-      "gallery_views",
-      "visitors",
-      "photos",
-      "galleries",
-      "rate_limits",
-      "settings",
-      "ignored_folders",
-    ].map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
+  await resetTables(
+    "favorites",
+    "downloads",
+    "gallery_views",
+    "visitors",
+    "photos",
+    "galleries",
+    "rate_limits",
+    "settings",
+    "ignored_folders",
   );
-  for (const o of (await env.CACHE.list()).objects)
-    await env.CACHE.delete(o.key);
+  await clearCache();
 });
 
 const sql = (s: string, ...b: unknown[]) => env.DB.prepare(s).bind(...b);

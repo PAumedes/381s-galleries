@@ -1,4 +1,5 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { clearCache } from "../support/cache";
+import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -11,10 +12,7 @@ const P = "pppppppp-0000-0000-0000-0000000000a1";
 const e = { ...env, DRIVE_MODE: "google" } as Env;
 
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 
 // body is keyed by drive id so tests can tell which file was served
@@ -54,8 +52,7 @@ const enc = (s: string) => new TextEncoder().encode(s);
 
 beforeEach(async () => {
   await db.delete(schema.galleries);
-  for (const o of (await env.CACHE.list()).objects)
-    await env.CACHE.delete(o.key);
+  await clearCache();
   await db.insert(schema.galleries).values({
     id: G,
     driveFolderId: "f",

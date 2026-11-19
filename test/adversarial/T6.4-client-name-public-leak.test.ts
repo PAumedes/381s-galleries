@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -6,10 +6,7 @@ import { loadGallery } from "../../app/lib/server/gallery";
 
 const db = getDb(env);
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 
 it("T6.4: client name is admin-only (PLAN 5.7) and must not be in the public loader payload", async () => {
