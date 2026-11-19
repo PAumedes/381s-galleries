@@ -688,6 +688,8 @@ interface AlbumPass {
   result: SyncResult;
   syncedAt: string;
   takenSlugs: Set<string>;
+  /** Removed photo ids whose R2 keys still need deleting (persisted with the row deletes). */
+  pendingIds: string[];
 }
 
 /**
@@ -762,6 +764,125 @@ function galleryStatements(
   return stmts;
 }
 
+/** New photos: capture time first (dated before undated), then name, then set. */
+const freshOrder = (x: PhotoDraft, y: PhotoDraft) =>
+  (x.highres.takenAt && y.highres.takenAt
+    ? cmp(x.highres.takenAt, y.highres.takenAt)
+    : x.highres.takenAt
+      ? -1
+      : y.highres.takenAt
+        ? 1
+        : 0) ||
+  cmp(x.baseName, y.baseName) ||
+  cmp(x.setName, y.setName);
+
+/**
+ * Diffs an album's photos against its rows: returns the new drafts, the
+ * update statements, and the rows to delete (grace over) or mark missing.
+ * Counts photos.updated as it goes.
+ */
+function diffPhotos(
+  { db, now }: SyncRun,
+  { result }: AlbumPass,
+  a: AlbumDraft,
+  rows: Row[],
+) {
+  const rowByKey = new Map(rows.map((r) => [keyOf(r.setName, r.baseName), r]));
+  const wanted = new Set<string>();
+  const fresh: PhotoDraft[] = [];
+  const updates: BatchItem[] = [];
+  for (const p of a.photos) {
+    const k = keyOf(p.setName, p.baseName);
+    wanted.add(k);
+    const row = rowByKey.get(k);
+    if (!row) {
+      fresh.push(p);
+      continue;
+    }
+    const f = photoFields(p);
+    const differs = (Object.keys(f) as (keyof typeof f)[]).some(
+      (c) => row[c] !== f[c],
+    );
+    if (differs) result.photos.updated++;
+    if (differs || row.missingSince !== null)
+      updates.push(
+        db
+          .update(schema.photos)
+          .set({ ...f, missingSince: null })
+          .where(eq(schema.photos.id, row.id)),
+      );
+  }
+  const gone = rows.filter((r) => !wanted.has(keyOf(r.setName, r.baseName)));
+  return {
+    fresh,
+    updates,
+    toDelete: gone.filter((r) => graceElapsed(now, r.missingSince)),
+    toMark: gone.filter((r) => r.missingSince === null),
+  };
+}
+
+/**
+ * The photo statements for one album, in the order that keeps every committed
+ * prefix consistent: pending-R2 ids, deletes, marks, updates, inserts.
+ */
+function photoStatements(
+  run: SyncRun,
+  pass: AlbumPass,
+  a: AlbumDraft,
+  rows: Row[],
+  galleryId: string,
+): BatchItem[] {
+  const { db } = run;
+  const { result, syncedAt } = pass;
+  const { fresh, updates, toDelete, toMark } = diffPhotos(run, pass, a, rows);
+  const goneIds = toDelete.map((r) => r.id);
+  result.photos.removed += goneIds.length;
+  result.photos.added += fresh.length;
+  const stmts: BatchItem[] = [];
+
+  if (goneIds.length) {
+    // Same batch as the row deletes: ids survive any later failure.
+    pass.pendingIds = [...new Set([...pass.pendingIds, ...goneIds])].slice(
+      -PENDING_DELETES_CAP,
+    );
+    const value = JSON.stringify(pass.pendingIds);
+    stmts.push(
+      db
+        .insert(schema.settings)
+        .values({ key: PENDING_DELETES_KEY, value })
+        .onConflictDoUpdate({ target: schema.settings.key, set: { value } }),
+    );
+  }
+  for (const ids of chunk(goneIds, D1_IN_CHUNK))
+    stmts.push(db.delete(schema.photos).where(inArray(schema.photos.id, ids)));
+  for (const ids of chunk(
+    toMark.map((r) => r.id),
+    D1_IN_CHUNK,
+  ))
+    stmts.push(
+      db
+        .update(schema.photos)
+        .set({ missingSince: syncedAt })
+        .where(inArray(schema.photos.id, ids)),
+    );
+  stmts.push(...updates);
+  fresh.sort(freshOrder);
+  let sort = rows.reduce((m, r) => Math.max(m, r.sort), -1) + 1;
+  // D1 allows 100 bound parameters per statement (d1-limits.ts); a photo row binds ~18.
+  for (const part of chunk(fresh, PHOTO_INSERT_ROWS))
+    stmts.push(
+      db.insert(schema.photos).values(
+        part.map((p) => ({
+          id: crypto.randomUUID(),
+          galleryId,
+          ...photoFields(p),
+          sort: sort++,
+        })),
+      ),
+    );
+  return stmts;
+}
+
 export async function runSync(
   env: SyncEnv,
   opts: SyncOptions,
@@ -833,9 +954,12 @@ export async function runSync(
     const takenSlugs = new Set(allRows.map((g) => g.slug.toLowerCase()));
     const syncedAt = nowIso(now);
     // Removed photo ids whose R2 keys still need deleting (persisted with the row deletes).
-    let pendingIds = pending;
-    const pass: AlbumPass = { result, syncedAt, takenSlugs };
-    const graceOver = (since: string | null) => graceElapsed(now, since);
+    const pass: AlbumPass = {
+      result,
+      syncedAt,
+      takenSlugs,
+      pendingIds: pending,
+    };
 
     const rowsByGallery = await loadPhotoRows(run, albums, byFolder);
 
@@ -854,101 +978,9 @@ export async function runSync(
       result.issues += a.issues.length;
       const stmts = galleryStatements(run, pass, a, ex, galleryId, issuesJson);
 
-      if (!highresEmpty) {
-        const rowByKey = new Map(
-          rows.map((r) => [keyOf(r.setName, r.baseName), r]),
-        );
-        const wanted = new Set<string>();
-        const fresh: PhotoDraft[] = [];
-        const updates: BatchItem[] = [];
-        for (const p of a.photos) {
-          const k = keyOf(p.setName, p.baseName);
-          wanted.add(k);
-          const row = rowByKey.get(k);
-          if (!row) {
-            fresh.push(p);
-            continue;
-          }
-          const f = photoFields(p);
-          const differs = (Object.keys(f) as (keyof typeof f)[]).some(
-            (c) => row[c] !== f[c],
-          );
-          if (differs) result.photos.updated++;
-          if (differs || row.missingSince !== null)
-            updates.push(
-              db
-                .update(schema.photos)
-                .set({ ...f, missingSince: null })
-                .where(eq(schema.photos.id, row.id)),
-            );
-        }
-        const gone = rows.filter(
-          (r) => !wanted.has(keyOf(r.setName, r.baseName)),
-        );
-        const toDelete = gone.filter((r) => graceOver(r.missingSince));
-        const toMark = gone.filter((r) => r.missingSince === null);
-        const goneIds = toDelete.map((r) => r.id);
-        result.photos.removed += goneIds.length;
-        result.photos.added += fresh.length;
-
-        if (goneIds.length) {
-          // Same batch as the row deletes: ids survive any later failure.
-          pendingIds = [...new Set([...pendingIds, ...goneIds])].slice(
-            -PENDING_DELETES_CAP,
-          );
-          const value = JSON.stringify(pendingIds);
-          stmts.push(
-            db
-              .insert(schema.settings)
-              .values({ key: PENDING_DELETES_KEY, value })
-              .onConflictDoUpdate({
-                target: schema.settings.key,
-                set: { value },
-              }),
-          );
-        }
-        for (const ids of chunk(goneIds, D1_IN_CHUNK))
-          stmts.push(
-            db.delete(schema.photos).where(inArray(schema.photos.id, ids)),
-          );
-        for (const ids of chunk(
-          toMark.map((r) => r.id),
-          D1_IN_CHUNK,
-        ))
-          stmts.push(
-            db
-              .update(schema.photos)
-              .set({ missingSince: syncedAt })
-              .where(inArray(schema.photos.id, ids)),
-          );
-        stmts.push(...updates);
-        fresh.sort(
-          (x, y) =>
-            (x.highres.takenAt && y.highres.takenAt
-              ? cmp(x.highres.takenAt, y.highres.takenAt)
-              : x.highres.takenAt
-                ? -1
-                : y.highres.takenAt
-                  ? 1
-                  : 0) ||
-            cmp(x.baseName, y.baseName) ||
-            cmp(x.setName, y.setName),
-        );
-        let sort = rows.reduce((m, r) => Math.max(m, r.sort), -1) + 1;
-        // D1 allows 100 bound parameters per statement (d1-limits.ts); a photo row binds ~18.
-        for (const part of chunk(fresh, PHOTO_INSERT_ROWS))
-          stmts.push(
-            db.insert(schema.photos).values(
-              part.map((p) => ({
-                id: crypto.randomUUID(),
-                galleryId,
-                ...photoFields(p),
-                sort: sort++,
-              })),
-            ),
-          );
-        await flushBatches(run, stmts);
-      } else await flushBatches(run, stmts);
+      if (!highresEmpty)
+        stmts.push(...photoStatements(run, pass, a, rows, galleryId));
+      await flushBatches(run, stmts);
     }
 
     result.galleries.archived = await archiveAbsent(
@@ -960,7 +992,7 @@ export async function runSync(
 
     await putSetting(env, TOKEN_KEY, nextToken, op);
 
-    await flushR2(env, op, pendingIds);
+    await flushR2(env, op, pass.pendingIds);
     result.subrequests = drive.subrequests() - startSubs;
     return result;
   } finally {
