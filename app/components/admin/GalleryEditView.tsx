@@ -6,20 +6,16 @@ import type { Design } from "../../lib/design";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
 import { versionsOf } from "../img-url";
 import { CoverTab } from "./gallery-edit/CoverTab";
-import { DangerSection } from "./gallery-edit/DangerSection";
 import { resolveEditorCover } from "./gallery-edit/cover";
 import { DesignBar, DesignSection } from "./gallery-edit/DesignSection";
-import { DetailsSection } from "./gallery-edit/DetailsSection";
+import { DatosSections } from "./gallery-edit/DatosSections";
 import { EditorColumns } from "./gallery-edit/EditorColumns";
 import { EditorHeader } from "./gallery-edit/EditorHeader";
 import { EditorPreview } from "./gallery-edit/EditorPreview";
-import { HomeSection } from "./gallery-edit/HomeSection";
-import { OptionsSection } from "./gallery-edit/OptionsSection";
+import { fieldErrorsOf } from "./gallery-edit/field-errors";
 import { PhotosTab } from "./gallery-edit/PhotosTab";
-import { PinSection } from "./gallery-edit/PinSection";
 import { ShareSections } from "./gallery-edit/ShareSections";
-import { StatusSection } from "./gallery-edit/StatusSection";
-import type { FieldErrors, GalleryEditData } from "./gallery-edit/types";
+import type { GalleryEditData } from "./gallery-edit/types";
 import { useCoverPrefetch } from "./gallery-edit/useCoverPrefetch";
 import { useDesignDraft } from "./gallery-edit/useDesignDraft";
 import { GalleryTabs, isEditorTab, type EditorTab } from "./GalleryTabs";
@@ -38,16 +34,6 @@ export function GalleryEditView(props: {
   actionData: GalleryActionResult | undefined;
 }) {
   return <GalleryEditViewInner key={props.data.gallery.id} {...props} />;
-}
-
-/** Field errors of the last action when it was this intent's and failed. */
-function fieldErrorsOf(
-  actionData: GalleryActionResult | undefined,
-  intent: string,
-): FieldErrors {
-  return actionData && actionData.intent === intent && !actionData.ok
-    ? (actionData.fieldErrors ?? {})
-    : {};
 }
 
 function GalleryEditViewInner({
@@ -134,45 +120,18 @@ function GalleryEditViewInner({
       {tab === "datos" && (
         <EditorColumns
           main={
-            <>
-              <DetailsSection
-                g={g}
-                errors={fieldErrorsOf(actionData, "details")}
-                title={title}
-                onTitle={setTitle}
-                eventDate={eventDate}
-                onEventDate={setEventDate}
-                busy={busy}
-                actionData={actionData}
-              />
-              <StatusSection
-                status={g.status}
-                busy={busy}
-                actionData={actionData}
-              />
-              <PinSection
-                hasPin={g.hasPin}
-                errors={fieldErrorsOf(actionData, "pin")}
-                busy={busy}
-                actionData={actionData}
-              />
-              <HomeSection g={g} busy={busy} actionData={actionData} />
-              <OptionsSection
-                g={g}
-                data={data}
-                proofing={proofing}
-                onMode={setMode}
-                errors={fieldErrorsOf(actionData, "flags")}
-                busy={busy}
-                actionData={actionData}
-              />
-              <DangerSection
-                slug={g.slug}
-                deleting={data.deleting}
-                busy={busy}
-                actionData={actionData}
-              />
-            </>
+            <DatosSections
+              g={g}
+              data={data}
+              proofing={proofing}
+              onMode={setMode}
+              title={title}
+              onTitle={setTitle}
+              eventDate={eventDate}
+              onEventDate={setEventDate}
+              busy={busy}
+              actionData={actionData}
+            />
           }
           preview={preview(t("admin.preview.hint"))}
         />
