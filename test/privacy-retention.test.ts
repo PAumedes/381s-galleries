@@ -25,7 +25,7 @@ describe("privacy retention text", () => {
       /downloads/,
       /cached images/,
       /PIN and visitor data/,
-      /Only the Drive folder identifier is kept/,
+      /Only the Drive folder identifier and the date of deletion are kept/,
     ])
       expect(en_).toMatch(w);
     const es_ = es["privacy.retention.body"];
@@ -37,7 +37,7 @@ describe("privacy retention text", () => {
       /descargas/,
       /imágenes en caché/,
       /datos de PIN y de visitantes/,
-      /Solo se conserva el identificador de la carpeta de Drive/,
+      /Solo se conservan el identificador de la carpeta de Drive y la fecha de eliminación/,
     ])
       expect(es_).toMatch(w);
   });

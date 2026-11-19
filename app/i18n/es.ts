@@ -116,7 +116,7 @@ export const es = {
     "Para entregar las fotos, para que el estudio vea la actividad y las estadísticas de cada galería (por ejemplo, desde qué países y dispositivos se mira) y para detectar abusos y proteger la galería.",
   "privacy.retention.title": "Cuánto tiempo",
   "privacy.retention.body":
-    "Guardamos el historial de visitas y descargas mientras exista la galería; no se elimina automáticamente. Cuando el estudio elimina una galería, se eliminan todos los datos asociados a ella (índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y de visitantes). Solo se conserva el identificador de la carpeta de Drive, para que la galería no se vuelva a crear. Si querés que se borre antes, pedíselo al estudio.",
+    "Guardamos el historial de visitas y descargas mientras exista la galería; no se elimina automáticamente. Cuando el estudio elimina una galería, se eliminan todos los datos asociados a ella (índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y de visitantes). Solo se conservan el identificador de la carpeta de Drive y la fecha de eliminación, para que la galería no se vuelva a crear. Si querés que se borre antes, pedíselo al estudio.",
   "privacy.sharing.title": "Venta y terceros",
   "privacy.sharing.body": "No vendemos ni compartimos tus datos.",
   "privacy.contact.title": "Contacto",
@@ -450,7 +450,7 @@ export const es = {
   "admin.setup.root.save": "Guardar carpeta",
   "admin.setup.section.ignored": "Carpetas ignoradas",
   "admin.setup.ignored.note":
-    "Carpetas de galerías eliminadas. La sincronización no las vuelve a crear. De ellas solo se guarda el identificador de la carpeta.",
+    "Carpetas de galerías eliminadas. La sincronización no las vuelve a crear. De ellas solo se guardan el identificador de la carpeta y la fecha de eliminación.",
   "admin.setup.ignored.empty": "No hay carpetas ignoradas.",
   "admin.setup.ignored.deletedAt": "Eliminada el {date}",
   "admin.setup.ignored.reinclude": "Volver a incluir",
@@ -521,6 +521,9 @@ export const es = {
   "admin.msg.restored": "Galería restaurada.",
   "admin.msg.deleteSlugMismatch":
     "El enlace que escribiste no coincide. No se eliminó nada.",
+  "admin.msg.deleteFailed":
+    "No se pudo terminar de eliminar la galería (falló un servicio). Ya está oculta; volvé a enviar para continuar.",
+  "admin.list.deleting": "Continuar eliminación",
   "admin.msg.deleteBusy":
     "Hay una sincronización en curso. Probá de nuevo en un momento; no se eliminó nada.",
   "admin.msg.deleteContinuing":

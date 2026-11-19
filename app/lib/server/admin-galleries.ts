@@ -46,8 +46,8 @@ const FILTER_STATUS: Record<Filter, "published" | "draft" | "archived" | null> =
 
 // ------------------------------------------------------------------ list
 
-/** A gallery whose deletion is in progress (tombstoned, row not gone yet) is hidden from the admin list. */
-const notDeleting = sql`NOT EXISTS (SELECT 1 FROM ignored_folders i WHERE i.drive_folder_id = ${schema.galleries.driveFolderId})`;
+/** A gallery whose deletion is in progress (tombstoned, row not gone yet): stays listed so it can be continued. */
+const isDeletingSql = sql<boolean>`EXISTS (SELECT 1 FROM ignored_folders i WHERE i.drive_folder_id = ${schema.galleries.driveFolderId})`;
 
 export interface GalleryListRow {
   id: string;
@@ -65,6 +65,8 @@ export interface GalleryListRow {
   /** Per-photo download rows only (bulk header rows are excluded). */
   downloads: number;
   issueCount: number;
+  /** Deletion started but not finished: the list offers "Continuar eliminación". */
+  deleting: boolean;
 }
 
 export async function listGalleries(
@@ -88,11 +90,12 @@ export async function listGalleries(
         (SELECT p.id FROM photos p WHERE p.id = galleries.cover_photo_id AND p.gallery_id = galleries.id AND p.missing_since IS NULL),
         (SELECT p.id FROM photos p WHERE p.gallery_id = galleries.id AND p.missing_since IS NULL ORDER BY p.set_name, p.sort, p.base_name LIMIT 1))`,
       photoCount: sql<number>`(SELECT count(*) FROM photos p WHERE p.gallery_id = galleries.id AND p.missing_since IS NULL)`,
+      deleting: sql<number>`${isDeletingSql}`,
       views: sql<number>`(SELECT count(*) FROM gallery_views v WHERE v.gallery_id = galleries.id)`,
       downloads: sql<number>`(SELECT count(*) FROM downloads d WHERE d.gallery_id = galleries.id AND d.photo_id IS NOT NULL)`,
     })
     .from(g)
-    .where(and(notDeleting, status ? eq(g.status, status) : undefined))
+    .where(status ? eq(g.status, status) : undefined)
     .orderBy(
       sql`${g.status} = 'archived'`,
       sql`${g.createdAt} DESC`,
@@ -112,6 +115,7 @@ export async function listGalleries(
     : rows;
   return matched.map(({ syncIssuesJson, ...r }) => ({
     ...r,
+    deleting: !!r.deleting,
     expired: isExpired(r.expiresAt, now),
     issueCount: groupIssues(syncIssuesJson).total,
   }));
@@ -121,8 +125,7 @@ export async function listGalleries(
 export async function countGalleries(env: Env): Promise<number> {
   const [r] = await getDb(env)
     .select({ n: sql<number>`count(*)` })
-    .from(schema.galleries)
-    .where(notDeleting);
+    .from(schema.galleries);
   return r?.n ?? 0;
 }
 
@@ -344,7 +347,16 @@ async function deleteIntent(
   const intent = "delete";
   if (str(f, "slug").trim().toLowerCase() !== g.slug.toLowerCase())
     return fail(intent, t("admin.msg.deleteSlugMismatch"));
-  switch (await deleteGallery(env, g.id)) {
+  let outcome: Awaited<ReturnType<typeof deleteGallery>>;
+  try {
+    outcome = await deleteGallery(env, g.id);
+  } catch {
+    // R2 or D1 failed: the gallery stays marked (and listed as "deleting");
+    // submitting again resumes, every step is repeatable.
+    console.error("delete gallery failed");
+    return fail(intent, t("admin.msg.deleteFailed"));
+  }
+  switch (outcome) {
     case "deleted":
       throw redirect("/admin?deleted=1", 303);
     case "continue":

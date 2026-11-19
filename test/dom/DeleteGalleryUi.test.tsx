@@ -120,7 +120,7 @@ describe("Ajustes: Carpetas ignoradas", () => {
   it("lists each folder with a 'Volver a incluir' form carrying the confirm flag", async () => {
     showSetup({
       ignoredFolders: [
-        { driveFolderId: "folder-1", deletedAt: "2026-11-01T12:00:00Z" },
+        { handle: "0123456789abcdef", deletedAt: "2026-11-01T12:00:00Z" },
       ],
     });
     const btn = await screen.findByRole("button", { name: "Volver a incluir" });
@@ -128,7 +128,8 @@ describe("Ajustes: Carpetas ignoradas", () => {
     const val = (n: string) =>
       (form.querySelector(`[name=${n}]`) as HTMLInputElement).value;
     expect(val("intent")).toBe("reinclude");
-    expect(val("folder")).toBe("folder-1");
+    expect(val("handle")).toBe("0123456789abcdef");
+    expect(document.body.textContent).not.toContain("0123456789abcdef");
     expect(val("confirm")).toBe("1");
   });
 });

@@ -28,8 +28,15 @@ export const VIEW_DEDUPE_MS = 30 * 60 * 1000;
 
 type ViewRow = VisitorInfo & { galleryId: string; visitorId: string | null };
 
-/** Cookieless views: one row per (gallery, ip_hash) per `VIEW_DEDUPE_MS`, decided atomically in one statement. */
-async function insertViewOnce(env: GalleryEnv, row: ViewRow): Promise<void> {
+/**
+ * Cookieless views: one row per (gallery, ip_hash) per `VIEW_DEDUPE_MS`, decided
+ * atomically in one statement. Only while the gallery exists, so a request
+ * racing a gallery deletion cannot leave an orphan row.
+ */
+export async function insertViewOnce(
+  env: GalleryEnv,
+  row: ViewRow,
+): Promise<void> {
   const columns = getTableColumns(schema.galleryViews);
   const values: Record<string, unknown> = { ...row, createdAt: nowIso() };
   const keys = Object.keys(values) as (keyof typeof columns)[];
@@ -38,7 +45,8 @@ async function insertViewOnce(env: GalleryEnv, row: ViewRow): Promise<void> {
   await env.DB.prepare(
     `INSERT INTO gallery_views (${keys.map((k) => columns[k].name).join(", ")})
      SELECT ${keys.map((_, i) => `?${i + 1}`).join(", ")}
-     WHERE NOT EXISTS (SELECT 1 FROM gallery_views
+     WHERE EXISTS (SELECT 1 FROM galleries WHERE id = ${param("galleryId")})
+       AND NOT EXISTS (SELECT 1 FROM gallery_views
        WHERE gallery_id = ${param("galleryId")} AND ip_hash = ${param("ipHash")} AND created_at > ${cutoff})`,
   )
     .bind(

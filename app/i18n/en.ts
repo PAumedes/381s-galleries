@@ -118,7 +118,7 @@ export const en = {
     "To deliver the photos, to let the studio see the activity and statistics of each gallery (for example, which countries and devices it is viewed from), and to detect abuse and protect the gallery.",
   "privacy.retention.title": "How long",
   "privacy.retention.body":
-    "We keep the visit and download history for as long as the gallery exists; nothing is deleted automatically. When the studio deletes a gallery, all data associated with it is deleted (photo index, favorites, visits, downloads, cached images, and PIN and visitor data). Only the Drive folder identifier is kept, so the gallery is not created again. If you want it removed sooner, ask the studio.",
+    "We keep the visit and download history for as long as the gallery exists; nothing is deleted automatically. When the studio deletes a gallery, all data associated with it is deleted (photo index, favorites, visits, downloads, cached images, and PIN and visitor data). Only the Drive folder identifier and the date of deletion are kept, so the gallery is not created again. If you want it removed sooner, ask the studio.",
   "privacy.sharing.title": "Selling and third parties",
   "privacy.sharing.body": "We do not sell or share your data.",
   "privacy.contact.title": "Contact",
@@ -451,7 +451,7 @@ export const en = {
   "admin.setup.root.save": "Save folder",
   "admin.setup.section.ignored": "Ignored folders",
   "admin.setup.ignored.note":
-    "Folders of deleted galleries. Sync does not re-create them. Only the folder identifier is kept for them.",
+    "Folders of deleted galleries. Sync does not re-create them. Only the folder identifier and the deletion date are kept for them.",
   "admin.setup.ignored.empty": "No ignored folders.",
   "admin.setup.ignored.deletedAt": "Deleted on {date}",
   "admin.setup.ignored.reinclude": "Include again",
@@ -521,6 +521,9 @@ export const en = {
   "admin.msg.restored": "Gallery restored.",
   "admin.msg.deleteSlugMismatch":
     "The link you typed does not match. Nothing was deleted.",
+  "admin.msg.deleteFailed":
+    "Could not finish deleting the gallery (a service failed). It is already hidden; submit again to continue.",
+  "admin.list.deleting": "Continue deletion",
   "admin.msg.deleteBusy":
     "A sync is running. Try again in a moment; nothing was deleted.",
   "admin.msg.deleteContinuing":

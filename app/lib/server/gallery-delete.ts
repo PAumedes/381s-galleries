@@ -9,19 +9,35 @@
  *  2. MARK: archive + hide from the home page + write the tombstone. From here
  *     the public routes 404, the warm cron skips it (archived) and sync skips
  *     the folder, so nothing refills R2 or re-adds photos;
- *  3. R2 first: the cache keys are `<photo id>/<variant>` (images.ts), so they
+ *  3. R2 first: the ids in `settings.r2_pending_deletes` (photos sync already
+ *     removed; their cache keys were still waiting) are flushed first. The
+ *     list does not record which gallery they came from, so ALL of them are
+ *     cleaned: they are orphans by definition (no photo row), and sync would
+ *     delete them on its next run anyway. Then, for this gallery: the cache keys are `<photo id>/<variant>` (images.ts), so they
  *     are known from the photo rows; deleted in calls of <= 1000 keys. If the
  *     D1 step then fails, the keys are gone and the gallery is merely still
- *     marked: re-submitting finishes (the reverse order would orphan objects
+ *     marked: re-submitting finishes (or "Continuar eliminación" in the list) (the reverse order would orphan objects
  *     whose ids can no longer be found). Past `r2CallsMax` calls per request
  *     (Workers Free allows 50 subrequests) the cleaned photo rows are dropped
  *     and "continue" is returned: the admin re-submits;
  *  4. one atomic D1 batch deletes every row tied to the gallery.
+ * Known limit: a request that already passed the access checks (a `/img`
+ * cache fill, a warm run that started before the mark) can `put` an object
+ * after the R2 delete; its key is `<photo id>/...` and the photo row is gone,
+ * so it is an unreachable orphan (never served: the route 404s). Documented in
+ * PLAN 6; it is not swept (no list calls).
  * Drive is never touched (the app only reads it) and neither is the studio logo.
  */
 import { eq, sql } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../db";
-import { SETTINGS_KEYS } from "./settings";
+import { safeEqual } from "./auth";
+import { shortMac } from "./crypto";
+import {
+  deleteSetting,
+  getSetting,
+  putSetting,
+  SETTINGS_KEYS,
+} from "./settings";
 
 /** The variants stored in R2 per photo (key `<photo id>/<variant>`). */
 const R2_VARIANTS = ["thumb", "view-sm", "view-lg"] as const;
@@ -89,6 +105,22 @@ const chunk = <T>(a: T[], n: number): T[][] =>
     a.slice(i * n, (i + 1) * n),
   );
 
+const r2Keys = (ids: string[]) =>
+  ids.flatMap((id) => R2_VARIANTS.map((v) => `${id}/${v}`));
+
+async function readPending(env: Env): Promise<string[]> {
+  try {
+    const v: unknown = JSON.parse(
+      (await getSetting(env, SETTINGS_KEYS.r2PendingDeletes)) ?? "[]",
+    );
+    return Array.isArray(v)
+      ? [...new Set(v.filter((x): x is string => typeof x === "string"))]
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function deleteGallery(
   env: Env,
   galleryId: string,
@@ -124,6 +156,24 @@ async function deleteLocked(
     ).bind(g.folder, nowIso()),
   ]);
 
+  let calls = Math.max(0, r2CallsMax);
+  const pending = await readPending(env);
+  if (pending.length) {
+    const parts = chunk(pending, PHOTOS_PER_R2_CALL);
+    const take = parts.slice(0, calls);
+    for (const part of take) await env.CACHE.delete(r2Keys(part));
+    calls -= take.length;
+    if (take.length < parts.length) {
+      await putSetting(
+        env,
+        SETTINGS_KEYS.r2PendingDeletes,
+        JSON.stringify(parts.slice(take.length).flat()),
+      );
+      return "continue";
+    }
+    await deleteSetting(env, SETTINGS_KEYS.r2PendingDeletes);
+  }
+
   const ids = (
     await db
       .select({ id: schema.photos.id })
@@ -132,11 +182,8 @@ async function deleteLocked(
       .orderBy(schema.photos.id)
   ).map((p) => p.id);
   const parts = chunk(ids, PHOTOS_PER_R2_CALL);
-  const now = parts.slice(0, Math.max(0, r2CallsMax));
-  for (const part of now)
-    await env.CACHE.delete(
-      part.flatMap((id) => R2_VARIANTS.map((v) => `${id}/${v}`)),
-    );
+  const now = parts.slice(0, calls);
+  for (const part of now) await env.CACHE.delete(r2Keys(part));
   if (now.length < parts.length) {
     // Progress: drop the photo rows whose cache is already gone (same order as `ids`).
     const cleaned = now.reduce((n, p) => n + p.length, 0);
@@ -162,6 +209,15 @@ export interface IgnoredFolder {
   deletedAt: string;
 }
 
+/**
+ * Opaque, stable, non-reversible handle for a tombstoned folder: the browser
+ * never sees the Drive id (CLAUDE.md), only this HMAC (SESSION_SECRET).
+ */
+export const folderHandle = (
+  env: Pick<Env, "SESSION_SECRET">,
+  driveFolderId: string,
+) => shortMac(env.SESSION_SECRET, `ignored-folder:${driveFolderId}`);
+
 /** Tombstoned folders whose deletion is complete (no gallery row left), newest first. */
 export async function ignoredFolders(env: Env): Promise<IgnoredFolder[]> {
   const t = schema.ignoredFolders;
@@ -182,7 +238,33 @@ export async function ignoredFolderIds(env: Env): Promise<Set<string>> {
   return new Set(rows.map((r) => r.id));
 }
 
-/** "Volver a incluir": forget a tombstone so the next sync re-creates the gallery. False when nothing was removed. */
+/** Resolve a handle to its tombstoned folder id (every candidate compared in constant time); undefined = unknown. */
+async function folderForHandle(
+  env: Env,
+  handle: string,
+): Promise<string | undefined> {
+  let found: string | undefined;
+  for (const f of await ignoredFolders(env))
+    if (safeEqual(await folderHandle(env, f.driveFolderId), handle))
+      found = f.driveFolderId;
+  return found;
+}
+
+/** "Volver a incluir" as the browser asks for it: by opaque handle. False (no-op) for an unknown handle. */
+export async function reincludeByHandle(
+  env: Env,
+  handle: string,
+): Promise<boolean> {
+  const folder = await folderForHandle(env, handle);
+  return folder !== undefined && (await reincludeFolder(env, folder));
+}
+
+/**
+ * "Volver a incluir": forget a tombstone so the next sync re-creates the
+ * gallery. The stored change token is cleared too: a non-forced sync with a
+ * valid token only looks at what changed in Drive, and nothing has changed in
+ * the folder, so it would never come back on its own. False when nothing was removed.
+ */
 export async function reincludeFolder(
   env: Env,
   driveFolderId: string,
@@ -192,7 +274,9 @@ export async function reincludeFolder(
   )
     .bind(driveFolderId)
     .run();
-  return res.meta.changes > 0;
+  if (res.meta.changes === 0) return false;
+  await deleteSetting(env, SETTINGS_KEYS.driveChangesToken);
+  return true;
 }
 
 /** True while a gallery is being deleted (tombstoned but its row still exists). */
