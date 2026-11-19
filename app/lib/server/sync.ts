@@ -631,6 +631,58 @@ async function loadPhotoRows(
   return rowsByGallery;
 }
 
+const graceElapsed = (now: Date, since: string | null) =>
+  since !== null && now.getTime() - Date.parse(since) > SYNC_DELETE_GRACE_MS;
+
+/**
+ * Albums whose folder is gone: mark first, archive only after the grace
+ * period (remembering the previous status), rows are always kept.
+ * Returns how many galleries were archived by this run.
+ */
+async function archiveAbsent(
+  run: SyncRun,
+  existing: GalleryRow[],
+  albums: AlbumDraft[],
+  syncedAt: string,
+): Promise<number> {
+  const { db, now } = run;
+  const present = new Set(albums.map((a) => a.folder.id));
+  const absent = existing.filter((g) => !present.has(g.driveFolderId));
+  const gstmts: BatchItem[] = [];
+  const firstSeen = absent.filter((g) => g.folderMissingSince === null);
+  for (const ids of chunk(
+    firstSeen.map((g) => g.id),
+    D1_IN_CHUNK,
+  ))
+    gstmts.push(
+      db
+        .update(schema.galleries)
+        .set({ folderMissingSince: syncedAt })
+        .where(inArray(schema.galleries.id, ids)),
+    );
+  const due = absent.filter(
+    (g) => g.status !== "archived" && graceElapsed(now, g.folderMissingSince),
+  );
+  for (const prev of ["draft", "published"] as const)
+    for (const ids of chunk(
+      due.filter((g) => g.status === prev).map((g) => g.id),
+      D1_IN_CHUNK,
+    ))
+      gstmts.push(
+        db
+          .update(schema.galleries)
+          .set({
+            status: "archived",
+            showOnHome: false,
+            archivedPrevStatus: prev,
+            archivedBySync: true,
+          })
+          .where(inArray(schema.galleries.id, ids)),
+      );
+  await flushBatches(run, gstmts);
+  return due.length;
+}
+
 export async function runSync(
   env: SyncEnv,
   opts: SyncOptions,
@@ -703,9 +755,7 @@ export async function runSync(
     const syncedAt = nowIso(now);
     // Removed photo ids whose R2 keys still need deleting (persisted with the row deletes).
     let pendingIds = pending;
-    const graceOver = (since: string | null) =>
-      since !== null &&
-      now.getTime() - Date.parse(since) > SYNC_DELETE_GRACE_MS;
+    const graceOver = (since: string | null) => graceElapsed(now, since);
 
     const rowsByGallery = await loadPhotoRows(run, albums, byFolder);
 
@@ -877,43 +927,12 @@ export async function runSync(
       } else await flushBatches(run, stmts);
     }
 
-    // Albums whose folder is gone: mark first, archive only after the grace
-    // period (remembering the previous status), rows are always kept.
-    const present = new Set(albums.map((a) => a.folder.id));
-    const absent = existing.filter((g) => !present.has(g.driveFolderId));
-    const gstmts: BatchItem[] = [];
-    const firstSeen = absent.filter((g) => g.folderMissingSince === null);
-    for (const ids of chunk(
-      firstSeen.map((g) => g.id),
-      D1_IN_CHUNK,
-    ))
-      gstmts.push(
-        db
-          .update(schema.galleries)
-          .set({ folderMissingSince: syncedAt })
-          .where(inArray(schema.galleries.id, ids)),
-      );
-    const due = absent.filter(
-      (g) => g.status !== "archived" && graceOver(g.folderMissingSince),
+    result.galleries.archived = await archiveAbsent(
+      run,
+      existing,
+      albums,
+      syncedAt,
     );
-    for (const prev of ["draft", "published"] as const)
-      for (const ids of chunk(
-        due.filter((g) => g.status === prev).map((g) => g.id),
-        D1_IN_CHUNK,
-      ))
-        gstmts.push(
-          db
-            .update(schema.galleries)
-            .set({
-              status: "archived",
-              showOnHome: false,
-              archivedPrevStatus: prev,
-              archivedBySync: true,
-            })
-            .where(inArray(schema.galleries.id, ids)),
-        );
-    await flushBatches(run, gstmts);
-    result.galleries.archived = due.length;
 
     await putSetting(env, TOKEN_KEY, nextToken, op);
 
