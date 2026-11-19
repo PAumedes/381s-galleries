@@ -4,7 +4,6 @@ import { getDb, photoVisible, schema } from "../../db";
 import type { Db } from "../../db";
 import { resolveExpiry, validTimezone } from "../studio-time";
 import {
-  localToUtcIso,
   groupIssues,
   ISSUE_LABELS,
   isValidDate,
