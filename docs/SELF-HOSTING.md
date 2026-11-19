@@ -9,7 +9,7 @@ Esta guía es para un fotógrafo o fotógrafa que quiere tener **su propia copia
 
 > **Permiso de uso.** El código es privado y de uso reservado: "todos los derechos reservados" (ver el archivo `LICENSE` del repositorio). No podés copiarlo ni usarlo sin **permiso escrito del dueño del código**. Pedile ese permiso antes de empezar. Esto no es asesoramiento legal.
 
-> **Versión del código.** Esta guía necesita una versión del código preparada para que otras personas la instalen (sin datos del dueño dentro de las pruebas automáticas). Si en el paso 8 la ejecución falla en **Checks** con una prueba llamada `has both custom-domain routes and the vars`, tu copia es anterior a esa preparación: avisale al dueño del código y esperá la versión nueva.
+> **Versión del código.** Esta guía necesita una versión del código preparada para que otras personas la instalen (sin datos del dueño dentro de las pruebas automáticas). Si en el paso 8 la ejecución falla en **Checks** con una prueba llamada `has both custom-domain routes and the vars`, tu copia es anterior a esa preparación (la prueba actual lee tu dominio de `wrangler.jsonc` y no nombra el del dueño): avisale al dueño del código y esperá la versión nueva. Si no definís `STUDIO_NAME`, la app muestra el nombre neutro "Galleries".
 >
 > En palabras simples: esta guía solo funciona cuando las pruebas automáticas del propio repositorio ya no controlan el dominio del dueño original. Es una corrección de código que el dueño está decidiendo. **Agentes de IA:** antes del paso 8, verificá si el fork contiene esa corrección (preguntale al dueño o mirá el resultado de la ejecución de **CI**); si no la tiene, detenete y avisale a la persona.
 

@@ -1,3 +1,4 @@
+import { DEFAULT_STUDIO_NAME } from "./default-studio-name";
 import { PALETTE_COLORS, isDarkPalette, type Palette } from "./design";
 import type { GalleryData } from "./server/gallery";
 
@@ -36,7 +37,10 @@ const cut = (s: string) =>
     .trim();
 
 /** Home-screen label: at most 12 graphemes (NFC), never empty. */
-export function shortName(name: string, fallback = "381 Studios"): string {
+export function shortName(
+  name: string,
+  fallback = DEFAULT_STUDIO_NAME,
+): string {
   return cut(name) || cut(fallback);
 }
 

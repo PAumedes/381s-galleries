@@ -1,19 +1,68 @@
 import { describe, expect, it } from "vitest";
 import { legacyRedirect } from "../app/lib/server/legacy-redirect";
+import wranglerRaw from "../wrangler.jsonc?raw";
+import workerSrc from "../workers/app.ts?raw";
 
-const env = {
-  PUBLIC_ORIGIN: "https://gallery.381studios.ar",
-  LEGACY_HOSTS: "session.381studios.ar",
+type Route = { pattern: string; custom_domain: boolean };
+type HostConfig = {
+  routes: Route[];
+  vars: { PUBLIC_ORIGIN: string; LEGACY_HOSTS?: string; STUDIO_NAME: string };
 };
+
+const parseWrangler = (raw: string): HostConfig =>
+  JSON.parse(
+    raw
+      // block comments only at line start: "/admin-assets/*" is a string, not a comment
+      .replace(/^\s*\/\*[\s\S]*?\*\//gm, "")
+      .replace(/^\s*\/\/.*$/gm, "")
+      .replace(/,(\s*[}\]])/g, "$1"),
+  );
+
+const legacyHostsOf = (c: HostConfig) =>
+  (c.vars.LEGACY_HOSTS ?? "")
+    .split(",")
+    .map((h) => h.trim())
+    .filter(Boolean);
+
+/** Structural problems of a wrangler host config (owner- and fork-agnostic). */
+export function hostConfigProblems(c: HostConfig): string[] {
+  const out: string[] = [];
+  const canon = new URL(c.vars.PUBLIC_ORIGIN).host;
+  const legacy = legacyHostsOf(c);
+  const domains = c.routes
+    .filter((r) => r.custom_domain === true)
+    .map((r) => r.pattern);
+  if (domains.length !== c.routes.length)
+    out.push("every route must be custom_domain: true");
+  if (!domains.includes(canon)) out.push("no route for the PUBLIC_ORIGIN host");
+  for (const h of legacy) {
+    if (h === canon) out.push(`legacy host equals canonical: ${h}`);
+    if (!/^[a-z0-9.-]+$/i.test(h) || h.includes("/"))
+      out.push(`legacy host is not a hostname: ${h}`);
+    if (!domains.includes(h)) out.push(`no route for legacy host ${h}`);
+  }
+  if (domains.length !== 1 + legacy.length)
+    out.push("routes must be the canonical host plus each legacy host");
+  if (typeof c.vars.STUDIO_NAME !== "string" || !c.vars.STUDIO_NAME.trim())
+    out.push("STUDIO_NAME must be a non-empty string");
+  return out;
+}
+
+const cfg = parseWrangler(wranglerRaw);
+const CANON_ORIGIN = cfg.vars.PUBLIC_ORIGIN;
+const CANON = new URL(CANON_ORIGIN).host;
+// Any hostname different from the canonical one works for the redirect tests.
+const LEGACY = legacyHostsOf(cfg)[0] ?? "legacy.example.test";
+const env = { PUBLIC_ORIGIN: CANON_ORIGIN, LEGACY_HOSTS: LEGACY };
 const old = (path: string, init?: RequestInit) =>
-  new Request("https://session.381studios.ar" + path, init);
+  new Request(`https://${LEGACY}${path}`, init);
 
 describe("legacyRedirect", () => {
   it("301s GET to the same path and query on PUBLIC_ORIGIN", () => {
     const r = legacyRedirect(old("/boda-ana?lang=en&x=1"), env)!;
     expect(r.status).toBe(301);
     expect(r.headers.get("Location")).toBe(
-      "https://gallery.381studios.ar/boda-ana?lang=en&x=1",
+      `${CANON_ORIGIN}/boda-ana?lang=en&x=1`,
     );
     expect(r.headers.get("Cache-Control")).toBe("public, max-age=86400");
   });
@@ -28,16 +77,14 @@ describe("legacyRedirect", () => {
       env,
     )!;
     expect(r.status).toBe(308);
-    expect(r.headers.get("Location")).toBe(
-      "https://gallery.381studios.ar/api/g/x/fav",
-    );
+    expect(r.headers.get("Location")).toBe(`${CANON_ORIGIN}/api/g/x/fav`);
   });
   it("redirects /img and root", () => {
     expect(
       legacyRedirect(old("/img/abc?v=1"), env)!.headers.get("Location"),
-    ).toBe("https://gallery.381studios.ar/img/abc?v=1");
+    ).toBe(`${CANON_ORIGIN}/img/abc?v=1`);
     expect(legacyRedirect(old("/"), env)!.headers.get("Location")).toBe(
-      "https://gallery.381studios.ar/",
+      `${CANON_ORIGIN}/`,
     );
   });
   it.each([
@@ -47,18 +94,11 @@ describe("legacyRedirect", () => {
     "///evil.com",
     "/%2f%2fevil.com",
   ])("stays on the gallery origin for %s", (p) => {
-    const r = legacyRedirect(
-      new Request("https://session.381studios.ar" + p),
-      env,
-    )!;
-    expect(new URL(r.headers.get("Location")!).origin).toBe(
-      "https://gallery.381studios.ar",
-    );
+    const r = legacyRedirect(new Request(`https://${LEGACY}${p}`), env)!;
+    expect(new URL(r.headers.get("Location")!).origin).toBe(CANON_ORIGIN);
   });
   it("ignores non-legacy hosts", () => {
-    expect(
-      legacyRedirect(new Request("https://gallery.381studios.ar/x"), env),
-    ).toBeNull();
+    expect(legacyRedirect(new Request(`${CANON_ORIGIN}/x`), env)).toBeNull();
     expect(legacyRedirect(new Request("https://evil.com/x"), env)).toBeNull();
   });
   it("is a no-op when LEGACY_HOSTS is unset or empty", () => {
@@ -73,13 +113,13 @@ describe("legacyRedirect", () => {
     undefined,
     "",
     "nope",
-    "http://gallery.381studios.ar",
-    "https://user:pw@gallery.381studios.ar",
-    "https://session.381studios.ar",
-    "https://Session.381studios.ar.",
+    `http://${CANON}`,
+    `https://user:pw@${CANON}`,
+    `https://${LEGACY}`,
+    `https://${LEGACY.toUpperCase()}.`,
   ])("fails closed with an empty 421 when PUBLIC_ORIGIN is %s", async (o) => {
     const r = legacyRedirect(old("/x"), {
-      LEGACY_HOSTS: "session.381studios.ar",
+      LEGACY_HOSTS: LEGACY,
       PUBLIC_ORIGIN: o,
     })!;
     expect(r.status).toBe(421);
@@ -96,13 +136,11 @@ describe("legacyRedirect", () => {
   });
   it("ignores one trailing dot on request host and LEGACY_HOSTS items, and case", () => {
     expect(
-      legacyRedirect(new Request("https://SESSION.381studios.ar./x"), env),
+      legacyRedirect(new Request(`https://${LEGACY.toUpperCase()}./x`), env),
     ).not.toBeNull();
-    const e = { ...env, LEGACY_HOSTS: " ,Session.381studios.ar. , " };
+    const e = { ...env, LEGACY_HOSTS: ` ,${LEGACY.toUpperCase()}. , ` };
     expect(legacyRedirect(old("/x"), e)!.status).toBe(301);
-    expect(
-      legacyRedirect(new Request("https://session.381studios.ar../x"), e),
-    ).toBeNull();
+    expect(legacyRedirect(new Request(`https://${LEGACY}../x`), e)).toBeNull();
   });
   it("adds security headers to redirects and 421", () => {
     for (const r of [
@@ -135,19 +173,19 @@ describe("legacyRedirect", () => {
     },
   );
   it("matches hosts case-insensitively, several entries, and the Host header cannot steer the target", () => {
-    const e = { ...env, LEGACY_HOSTS: "a.example.com, Session.381studios.ar" };
+    const e = {
+      ...env,
+      LEGACY_HOSTS: `a.example.com, ${LEGACY.toUpperCase()}`,
+    };
     const r = legacyRedirect(old("/x"), e)!;
-    expect(r.headers.get("Location")).toBe("https://gallery.381studios.ar/x");
+    expect(r.headers.get("Location")).toBe(`${CANON_ORIGIN}/x`);
     expect(
       legacyRedirect(new Request("https://a.example.com/y"), e)!.headers.get(
         "Location",
       ),
-    ).toBe("https://gallery.381studios.ar/y");
+    ).toBe(`${CANON_ORIGIN}/y`);
   });
 });
-
-import wranglerRaw from "../wrangler.jsonc?raw";
-import workerSrc from "../workers/app.ts?raw";
 
 const appFiles = import.meta.glob("../app/**/*.{ts,tsx,css}", {
   query: "?raw",
@@ -156,20 +194,68 @@ const appFiles = import.meta.glob("../app/**/*.{ts,tsx,css}", {
 }) as Record<string, string>;
 
 describe("config", () => {
-  const cfg = JSON.parse(
-    wranglerRaw
-      // block comments only at line start: "/admin-assets/*" is a string, not a comment
-      .replace(/^\s*\/\*[\s\S]*?\*\//gm, "")
-      .replace(/^\s*\/\/.*$/gm, "")
-      .replace(/,(\s*[}\]])/g, "$1"),
-  );
   it("has both custom-domain routes and the vars", () => {
-    const routes = cfg.routes as { pattern: string; custom_domain: boolean }[];
-    for (const p of ["gallery.381studios.ar", "session.381studios.ar"]) {
-      expect(routes).toContainEqual({ pattern: p, custom_domain: true });
-    }
-    expect(cfg.vars.PUBLIC_ORIGIN).toBe("https://gallery.381studios.ar");
-    expect(cfg.vars.LEGACY_HOSTS).toBe("session.381studios.ar");
+    expect(hostConfigProblems(cfg)).toEqual([]);
+  });
+  it("detects a missing route", () => {
+    const c = structuredClone(cfg);
+    c.routes = c.routes.filter((r) => r.pattern !== CANON);
+    expect(hostConfigProblems(c)).not.toEqual([]);
+    const l = structuredClone(cfg);
+    l.vars.LEGACY_HOSTS = "other.example.test";
+    expect(hostConfigProblems(l)).toContain(
+      "no route for legacy host other.example.test",
+    );
+  });
+  it("detects a PUBLIC_ORIGIN host mismatch, bad legacy host, non custom domain, empty name", () => {
+    const m = structuredClone(cfg);
+    m.vars.PUBLIC_ORIGIN = "https://elsewhere.example.test";
+    expect(hostConfigProblems(m)).toContain(
+      "no route for the PUBLIC_ORIGIN host",
+    );
+    const e = structuredClone(cfg);
+    e.vars.LEGACY_HOSTS = CANON;
+    expect(hostConfigProblems(e)).toContain(
+      `legacy host equals canonical: ${CANON}`,
+    );
+    const b = structuredClone(cfg);
+    b.vars.LEGACY_HOSTS = "https://x.example.test/p";
+    expect(hostConfigProblems(b).join()).toContain("not a hostname");
+    const n = structuredClone(cfg);
+    n.routes[0].custom_domain = false;
+    expect(hostConfigProblems(n)).not.toEqual([]);
+    const s = structuredClone(cfg);
+    s.vars.STUDIO_NAME = "  ";
+    expect(hostConfigProblems(s)).toContain(
+      "STUDIO_NAME must be a non-empty string",
+    );
+  });
+  it.each([
+    [
+      "fork, no legacy host",
+      "luz.example",
+      "",
+      [{ pattern: "luz.example", custom_domain: true }],
+    ],
+    [
+      "fork with a legacy host",
+      "galeria.estudio.example",
+      "vieja.estudio.example",
+      [
+        { pattern: "galeria.estudio.example", custom_domain: true },
+        { pattern: "vieja.estudio.example", custom_domain: true },
+      ],
+    ],
+  ])("accepts a different domain: %s", (_n, host, legacy, routes) => {
+    const fork: HostConfig = {
+      routes,
+      vars: {
+        STUDIO_NAME: "Estudio Luz",
+        PUBLIC_ORIGIN: `https://${host}`,
+        LEGACY_HOSTS: legacy,
+      },
+    };
+    expect(hostConfigProblems(fork)).toEqual([]);
   });
   it("worker entry runs the redirect before anything else", () => {
     const src = workerSrc as string;

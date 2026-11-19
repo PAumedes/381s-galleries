@@ -9,7 +9,7 @@ This guide is for a photographer who wants **their own copy** of the galleries a
 
 > **Permission to use.** The code is proprietary, "all rights reserved" (see the `LICENSE` file in the repository). You may not copy or use it without the **written permission of the code's owner**. Ask for that permission before you start. This is not legal advice.
 
-> **Code version.** This guide needs a version of the code prepared for other people to install (no owner values inside the automated tests). If in step 8 the run fails in **Checks** with a test called `has both custom-domain routes and the vars`, your copy predates that preparation: tell the code's owner and wait for the new version.
+> **Code version.** This guide needs a version of the code prepared for other people to install (no owner values inside the automated tests). If in step 8 the run fails in **Checks** with a test called `has both custom-domain routes and the vars`, your copy predates that preparation (the current test reads your domain from `wrangler.jsonc` and does not name the owner's): tell the code's owner and wait for the new version. If you leave `STUDIO_NAME` unset, the app shows the neutral name "Galleries".
 >
 > In plain words: this guide only works once the repository's own automated tests no longer check the original owner's domain. That is a code fix the owner is deciding on. **AI agents:** before step 8, check whether the fork contains that fix (ask the owner, or look at the result of the **CI** run); if it does not, stop and tell the person.
 

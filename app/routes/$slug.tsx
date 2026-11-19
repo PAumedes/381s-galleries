@@ -10,7 +10,7 @@ import { getLang, langCookie } from "../i18n/lang";
 import { makeT } from "../i18n/t";
 import { galleryMeta } from "../lib/og";
 import { pwaMeta } from "../lib/pwa";
-import { DEFAULT_STUDIO_NAME } from "../lib/use-studio-name";
+import { DEFAULT_STUDIO_NAME } from "../lib/default-studio-name";
 import { loadGallery, unlockGallery } from "../lib/server/gallery";
 import { publicOrigin } from "../lib/server/public-url";
 import type { Route } from "./+types/$slug";

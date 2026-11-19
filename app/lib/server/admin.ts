@@ -1,6 +1,7 @@
 import { crossSite } from "./access";
 import { requireAdmin } from "./auth";
 import { getSetting, SETTINGS_KEYS } from "./settings";
+import { DEFAULT_STUDIO_NAME } from "../default-studio-name";
 
 /** Response headers every admin page and action must carry. */
 export function adminHeaders(): Record<string, string> {
@@ -82,9 +83,11 @@ export function getStudioName(
   const p = (async () => {
     try {
       const v = await getSetting(env, SETTINGS_KEYS.studioName);
-      return (v && validStudioName(v)) || env.STUDIO_NAME;
+      return (
+        (v && validStudioName(v)) || env.STUDIO_NAME || DEFAULT_STUDIO_NAME
+      );
     } catch {
-      return env.STUDIO_NAME;
+      return env.STUDIO_NAME || DEFAULT_STUDIO_NAME;
     }
   })();
   if (request) nameCache.set(request, p);
