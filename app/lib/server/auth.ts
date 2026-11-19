@@ -39,7 +39,7 @@ export async function pinFingerprint(
   return b64urlEncode(new Uint8Array(mac)).slice(0, 16);
 }
 
-function safeEqual(a: string, b: string): boolean {
+export function safeEqual(a: string, b: string): boolean {
   const x = new TextEncoder().encode(a);
   const y = new TextEncoder().encode(b);
   let diff = x.length ^ y.length;

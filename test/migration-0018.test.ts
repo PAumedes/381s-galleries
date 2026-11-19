@@ -29,9 +29,9 @@ const cols = async (table: string) =>
   ).results.map((r) => r.name);
 
 describe("migration 0018_visitor_data", () => {
-  it("is named 0018_visitor_data.sql and is the last migration", () => {
+  it("is named 0018_visitor_data.sql", () => {
     expect(all[idx]?.name).toBe("0018_visitor_data.sql");
-    expect(idx).toBe(all.length - 1);
+    expect(idx).toBeGreaterThanOrEqual(0);
   });
 
   it("on a database with existing rows: old rows keep working, new columns are null", async () => {

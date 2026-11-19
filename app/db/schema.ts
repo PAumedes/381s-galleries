@@ -241,7 +241,7 @@ export const favorites = sqliteTable(
   ],
 );
 
-// Stats tables intentionally have no FKs so history survives gallery deletion.
+// Stats tables have no FKs: deleteGallery (gallery-delete.ts) removes their rows explicitly.
 /**
  * What we learn about a visitor's request (0018_visitor_data). Never the raw
  * IP: `ip_hash` is a keyed one-way hash. All nullable; the length / enum
@@ -318,6 +318,17 @@ export const rateLimits = sqliteTable("rate_limits", {
   key: text("key").primaryKey(),
   count: integer("count").notNull().default(0),
   windowStart: text("window_start").notNull(),
+});
+
+/**
+ * Tombstones of deleted galleries (0019): ONLY the Drive folder id and when it
+ * was deleted, so sync does not re-create the gallery. See gallery-delete.ts.
+ */
+export const ignoredFolders = sqliteTable("ignored_folders", {
+  driveFolderId: text("drive_folder_id").primaryKey(),
+  deletedAt: text("deleted_at")
+    .notNull()
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%SZ','now'))`),
 });
 
 export type Setting = typeof settings.$inferSelect;
