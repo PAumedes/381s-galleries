@@ -5,7 +5,6 @@ import { useT } from "../../i18n/use-t";
 import { movePhoto, moveTo, sortPhotos } from "../../lib/admin-gallery";
 import type { MoveDir } from "../../lib/admin-gallery";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
-import { Monitor, Phone } from "../icons";
 import { adminImgSrc } from "../img-url";
 import {
   FRAME_BY_MODE,
@@ -13,10 +12,10 @@ import {
   IMG_BY_MODE,
   useFitPrefs,
 } from "./photo-fit";
-import type { FitMode, TileSize } from "./photo-fit";
+import { FitControls, TOOL_BTN as tool } from "./FitControls";
 import { PhotoViewer } from "./PhotoViewer";
 import { QuickLook, useQuickLook } from "./QuickLook";
-import { TileActions } from "./TileActions";
+import { TileActions, TileBadges } from "./TileActions";
 
 export interface ReorderPhoto {
   id: string;
@@ -29,80 +28,12 @@ export interface ReorderPhoto {
 
 type Orders = Record<string, string[]>;
 
-const tool =
-  "text-micro text-grey-700 hover:text-ink border border-grey-300 hover:border-ink min-h-tap px-3 uppercase disabled:opacity-40 disabled:hover:border-grey-300 disabled:hover:text-grey-700 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-9";
 const btn =
   "text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10";
 function groupBySet(photos: ReorderPhoto[]): Orders {
   const out: Orders = {};
   for (const p of photos) (out[p.set] ??= []).push(p.id);
   return out;
-}
-
-function Choice<T extends string>({
-  label,
-  value,
-  options,
-  onPick,
-}: {
-  label: string;
-  value: T;
-  options: { value: T; text: string; name?: string }[];
-  onPick: (v: T) => void;
-}) {
-  return (
-    <div role="group" aria-label={label} className="flex items-center gap-1.5">
-      <span aria-hidden="true" className="text-micro text-grey-700 uppercase">
-        {label}
-      </span>
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          aria-pressed={value === o.value}
-          aria-label={o.name}
-          onClick={() => onPick(o.value)}
-          className={`${tool} min-w-tap ${value === o.value ? "bg-ink border-ink text-paper hover:text-paper" : ""}`}
-        >
-          {o.text}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/** Whole picture or cropped fill, and the tile size: remembered per viewer. */
-function FitControls({
-  prefs,
-  onChange,
-}: {
-  prefs: { mode: FitMode; size: TileSize };
-  onChange: (next: { mode?: FitMode; size?: TileSize }) => void;
-}) {
-  const t = useT();
-  return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-      <Choice
-        label={t("admin.reorder.view")}
-        value={prefs.mode}
-        onPick={(mode) => onChange({ mode })}
-        options={[
-          { value: "fit", text: t("admin.reorder.fit") },
-          { value: "fill", text: t("admin.reorder.fill") },
-        ]}
-      />
-      <Choice
-        label={t("admin.reorder.size")}
-        value={prefs.size}
-        onPick={(size) => onChange({ size })}
-        options={[
-          { value: "s", text: "S", name: t("admin.reorder.sizeS") },
-          { value: "m", text: "M", name: t("admin.reorder.sizeM") },
-          { value: "l", text: "L", name: t("admin.reorder.sizeL") },
-        ]}
-      />
-    </div>
-  );
 }
 
 /**
@@ -367,40 +298,11 @@ export function PhotoReorder({
                       >
                         {i + 1}
                       </span>
-                      {(isCover || isMobile) && (
-                        <span className="pointer-events-none absolute top-0 right-0 flex max-w-[calc(100%-1.5rem)]">
-                          {isCover && (
-                            <span
-                              data-cover-badge="desktop"
-                              title={coverLabel}
-                              className="bg-ink text-paper text-micro flex min-w-0 items-center gap-1 px-1.5 py-0.5 uppercase"
-                            >
-                              <Monitor
-                                aria-hidden="true"
-                                className="size-3.5 shrink-0"
-                              />
-                              <span className="truncate">
-                                {t("admin.reorder.cover")}
-                              </span>
-                            </span>
-                          )}
-                          {isMobile && (
-                            <span
-                              data-cover-badge="mobile"
-                              title={t("admin.reorder.coverMobile")}
-                              className="bg-ink text-paper text-micro border-paper/40 flex min-w-0 items-center gap-1 border-l px-1.5 py-0.5 uppercase"
-                            >
-                              <Phone
-                                aria-hidden="true"
-                                className="size-3.5 shrink-0"
-                              />
-                              <span className="truncate">
-                                {t("admin.reorder.tileMobile")}
-                              </span>
-                            </span>
-                          )}
-                        </span>
-                      )}
+                      <TileBadges
+                        isCover={isCover}
+                        isMobile={isMobile}
+                        coverLabel={coverLabel}
+                      />
                     </div>
                     <span
                       aria-hidden="true"

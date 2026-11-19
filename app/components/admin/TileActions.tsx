@@ -135,3 +135,42 @@ export function TileActions({
     </div>
   );
 }
+
+/** "Portada" / "Móvil" badges in the picture's top-right corner. */
+export function TileBadges({
+  isCover,
+  isMobile,
+  coverLabel,
+}: {
+  isCover: boolean;
+  isMobile: boolean;
+  /** "Portada" or "Portada automática (primera foto)" (the badge title). */
+  coverLabel: string;
+}) {
+  const t = useT();
+  if (!isCover && !isMobile) return null;
+  return (
+    <span className="pointer-events-none absolute top-0 right-0 flex max-w-[calc(100%-1.5rem)]">
+      {isCover && (
+        <span
+          data-cover-badge="desktop"
+          title={coverLabel}
+          className="bg-ink text-paper text-micro flex min-w-0 items-center gap-1 px-1.5 py-0.5 uppercase"
+        >
+          <Monitor aria-hidden="true" className="size-3.5 shrink-0" />
+          <span className="truncate">{t("admin.reorder.cover")}</span>
+        </span>
+      )}
+      {isMobile && (
+        <span
+          data-cover-badge="mobile"
+          title={t("admin.reorder.coverMobile")}
+          className="bg-ink text-paper text-micro border-paper/40 flex min-w-0 items-center gap-1 border-l px-1.5 py-0.5 uppercase"
+        >
+          <Phone aria-hidden="true" className="size-3.5 shrink-0" />
+          <span className="truncate">{t("admin.reorder.tileMobile")}</span>
+        </span>
+      )}
+    </span>
+  );
+}
