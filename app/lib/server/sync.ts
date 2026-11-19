@@ -504,6 +504,90 @@ async function releaseLock(env: SyncEnv, lockValue: string): Promise<void> {
     .run();
 }
 
+/** What every phase of one sync run needs (Introduce Parameter Object). */
+interface SyncRun {
+  env: SyncEnv;
+  db: Db;
+  drive: DriveClient;
+  guard: Guard;
+  op: Op;
+  now: Date;
+}
+
+/**
+ * Only photos that can still mature count: gallery not archived, folder
+ * present in the last scan, and not in the (marks-frozen) highres_empty state.
+ */
+async function hasMaturingMissing({ db }: SyncRun): Promise<boolean> {
+  const [missingPhoto] = await db
+    .select({ id: schema.photos.id })
+    .from(schema.photos)
+    .innerJoin(
+      schema.galleries,
+      eq(schema.photos.galleryId, schema.galleries.id),
+    )
+    .where(
+      and(
+        isNotNull(schema.photos.missingSince),
+        ne(schema.galleries.status, "archived"),
+        sql`${schema.galleries.folderMissingSince} is null`,
+        sql`coalesce(${schema.galleries.syncIssuesJson}, '') not like '%"highres_empty"%'`,
+      ),
+    )
+    .limit(1);
+  const [missingFolder] = await db
+    .select({ id: schema.galleries.id })
+    .from(schema.galleries)
+    .where(
+      and(
+        isNotNull(schema.galleries.folderMissingSince),
+        ne(schema.galleries.status, "archived"),
+      ),
+    )
+    .limit(1);
+  return Boolean(missingPhoto || missingFolder);
+}
+
+/**
+ * Change detection; takes the next token BEFORE scanning. Unfinished grace
+ * periods (missing photos/folders) force a rescan so they can mature even
+ * when Drive itself reports no new changes.
+ */
+async function detectChanges(
+  run: SyncRun,
+  force: boolean,
+): Promise<{ unchanged: true } | { unchanged: false; nextToken: string }> {
+  const { env, drive, guard, op } = run;
+  const stored = await getSetting(env, TOKEN_KEY, op);
+  let nextToken: string | undefined;
+  if (stored && !force) {
+    op(2);
+    if (!(await hasMaturingMissing(run))) {
+      try {
+        guard.reserve(1);
+        const ch = await drive.listChanges(stored);
+        guard.check();
+        if (!ch.changed) return { unchanged: true };
+        nextToken = ch.newStartPageToken;
+      } catch (err) {
+        // Only a stale/invalid token (400/404) means "rescan"; auth, quota
+        // and server errors must surface instead of silently costing a rescan.
+        if (!(
+          err instanceof DriveError &&
+          (err.status === 400 || err.status === 404)
+        ))
+          throw err;
+      }
+    }
+  }
+  if (nextToken === undefined) {
+    guard.reserve(1);
+    nextToken = await drive.getStartPageToken();
+    guard.check();
+  }
+  return { unchanged: false, nextToken };
+}
+
 export async function runSync(
   env: SyncEnv,
   opts: SyncOptions,
@@ -524,6 +608,7 @@ export async function runSync(
     cfOps += n;
     if (cfOps > CF_SUBREQUEST_CAP) throw new SyncBudgetError();
   };
+  const run: SyncRun = { env, db, drive, guard, op, now };
 
   const lockValue = newLockValue(now);
   if (!(await acquireLock(env, lockValue, now)))
@@ -538,69 +623,15 @@ export async function runSync(
     const rootId = await getRootFolderId(env);
     if (!rootId) return { ...result, skipped: "no_root" };
 
-    // 2. Change detection; take the next token BEFORE scanning. Unfinished
-    // grace periods (missing photos/folders) force a rescan so they can mature
-    // even when Drive itself reports no new changes.
-    const stored = await getSetting(env, TOKEN_KEY, op);
-    let nextToken: string | undefined;
-    if (stored && !force) {
-      op(2);
-      // Only photos that can still mature count: gallery not archived, folder
-      // present in the last scan, and not in the (marks-frozen) highres_empty state.
-      const [missingPhoto] = await db
-        .select({ id: schema.photos.id })
-        .from(schema.photos)
-        .innerJoin(
-          schema.galleries,
-          eq(schema.photos.galleryId, schema.galleries.id),
-        )
-        .where(
-          and(
-            isNotNull(schema.photos.missingSince),
-            ne(schema.galleries.status, "archived"),
-            sql`${schema.galleries.folderMissingSince} is null`,
-            sql`coalesce(${schema.galleries.syncIssuesJson}, '') not like '%"highres_empty"%'`,
-          ),
-        )
-        .limit(1);
-      const [missingFolder] = await db
-        .select({ id: schema.galleries.id })
-        .from(schema.galleries)
-        .where(
-          and(
-            isNotNull(schema.galleries.folderMissingSince),
-            ne(schema.galleries.status, "archived"),
-          ),
-        )
-        .limit(1);
-      if (!missingPhoto && !missingFolder) {
-        try {
-          guard.reserve(1);
-          const ch = await drive.listChanges(stored);
-          guard.check();
-          if (!ch.changed)
-            return {
-              ...result,
-              skipped: "unchanged",
-              subrequests: drive.subrequests() - startSubs,
-            };
-          nextToken = ch.newStartPageToken;
-        } catch (err) {
-          // Only a stale/invalid token (400/404) means "rescan"; auth, quota
-          // and server errors must surface instead of silently costing a rescan.
-          if (!(
-            err instanceof DriveError &&
-            (err.status === 400 || err.status === 404)
-          ))
-            throw err;
-        }
-      }
-    }
-    if (nextToken === undefined) {
-      guard.reserve(1);
-      nextToken = await drive.getStartPageToken();
-      guard.check();
-    }
+    // 2. Change detection; take the next token BEFORE scanning.
+    const detected = await detectChanges(run, force);
+    if (detected.unchanged)
+      return {
+        ...result,
+        skipped: "unchanged",
+        subrequests: drive.subrequests() - startSubs,
+      };
+    const nextToken = detected.nextToken;
 
     // 3. Scan (no writes yet).
     // Folders of deleted galleries (tombstones, or a deletion still in progress)
