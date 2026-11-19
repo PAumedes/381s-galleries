@@ -23,6 +23,28 @@ export interface ActivityOpts {
   limit?: number;
 }
 
+/**
+ * The visitor-info columns shared by `downloads` and `gallery_views` (never
+ * `ip_hash`: admins see where and on what a visit came from, not the hash).
+ */
+export const visitorFields = (
+  t: typeof schema.downloads | typeof schema.galleryViews,
+) => ({
+  country: t.country,
+  region: t.region,
+  city: t.city,
+  continent: t.continent,
+  timezone: t.timezone,
+  asn: t.asn,
+  asOrg: t.asOrg,
+  lang: t.lang,
+  referrerHost: t.referrerHost,
+  browser: t.browser,
+  browserVersion: t.browserVersion,
+  os: t.os,
+  device: t.device,
+});
+
 export function activityQuery(
   db: ReturnType<typeof getDb>,
   galleryId: string,
@@ -58,7 +80,7 @@ export function activityQuery(
       kind: d.kind,
       bulkId: d.bulkId,
       bulkScope: d.bulkScope,
-      country: d.country,
+      ...visitorFields(d),
       createdAt: d.createdAt,
       email: sql<
         string | null

@@ -57,4 +57,42 @@ describe("SiteFooter", () => {
     const a = await screen.findByRole("link", { name: "Privacidad" });
     expect(a.getAttribute("href")).toBe("/privacy");
   });
+
+  it.each([
+    [
+      "es",
+      [
+        "Nunca guardamos tu dirección IP",
+        "una sola vía",
+        "contar visitas únicas",
+        "detectar abusos",
+        "no se elimina automáticamente",
+        "pedíselo al estudio",
+        "ciudad",
+        "dominio, sin ruta ni parámetros",
+        "User-Agent",
+      ],
+    ],
+    [
+      "en",
+      [
+        "We never store your IP address",
+        "one-way hash",
+        "count unique visits",
+        "detect abuse",
+        "nothing is deleted automatically",
+        "ask the studio",
+        "city",
+        "domain only, no path or parameters",
+        "User-Agent",
+      ],
+    ],
+  ] as const)(
+    "discloses exactly what is collected, the IP hash and retention (%s)",
+    async (lang, phrases) => {
+      stub(<PrivacyPage />, lang);
+      await screen.findByRole("heading", { level: 1 });
+      for (const p of phrases) expect(document.body.textContent).toContain(p);
+    },
+  );
 });

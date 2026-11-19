@@ -95,13 +95,20 @@ favorites     (gallery_id, visitor_id, photo_id, list_name default 'Favoritos', 
                FK(gallery_id, photo_id) -> photos(gallery_id, id) cascade)   // same-gallery guaranteed by DB; idx (gallery_id, visitor_id) [0009]
 downloads     (id PK, gallery_id, photo_id?, visitor_id?, variant: 'highres'|'web'|'ig',
                kind: 'single'|'bulk', token_id? UNIQUE (jti of the /dl token: retries log once),
-               bulk_id? (per-photo rows of a bulk run: id of their header row), bulk_scope? (header rows only: 'all'|'favorites'|'set:<name>'), country?, ua?, created_at)
+               bulk_id? (per-photo rows of a bulk run: id of their header row), bulk_scope? (header rows only: 'all'|'favorites'|'set:<name>'), country?, ua? (first 200 chars, control characters stripped),
+               ip_hash? + the visitor-info columns below [0018], created_at)
                // indexes: (gallery_id, created_at), (gallery_id, bulk_id) [0009]
                // Activity shape: a bulk HEADER row = kind 'bulk' with photo_id NULL (one per download-all/set, written by /bulk);
                // per-photo rows have photo_id NOT NULL (written by /dl hits; kind 'bulk' when the token carried a bulkId).
                // Anonymous visitors are those with email LIKE '%@anon.invalid'. `activityQuery(db, galleryId)` (`app/lib/server/activity.ts`)
                // returns both kinds joined with the visitor email (null for anon / no visitor): Phase 4 stats and CSV build on it.
-gallery_views (gallery_id, visitor_id?, country?, ip_hash?, created_at)  // idx (gallery_id, ip_hash, created_at); cookieless views deduped per (gallery, ip_hash) for 30 min
+gallery_views (gallery_id, visitor_id?, country?, ip_hash?, + the visitor-info columns below [0018], created_at)  // idx (gallery_id, ip_hash, created_at); cookieless views deduped per (gallery, ip_hash) for 30 min
+               // Visitor-info columns [0018_visitor_data; same on `downloads` and `gallery_views`, all nullable, old rows stay NULL, each with a length CHECK; no auto-deletion, retention = while the gallery exists]:
+               //   ip_hash (keyed one-way hash of the client IP (IPv6 reduced to its /64) SALTED WITH THE GALLERY ID so it cannot be linked across galleries, <= 64; the rate-limit hashes are NOT salted), region (<= 100; cf.region else regionCode), city (<= 100), continent (2), timezone (<= 64), asn (int 0..2^32-1), as_org (<= 100; cf.asOrganization),
+               //   lang (primary Accept-Language tag only, <= 35, e.g. es-AR), referrer_host (host of Referer only, <= 253; NULL for same-site, missing, malformed, non-http(s) and IP-literal referrers),
+               //   browser (<= 40), browser_version (major only, <= 10), os (<= 40), device ('mobile'|'tablet'|'desktop'|'bot'|'unknown').
+               //   ONE helper fills them: `visitorInfo(request, env)` (`app/lib/server/visitor-info.ts`; used by view logging, bulk header rows and /dl) with `parseUserAgent` (`user-agent.ts`: in-house, indexOf over short ordered lists, no dependency, no regex tables).
+               //   Every value is typed, stripped of control/bidi characters, capped; `request.cf` missing (local/mock) = NULLs. Never exposed to clients: only admin `loadActivity` / the activity CSV read them (`ip_hash` is not even shown to admins). `downloads.ua` has IPv4/IPv6 literals replaced by `[ip]` before storing.
 rate_limits   (key PK, count, window_start)  // the ONE fixed-window limiter (`rateLimit(env, scope, key, max, windowMs)`, `app/lib/server/rate-limit.ts`);
                //   key = `<scope>:<key>`; scopes: `pin:<ip_hash>:<gallery_id>` (5/10 min; pseudo-gallery `unknown`), `visitor:<ip_hash>:<gallery_id>`,
                //   `anon:<ip_hash>:<gallery_id>`, `dl:<ip_hash>:<gallery_id>` (300 token/bulk requests per `DL_WINDOW_MS` = 10 min; every request counts once, refreshes included; 429s carry `Retry-After` = seconds left in the window). Expired rows of a scope are pruned opportunistically.
@@ -226,6 +233,7 @@ Simple, elegant, minimal, **Pixieset-inspired**: the photos are the interface.
 - Constant-time comparison for HMACs.
 - Refresh token stored AES-GCM encrypted (`TOKEN_KEY`).
 - Secrets only via `wrangler secret put` / `.dev.vars` (gitignored).
+- **Privacy (owner decision):** raw IP addresses are NEVER stored, logged or exported: only `hashIp` (HMAC with `SESSION_SECRET`), used to count unique visits and detect abuse. Everything else we keep about a visit/download is listed in §4 (visitor-info columns) and disclosed on `/privacy` (es + en: what, why, "never your IP, only a one-way hash that differs per gallery", history is kept, nothing deleted automatically; the studio can remove it on request). Adding a column here means updating that page. Header and `request.cf` values are hostile: sanitised and capped by `visitorInfo`, CHECK-capped by the DB, CSV cells guarded against formula injection (`csvCell`: leading `= + - @ TAB CR`), and shown only to the admin (Actividad tab: location, device, browser/OS, referrer host, language per row, plus a top-5 summary of countries, devices, browsers and referrers per gallery; the CSV has the same columns). Stats rows have no FK to galleries and are kept after a gallery is deleted. No automatic deletion (retention undecided); /privacy says so.
 
 ## 7. Task breakdown
 
@@ -286,6 +294,8 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T6.3 Gallery mode: Prueba (proofing) / Entrega (delivery).** See §3 (`thumb-wm`), §4 (`mode`, `drive_thumb_wm_id`), §5.3 (mode policy, protections). Migration 0013_gallery_mode (maps `use_watermark_preview`, recreates the warm triggers on `mode`). Replaces the old per-gallery watermark flag; downloads are refused and download UI hidden in proofing.
 - [x] **T6.4 Gallery editor: one Fotos grid, live cover preview, focal point, client search.** See §5.7 "T6.4 decisions". Migration 0014_cover_focus; shared `CoverHero`; admin-only `view-sm-wm`; `?q=` search on the list.
 - [x] **T6.5 Design panel.** Per-gallery palette (Claro/Oscuro/Arena/Gris, AA-tested), cover layout, grid style, spacing, live in the cover preview. Migration 0015_design (new columns; `theme` kept, unused). See §5.8 "Design panel (T6.5)".
+
+- [x] **T6.13 Visitor data.** Migration 0018_visitor_data (see §4 visitor-info columns, §6 Privacy), `visitorInfo` + `parseUserAgent`, Actividad per-row data + per-gallery summary, CSV columns, updated `/privacy`.
 
 ### Backlog (not now)
 - Email notifications (Resend / Gmail SMTP)

@@ -13,14 +13,52 @@ const row = (over = {}) => ({
   email: "ana@example.com",
   variant: "web",
   country: "AR",
+  region: null,
+  city: null,
+  lang: null,
+  referrerHost: null,
+  browser: null,
+  browserVersion: null,
+  os: null,
+  device: null,
   photoId: "p1",
   name: "IMG_1",
   set: "Highlights",
   ...over,
 });
 
+function view(over = {}) {
+  return {
+    createdAt: "2026-11-16T02:30:00Z",
+    email: null as string | null,
+    country: null as string | null,
+    region: null,
+    city: null as string | null,
+    continent: null,
+    timezone: null,
+    asn: null,
+    asOrg: null,
+    lang: null as string | null,
+    referrerHost: null as string | null,
+    browser: null as string | null,
+    browserVersion: null as string | null,
+    os: null as string | null,
+    device: null as string | null,
+    ...over,
+  };
+}
+
 const data: ActivityViewData = {
   gallery: { id: "g1", title: "Boda Ana", slug: "boda-ana" },
+  breakdown: {
+    countries: [
+      { value: "AR", count: 5 },
+      { value: "UY", count: 2 },
+    ],
+    devices: [{ value: "mobile", count: 4 }],
+    browsers: [{ value: "Safari", count: 3 }],
+    referrers: [],
+  },
   summary: { views: 7, visitors: 2, photos: 5, bulks: 1 },
   rows: [
     row(),
@@ -47,12 +85,12 @@ const data: ActivityViewData = {
   filters: { visitor: "", size: "" },
   visitorOptions: ["ana@example.com", "bob@example.com"],
   views: [
-    { createdAt: "2026-11-16T02:30:00Z", email: null, country: "UY" },
-    {
+    view({ createdAt: "2026-11-16T02:30:00Z", country: "UY", city: "Salto" }),
+    view({
       createdAt: "2026-11-15T12:00:00Z",
       email: "ana@example.com",
       country: null,
-    },
+    }),
   ],
 };
 
@@ -155,7 +193,7 @@ describe("ActivityView", () => {
     show({ ...data, next: null });
     expect(screen.queryByRole("link", { name: /Más antiguas/ })).toBeNull();
     const t = await screen.findByRole("table", { name: "Visitas" });
-    expect(within(t).getByText("UY")).toBeTruthy();
+    expect(within(t).getByText("Salto, UY")).toBeTruthy();
     expect(within(t).getByText("15/11/2026 09:00")).toBeTruthy();
   });
 
@@ -170,5 +208,56 @@ describe("ActivityView", () => {
     const ths = [...container.querySelectorAll("th")];
     expect(ths.length).toBeGreaterThan(0);
     for (const th of ths) expect(th.getAttribute("scope")).toBe("col");
+  });
+
+  it("shows location, device, browser/OS, referrer and language per row", async () => {
+    show({
+      ...data,
+      rows: [
+        row({
+          city: "Villa Luro",
+          country: "AR",
+          device: "mobile",
+          browser: "Safari",
+          browserVersion: "17",
+          os: "iOS",
+          referrerHost: "l.instagram.com",
+          lang: "es-AR",
+        }),
+      ],
+    });
+    const table = await screen.findByRole("table", { name: "Descargas" });
+    expect(within(table).getByText("Villa Luro, AR")).toBeTruthy();
+    expect(within(table).getByText("Celular")).toBeTruthy();
+    expect(within(table).getByText("Safari 17 · iOS")).toBeTruthy();
+    expect(within(table).getByText("l.instagram.com · es-AR")).toBeTruthy();
+  });
+
+  it("per-gallery summary lists top countries, devices, browsers and referrers", async () => {
+    show();
+    const sec = await screen.findByRole("region", {
+      name: "Resumen de visitas",
+    });
+    expect(within(sec).getByText("Países")).toBeTruthy();
+    expect(within(sec).getByText("UY")).toBeTruthy();
+    expect(within(sec).getByText("Celular")).toBeTruthy(); // translated device
+    expect(within(sec).getByText("Safari")).toBeTruthy();
+    expect(within(sec).getByText("Orígenes")).toBeTruthy();
+    expect(within(sec).getByText("Sin datos todavía.")).toBeTruthy(); // empty referrers
+  });
+
+  it("phones: the table stacks into labelled cards (T6.11 pattern)", async () => {
+    const { container } = show();
+    await screen.findByRole("table", { name: "Descargas" });
+    const table = container.querySelector("table")!;
+    expect(table.className).toContain("block");
+    expect(table.className).toContain("md:table");
+    expect(table.querySelector("thead")!.className).toContain("sr-only");
+    const cells = [...table.querySelectorAll("tbody td[data-label]")];
+    expect(cells.length).toBeGreaterThan(0);
+    for (const c of cells) expect(c.className).toContain("md:table-cell");
+    const labels = new Set(cells.map((c) => c.getAttribute("data-label")));
+    for (const l of ["Lugar", "Dispositivo", "Origen"])
+      expect(labels).toContain(l);
   });
 });
