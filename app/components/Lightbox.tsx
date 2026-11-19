@@ -18,9 +18,11 @@ import {
   Retry,
 } from "./icons";
 import { useImgUrl } from "./img-url";
+import { srcSetOf } from "./lightbox/srcset";
+import { usePreloadNeighbours } from "./lightbox/usePreloadNeighbours";
 import { NavZone } from "./lightbox/NavZone";
 import { BTN } from "./lightbox/styles";
-import type { GalleryPhoto, ImgUrlFn } from "./types";
+import type { GalleryPhoto } from "./types";
 
 const SWIPE_DISTANCE = 50;
 const SWIPE_VELOCITY = 0.5; // px per ms
@@ -40,13 +42,6 @@ export type LightboxProps = {
   isFavorite?: (id: string) => boolean;
   /** Proofing: block "Save image" (overlay above the photo, no context menu). */
   protect?: boolean;
-};
-
-const srcSetOf = (imgUrl: ImgUrlFn) => (id: string, v?: string) => {
-  const sm = imgUrl(id, "view-sm", v);
-  const lg = imgUrl(id, "view-lg", v);
-  // The admin preview has no 2048 px variant: a single candidate then.
-  return lg === sm ? `${sm} 1200w` : `${sm} 1200w, ${lg} 2048w`;
 };
 
 const TOP_BAR_PX = 64;
@@ -228,33 +223,7 @@ function LightboxView({
     return () => document.removeEventListener("keydown", onKey);
   }, [prev, next]);
 
-  // Preload neighbours. Stale ones (we navigated on) are cancelled so rapid
-  // navigation never piles up requests: at most the two current neighbours.
-  useEffect(() => {
-    const inflight: HTMLImageElement[] = [];
-    for (const p of [photos[index + 1], photos[index - 1]]) {
-      if (!p) continue;
-      const img = new Image();
-      const done = () => {
-        const at = inflight.indexOf(img);
-        if (at >= 0) inflight.splice(at, 1);
-      };
-      img.onload = done;
-      img.onerror = done;
-      img.sizes = "(min-width: 768px) 92vw, 100vw";
-      img.srcset = srcSetOf(imgUrl)(p.id, p.v);
-      img.src = imgUrl(p.id, "view-sm", p.v);
-      inflight.push(img);
-    }
-    return () => {
-      for (const img of inflight) {
-        img.onload = null;
-        img.onerror = null;
-        img.removeAttribute?.("srcset");
-        img.src = "";
-      }
-    };
-  }, [photos, index, imgUrl]);
+  usePreloadNeighbours(photos, index, imgUrl);
 
   // Auto-hide controls on pointer devices.
   useEffect(() => () => clearTimeout(idleTimer.current), []);
