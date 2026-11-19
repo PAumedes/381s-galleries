@@ -1,4 +1,4 @@
-import { es } from "./es";
+import { fallbackMessages } from "./fallback";
 import { DEFAULT_LANG, type Lang } from "./lang";
 import { makeT, type Messages, type TFunction } from "./t";
 
@@ -9,7 +9,10 @@ export function metaT(
   matches: ReadonlyArray<{ id: string; loaderData?: unknown } | undefined>,
 ): TFunction {
   const root = matches.find((m) => m?.id === "root")?.loaderData as RootData;
-  return makeT(root?.lang ?? DEFAULT_LANG, root?.messages ?? es);
+  return makeT(
+    root?.lang ?? DEFAULT_LANG,
+    root?.messages ?? fallbackMessages(),
+  );
 }
 
 /**

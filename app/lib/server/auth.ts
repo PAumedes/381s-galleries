@@ -256,13 +256,8 @@ async function verifyAccessJwt(
  * LOCAL DEV EXCEPTION: nothing is required only when ALL hold:
  * DRIVE_MODE is "mock", ALLOW_DEV_ADMIN is "1" (set only in .dev.vars, never
  * in wrangler.jsonc), and the request host is localhost or 127.0.0.1.
- *
- * Throws a 401 Response when access is denied.
  */
-export async function requireAdmin(
-  request: Request,
-  env: AdminEnv,
-): Promise<void> {
+async function checkAdmin(request: Request, env: AdminEnv): Promise<boolean> {
   const admin = env.ADMIN_EMAIL?.trim().toLowerCase();
   const header = request.headers
     .get("Cf-Access-Authenticated-User-Email")
@@ -273,7 +268,7 @@ export async function requireAdmin(
     // Header path (preferred): the email header must match too.
     if (admin && header === admin) {
       const email = await verifyAccessJwt(jwt, env);
-      if (email === admin) return;
+      if (email === admin) return true;
     }
   } else if (admin) {
     // Cookie path: single-fetch `.data` URLs (e.g. /admin.data) fall outside
@@ -283,7 +278,7 @@ export async function requireAdmin(
     // exists on this path).
     for (const token of getCookies(request, "CF_Authorization")) {
       if (!token) continue;
-      if ((await verifyAccessJwt(token, env)) === admin) return;
+      if ((await verifyAccessJwt(token, env)) === admin) return true;
     }
   }
   const host = new URL(request.url).hostname;
@@ -292,7 +287,34 @@ export async function requireAdmin(
     env.ALLOW_DEV_ADMIN === "1" &&
     (host === "localhost" || host === "127.0.0.1")
   ) {
-    return;
+    return true;
   }
-  throw new Response("Unauthorized", { status: 401 });
+  return false;
+}
+
+const verdicts = new WeakMap<
+  Request,
+  { env: AdminEnv; ok: Promise<boolean> }
+>();
+
+/**
+ * Whether the request is from the verified admin (same rules as
+ * requireAdmin, never throws). The verdict is cached per Request/env so the
+ * root loader and the admin route verify the Access JWT once per request.
+ */
+export function isAdmin(request: Request, env: AdminEnv): Promise<boolean> {
+  const hit = verdicts.get(request);
+  if (hit && hit.env === env) return hit.ok;
+  const ok = checkAdmin(request, env);
+  verdicts.set(request, { env, ok });
+  return ok;
+}
+
+/** Throws a 401 Response unless the request is from the verified admin. */
+export async function requireAdmin(
+  request: Request,
+  env: AdminEnv,
+): Promise<void> {
+  if (!(await isAdmin(request, env)))
+    throw new Response("Unauthorized", { status: 401 });
 }

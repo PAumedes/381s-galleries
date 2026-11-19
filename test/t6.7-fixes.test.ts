@@ -65,9 +65,9 @@ describe("case-insensitive admin paths", () => {
   ])("%s is admin", (p) => {
     expect(isAdminPath(p)).toBe(true);
     expect(getRequestLang(req(p, "admin_lang=en"))).toBe("en");
-    expect(messagesForRequest(req(p, "admin_lang=en")).messages).toHaveProperty(
-      "admin.lang.label",
-    );
+    expect(
+      messagesForRequest(req(p, "admin_lang=en"), true).messages,
+    ).toHaveProperty("admin.lang.label");
   });
   it.each(["/administrator", "/admins.data", "/g/admin"])("%s is not", (p) => {
     expect(isAdminPath(p)).toBe(false);

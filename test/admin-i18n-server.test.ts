@@ -177,19 +177,42 @@ describe("root loader", () => {
     } as never)) as { data?: unknown };
     return (r.data ?? r) as { lang: string; messages: Record<string, string> };
   };
-  it("uses admin_lang on admin and .data paths, full dictionary", async () => {
-    for (const u of [
-      "http://localhost/admin",
-      "http://localhost/admin/setup.data?_routes=root",
-    ]) {
-      const p = await run(u, "admin_lang=en");
-      expect(p.lang).toBe("en");
-      expect(p.messages["admin.nav.galleries"]).toBe("Galleries");
+  const adminUrls = [
+    "http://localhost/admin",
+    "http://localhost/admin/setup.data?_routes=root",
+  ];
+  const withDevAdmin = async (on: boolean, fn: () => Promise<void>) => {
+    const live = env as unknown as Record<string, string | undefined>;
+    const prev = [live.ALLOW_DEV_ADMIN, live.DRIVE_MODE];
+    live.ALLOW_DEV_ADMIN = on ? "1" : undefined;
+    live.DRIVE_MODE = on ? "mock" : undefined;
+    try {
+      await fn();
+    } finally {
+      [live.ALLOW_DEV_ADMIN, live.DRIVE_MODE] = prev;
     }
-    expect((await run("http://localhost/admin", "admin_lang=bad")).lang).toBe(
-      "es",
-    );
-  });
+  };
+  it("verified admin: admin_lang on admin and .data paths, full dictionary", () =>
+    withDevAdmin(true, async () => {
+      for (const u of adminUrls) {
+        const p = await run(u, "admin_lang=en");
+        expect(p.lang).toBe("en");
+        expect(p.messages["admin.nav.galleries"]).toBe("Galleries");
+      }
+      expect((await run("http://localhost/admin", "admin_lang=bad")).lang).toBe(
+        "es",
+      );
+    }));
+  it("unverified request: admin_lang language, public strings only", () =>
+    withDevAdmin(false, async () => {
+      for (const u of adminUrls) {
+        const p = await run(u, "admin_lang=en");
+        expect(p.lang).toBe("en");
+        expect(
+          Object.keys(p.messages).some((k) => k.startsWith("admin.")),
+        ).toBe(false);
+      }
+    }));
   it("public pages: no admin strings, no admin cookie effect", async () => {
     const p = await run("http://localhost/", "admin_lang=en");
     expect(p.lang).toBe("es");

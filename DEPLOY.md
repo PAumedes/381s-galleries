@@ -41,6 +41,8 @@ Los valores se guardan como **secrets de GitHub**: en el repositorio, **Settings
    - `ACCESS_TEAM_DOMAIN`: `<equipo>.cloudflareaccess.com` (sin `https://`).
    - `ACCESS_AUD`: el AUD tag.
 
+> El JavaScript del admin **no es público**: vive en `/admin-assets/`, y el Worker solo lo entrega si tu sesión de Access es válida (usa la cookie `CF_Authorization`, que el navegador manda a todo el dominio). **No hace falta agregar ningún path nuevo en Access** para esto; los tres paths de arriba no cambian. Lo que **no** se oculta: los nombres de las rutas del admin y de sus archivos (visibles en `/__manifest` y en `assets/manifest-*.js`); solo el código y el diccionario de textos del admin están protegidos. El diccionario del admin tampoco se envía a quien no sea admin verificado (ni en `/admin.data` ni en la página 401). `pnpm run deploy` corre `check:bundles` después del build y aborta si algo del admin quedó fuera de `/admin-assets/`.
+
 > **Nunca** cargues `ALLOW_DEV_ADMIN` (desactiva el login del admin). Si existiera en producción, el workflow Setup lo borra y avisa.
 
 ## 3. Token de API de Cloudflare
@@ -131,6 +133,7 @@ Creá hasta seis recetas de proceso (las dos con marca de agua son opcionales) (
 | "Google no verificó esta app" | Es normal. **Avanzado → Ir a…**. Confirmá que la app esté "In production". |
 | La sincronización dice "no root folder" / "Primero elegí una carpeta raíz" | Falta pegar el link de la carpeta `381studios` en Ajustes y guardar. Comprobá que sea la carpeta de tu cuenta conectada. |
 | Access entra en bucle o da 403 | `ACCESS_AUD`, `ACCESS_TEAM_DOMAIN` o `ADMIN_EMAIL` incorrectos (o email distinto al de la policy). Corregí el secret de GitHub y ejecutá Setup. Las rutas `admin` y `api/admin` deben estar bajo Access. |
+| El admin carga sin estilos/funciones o la consola muestra 404 en `/admin-assets/...` | La sesión de Access venció (la cookie `CF_Authorization` expiró). Recargá `/admin` e iniciá sesión de nuevo. Para cualquiera que no sea el admin, esos archivos responden 404 a propósito. |
 | Error al navegar entre páginas del admin pero no al recargar | Actualizá la app (ya se resolvió) / agregá el path `admin.data` en Access. |
 | Las imágenes no se ven | Falta el bucket R2 (`381s-galleries-cache`): ejecutá Setup de nuevo. |
 | "Fotos en caché: N / M" no llega a M | Es el precalentamiento: un cron de 1 minuto (gratis, no consume la cuota de Drive de los visitantes) copia miniaturas y vista chica de cada foto nueva a R2, hasta 20 fotos por minuto. Una galería nueva tarda unos minutos en quedar lista; mientras tanto la primera visita a cada foto carga desde Drive. Si no avanza, revisá que existan ambos crons (`*/15 * * * *` y `* * * * *`) en Workers > Triggers. |

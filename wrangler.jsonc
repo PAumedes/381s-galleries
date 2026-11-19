@@ -17,6 +17,14 @@
     // Legacy host: still routed to the Worker so old links get redirected.
     { "pattern": "session.381studios.ar", "custom_domain": true },
   ],
+  // Admin-only JS (build/client/admin-assets) is never served publicly: Workers
+  // Static Assets runs the Worker first for that path, and the Worker only
+  // hands the file to a verified admin (app/lib/server/admin-assets.ts). The
+  // Vite plugin fills in `directory` from the client build output.
+  "assets": {
+    "binding": "ASSETS",
+    "run_worker_first": ["/admin-assets/*"],
+  },
   "vars": {
     "DRIVE_MODE": "google",
     "STUDIO_NAME": "381 Studios",

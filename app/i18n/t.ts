@@ -25,7 +25,10 @@ export function plural(
   return forms[cat] ?? forms.other;
 }
 
-export function makeT(lang: Lang, messages: Messages): TFunction {
+export function makeT(
+  lang: Lang,
+  messages: Readonly<Record<string, string>>,
+): TFunction {
   const dict = messages as Record<string, string>;
   return (key, vars) => {
     let template = dict[key];

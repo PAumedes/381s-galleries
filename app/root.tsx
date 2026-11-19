@@ -13,8 +13,9 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { nonceContext } from "./lib/server/context";
+import { isAdmin } from "./lib/server/auth";
 import { getStudioName } from "./lib/server/admin";
-import { es } from "./i18n/es";
+import { fallbackMessages } from "./i18n/fallback";
 import { messagesForRequest } from "./i18n/dictionaries";
 import { isAdminPath, langCookie } from "./i18n/lang";
 import { validPublicOrigin } from "./lib/server/public-url";
@@ -24,10 +25,14 @@ import { makeT } from "./i18n/t";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   // /admin (and its .data requests) use the admin_lang cookie; the public
-  // site keeps ?lang= / lang cookie / Accept-Language. Public pages are not
-  // sent the admin strings.
-  const { lang, messages } = messagesForRequest(request);
+  // site keeps ?lang= / lang cookie / Accept-Language. Admin strings are sent
+  // only to a verified admin.
   const url = new URL(request.url);
+  // Admin strings only for a verified admin (the verdict is cached per
+  // request, so the admin route's own requireAdmin does not verify again).
+  const verifiedAdmin =
+    isAdminPath(url.pathname) && (await isAdmin(request, env));
+  const { lang, messages } = messagesForRequest(request, verifiedAdmin);
   const payload = {
     lang,
     messages,
@@ -103,7 +108,10 @@ export default function App() {
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   const loaderData = useRouteLoaderData<typeof loader>("root");
-  const t = makeT(loaderData?.lang ?? "es", loaderData?.messages ?? es);
+  const t = makeT(
+    loaderData?.lang ?? "es",
+    loaderData?.messages ?? fallbackMessages(),
+  );
 
   const notFound = isRouteErrorResponse(error) && error.status === 404;
   const title = notFound ? t("error.notFound.title") : t("error.generic.title");

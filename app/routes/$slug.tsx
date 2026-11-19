@@ -4,8 +4,8 @@ import { data, redirect } from "react-router";
 import { GalleryView } from "../components/GalleryView";
 import { PinScreen } from "../components/PinScreen";
 import { UnavailableScreen } from "../components/UnavailableScreen";
-import { en } from "../i18n/en";
-import { es } from "../i18n/es";
+import { enPublic } from "../i18n/en.public";
+import { esPublic } from "../i18n/es.public";
 import { getLang, langCookie } from "../i18n/lang";
 import { makeT } from "../i18n/t";
 import { galleryMeta } from "../lib/og";
@@ -50,7 +50,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     return redirect(result.location, { status: 303, headers });
   }
   const lang = getLang(request);
-  const t = makeT(lang, lang === "en" ? en : es);
+  const t = makeT(lang, lang === "en" ? enPublic : esPublic);
   const error =
     result.status === 429
       ? t("pin.tooManyAttempts")
