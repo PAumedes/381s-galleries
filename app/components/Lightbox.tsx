@@ -4,7 +4,6 @@ import {
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
-  type ReactNode,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
@@ -19,6 +18,8 @@ import {
   Retry,
 } from "./icons";
 import { useImgUrl } from "./img-url";
+import { NavZone } from "./lightbox/NavZone";
+import { BTN } from "./lightbox/styles";
 import type { GalleryPhoto, ImgUrlFn } from "./types";
 
 const SWIPE_DISTANCE = 50;
@@ -47,18 +48,6 @@ const srcSetOf = (imgUrl: ImgUrlFn) => (id: string, v?: string) => {
   // The admin preview has no 2048 px variant: a single candidate then.
   return lg === sm ? `${sm} 1200w` : `${sm} 1200w, ${lg} 2048w`;
 };
-
-const FOCUS =
-  "focus-visible:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white";
-
-const BTN = `flex size-11 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:text-white ${FOCUS} disabled:pointer-events-none disabled:opacity-25`;
-
-// Previous/next: wide full-height side zones (15% of the width, 64px at
-// least) that start below the top bar. Always clickable, even while the chrome
-// is faded, and never pointer-events-none when disabled, so a click can't fall
-// through to the backdrop and close the lightbox. On touch they become sr-only
-// (still in the accessibility tree and the tab order) and phones swipe.
-const NAV_ZONE = `absolute inset-y-16 flex w-[15vw] min-w-16 cursor-pointer items-center justify-center text-white/70 transition-colors duration-base ease-out-soft hover:bg-white/10 hover:text-white focus-visible:bg-white/10 ${FOCUS} disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent pointer-coarse:sr-only pointer-coarse:min-w-0`;
 
 const TOP_BAR_PX = 64;
 const SIDE_ZONE_FRACTION = 0.18; // slightly wider than the 15vw arrows
@@ -572,31 +561,5 @@ function LightboxView({
         <ChevronRight className={`size-12 ${chrome}`} />
       </NavZone>
     </div>
-  );
-}
-
-function NavZone({
-  side,
-  label,
-  enabled,
-  onClick,
-  children,
-}: {
-  side: "left" | "right";
-  label: string;
-  enabled: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      className={`${NAV_ZONE} ${side}-0`}
-      aria-label={label}
-      disabled={!enabled}
-      onClick={onClick}
-    >
-      {children}
-    </button>
   );
 }
