@@ -302,7 +302,6 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - [x] **T6.16 Visitor data.** Migration 0018_visitor_data (see §4 visitor-info columns, §6 Privacy), `visitorInfo` + `parseUserAgent`, Actividad per-row data + per-gallery summary, CSV columns, updated `/privacy`.
 - [x] **T6.17 Admin JS not public** — admin-only chunks under `/admin-assets/`, served by the Worker to the verified admin only; split admin dictionary; `pnpm check:bundles` guard in CI. See §6.
 - [x] **T6.14 Delete gallery.** `deleteGallery` + admin intent `delete` (typed slug, server-checked), tombstone table `ignored_folders` (migration 0019), sync skips tombstoned folders, "Carpetas ignoradas" in Ajustes, retention text on /privacy (es + en), see §4 and §6 "Deleting a gallery".
-- [x] **T6.13 Visitor data.** Migration 0018_visitor_data (see §4 visitor-info columns, §6 Privacy), `visitorInfo` + `parseUserAgent`, Actividad per-row data + per-gallery summary, CSV columns, updated `/privacy`.
 
 ### Backlog (not now)
 - Email notifications (Resend / Gmail SMTP)
