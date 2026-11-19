@@ -683,6 +683,85 @@ async function archiveAbsent(
   return due.length;
 }
 
+/** State shared by the per-album steps of one reconcile pass. */
+interface AlbumPass {
+  result: SyncResult;
+  syncedAt: string;
+  takenSlugs: Set<string>;
+}
+
+/**
+ * The gallery-row statement(s) for one album: an update of an existing
+ * gallery (only when something changed, or it must come back from a missing /
+ * sync-archived state) or the insert of a new one.
+ */
+function galleryStatements(
+  { env, db }: SyncRun,
+  { result, syncedAt, takenSlugs }: AlbumPass,
+  a: AlbumDraft,
+  ex: GalleryRow | undefined,
+  galleryId: string,
+  issuesJson: string,
+): BatchItem[] {
+  const stmts: BatchItem[] = [];
+  if (ex) {
+    // Only galleries sync itself archived come back when the folder does;
+    // an admin-archived gallery stays archived.
+    const restore =
+      ex.archivedBySync && ex.status === "archived"
+        ? (ex.archivedPrevStatus ?? "draft")
+        : undefined;
+    // The admin owns the gallery mode: sync never changes it for an
+    // existing gallery (switching to proofing would silently disable a
+    // client's downloads). Only new galleries get a default from the
+    // presence of preview-wm. A proofing gallery that loses its
+    // preview-wm files 404s (admin sees "falta preview-wm").
+    const changed =
+      ex.syncIssuesJson !== issuesJson ||
+      ex.driveModifiedAt !== a.folder.modifiedTime ||
+      restore !== undefined;
+    if (changed) result.galleries.updated++;
+    if (changed || ex.folderMissingSince !== null || ex.archivedBySync)
+      stmts.push(
+        db
+          .update(schema.galleries)
+          .set({
+            syncIssuesJson: issuesJson,
+            driveModifiedAt: a.folder.modifiedTime,
+            lastSyncedAt: syncedAt,
+            folderMissingSince: null,
+            ...(ex.archivedBySync
+              ? {
+                  archivedBySync: false,
+                  archivedPrevStatus: null,
+                  ...(restore ? { status: restore } : {}),
+                }
+              : {}),
+          })
+          .where(eq(schema.galleries.id, ex.id)),
+      );
+  } else {
+    result.galleries.created++;
+    const full = nfc(a.folder.name);
+    const { title, eventDate } = parseFolderDate(full);
+    stmts.push(
+      db.insert(schema.galleries).values({
+        id: galleryId,
+        driveFolderId: a.folder.id,
+        slug: uniqueSlug(full, takenSlugs),
+        title,
+        eventDate,
+        status: env.DRIVE_MODE === "mock" ? "published" : "draft",
+        mode: a.hasWm ? "proofing" : "delivery",
+        syncIssuesJson: issuesJson,
+        driveModifiedAt: a.folder.modifiedTime,
+        lastSyncedAt: syncedAt,
+      }),
+    );
+  }
+  return stmts;
+}
+
 export async function runSync(
   env: SyncEnv,
   opts: SyncOptions,
@@ -755,6 +834,7 @@ export async function runSync(
     const syncedAt = nowIso(now);
     // Removed photo ids whose R2 keys still need deleting (persisted with the row deletes).
     let pendingIds = pending;
+    const pass: AlbumPass = { result, syncedAt, takenSlugs };
     const graceOver = (since: string | null) => graceElapsed(now, since);
 
     const rowsByGallery = await loadPhotoRows(run, albums, byFolder);
@@ -772,63 +852,7 @@ export async function runSync(
       }
       const issuesJson = capIssues(a.issues);
       result.issues += a.issues.length;
-      const stmts: BatchItem[] = [];
-
-      if (ex) {
-        // Only galleries sync itself archived come back when the folder does;
-        // an admin-archived gallery stays archived.
-        const restore =
-          ex.archivedBySync && ex.status === "archived"
-            ? (ex.archivedPrevStatus ?? "draft")
-            : undefined;
-        // The admin owns the gallery mode: sync never changes it for an
-        // existing gallery (switching to proofing would silently disable a
-        // client's downloads). Only new galleries get a default from the
-        // presence of preview-wm. A proofing gallery that loses its
-        // preview-wm files 404s (admin sees "falta preview-wm").
-        const changed =
-          ex.syncIssuesJson !== issuesJson ||
-          ex.driveModifiedAt !== a.folder.modifiedTime ||
-          restore !== undefined;
-        if (changed) result.galleries.updated++;
-        if (changed || ex.folderMissingSince !== null || ex.archivedBySync)
-          stmts.push(
-            db
-              .update(schema.galleries)
-              .set({
-                syncIssuesJson: issuesJson,
-                driveModifiedAt: a.folder.modifiedTime,
-                lastSyncedAt: syncedAt,
-                folderMissingSince: null,
-                ...(ex.archivedBySync
-                  ? {
-                      archivedBySync: false,
-                      archivedPrevStatus: null,
-                      ...(restore ? { status: restore } : {}),
-                    }
-                  : {}),
-              })
-              .where(eq(schema.galleries.id, ex.id)),
-          );
-      } else {
-        result.galleries.created++;
-        const full = nfc(a.folder.name);
-        const { title, eventDate } = parseFolderDate(full);
-        stmts.push(
-          db.insert(schema.galleries).values({
-            id: galleryId,
-            driveFolderId: a.folder.id,
-            slug: uniqueSlug(full, takenSlugs),
-            title,
-            eventDate,
-            status: env.DRIVE_MODE === "mock" ? "published" : "draft",
-            mode: a.hasWm ? "proofing" : "delivery",
-            syncIssuesJson: issuesJson,
-            driveModifiedAt: a.folder.modifiedTime,
-            lastSyncedAt: syncedAt,
-          }),
-        );
-      }
+      const stmts = galleryStatements(run, pass, a, ex, galleryId, issuesJson);
 
       if (!highresEmpty) {
         const rowByKey = new Map(
