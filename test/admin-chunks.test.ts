@@ -138,7 +138,7 @@ describe("admin asset wiring", () => {
     expect(`/${ADMIN_DIR}/`).toBe(ADMIN_ASSET_PREFIX);
     // Comments hold quotes and "/*"; look at the raw text instead of parsing.
     expect(wranglerRaw).toContain(
-      `"run_worker_first": ["${ADMIN_ASSET_PREFIX}*"]`,
+      `"run_worker_first": ["${ADMIN_ASSET_PREFIX}*", "/manifest.webmanifest"]`,
     );
     expect(wranglerRaw).toContain('"binding": "ASSETS"');
   });

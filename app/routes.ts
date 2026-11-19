@@ -28,6 +28,7 @@ export default [
   route("brand/logo/:variant", "routes/brand.logo.$variant.tsx"),
   route("dl/:token", "routes/dl.$token.tsx"),
   route("api/admin/sync", "routes/api.admin.sync.tsx"),
+  route("manifest.webmanifest", "routes/manifest.tsx"),
   route("api/g/:slug/manifest.webmanifest", "routes/api.g.$slug.manifest.tsx"),
   route("api/g/:slug/visitor", "routes/api.g.$slug.visitor.tsx"),
   route("api/g/:slug/favorites", "routes/api.g.$slug.favorites.tsx"),

@@ -2,51 +2,12 @@ import { describe, expect, it } from "vitest";
 import { legacyRedirect } from "../app/lib/server/legacy-redirect";
 import wranglerRaw from "../wrangler.jsonc?raw";
 import workerSrc from "../workers/app.ts?raw";
-
-type Route = { pattern: string; custom_domain: boolean };
-type HostConfig = {
-  routes: Route[];
-  vars: { PUBLIC_ORIGIN: string; LEGACY_HOSTS?: string; STUDIO_NAME: string };
-};
-
-const parseWrangler = (raw: string): HostConfig =>
-  JSON.parse(
-    raw
-      // block comments only at line start: "/admin-assets/*" is a string, not a comment
-      .replace(/^\s*\/\*[\s\S]*?\*\//gm, "")
-      .replace(/^\s*\/\/.*$/gm, "")
-      .replace(/,(\s*[}\]])/g, "$1"),
-  );
-
-const legacyHostsOf = (c: HostConfig) =>
-  (c.vars.LEGACY_HOSTS ?? "")
-    .split(",")
-    .map((h) => h.trim())
-    .filter(Boolean);
-
-/** Structural problems of a wrangler host config (owner- and fork-agnostic). */
-export function hostConfigProblems(c: HostConfig): string[] {
-  const out: string[] = [];
-  const canon = new URL(c.vars.PUBLIC_ORIGIN).host;
-  const legacy = legacyHostsOf(c);
-  const domains = c.routes
-    .filter((r) => r.custom_domain === true)
-    .map((r) => r.pattern);
-  if (domains.length !== c.routes.length)
-    out.push("every route must be custom_domain: true");
-  if (!domains.includes(canon)) out.push("no route for the PUBLIC_ORIGIN host");
-  for (const h of legacy) {
-    if (h === canon) out.push(`legacy host equals canonical: ${h}`);
-    if (!/^[a-z0-9.-]+$/i.test(h) || h.includes("/"))
-      out.push(`legacy host is not a hostname: ${h}`);
-    if (!domains.includes(h)) out.push(`no route for legacy host ${h}`);
-  }
-  if (domains.length !== 1 + legacy.length)
-    out.push("routes must be the canonical host plus each legacy host");
-  if (typeof c.vars.STUDIO_NAME !== "string" || !c.vars.STUDIO_NAME.trim())
-    out.push("STUDIO_NAME must be a non-empty string");
-  return out;
-}
+import {
+  hostConfigProblems,
+  legacyHostsOf,
+  parseWrangler,
+  type HostConfig,
+} from "./support/wrangler-config";
 
 const cfg = parseWrangler(wranglerRaw);
 const CANON_ORIGIN = cfg.vars.PUBLIC_ORIGIN;

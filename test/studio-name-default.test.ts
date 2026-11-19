@@ -1,50 +1,113 @@
-import { describe, expect, it } from "vitest";
+import { applyD1Migrations } from "cloudflare:test";
+import { env } from "cloudflare:workers";
+import { RouterContextProvider } from "react-router";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { DEFAULT_STUDIO_NAME } from "../app/lib/default-studio-name";
-import { buildManifest, pwaMeta, shortName } from "../app/lib/pwa";
-import { getStudioName } from "../app/lib/server/admin";
-import { galleryMeta } from "../app/lib/og";
-import { meta as rootMeta } from "../app/root";
+import { nonceContext } from "../app/lib/server/context";
+import { handleGenericManifest } from "../app/lib/server/manifest";
+import wranglerRaw from "../wrangler.jsonc?raw";
+import routesSrc from "../app/routes.ts?raw";
+import { loader as rootLoader, meta as rootMeta } from "../app/root";
+import { meta as slugMeta } from "../app/routes/$slug";
 
-const noDb = {
-  prepare() {
-    throw new Error("no db");
-  },
-} as unknown as D1Database;
+const mutable = env as unknown as { STUDIO_NAME?: string };
+const original = mutable.STUDIO_NAME;
+afterEach(() => {
+  mutable.STUDIO_NAME = original;
+});
 
-describe("T6.20 neutral studio-name default (STUDIO_NAME unset)", () => {
+beforeAll(async () => {
+  await applyD1Migrations(
+    env.DB,
+    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
+  );
+});
+
+const BAD = [
+  ["unset", undefined],
+  ["empty", ""],
+  ["whitespace", "   "],
+  ["control characters", "Lu\u0000z"],
+  ["over-long", "x".repeat(61)],
+] as const;
+
+async function rootData() {
+  const context = new RouterContextProvider();
+  context.set(nonceContext, "n");
+  const res = (await rootLoader({
+    request: new Request("https://g.example/"),
+    context,
+    params: {},
+  } as never)) as unknown as { data: { studioName: string } };
+  return res.data;
+}
+
+describe("T6.20 neutral studio-name default through the real code paths", () => {
   it("is neutral", () => {
     expect(DEFAULT_STUDIO_NAME).toBe("Galleries");
-    expect(DEFAULT_STUDIO_NAME).not.toMatch(/381/);
   });
-  it("getStudioName falls back to the default, not the owner", async () => {
-    const env = { DB: noDb, STUDIO_NAME: undefined } as never;
-    expect(await getStudioName(env)).toBe(DEFAULT_STUDIO_NAME);
-    expect(await getStudioName({ DB: noDb, STUDIO_NAME: "" } as never)).toBe(
-      DEFAULT_STUDIO_NAME,
+
+  it("the owner's configured name passes unchanged", async () => {
+    mutable.STUDIO_NAME = "381 Studios";
+    expect((await rootData()).studioName).toBe("381 Studios");
+    const m = await (
+      await handleGenericManifest(new Request("https://g.example/m"), env)
+    ).json<{ name: string }>();
+    expect(m.name).toBe("381 Studios");
+  });
+
+  describe.each(BAD)("STUDIO_NAME %s", (_n, value) => {
+    it("root loader falls back to the default", async () => {
+      mutable.STUDIO_NAME = value;
+      const d = await rootData();
+      expect(d.studioName).toBe(DEFAULT_STUDIO_NAME);
+      const tags = JSON.stringify(rootMeta({ loaderData: d } as never));
+      expect(tags).toContain(DEFAULT_STUDIO_NAME);
+      expect(tags).not.toMatch(/381/);
+    });
+
+    it("the generic manifest response uses the default name", async () => {
+      mutable.STUDIO_NAME = value;
+      const res = await handleGenericManifest(
+        new Request("https://g.example/manifest.webmanifest"),
+        env,
+      );
+      expect(res.headers.get("Content-Type")).toMatch(
+        /^application\/manifest\+json/,
+      );
+      const m = await res.json<{ name: string; short_name: string }>();
+      expect(m.name).toBe(DEFAULT_STUDIO_NAME);
+      expect(m.short_name).toBe(DEFAULT_STUDIO_NAME);
+    });
+  });
+
+  it("generic manifest keeps the cache and security headers", async () => {
+    const res = await handleGenericManifest(
+      new Request("https://g.example/manifest.webmanifest"),
+      env,
     );
+    expect(res.headers.get("Cache-Control")).toBe("private, max-age=300");
+    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
   });
-  it("getStudioName keeps an explicit STUDIO_NAME", async () => {
-    expect(await getStudioName({ DB: noDb, STUDIO_NAME: "Luz" })).toBe("Luz");
-  });
-  it("shortName fallback and manifest carry no 381", () => {
-    expect(shortName("")).toBe(DEFAULT_STUDIO_NAME);
-    const m = JSON.stringify(buildManifest({ studio: DEFAULT_STUDIO_NAME }));
-    expect(m).not.toMatch(/381/);
-  });
-  it("root meta without loader data uses the default (pwa tags)", () => {
+
+  it("root meta without loader data uses the default", () => {
     const tags = JSON.stringify(rootMeta({ loaderData: undefined } as never));
-    expect(tags).not.toMatch(/381/);
     expect(tags).toContain(DEFAULT_STUDIO_NAME);
-  });
-  it("og + pwa tags for the default studio have no 381", () => {
-    const tags = JSON.stringify([
-      ...galleryMeta(undefined, {
-        studio: DEFAULT_STUDIO_NAME,
-        lang: "es",
-        origin: "https://g.example",
-      }),
-      ...pwaMeta(undefined, { studio: DEFAULT_STUDIO_NAME }),
-    ]);
     expect(tags).not.toMatch(/381/);
+  });
+
+  it("$slug meta without root data uses the default (og + pwa tags)", () => {
+    const tags = JSON.stringify(
+      slugMeta({ loaderData: undefined, matches: [] } as never),
+    );
+    expect(tags).toContain(DEFAULT_STUDIO_NAME);
+    expect(tags).not.toMatch(/381/);
+  });
+
+  it("the generic manifest is served by the Worker, not the static file", () => {
+    expect(wranglerRaw).toMatch(
+      /"run_worker_first":\s*\[[^\]]*"\/manifest\.webmanifest"/,
+    );
+    expect(routesSrc).toContain('route("manifest.webmanifest"');
   });
 });
