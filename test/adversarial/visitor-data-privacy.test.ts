@@ -1,4 +1,4 @@
-import { migrateDb } from "../support/d1";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -19,15 +19,13 @@ beforeAll(async () => {
   await migrateDb();
 });
 beforeEach(async () => {
-  await env.DB.batch(
-    [
-      "downloads",
-      "gallery_views",
-      "visitors",
-      "rate_limits",
-      "photos",
-      "galleries",
-    ].map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
+  await resetTables(
+    "downloads",
+    "gallery_views",
+    "visitors",
+    "rate_limits",
+    "photos",
+    "galleries",
   );
   for (const [id, slug] of [
     [G, "boda"],

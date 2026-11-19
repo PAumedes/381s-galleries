@@ -1,4 +1,4 @@
-import { migrateDb } from "../support/d1";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -10,11 +10,7 @@ beforeAll(async () => {
 });
 
 it("activity of gallery A never shows an email of a visitor that belongs to gallery B", async () => {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM downloads"),
-    env.DB.prepare("DELETE FROM visitors"),
-    env.DB.prepare("DELETE FROM galleries"),
-  ]);
+  await resetTables("downloads", "visitors", "galleries");
   for (const [id, slug] of [
     ["gA", "a"],
     ["gB", "b"],

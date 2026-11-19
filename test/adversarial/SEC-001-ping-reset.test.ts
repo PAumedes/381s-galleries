@@ -1,4 +1,4 @@
-import { migrateDb } from "../support/d1";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -24,10 +24,7 @@ const post = (pin: string, ip: string) => {
 };
 
 async function setup() {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM rate_limits"),
-    env.DB.prepare("DELETE FROM galleries"),
-  ]);
+  await resetTables("rate_limits", "galleries");
   await db.insert(schema.galleries).values({
     id: "gPIN",
     driveFolderId: "f",

@@ -1,5 +1,5 @@
 import { clearCache } from "./support/cache";
-import { migrateDb } from "./support/d1";
+import { migrateDb, resetTables } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -94,14 +94,14 @@ async function addPhoto(over: Record<string, unknown> = {}, id = P) {
   });
 }
 beforeEach(async () => {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM downloads"),
-    env.DB.prepare("DELETE FROM visitors"),
-    env.DB.prepare("DELETE FROM rate_limits"),
-    env.DB.prepare("DELETE FROM photos"),
-    env.DB.prepare("DELETE FROM galleries"),
-    env.DB.prepare("DELETE FROM settings"),
-  ]);
+  await resetTables(
+    "downloads",
+    "visitors",
+    "rate_limits",
+    "photos",
+    "galleries",
+    "settings",
+  );
   await clearCache();
 });
 

@@ -1,4 +1,4 @@
-import { migrateDb } from "../support/d1";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -14,11 +14,7 @@ beforeAll(async () => {
 });
 
 it("unsatisfiable Range (Drive 416) is not reported as 502 bad gateway", async () => {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM downloads"),
-    env.DB.prepare("DELETE FROM photos"),
-    env.DB.prepare("DELETE FROM galleries"),
-  ]);
+  await resetTables("downloads", "photos", "galleries");
   await db.insert(schema.galleries).values({
     id: G,
     driveFolderId: "f",

@@ -1,4 +1,4 @@
-import { migrateDb } from "../support/d1";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -16,13 +16,13 @@ beforeAll(async () => {
   await migrateDb();
 });
 beforeEach(async () => {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM favorites"),
-    env.DB.prepare("DELETE FROM visitors"),
-    env.DB.prepare("DELETE FROM rate_limits"),
-    env.DB.prepare("DELETE FROM photos"),
-    env.DB.prepare("DELETE FROM galleries"),
-  ]);
+  await resetTables(
+    "favorites",
+    "visitors",
+    "rate_limits",
+    "photos",
+    "galleries",
+  );
   await db.insert(schema.galleries).values({
     id: G,
     driveFolderId: "f1",

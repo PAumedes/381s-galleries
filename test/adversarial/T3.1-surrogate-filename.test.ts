@@ -1,4 +1,4 @@
-import { migrateDb } from "../support/d1";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -13,11 +13,7 @@ beforeAll(async () => {
 });
 
 it("a long base_name whose 200th UTF-16 unit splits an emoji still downloads", async () => {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM downloads"),
-    env.DB.prepare("DELETE FROM photos"),
-    env.DB.prepare("DELETE FROM galleries"),
-  ]);
+  await resetTables("downloads", "photos", "galleries");
   await db.insert(schema.galleries).values({
     id: G,
     driveFolderId: "f",

@@ -1,5 +1,5 @@
 import { clearCache } from "./support/cache";
-import { migrateDb } from "./support/d1";
+import { migrateDb, resetTables } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -22,18 +22,16 @@ beforeAll(async () => {
   await migrateDb();
 });
 beforeEach(async () => {
-  await env.DB.batch(
-    [
-      "favorites",
-      "downloads",
-      "gallery_views",
-      "visitors",
-      "photos",
-      "galleries",
-      "rate_limits",
-      "settings",
-      "ignored_folders",
-    ].map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
+  await resetTables(
+    "favorites",
+    "downloads",
+    "gallery_views",
+    "visitors",
+    "photos",
+    "galleries",
+    "rate_limits",
+    "settings",
+    "ignored_folders",
   );
   await clearCache();
 });

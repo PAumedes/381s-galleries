@@ -9,3 +9,8 @@ export function testMigrations(): D1Migration[] {
 export async function migrateDb(): Promise<void> {
   await applyD1Migrations(env.DB, testMigrations());
 }
+
+/** Empty the given tables in one batch, in the order given (children first). */
+export async function resetTables(...tables: string[]): Promise<void> {
+  await env.DB.batch(tables.map((t) => env.DB.prepare(`DELETE FROM ${t}`)));
+}

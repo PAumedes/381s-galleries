@@ -1,4 +1,4 @@
-import { migrateDb } from "../support/d1";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -22,13 +22,13 @@ const post = (path: string, body: unknown, ip: string) =>
   });
 
 it("visitor B cannot attach their per-photo downloads to visitor A's bulk header", async () => {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM downloads"),
-    env.DB.prepare("DELETE FROM visitors"),
-    env.DB.prepare("DELETE FROM rate_limits"),
-    env.DB.prepare("DELETE FROM photos"),
-    env.DB.prepare("DELETE FROM galleries"),
-  ]);
+  await resetTables(
+    "downloads",
+    "visitors",
+    "rate_limits",
+    "photos",
+    "galleries",
+  );
   await db.insert(schema.galleries).values({
     id: "gF",
     driveFolderId: "ff",

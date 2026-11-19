@@ -1,4 +1,4 @@
-import { migrateDb } from "./support/d1";
+import { migrateDb, resetTables } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../app/db";
@@ -23,15 +23,13 @@ const iso = (n: number) =>
     .replace(/\.\d{3}Z$/, "Z");
 
 beforeEach(async () => {
-  await env.DB.batch(
-    [
-      "downloads",
-      "gallery_views",
-      "favorites",
-      "visitors",
-      "photos",
-      "galleries",
-    ].map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
+  await resetTables(
+    "downloads",
+    "gallery_views",
+    "favorites",
+    "visitors",
+    "photos",
+    "galleries",
   );
   for (const [id, slug] of [
     [G, "boda-ana"],

@@ -1,5 +1,5 @@
 import { clearCache } from "../support/cache";
-import { migrateDb } from "../support/d1";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
@@ -25,18 +25,16 @@ beforeAll(async () => {
   await migrateDb();
 });
 beforeEach(async () => {
-  await env.DB.batch(
-    [
-      "favorites",
-      "downloads",
-      "gallery_views",
-      "visitors",
-      "photos",
-      "galleries",
-      "rate_limits",
-      "ignored_folders",
-      "settings",
-    ].map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
+  await resetTables(
+    "favorites",
+    "downloads",
+    "gallery_views",
+    "visitors",
+    "photos",
+    "galleries",
+    "rate_limits",
+    "ignored_folders",
+    "settings",
   );
   await clearCache();
   await db.insert(schema.galleries).values({

@@ -1,4 +1,4 @@
-import { migrateDb } from "../support/d1";
+import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeAll, expect, it } from "vitest";
@@ -16,13 +16,13 @@ beforeAll(async () => {
 });
 
 it("tokens issued for a multi-id (bulk-gated) request stop working when allow_bulk is turned off", async () => {
-  await env.DB.batch([
-    env.DB.prepare("DELETE FROM downloads"),
-    env.DB.prepare("DELETE FROM visitors"),
-    env.DB.prepare("DELETE FROM rate_limits"),
-    env.DB.prepare("DELETE FROM photos"),
-    env.DB.prepare("DELETE FROM galleries"),
-  ]);
+  await resetTables(
+    "downloads",
+    "visitors",
+    "rate_limits",
+    "photos",
+    "galleries",
+  );
   await db.insert(schema.galleries).values({
     id: G,
     driveFolderId: "f",
