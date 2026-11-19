@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router";
 import { describe, expect, it } from "vitest";
@@ -250,9 +250,7 @@ describe("PhotoReorder automatic cover", () => {
     expect(
       b.querySelector('[data-cover-badge="desktop"]')!.getAttribute("title"),
     ).toBe("Portada automática (primera foto)");
-    const pin = Array.from(b.querySelectorAll("button")).find(
-      (x) => x.textContent === "Usar como portada",
-    )!;
+    const pin = within(b).getByRole("button", { name: "Usar como portada" });
     const form = pin.closest("form")!;
     expect(
       (form.querySelector("input[name=intent]") as HTMLInputElement).value,

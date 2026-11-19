@@ -149,14 +149,13 @@ describe("Fotos: cover indicator only once", () => {
     expect(document.querySelectorAll("[data-cover-badge]")).toHaveLength(1);
   });
 
-  it("other tiles keep 'Usar como portada' in a hover/focus overlay (hidden until then)", async () => {
+  it("other tiles keep 'Usar como portada' in the always-visible action bar under the picture (T6.18)", async () => {
     reorder();
     const actions = tile("p1").querySelector(
       "[data-tile-actions]",
     ) as HTMLElement;
-    expect(actions.className).toMatch(/\binvisible\b/);
-    expect(actions.className).toMatch(/group-hover:visible/);
-    expect(actions.className).toMatch(/group-focus-within:visible/);
+    expect(actions.className).not.toMatch(/\binvisible\b/);
+    expect(actions.closest("[data-thumb-frame]")).toBeNull();
     const use = within(actions).getByRole("button", {
       name: "Usar como portada",
     });
