@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type MouseEvent as ReactMouseEvent,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { TFunction } from "../i18n/t";
 import {
@@ -17,21 +11,17 @@ import {
   Retry,
 } from "./icons";
 import { useImgUrl } from "./img-url";
+import { useIdleChrome } from "./lightbox/useIdleChrome";
 import { useLightboxKeys } from "./lightbox/useLightboxKeys";
 import { useLightboxNav } from "./lightbox/useLightboxNav";
 import { useModalLock } from "./lightbox/useModalLock";
+import { usePressOrigin } from "./lightbox/usePressOrigin";
 import { srcSetOf } from "./lightbox/srcset";
 import { usePreloadNeighbours } from "./lightbox/usePreloadNeighbours";
+import { useSwipe } from "./lightbox/useSwipe";
 import { NavZone } from "./lightbox/NavZone";
 import { BTN } from "./lightbox/styles";
 import type { GalleryPhoto } from "./types";
-
-const SWIPE_DISTANCE = 50;
-const SWIPE_VELOCITY = 0.5; // px per ms
-const SWIPE_MIN_FAST = 20;
-const CLOSE_DISTANCE = 80;
-const IDLE_MS = 2500;
-const DRAG_SLOP = 10;
 
 export type LightboxProps = {
   photos: readonly GalleryPhoto[];
@@ -44,29 +34,6 @@ export type LightboxProps = {
   isFavorite?: (id: string) => boolean;
   /** Proofing: block "Save image" (overlay above the photo, no context menu). */
   protect?: boolean;
-};
-
-const TOP_BAR_PX = 64;
-const SIDE_ZONE_FRACTION = 0.18; // slightly wider than the 15vw arrows
-
-/**
- * Backdrop click rule: closes only on clearly empty backdrop, that is the
- * stage itself (not the photo, shield or a control), horizontally between the
- * two navigation zones and below the top bar. A miss near an arrow or the
- * controls does nothing instead of closing.
- */
-const isEmptyBackdrop = (
-  e: { target: EventTarget; currentTarget: EventTarget },
-  x: number,
-  y: number,
-) => {
-  if (e.target !== e.currentTarget) return false;
-  const w = window.innerWidth;
-  return (
-    x > w * SIDE_ZONE_FRACTION &&
-    x < w - w * SIDE_ZONE_FRACTION &&
-    y > TOP_BAR_PX
-  );
 };
 
 export function Lightbox(props: LightboxProps) {
@@ -90,9 +57,6 @@ export function Lightbox(props: LightboxProps) {
 const withRetry = (url: string, n: number) =>
   n === 0 ? url : `${url}${url.includes("?") ? "&" : "?"}r=${n}`;
 
-const isZoomed = () =>
-  typeof window !== "undefined" && (window.visualViewport?.scale ?? 1) > 1.01;
-
 function LightboxView({
   photos,
   index,
@@ -109,30 +73,13 @@ function LightboxView({
   const dialogRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [visible, setVisible] = useState(true);
   const [loadedId, setLoadedId] = useState<string | null>(null);
-  const [dragX, setDragX] = useState(0);
   const [failedId, setFailedId] = useState<string | null>(null);
   // Retry counter is per photo: a retry on one photo must not affect others.
   const [retryState, setRetryState] = useState<{ id: string; n: number }>({
     id: "",
     n: 0,
   });
-  const lastKeyAt = useRef(0);
-  const pointers = useRef(new Set<number>());
-  const kbFocus = useRef(false);
-  const idleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  const drag = useRef<{ x: number; y: number; t: number; id: number } | null>(
-    null,
-  );
-  // A backdrop close needs the press to have started on empty backdrop too
-  // (null: no press seen, e.g. a synthetic click).
-  const pressOk = useRef<boolean | null>(null);
-  // Set once a touch drag passes the slop; swallows the trailing click.
-  const dragged = useRef(false);
-
   const photo = photos[index];
   // Events from images of other photos (out-of-order loads) are ignored.
   const currentId = useRef(photo.id);
@@ -151,109 +98,15 @@ function LightboxView({
 
   usePreloadNeighbours(photos, index, imgUrl);
 
-  // Auto-hide controls on pointer devices.
-  useEffect(() => () => clearTimeout(idleTimer.current), []);
-  const arm = () => {
-    setVisible(true);
-    clearTimeout(idleTimer.current);
-    idleTimer.current = setTimeout(function hide() {
-      if (
-        kbFocus.current &&
-        dialogRef.current?.contains(document.activeElement)
-      ) {
-        idleTimer.current = setTimeout(hide, IDLE_MS);
-        return;
-      }
-      // Focus must not linger on an invisible control; park it on the dialog.
-      if (dialogRef.current?.contains(document.activeElement)) {
-        dialogRef.current.focus();
-      }
-      setVisible(false);
-    }, IDLE_MS);
-  };
-  const wake = (e: ReactPointerEvent) => {
-    if (e.pointerType !== "mouse") return;
-    kbFocus.current = false;
-    arm();
-  };
-  const notePress = (e: ReactMouseEvent | ReactPointerEvent) => {
-    pressOk.current = isEmptyBackdrop(
-      { target: e.target, currentTarget: stageRef.current as EventTarget },
-      e.clientX,
-      e.clientY,
-    );
-  };
-  const onKeyWake = () => {
-    lastKeyAt.current = Date.now();
-    kbFocus.current = true;
-    arm();
-  };
-  // Focus only counts as keyboard focus right after a key press, so the
-  // programmatic focus on mount or a tap doesn't pin the controls visible.
-  const onFocusWake = () => {
-    // Hidden controls are pointer-events:none, so focus landing while hidden
-    // can only come from the keyboard.
-    if (!visible || Date.now() - lastKeyAt.current < 1000) {
-      kbFocus.current = true;
-      arm();
-    }
-  };
-
-  const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    dragged.current = false;
-    if (e.pointerType === "mouse") return;
-    pointers.current.add(e.pointerId);
-    if (pointers.current.size > 1 || isZoomed()) {
-      drag.current = null;
-      setDragX(0);
-      return;
-    }
-    drag.current = {
-      x: e.clientX,
-      y: e.clientY,
-      t: Date.now(),
-      id: e.pointerId,
-    };
-  };
-  const onMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const d = drag.current;
-    if (!d || d.id !== e.pointerId) return;
-    const dx = e.clientX - d.x;
-    const dy = e.clientY - d.y;
-    if (Math.hypot(dx, dy) > DRAG_SLOP && !dragged.current) {
-      // Capture only once it is a drag, so a plain tap still clicks its target.
-      dragged.current = true;
-      e.currentTarget.setPointerCapture?.(e.pointerId);
-    }
-    if (Math.abs(dx) > Math.abs(dy)) {
-      const blocked = (dx > 0 && !hasPrev) || (dx < 0 && !hasNext);
-      setDragX(blocked ? dx / 4 : dx);
-    }
-  };
-  const endDrag = (e: ReactPointerEvent<HTMLDivElement>, cancelled = false) => {
-    pointers.current.delete(e.pointerId);
-    const d = drag.current;
-    if (!d || d.id !== e.pointerId) return;
-    drag.current = null;
-    setDragX(0);
-    if (cancelled || isZoomed()) return;
-    const dx = e.clientX - d.x;
-    const dy = e.clientY - d.y;
-    const dt = Math.max(1, Date.now() - d.t);
-    if (Math.abs(dx) > Math.abs(dy)) {
-      const fast =
-        Math.abs(dx) >= SWIPE_MIN_FAST && Math.abs(dx) / dt > SWIPE_VELOCITY;
-      if (Math.abs(dx) >= SWIPE_DISTANCE || fast) {
-        if (dx < 0) next();
-        else prev();
-      }
-    } else if (
-      dy >= CLOSE_DISTANCE ||
-      (dy >= SWIPE_MIN_FAST * 2 && dy / dt > SWIPE_VELOCITY)
-    ) {
-      onClose();
-    }
-  };
+  const { visible, wake, onKeyWake, onFocusWake } = useIdleChrome(dialogRef);
+  const { notePress, onStageClick } = usePressOrigin(stageRef, onClose);
+  const { dragX, handlers: swipe } = useSwipe({
+    hasPrev,
+    hasNext,
+    prev,
+    next,
+    onClose,
+  });
 
   // An error belongs to one photo; navigating away forgets it so coming back
   // tries again.
@@ -283,23 +136,16 @@ function LightboxView({
       data-controls={visible ? "visible" : "hidden"}
       onPointerDown={(e) => {
         notePress(e);
-        onDown(e);
+        swipe.onPointerDown(e);
       }}
       onPointerMove={(e) => {
         wake(e);
-        onMove(e);
+        swipe.onPointerMove(e);
       }}
-      onPointerUp={endDrag}
-      onPointerCancel={(e) => endDrag(e, true)}
+      onPointerUp={swipe.onPointerUp}
+      onPointerCancel={swipe.onPointerCancel}
       onMouseDown={notePress}
-      onClickCapture={(e) => {
-        // The click that ends a touch swipe must not hit what was under it.
-        if (dragged.current) {
-          dragged.current = false;
-          e.stopPropagation();
-          e.preventDefault();
-        }
-      }}
+      onClickCapture={swipe.onClickCapture}
       onFocus={onFocusWake}
       onKeyDown={onKeyWake}
       className={`on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white ${visible ? "" : "cursor-none"}${protect ? " img-protect" : ""}`}
@@ -310,12 +156,7 @@ function LightboxView({
         ref={stageRef}
         data-testid="lightbox-stage"
         className="absolute inset-0 grid place-items-center select-none"
-        onClick={(e) => {
-          const pressed = pressOk.current;
-          pressOk.current = null;
-          if (pressed !== false && isEmptyBackdrop(e, e.clientX, e.clientY))
-            onClose();
-        }}
+        onClick={onStageClick}
       >
         {failed ? (
           <div
