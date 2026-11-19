@@ -74,16 +74,17 @@ describe("CoverHero layouts", () => {
     show("dividida", { palette: "gris" });
     await screen.findByRole("heading", { level: 1 });
     const pane = () => root().querySelector('[data-cover-pane="text"]')!;
-    expect(pane().querySelector("img")!.getAttribute("src")).toBe(
-      "/brand/logo-black.svg",
+    expect(pane().querySelector("[data-logo=wordmark]")!.className).toMatch(
+      /text-black/,
     );
   });
   it("dividida on oscuro uses the white logo", async () => {
     show("dividida", { palette: "oscuro" });
     await screen.findByRole("heading", { level: 1 });
     expect(
-      root().querySelector('[data-cover-pane="text"] img')!.getAttribute("src"),
-    ).toBe("/brand/logo-white.svg");
+      root().querySelector('[data-cover-pane="text"] [data-logo=wordmark]')!
+        .className,
+    ).toMatch(/text-white/);
   });
 
   it("centrada: framed image (with margins), title centered below it", async () => {

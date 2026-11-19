@@ -34,7 +34,7 @@ describe("PrivacyPage", () => {
       "contactá al estudio por los medios habituales",
     );
     expect(document.body.textContent).toContain("Google Drive");
-    expect(document.querySelector("img")).toBeTruthy();
+    expect(document.querySelector("[data-logo=wordmark]")).toBeTruthy();
   });
   it("renders in English", async () => {
     stub(<PrivacyPage />, "en");

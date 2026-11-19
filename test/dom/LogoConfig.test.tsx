@@ -28,41 +28,38 @@ const src = async () =>
   (await screen.findByRole("img")).getAttribute("src") as string;
 
 describe("logoSource", () => {
-  it("defaults to the bundled files", () => {
-    expect(logoSource("dark")).toMatchObject({ src: "/brand/logo-black.svg" });
-    expect(logoSource("light")).toMatchObject({ src: "/brand/logo-white.svg" });
-    expect(logoSource("light", { onLight: null, onDark: null }).src).toBe(
-      "/brand/logo-white.svg",
-    );
+  it("has no default file (the name is shown as text)", () => {
+    expect(logoSource("dark")).toBeNull();
+    expect(logoSource("light")).toBeNull();
+    expect(logoSource("light", { onLight: null, onDark: null })).toBeNull();
   });
   it("uses the uploaded files via the dedicated route with the version", () => {
-    expect(logoSource("dark", { onLight: V, onDark: W }).src).toBe(
+    expect(logoSource("dark", { onLight: V, onDark: W })!.src).toBe(
       `/brand/logo/on-light?v=${V}`,
     );
-    expect(logoSource("light", { onLight: V, onDark: W }).src).toBe(
+    expect(logoSource("light", { onLight: V, onDark: W })!.src).toBe(
       `/brand/logo/on-dark?v=${W}`,
     );
   });
-  it("without a dark upload, inverts the light one; a dark-only upload keeps the bundled light-bg logo", () => {
+  it("without a dark upload, inverts the light one; a dark-only upload has no light-bg logo", () => {
     expect(logoSource("light", { onLight: V, onDark: null })).toMatchObject({
       src: `/brand/logo/on-light?v=${V}`,
       invert: true,
     });
-    expect(logoSource("dark", { onLight: null, onDark: W }).src).toBe(
-      "/brand/logo-black.svg",
-    );
+    expect(logoSource("dark", { onLight: null, onDark: W })).toBeNull();
   });
   it("encodes a hostile version", () => {
     expect(
-      logoSource("dark", { onLight: '"><script>', onDark: null }).src,
+      logoSource("dark", { onLight: '"><script>', onDark: null })!.src,
     ).not.toMatch(/[<>"]/);
   });
 });
 
 describe("Logo component", () => {
-  it("renders the bundled logo by default", async () => {
+  it("renders the studio name as text by default", async () => {
     stub(<Logo />);
-    expect(await src()).toBe("/brand/logo-black.svg");
+    expect(await screen.findByText("Estudio")).toBeTruthy();
+    expect(document.querySelector("img")).toBeNull();
   });
   it("renders the configured logo, never inlining it", async () => {
     stub(<Logo variant="dark" />, { onLight: V, onDark: null });
@@ -183,12 +180,10 @@ describe("Logo card in Ajustes", () => {
     await screen.findByLabelText("Logo para fondos claros");
     const light = screen.getByTestId("logo-preview-light");
     const dark = screen.getByTestId("logo-preview-dark");
-    expect(light.querySelector("img")!.getAttribute("src")).toBe(
-      "/brand/logo-black.svg",
-    );
-    expect(dark.querySelector("img")!.getAttribute("src")).toBe(
-      "/brand/logo-white.svg",
-    );
+    expect(light.querySelector("img")).toBeNull();
+    expect(light.textContent).toContain("Estudio");
+    expect(dark.querySelector("img")).toBeNull();
+    expect(dark.textContent).toContain("Estudio");
     expect(
       (screen.getByRole("button", { name: "Restablecer" }) as HTMLButtonElement)
         .disabled,
@@ -296,7 +291,9 @@ describe("Logo card in Ajustes", () => {
       target: { files: [png()] },
     });
     expect(previewSrc("logo-preview-dark")).toBe("blob:dark-only");
-    expect(previewSrc("logo-preview-light")).toBe("/brand/logo-black.svg");
+    expect(
+      screen.getByTestId("logo-preview-light").querySelector("img"),
+    ).toBeNull();
   });
   it("a new light pick is inverted on the dark swatch when there is no dark logo", async () => {
     URL.createObjectURL = () => "blob:l";

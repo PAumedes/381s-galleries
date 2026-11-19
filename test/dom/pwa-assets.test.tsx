@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_STUDIO_NAME } from "../../app/lib/default-studio-name";
@@ -32,5 +32,21 @@ describe("PWA static assets", () => {
       "/icons/icon-512.png",
       "/icons/maskable-512.png",
     ]);
+  });
+});
+
+describe("T6.22 shipped assets", () => {
+  it("public/brand has no logo SVGs (wordmark default); neutral set is not served", () => {
+    for (const f of ["brand/logo-black.svg", "brand/logo-white.svg"])
+      expect(existsSync(pub(f))).toBe(false);
+    expect(existsSync(path.join(process.cwd(), "brand-owner"))).toBe(false);
+    expect(existsSync(pub("../brand-neutral/icons/icon-512.png"))).toBe(true);
+    expect(existsSync(pub("brand-neutral"))).toBe(false);
+  });
+  it("apple icon is 180px, favicons are a valid ico and svg", () => {
+    expect(dims("apple-touch-icon.png")).toEqual([180, 180]);
+    const ico = readFileSync(pub("favicon.ico"));
+    expect([ico.readUInt16LE(0), ico.readUInt16LE(2)]).toEqual([0, 1]);
+    expect(readFileSync(pub("favicon.svg"), "utf8")).toMatch(/<svg[\s>]/);
   });
 });

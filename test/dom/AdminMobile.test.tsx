@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub, Outlet } from "react-router";
 import { describe, expect, it } from "vitest";
@@ -45,6 +45,16 @@ function shell() {
 }
 
 describe("admin shell on phones (T6.11)", () => {
+  it("T6.22: the rendered logo link can shrink and clips a long studio name", async () => {
+    shell();
+    const mark = await waitFor(() => {
+      const m = document.querySelector("a[href='/admin'] [data-logo=wordmark]");
+      expect(m).not.toBeNull();
+      return m!;
+    });
+    expect(mark.parentElement!.className).toMatch(/(^|\s)min-w-0(\s|$)/);
+    expect(mark.parentElement!.className).toMatch(/overflow-hidden/);
+  });
   it("has a menu toggle with aria-expanded/aria-controls that opens the panel", async () => {
     shell();
     const toggle = await screen.findByRole("button", {

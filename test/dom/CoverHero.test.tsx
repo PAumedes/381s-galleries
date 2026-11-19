@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { createRoutesStub } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CoverHero } from "../../app/components/CoverHero";
@@ -100,7 +100,9 @@ describe("CoverHero", () => {
     hero({ onScroll: () => {} });
     expect(await screen.findByRole("heading", { name: "Boda" })).toBeTruthy();
     expect(screen.getByText("1 November 2026")).toBeTruthy();
-    expect(screen.getByText("381 Studios")).toBeTruthy();
+    expect(
+      document.querySelector("header [data-logo=wordmark]")?.textContent,
+    ).toBe("381 Studios");
     expect(screen.getByRole("button", { name: "View gallery" })).toBeTruthy();
   });
   it("proofing adds the shield and protection class", async () => {
@@ -110,14 +112,21 @@ describe("CoverHero", () => {
   });
   it("embedded (preview) mode: fills its box, no real button, not a landmark heading level 1", async () => {
     hero({ embedded: true });
-    await screen.findByText("381 Studios");
+    await waitFor(() =>
+      expect(document.querySelector("[data-logo=wordmark]")).not.toBeNull(),
+    );
+    expect(
+      document.querySelector("header [data-logo=wordmark]")?.textContent,
+    ).toBe("381 Studios");
     expect(screen.queryByRole("button", { name: "View gallery" })).toBeNull();
     expect(document.querySelector("header")!.className).not.toMatch(/h-dvh/);
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
   });
   it("no src: no image", async () => {
     hero({ src: null });
-    await screen.findByText("381 Studios");
+    await waitFor(() =>
+      expect(document.querySelector("[data-logo=wordmark]")).not.toBeNull(),
+    );
     expect(document.querySelector("img[data-cover-img]")).toBeNull();
   });
 });
