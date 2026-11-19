@@ -14,6 +14,7 @@ import {
   type AccessEnv,
 } from "./access";
 import { verifyPin } from "./crypto";
+import { focusOf, resolveCover } from "./cover";
 import { imageVersionToken } from "./images";
 import { asLang } from "../../i18n/lang";
 import { rateLimit, refundRateLimit, resetRateLimit } from "./rate-limit";
@@ -106,9 +107,6 @@ async function versionField(
 
 type GalleryRow = typeof schema.galleries.$inferSelect;
 
-const focusOf = (x: number | null, y: number | null) =>
-  x !== null && y !== null ? { x, y } : null;
-
 /**
  * The client payload of an open gallery (cover, design, sets, photos with
  * their `?v=` tokens, link-preview data). No access checks and no side
@@ -154,28 +152,13 @@ export async function buildOpenData(
     if (last?.name === p.set) last.count++;
     else sets.push({ name: p.set, count: 1 });
   }
-  const baseCover =
-    g.coverPhotoId && rows.some((p) => p.id === g.coverPhotoId)
-      ? g.coverPhotoId
-      : (rows[0]?.id ?? null);
-
   // In proofing, crawlers only get /view-sm of a photo that has a
   // preview-wm; otherwise the og:image URL would 404.
   const proofing = g.mode === "proofing";
-  // In Prueba a cover without a preview-wm would 404 (blank hero): use the
-  // first photo that has one (Entrega is unchanged).
-  const cover =
-    proofing && !rows.some((p) => p.id === baseCover && p.driveWmId)
-      ? (rows.find((p) => p.driveWmId)?.id ?? baseCover)
-      : baseCover;
-  // Optional mobile cover: a visible photo of this gallery; in Prueba only
-  // one with a preview-wm (else /img 404s), so it falls back to the desktop
-  // cover instead of a broken image.
-  const mobileRow = g.coverPhotoIdMobile
-    ? rows.find(
-        (p) => p.id === g.coverPhotoIdMobile && (!proofing || p.driveWmId),
-      )
-    : undefined;
+  const { cover, mobile } = resolveCover(
+    rows.map((p) => ({ id: p.id, hasWm: !!p.driveWmId })),
+    g,
+  );
   const ogCover = proofing
     ? rows.find((p) => p.id === cover && p.driveWmId) ||
       rows.find((p) => p.driveWmId)
@@ -203,8 +186,8 @@ export async function buildOpenData(
       eventDate: g.eventDate,
       coverPhotoId: cover,
       coverFocus: focusOf(g.coverFocusX, g.coverFocusY),
-      coverPhotoIdMobile: mobileRow?.id ?? null,
-      coverFocusMobile: mobileRow
+      coverPhotoIdMobile: mobile,
+      coverFocusMobile: mobile
         ? focusOf(g.coverFocusMobileX, g.coverFocusMobileY)
         : null,
       mode: g.mode,

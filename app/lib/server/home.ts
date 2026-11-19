@@ -1,5 +1,6 @@
 import { inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "../../db";
+import { coverIdSql, focusOf } from "./cover";
 import { imageVersionToken } from "./images";
 import { isExpired } from "./time";
 
@@ -38,11 +39,7 @@ export async function loadHome(env: Env): Promise<{ items: HomeItem[] }> {
   const db = getDb(env);
   // Cover: chosen photo when visible (and servable), else the first one, in the
   // same order as the gallery page.
-  const servable = (alias: string) =>
-    `${alias}.missing_since IS NULL AND (galleries.mode = 'delivery' OR ${alias}.drive_wm_id IS NOT NULL)`;
-  const cover = sql<string | null>`COALESCE(
-    (SELECT p.id FROM photos p WHERE p.id = galleries.cover_photo_id AND p.gallery_id = galleries.id AND ${sql.raw(servable("p"))}),
-    (SELECT p.id FROM photos p WHERE p.gallery_id = galleries.id AND ${sql.raw(servable("p"))} ORDER BY p.set_name, p.sort, p.base_name LIMIT 1))`;
+  const cover = coverIdSql(true);
   const rows = await db
     .select({
       slug: g.slug,
@@ -91,10 +88,7 @@ export async function loadHome(env: Env): Promise<{ items: HomeItem[] }> {
       cover: {
         id: p.id,
         ...(v ? { v } : {}),
-        focus:
-          r.focusX !== null && r.focusY !== null
-            ? { x: r.focusX, y: r.focusY }
-            : null,
+        focus: focusOf(r.focusX, r.focusY),
         aspect: p.width && p.height ? p.width / p.height : null,
       },
     });
