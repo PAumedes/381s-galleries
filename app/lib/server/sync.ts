@@ -883,6 +883,30 @@ function photoStatements(
   return stmts;
 }
 
+/** Writes one album: gallery row first, then (unless high-res is empty) its photo diff. */
+async function syncAlbum(
+  run: SyncRun,
+  pass: AlbumPass,
+  a: AlbumDraft,
+  ex: GalleryRow | undefined,
+  rows: Row[],
+): Promise<void> {
+  const galleryId = ex?.id ?? crypto.randomUUID();
+  // High-res folder missing/renamed/empty while the gallery has photos:
+  // most likely a transient state (e.g. Capture One re-export). Touch nothing.
+  const highresEmpty = a.photos.length === 0 && rows.length > 0;
+  if (highresEmpty) {
+    a.issues.push({ type: "highres_empty", set: null, name: "high-res" });
+    a.issues.sort(issueCmp);
+  }
+  const issuesJson = capIssues(a.issues);
+  pass.result.issues += a.issues.length;
+  const stmts = galleryStatements(run, pass, a, ex, galleryId, issuesJson);
+  if (!highresEmpty)
+    stmts.push(...photoStatements(run, pass, a, rows, galleryId));
+  await flushBatches(run, stmts);
+}
+
 export async function runSync(
   env: SyncEnv,
   opts: SyncOptions,
@@ -965,22 +989,13 @@ export async function runSync(
 
     for (const a of albums) {
       const ex = byFolder.get(a.folder.id);
-      const galleryId = ex?.id ?? crypto.randomUUID();
-      const rows: Row[] = ex ? (rowsByGallery.get(ex.id) ?? []) : [];
-      // High-res folder missing/renamed/empty while the gallery has photos:
-      // most likely a transient state (e.g. Capture One re-export). Touch nothing.
-      const highresEmpty = a.photos.length === 0 && rows.length > 0;
-      if (highresEmpty) {
-        a.issues.push({ type: "highres_empty", set: null, name: "high-res" });
-        a.issues.sort(issueCmp);
-      }
-      const issuesJson = capIssues(a.issues);
-      result.issues += a.issues.length;
-      const stmts = galleryStatements(run, pass, a, ex, galleryId, issuesJson);
-
-      if (!highresEmpty)
-        stmts.push(...photoStatements(run, pass, a, rows, galleryId));
-      await flushBatches(run, stmts);
+      await syncAlbum(
+        run,
+        pass,
+        a,
+        ex,
+        ex ? (rowsByGallery.get(ex.id) ?? []) : [],
+      );
     }
 
     result.galleries.archived = await archiveAbsent(
