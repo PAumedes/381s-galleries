@@ -1,3 +1,4 @@
+import { clearCache } from "../support/cache";
 import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -36,8 +37,7 @@ const mk = (s: string) =>
 describe("T2.3r2 same Drive id, new content (in-place re-export)", () => {
   it("serves the new bytes after the Drive file is overwritten in place", async () => {
     const db = getDb(env);
-    for (const o of (await env.CACHE.list()).objects)
-      await env.CACHE.delete(o.key);
+    await clearCache();
     await db.delete(schema.galleries);
     await db.insert(schema.galleries).values({
       id: G,

@@ -1,3 +1,4 @@
+import { clearCache } from "./support/cache";
 import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -58,8 +59,7 @@ beforeAll(async () => {
 });
 beforeEach(async () => {
   await getDb(env).delete(schema.settings);
-  for (const o of (await env.CACHE.list()).objects)
-    await env.CACHE.delete(o.key);
+  await clearCache();
 });
 
 describe("validateLogo: raster formats by magic bytes", () => {

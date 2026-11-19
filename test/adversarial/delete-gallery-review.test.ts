@@ -1,3 +1,4 @@
+import { clearCache } from "../support/cache";
 import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -37,8 +38,7 @@ beforeEach(async () => {
       "settings",
     ].map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
   );
-  for (const o of (await env.CACHE.list()).objects)
-    await env.CACHE.delete(o.key);
+  await clearCache();
   await db.insert(schema.galleries).values({
     id: G,
     driveFolderId: FOLDER,

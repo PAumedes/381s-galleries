@@ -1,3 +1,4 @@
+import { clearCache } from "./support/cache";
 import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -117,8 +118,7 @@ async function cookie(
 
 beforeEach(async () => {
   await db.delete(schema.galleries);
-  for (const o of (await env.CACHE.list()).objects)
-    await env.CACHE.delete(o.key);
+  await clearCache();
   await gallery(GA);
   await photo();
 });
@@ -209,8 +209,7 @@ describe("PIN", () => {
 
 describe("fallbacks and watermark", () => {
   async function fileFor(variant: string) {
-    for (const o of (await env.CACHE.list()).objects)
-      await env.CACHE.delete(o.key);
+    await clearCache();
     const f = fakeDrive();
     const res = await get(variant, { drive: f.drive });
     return { res, calls: f.calls };
@@ -218,8 +217,7 @@ describe("fallbacks and watermark", () => {
   it("thumb: thumb ?? web ?? highres", async () => {
     expect((await fileFor("thumb")).calls).toEqual(["DRIVE-THUMB"]);
     await db.update(schema.photos).set({ driveThumbId: null });
-    for (const o of (await env.CACHE.list()).objects)
-      await env.CACHE.delete(o.key);
+    await clearCache();
     expect((await fileFor("thumb")).calls).toEqual(["DRIVE-WEB"]);
     await db.update(schema.photos).set({ driveWebId: null });
     expect((await fileFor("thumb")).calls).toEqual(["DRIVE-HI"]);
@@ -228,8 +226,7 @@ describe("fallbacks and watermark", () => {
     expect((await fileFor("view-sm")).calls).toEqual(["DRIVE-WEB"]);
     expect((await fileFor("view-lg")).calls).toEqual(["DRIVE-HI"]);
     await db.update(schema.photos).set({ driveWebId: null });
-    for (const o of (await env.CACHE.list()).objects)
-      await env.CACHE.delete(o.key);
+    await clearCache();
     expect((await fileFor("view-sm")).calls).toEqual(["DRIVE-HI"]);
   });
   it("proofing: view-* use wm and so does thumb (never the clean thumb)", async () => {

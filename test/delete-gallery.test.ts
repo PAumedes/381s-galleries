@@ -1,3 +1,4 @@
+import { clearCache } from "./support/cache";
 import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -34,8 +35,7 @@ beforeEach(async () => {
       "ignored_folders",
     ].map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
   );
-  for (const o of (await env.CACHE.list()).objects)
-    await env.CACHE.delete(o.key);
+  await clearCache();
 });
 
 const sql = (s: string, ...b: unknown[]) => env.DB.prepare(s).bind(...b);

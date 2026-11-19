@@ -1,3 +1,4 @@
+import { clearCache } from "./support/cache";
 import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
@@ -85,8 +86,7 @@ const row = async (id: string) =>
 beforeEach(async () => {
   await db.delete(schema.galleries);
   await db.delete(schema.settings);
-  for (const o of (await env.CACHE.list()).objects)
-    await env.CACHE.delete(o.key);
+  await clearCache();
 });
 
 describe("warmBatch", () => {

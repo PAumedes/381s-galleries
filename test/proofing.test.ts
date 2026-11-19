@@ -1,3 +1,4 @@
+import { clearCache } from "./support/cache";
 import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
@@ -101,8 +102,7 @@ beforeEach(async () => {
     env.DB.prepare("DELETE FROM galleries"),
     env.DB.prepare("DELETE FROM settings"),
   ]);
-  for (const o of (await env.CACHE.list()).objects)
-    await env.CACHE.delete(o.key);
+  await clearCache();
 });
 
 async function img(
