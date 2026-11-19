@@ -367,6 +367,7 @@ async function scan(
 
 type Db = ReturnType<typeof getDb>;
 type Row = typeof schema.photos.$inferSelect;
+type GalleryRow = typeof schema.galleries.$inferSelect;
 type BatchItem = Parameters<Db["batch"]>[0][number];
 
 const photoFields = (p: PhotoDraft) => ({
@@ -588,6 +589,48 @@ async function detectChanges(
   return { unchanged: false, nextToken };
 }
 
+/**
+ * Trade-off: a gallery is written as several D1 batches (<=100 statements
+ * each; one atomic batch could exceed D1 limits for big galleries). Order:
+ * gallery row, deletes, marks, updates, inserts, so any prefix that
+ * committed before a failure is a consistent state, and the next run
+ * (the changes token is stored only after success) just re-diffs.
+ */
+async function flushBatches(
+  { db, op }: SyncRun,
+  stmts: BatchItem[],
+): Promise<void> {
+  if (stmts.length === 0) return;
+  for (const part of chunk(stmts, D1_BATCH_MAX)) {
+    op();
+    await db.batch(part as [BatchItem, ...BatchItem[]]);
+  }
+}
+
+/** One chunked IN query per <=90 galleries instead of one select each. */
+async function loadPhotoRows(
+  { db, op }: SyncRun,
+  albums: AlbumDraft[],
+  byFolder: Map<string, GalleryRow>,
+): Promise<Map<string, Row[]>> {
+  const rowsByGallery = new Map<string, Row[]>();
+  for (const ids of chunk(
+    albums.flatMap((a) => byFolder.get(a.folder.id)?.id ?? []),
+    D1_IN_CHUNK,
+  )) {
+    op();
+    for (const r of await db
+      .select()
+      .from(schema.photos)
+      .where(inArray(schema.photos.galleryId, ids))) {
+      const l = rowsByGallery.get(r.galleryId) ?? [];
+      l.push(r);
+      rowsByGallery.set(r.galleryId, l);
+    }
+  }
+  return rowsByGallery;
+}
+
 export async function runSync(
   env: SyncEnv,
   opts: SyncOptions,
@@ -664,35 +707,7 @@ export async function runSync(
       since !== null &&
       now.getTime() - Date.parse(since) > SYNC_DELETE_GRACE_MS;
 
-    // Trade-off: a gallery is written as several D1 batches (<=100 statements
-    // each; one atomic batch could exceed D1 limits for big galleries). Order:
-    // gallery row, deletes, marks, updates, inserts, so any prefix that
-    // committed before a failure is a consistent state, and the next run
-    // (the changes token is stored only after success) just re-diffs.
-    const flush = async (stmts: BatchItem[]) => {
-      if (stmts.length === 0) return;
-      for (const part of chunk(stmts, D1_BATCH_MAX)) {
-        op();
-        await db.batch(part as [BatchItem, ...BatchItem[]]);
-      }
-    };
-
-    // One chunked IN query per <=90 galleries instead of one select each.
-    const rowsByGallery = new Map<string, Row[]>();
-    for (const ids of chunk(
-      albums.flatMap((a) => byFolder.get(a.folder.id)?.id ?? []),
-      D1_IN_CHUNK,
-    )) {
-      op();
-      for (const r of await db
-        .select()
-        .from(schema.photos)
-        .where(inArray(schema.photos.galleryId, ids))) {
-        const l = rowsByGallery.get(r.galleryId) ?? [];
-        l.push(r);
-        rowsByGallery.set(r.galleryId, l);
-      }
-    }
+    const rowsByGallery = await loadPhotoRows(run, albums, byFolder);
 
     for (const a of albums) {
       const ex = byFolder.get(a.folder.id);
@@ -858,8 +873,8 @@ export async function runSync(
               })),
             ),
           );
-        await flush(stmts);
-      } else await flush(stmts);
+        await flushBatches(run, stmts);
+      } else await flushBatches(run, stmts);
     }
 
     // Albums whose folder is gone: mark first, archive only after the grace
@@ -897,7 +912,7 @@ export async function runSync(
             })
             .where(inArray(schema.galleries.id, ids)),
         );
-    await flush(gstmts);
+    await flushBatches(run, gstmts);
     result.galleries.archived = due.length;
 
     await putSetting(env, TOKEN_KEY, nextToken, op);
