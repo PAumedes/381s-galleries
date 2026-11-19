@@ -907,6 +907,12 @@ async function syncAlbum(
   await flushBatches(run, stmts);
 }
 
+interface Library {
+  albums: AlbumDraft[];
+  allRows: GalleryRow[];
+  existing: GalleryRow[];
+}
+
 const emptyResult = (): SyncResult => ({
   galleries: { created: 0, updated: 0, archived: 0 },
   photos: { added: 0, updated: 0, removed: 0 },
@@ -923,11 +929,7 @@ const emptyResult = (): SyncResult => ({
 async function loadLibrary(
   { env, db, drive, guard, op }: SyncRun,
   rootId: string,
-): Promise<{
-  albums: AlbumDraft[];
-  allRows: GalleryRow[];
-  existing: GalleryRow[];
-}> {
+): Promise<Library> {
   op();
   const ignored = await ignoredFolderIds(env as Env);
   const albums = (await scan(rootId, drive, guard)).filter(
@@ -937,6 +939,39 @@ async function loadLibrary(
   const allRows = await db.select().from(schema.galleries);
   const existing = allRows.filter((g) => !ignored.has(g.driveFolderId));
   return { albums, allRows, existing };
+}
+
+/**
+ * Writes the whole library diff: every album, then the absent folders.
+ * Returns the removed photo ids whose R2 keys still need deleting.
+ */
+async function applyLibrary(
+  run: SyncRun,
+  result: SyncResult,
+  { albums, allRows, existing }: Library,
+  pending: string[],
+): Promise<string[]> {
+  const byFolder = new Map(existing.map((g) => [g.driveFolderId, g]));
+  const syncedAt = nowIso(run.now);
+  const pass: AlbumPass = {
+    result,
+    syncedAt,
+    takenSlugs: new Set(allRows.map((g) => g.slug.toLowerCase())),
+    pendingIds: pending,
+  };
+  const rowsByGallery = await loadPhotoRows(run, albums, byFolder);
+  for (const a of albums) {
+    const ex = byFolder.get(a.folder.id);
+    const rows = ex ? (rowsByGallery.get(ex.id) ?? []) : [];
+    await syncAlbum(run, pass, a, ex, rows);
+  }
+  result.galleries.archived = await archiveAbsent(
+    run,
+    existing,
+    albums,
+    syncedAt,
+  );
+  return pass.pendingIds;
 }
 
 export async function runSync(
@@ -990,40 +1025,16 @@ export async function runSync(
         subrequests: drive.subrequests() - startSubs,
       };
     }
-    const byFolder = new Map(existing.map((g) => [g.driveFolderId, g]));
-    const takenSlugs = new Set(allRows.map((g) => g.slug.toLowerCase()));
-    const syncedAt = nowIso(now);
-    // Removed photo ids whose R2 keys still need deleting (persisted with the row deletes).
-    const pass: AlbumPass = {
-      result,
-      syncedAt,
-      takenSlugs,
-      pendingIds: pending,
-    };
-
-    const rowsByGallery = await loadPhotoRows(run, albums, byFolder);
-
-    for (const a of albums) {
-      const ex = byFolder.get(a.folder.id);
-      await syncAlbum(
-        run,
-        pass,
-        a,
-        ex,
-        ex ? (rowsByGallery.get(ex.id) ?? []) : [],
-      );
-    }
-
-    result.galleries.archived = await archiveAbsent(
+    const pendingIds = await applyLibrary(
       run,
-      existing,
-      albums,
-      syncedAt,
+      result,
+      { albums, allRows, existing },
+      pending,
     );
 
     await putSetting(env, TOKEN_KEY, nextToken, op);
 
-    await flushR2(env, op, pass.pendingIds);
+    await flushR2(env, op, pendingIds);
     result.subrequests = drive.subrequests() - startSubs;
     return result;
   } finally {
