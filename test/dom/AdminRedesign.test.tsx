@@ -202,7 +202,7 @@ describe("Fotos: cover indicator only once", () => {
 });
 
 describe("Fotos: uniform thumbnail grid + full view", () => {
-  it("every tile is a fixed-aspect square cropped with object-cover", () => {
+  it("every tile is a fixed 4:3 box showing the whole photo (object-contain)", () => {
     reorder();
     const lists = document.querySelectorAll("ul[data-set]");
     expect(lists).toHaveLength(2);
@@ -210,9 +210,9 @@ describe("Fotos: uniform thumbnail grid + full view", () => {
       const img = tile(id).querySelector(
         `img[src="/admin/img/${id}/thumb"]`,
       ) as HTMLElement;
-      expect(img.className).toMatch(/object-cover/);
+      expect(img.className).toMatch(/object-contain/);
       expect(img.closest("[data-thumb-frame]")!.className).toMatch(
-        /aspect-square/,
+        /aspect-\[4\/3\]/,
       );
     }
   });
