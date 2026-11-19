@@ -493,4 +493,31 @@ export const enAdmin = {
   "admin.export.col.browserVersion": "Version",
   "admin.export.col.os": "OS",
   "admin.export.col.device": "Device",
+  "admin.edit.section.danger": "Delete gallery",
+  "admin.edit.delete.warning":
+    "Deletes the gallery and everything associated with it: the photo index, favorites, visits, downloads, cached images, and PIN and visitor data. This cannot be undone. It does not touch the Google Drive files. The folder is not re-created by sync (you can include it again in Settings).",
+  "admin.edit.delete.label": "To confirm, type the gallery link ({slug})",
+  "admin.edit.delete.button": "Delete gallery",
+  "admin.edit.delete.confirm":
+    "The gallery and all of its data will be deleted. This cannot be undone. Continue?",
+  "admin.edit.delete.continuing":
+    "The deletion stopped halfway (the gallery is already hidden). Continuing…: submit again to finish.",
+  "admin.setup.section.ignored": "Ignored folders",
+  "admin.setup.ignored.note":
+    "Folders of deleted galleries. Sync does not re-create them. Only the folder identifier is kept for them.",
+  "admin.setup.ignored.empty": "No ignored folders.",
+  "admin.setup.ignored.deletedAt": "Deleted on {date}",
+  "admin.setup.ignored.reinclude": "Include again",
+  "admin.setup.ignored.confirm":
+    "The next sync will create the gallery from scratch (without the previous data). Continue?",
+  "admin.msg.deleteSlugMismatch":
+    "The link you typed does not match. Nothing was deleted.",
+  "admin.msg.deleteBusy":
+    "A sync is running. Try again in a moment; nothing was deleted.",
+  "admin.msg.deleteContinuing":
+    "Continuing…: the gallery is already hidden and its data is being deleted. Submit again to finish.",
+  "admin.msg.galleryDeleted": "Gallery deleted with all of its data.",
+  "admin.msg.reincluded":
+    "Folder included again: the next sync will create the gallery from scratch.",
+  "admin.msg.reincludeConfirm": "Confirm to include the folder again.",
 } as const satisfies Record<keyof typeof esAdmin, string>;

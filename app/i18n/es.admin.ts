@@ -496,4 +496,32 @@ export const esAdmin = {
   "admin.reorder.sizeS": "Pequeño",
   "admin.reorder.sizeM": "Mediano",
   "admin.reorder.sizeL": "Grande",
+  "admin.edit.section.danger": "Eliminar galería",
+  "admin.edit.delete.warning":
+    "Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).",
+  "admin.edit.delete.label":
+    "Para confirmar, escribí el enlace de la galería ({slug})",
+  "admin.edit.delete.button": "Eliminar galería",
+  "admin.edit.delete.confirm":
+    "Se eliminará la galería y todos sus datos. No se puede deshacer. ¿Continuar?",
+  "admin.edit.delete.continuing":
+    "La eliminación quedó a medias (la galería ya está oculta). Continuando…: enviá de nuevo para terminar.",
+  "admin.setup.section.ignored": "Carpetas ignoradas",
+  "admin.setup.ignored.note":
+    "Carpetas de galerías eliminadas. La sincronización no las vuelve a crear. De ellas solo se guarda el identificador de la carpeta.",
+  "admin.setup.ignored.empty": "No hay carpetas ignoradas.",
+  "admin.setup.ignored.deletedAt": "Eliminada el {date}",
+  "admin.setup.ignored.reinclude": "Volver a incluir",
+  "admin.setup.ignored.confirm":
+    "La próxima sincronización creará la galería desde cero (sin los datos anteriores). ¿Continuar?",
+  "admin.msg.deleteSlugMismatch":
+    "El enlace que escribiste no coincide. No se eliminó nada.",
+  "admin.msg.deleteBusy":
+    "Hay una sincronización en curso. Probá de nuevo en un momento; no se eliminó nada.",
+  "admin.msg.deleteContinuing":
+    "Continuando…: la galería ya está oculta y se están borrando sus datos. Enviá de nuevo para terminar.",
+  "admin.msg.galleryDeleted": "Galería eliminada con todos sus datos.",
+  "admin.msg.reincluded":
+    "Carpeta incluida de nuevo: la próxima sincronización creará la galería desde cero.",
+  "admin.msg.reincludeConfirm": "Confirmá para volver a incluir la carpeta.",
 } as const;
