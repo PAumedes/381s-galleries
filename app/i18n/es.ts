@@ -116,7 +116,7 @@ export const es = {
     "Para entregar las fotos, para que el estudio vea la actividad y las estadísticas de cada galería (por ejemplo, desde qué países y dispositivos se mira) y para detectar abusos y proteger la galería.",
   "privacy.retention.title": "Cuánto tiempo",
   "privacy.retention.body":
-    "Guardamos el historial de visitas y descargas; no se elimina automáticamente. Si querés que se borre, pedíselo al estudio.",
+    "Guardamos el historial de visitas y descargas mientras exista la galería; no se elimina automáticamente. Cuando el estudio elimina una galería, se eliminan todos los datos asociados a ella (índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y de visitantes). Solo se conserva el identificador de la carpeta de Drive, para que la galería no se vuelva a crear. Si querés que se borre antes, pedíselo al estudio.",
   "privacy.sharing.title": "Venta y terceros",
   "privacy.sharing.body": "No vendemos ni compartimos tus datos.",
   "privacy.contact.title": "Contacto",
@@ -218,6 +218,16 @@ export const es = {
   "admin.edit.action.archive": "Archivar",
   "admin.edit.action.draft": "Pasar a borrador",
   "admin.edit.action.restore": "Restaurar",
+  "admin.edit.section.danger": "Eliminar galería",
+  "admin.edit.delete.warning":
+    "Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).",
+  "admin.edit.delete.label":
+    "Para confirmar, escribí el enlace de la galería ({slug})",
+  "admin.edit.delete.button": "Eliminar galería",
+  "admin.edit.delete.confirm":
+    "Se eliminará la galería y todos sus datos. No se puede deshacer. ¿Continuar?",
+  "admin.edit.delete.continuing":
+    "La eliminación quedó a medias (la galería ya está oculta). Continuando…: enviá de nuevo para terminar.",
   "admin.edit.pin.active": "PIN activo",
   "admin.edit.pin.none": "Sin PIN",
   "admin.edit.pin.note":
@@ -438,6 +448,14 @@ export const es = {
   "admin.setup.root.note":
     "Al cambiar la carpeta raíz, las galerías que no estén en la nueva carpeta se van a archivar después del período de gracia (1 hora).",
   "admin.setup.root.save": "Guardar carpeta",
+  "admin.setup.section.ignored": "Carpetas ignoradas",
+  "admin.setup.ignored.note":
+    "Carpetas de galerías eliminadas. La sincronización no las vuelve a crear. De ellas solo se guarda el identificador de la carpeta.",
+  "admin.setup.ignored.empty": "No hay carpetas ignoradas.",
+  "admin.setup.ignored.deletedAt": "Eliminada el {date}",
+  "admin.setup.ignored.reinclude": "Volver a incluir",
+  "admin.setup.ignored.confirm":
+    "La próxima sincronización creará la galería desde cero (sin los datos anteriores). ¿Continuar?",
   "admin.setup.sync.syncing": "Sincronizando…",
   "admin.setup.sync.now": "Sincronizar ahora",
   "admin.setup.sync.cache": "Fotos en caché: {warmed} / {total}",
@@ -501,6 +519,16 @@ export const es = {
   "admin.msg.movedToDraft": "La galería pasó a borrador.",
   "admin.msg.archived": "Galería archivada.",
   "admin.msg.restored": "Galería restaurada.",
+  "admin.msg.deleteSlugMismatch":
+    "El enlace que escribiste no coincide. No se eliminó nada.",
+  "admin.msg.deleteBusy":
+    "Hay una sincronización en curso. Probá de nuevo en un momento; no se eliminó nada.",
+  "admin.msg.deleteContinuing":
+    "Continuando…: la galería ya está oculta y se están borrando sus datos. Enviá de nuevo para terminar.",
+  "admin.msg.galleryDeleted": "Galería eliminada con todos sus datos.",
+  "admin.msg.reincluded":
+    "Carpeta incluida de nuevo: la próxima sincronización creará la galería desde cero.",
+  "admin.msg.reincludeConfirm": "Confirmá para volver a incluir la carpeta.",
   "admin.msg.stale":
     "Ese cambio no es posible desde el estado actual. Recargá la página.",
   "admin.msg.pinRemoved":

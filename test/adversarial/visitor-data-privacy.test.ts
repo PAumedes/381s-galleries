@@ -2,6 +2,7 @@ import { applyD1Migrations } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
+import { deleteGallery } from "../../app/lib/server/gallery-delete";
 import { loadGallery } from "../../app/lib/server/gallery";
 import {
   handleDownloadTokens,
@@ -130,11 +131,11 @@ describe("raw IP in the stored User-Agent", () => {
 });
 
 describe("privacy page retention claim", () => {
-  // Skipped by decision: stats rows are kept on purpose (no FK); /privacy now says so instead of promising deletion (see privacy-retention.test.ts).
-  it.skip("stats rows are deleted with the gallery, as /privacy says", async () => {
+  // Stats tables have no FK, so the app's delete path (deleteGallery) removes their rows explicitly.
+  it("stats rows are deleted with the gallery, as /privacy says", async () => {
     await loadGallery(nav("203.0.113.9"), "boda", env);
     expect((await hashes()).length).toBe(1);
-    await env.DB.prepare("DELETE FROM galleries WHERE id = ?1").bind(G).run();
+    expect(await deleteGallery(env, G)).toBe("deleted");
     const n = await env.DB.prepare(
       "SELECT COUNT(*) AS n FROM gallery_views WHERE gallery_id = ?1",
     )

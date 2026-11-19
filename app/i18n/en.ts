@@ -118,7 +118,7 @@ export const en = {
     "To deliver the photos, to let the studio see the activity and statistics of each gallery (for example, which countries and devices it is viewed from), and to detect abuse and protect the gallery.",
   "privacy.retention.title": "How long",
   "privacy.retention.body":
-    "We keep the visit and download history; nothing is deleted automatically. If you want it removed, ask the studio.",
+    "We keep the visit and download history for as long as the gallery exists; nothing is deleted automatically. When the studio deletes a gallery, all data associated with it is deleted (photo index, favorites, visits, downloads, cached images, and PIN and visitor data). Only the Drive folder identifier is kept, so the gallery is not created again. If you want it removed sooner, ask the studio.",
   "privacy.sharing.title": "Selling and third parties",
   "privacy.sharing.body": "We do not sell or share your data.",
   "privacy.contact.title": "Contact",
@@ -220,6 +220,15 @@ export const en = {
   "admin.edit.action.archive": "Archive",
   "admin.edit.action.draft": "Move to drafts",
   "admin.edit.action.restore": "Restore",
+  "admin.edit.section.danger": "Delete gallery",
+  "admin.edit.delete.warning":
+    "Deletes the gallery and everything associated with it: the photo index, favorites, visits, downloads, cached images, and PIN and visitor data. This cannot be undone. It does not touch the Google Drive files. The folder is not re-created by sync (you can include it again in Settings).",
+  "admin.edit.delete.label": "To confirm, type the gallery link ({slug})",
+  "admin.edit.delete.button": "Delete gallery",
+  "admin.edit.delete.confirm":
+    "The gallery and all of its data will be deleted. This cannot be undone. Continue?",
+  "admin.edit.delete.continuing":
+    "The deletion stopped halfway (the gallery is already hidden). Continuing…: submit again to finish.",
   "admin.edit.pin.active": "PIN active",
   "admin.edit.pin.none": "No PIN",
   "admin.edit.pin.note":
@@ -440,6 +449,14 @@ export const en = {
   "admin.setup.root.note":
     "If you change the root folder, galleries that aren't in the new folder will be archived after the grace period (1 hour).",
   "admin.setup.root.save": "Save folder",
+  "admin.setup.section.ignored": "Ignored folders",
+  "admin.setup.ignored.note":
+    "Folders of deleted galleries. Sync does not re-create them. Only the folder identifier is kept for them.",
+  "admin.setup.ignored.empty": "No ignored folders.",
+  "admin.setup.ignored.deletedAt": "Deleted on {date}",
+  "admin.setup.ignored.reinclude": "Include again",
+  "admin.setup.ignored.confirm":
+    "The next sync will create the gallery from scratch (without the previous data). Continue?",
   "admin.setup.sync.syncing": "Syncing…",
   "admin.setup.sync.now": "Sync now",
   "admin.setup.sync.cache": "Cached photos: {warmed} / {total}",
@@ -502,6 +519,16 @@ export const en = {
   "admin.msg.movedToDraft": "The gallery was moved to drafts.",
   "admin.msg.archived": "Gallery archived.",
   "admin.msg.restored": "Gallery restored.",
+  "admin.msg.deleteSlugMismatch":
+    "The link you typed does not match. Nothing was deleted.",
+  "admin.msg.deleteBusy":
+    "A sync is running. Try again in a moment; nothing was deleted.",
+  "admin.msg.deleteContinuing":
+    "Continuing…: the gallery is already hidden and its data is being deleted. Submit again to finish.",
+  "admin.msg.galleryDeleted": "Gallery deleted with all of its data.",
+  "admin.msg.reincluded":
+    "Folder included again: the next sync will create the gallery from scratch.",
+  "admin.msg.reincludeConfirm": "Confirm to include the folder again.",
   "admin.msg.stale":
     "That change isn't possible from the current state. Reload the page.",
   "admin.msg.pinRemoved":
