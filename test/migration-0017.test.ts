@@ -1,9 +1,9 @@
 import { applyD1Migrations } from "cloudflare:test";
+import { testMigrations } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 
-const all = (env as unknown as { TEST_MIGRATIONS: D1Migration[] })
-  .TEST_MIGRATIONS;
+const all = testMigrations();
 
 describe("migration 0017_mobile_cover on a database with existing rows", () => {
   it("is a migration and keeps every existing gallery as it was", async () => {
