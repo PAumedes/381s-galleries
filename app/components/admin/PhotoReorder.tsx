@@ -5,7 +5,6 @@ import { useT } from "../../i18n/use-t";
 import { movePhoto, moveTo, sortPhotos } from "../../lib/admin-gallery";
 import type { MoveDir } from "../../lib/admin-gallery";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
-import { Expand, Monitor, Phone } from "../icons";
 import { adminImgSrc } from "../img-url";
 import {
   FRAME_BY_MODE,
@@ -13,9 +12,10 @@ import {
   IMG_BY_MODE,
   useFitPrefs,
 } from "./photo-fit";
-import type { FitMode, TileSize } from "./photo-fit";
+import { FitControls, TOOL_BTN as tool } from "./FitControls";
 import { PhotoViewer } from "./PhotoViewer";
 import { QuickLook, useQuickLook } from "./QuickLook";
+import { TileActions, TileBadges } from "./TileActions";
 
 export interface ReorderPhoto {
   id: string;
@@ -28,84 +28,12 @@ export interface ReorderPhoto {
 
 type Orders = Record<string, string[]>;
 
-const tool =
-  "text-micro text-grey-700 hover:text-ink border border-grey-300 hover:border-ink min-h-tap px-3 uppercase disabled:opacity-40 disabled:hover:border-grey-300 disabled:hover:text-grey-700 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-9";
 const btn =
   "text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10";
-/** Tile overlay buttons: white on a dark scrim, 44px on touch screens. */
-const over =
-  "pointer-events-auto flex min-h-tap min-w-tap items-center justify-center bg-black/70 text-white hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white disabled:opacity-50 md:min-h-8 md:min-w-8";
-
 function groupBySet(photos: ReorderPhoto[]): Orders {
   const out: Orders = {};
   for (const p of photos) (out[p.set] ??= []).push(p.id);
   return out;
-}
-
-function Choice<T extends string>({
-  label,
-  value,
-  options,
-  onPick,
-}: {
-  label: string;
-  value: T;
-  options: { value: T; text: string; name?: string }[];
-  onPick: (v: T) => void;
-}) {
-  return (
-    <div role="group" aria-label={label} className="flex items-center gap-1.5">
-      <span aria-hidden="true" className="text-micro text-grey-700 uppercase">
-        {label}
-      </span>
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          aria-pressed={value === o.value}
-          aria-label={o.name}
-          onClick={() => onPick(o.value)}
-          className={`${tool} min-w-tap ${value === o.value ? "bg-ink border-ink text-paper hover:text-paper" : ""}`}
-        >
-          {o.text}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/** Whole picture or cropped fill, and the tile size: remembered per viewer. */
-function FitControls({
-  prefs,
-  onChange,
-}: {
-  prefs: { mode: FitMode; size: TileSize };
-  onChange: (next: { mode?: FitMode; size?: TileSize }) => void;
-}) {
-  const t = useT();
-  return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-      <Choice
-        label={t("admin.reorder.view")}
-        value={prefs.mode}
-        onPick={(mode) => onChange({ mode })}
-        options={[
-          { value: "fit", text: t("admin.reorder.fit") },
-          { value: "fill", text: t("admin.reorder.fill") },
-        ]}
-      />
-      <Choice
-        label={t("admin.reorder.size")}
-        value={prefs.size}
-        onPick={(size) => onChange({ size })}
-        options={[
-          { value: "s", text: "S", name: t("admin.reorder.sizeS") },
-          { value: "m", text: "M", name: t("admin.reorder.sizeM") },
-          { value: "l", text: "L", name: t("admin.reorder.sizeL") },
-        ]}
-      />
-    </div>
-  );
 }
 
 /**
@@ -114,8 +42,8 @@ function FitControls({
  * Keyboard/touch: Enter/Space (or tap) selects a photo, then arrow keys /
  * Home / End or the "Mover antes/después" buttons move it; Escape deselects.
  * Nothing is written until "Guardar orden". The current cover wears a small
- * badge (once); every other tile shows "Usar como portada" (and the mobile
- * cover / full view actions) on hover, focus or selection.
+ * badge (once); every tile has an icon + label action bar under the picture
+ * (`TileActions`: cover, mobile cover, full view).
  */
 export function PhotoReorder({
   photos,
@@ -295,9 +223,6 @@ export function PhotoReorder({
                     key={id}
                     data-photo-id={id}
                     draggable
-                    onPointerEnter={(ev) =>
-                      quick.hover(id, ev.currentTarget, ev.pointerType)
-                    }
                     onPointerDownCapture={quick.pointerDown}
                     onPointerLeave={quick.stop}
                     onFocus={(ev) => quick.focus(id, ev.currentTarget)}
@@ -330,10 +255,17 @@ export function PhotoReorder({
                     onDragEnd={() => {
                       dragging.current = null;
                     }}
-                    className="group flex min-w-0 list-none flex-col gap-1"
+                    className="group @container flex min-w-0 list-none flex-col gap-1"
                   >
                     <div
                       data-thumb-frame=""
+                      onPointerEnter={(ev) =>
+                        quick.hover(
+                          id,
+                          ev.currentTarget.parentElement!,
+                          ev.pointerType,
+                        )
+                      }
                       className={`bg-grey-100 relative ${FRAME_BY_MODE[prefs.mode]} overflow-hidden ${isSel ? "outline-ink outline-2 outline-offset-2" : ""}`}
                     >
                       <div
@@ -357,100 +289,17 @@ export function PhotoReorder({
                           className={`size-full ${IMG_BY_MODE[prefs.mode]} select-none`}
                         />
                       </div>
-                      <div
-                        data-tile-actions=""
-                        className={`pointer-events-none absolute inset-0 flex flex-col bg-black/25 ${isSel ? "visible" : "invisible group-focus-within:visible group-hover:visible"}`}
-                      >
-                        <div className="flex flex-1 items-center justify-center gap-1">
-                          {!isMobile && (
-                            <Form method="post" className="contents">
-                              <input
-                                type="hidden"
-                                name="intent"
-                                value="cover"
-                              />
-                              <input
-                                type="hidden"
-                                name="device"
-                                value="mobile"
-                              />
-                              <input type="hidden" name="photoId" value={id} />
-                              <button
-                                type="submit"
-                                disabled={busy}
-                                aria-label={t("admin.reorder.useAsMobileCover")}
-                                aria-describedby={`photo-${id}`}
-                                title={t("admin.reorder.useAsMobileCover")}
-                                className={over}
-                              >
-                                <Phone aria-hidden="true" className="size-4" />
-                              </button>
-                            </Form>
-                          )}
-                          <button
-                            type="button"
-                            aria-label={t("admin.reorder.viewFull")}
-                            aria-describedby={`photo-${id}`}
-                            title={t("admin.reorder.viewFull")}
-                            onClick={() => {
-                              quick.stop();
-                              setViewing(id);
-                            }}
-                            className={over}
-                          >
-                            <Expand aria-hidden="true" className="size-4" />
-                          </button>
-                        </div>
-                        {(!isCover || coverAuto) && (
-                          <Form method="post" className="flex">
-                            <input type="hidden" name="intent" value="cover" />
-                            <input type="hidden" name="photoId" value={id} />
-                            <button
-                              type="submit"
-                              disabled={busy}
-                              aria-describedby={`photo-${id}`}
-                              className={`${over} text-micro w-full px-2 uppercase`}
-                            >
-                              {t("admin.reorder.useAsCover")}
-                            </button>
-                          </Form>
-                        )}
-                      </div>
                       <span
                         aria-hidden="true"
                         className="text-micro bg-paper/90 text-ink pointer-events-none absolute top-0 left-0 px-1.5 py-0.5"
                       >
                         {i + 1}
                       </span>
-                      {(isCover || isMobile) && (
-                        <span className="pointer-events-none absolute top-0 right-0 flex">
-                          {isCover && (
-                            <span
-                              data-cover-badge="desktop"
-                              title={coverLabel}
-                              className="bg-ink text-paper text-micro flex items-center gap-1 px-1.5 py-0.5 uppercase"
-                            >
-                              <Monitor
-                                aria-hidden="true"
-                                className="size-3.5"
-                              />
-                              <span className="sr-only">{coverLabel}</span>
-                            </span>
-                          )}
-                          {isMobile && (
-                            <span
-                              data-cover-badge="mobile"
-                              title={t("admin.reorder.coverMobile")}
-                              className="bg-ink text-paper flex items-center px-1.5 py-0.5"
-                            >
-                              <Phone aria-hidden="true" className="size-3.5" />
-                              <span className="sr-only">
-                                {t("admin.reorder.coverMobile")}
-                              </span>
-                            </span>
-                          )}
-                        </span>
-                      )}
+                      <TileBadges
+                        isCover={isCover}
+                        isMobile={isMobile}
+                        coverLabel={coverLabel}
+                      />
                     </div>
                     <span
                       aria-hidden="true"
@@ -458,6 +307,22 @@ export function PhotoReorder({
                     >
                       {p.name}
                     </span>
+                    <div
+                      onPointerEnter={quick.stop}
+                      onFocus={(ev) => ev.stopPropagation()}
+                    >
+                      <TileActions
+                        id={id}
+                        isCover={isCover}
+                        coverAuto={coverAuto}
+                        isMobile={isMobile}
+                        busy={busy}
+                        onView={() => {
+                          quick.stop();
+                          setViewing(id);
+                        }}
+                      />
+                    </div>
                   </li>
                 );
               })}

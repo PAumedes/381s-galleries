@@ -172,7 +172,7 @@ describe("Fotos: quick look", () => {
 
   it("appears after ~350 ms of hover: view-sm, aria-hidden, no focusable content", async () => {
     await ready();
-    fireEvent.pointerEnter(tile("p2"));
+    fireEvent.pointerEnter(frame("p2"));
     act(() => void vi.advanceTimersByTime(200));
     expect(lookImgs()).toHaveLength(0);
     act(() => void vi.advanceTimersByTime(200));
@@ -194,7 +194,7 @@ describe("Fotos: quick look", () => {
 
   it("does not appear if the pointer leaves before the delay", async () => {
     await ready();
-    fireEvent.pointerEnter(tile("p2"));
+    fireEvent.pointerEnter(frame("p2"));
     act(() => void vi.advanceTimersByTime(200));
     fireEvent.pointerLeave(tile("p2"));
     act(() => void vi.advanceTimersByTime(1000));
@@ -204,7 +204,7 @@ describe("Fotos: quick look", () => {
   it("hides on leave, blur, Escape, scroll, drag and when the viewer opens", async () => {
     await ready();
     const open = () => {
-      fireEvent.pointerEnter(tile("p2"));
+      fireEvent.pointerEnter(frame("p2"));
       act(() => void vi.advanceTimersByTime(400));
       expect(lookImgs()).toHaveLength(1);
     };
@@ -230,7 +230,7 @@ describe("Fotos: quick look", () => {
   it("never shows on touch / coarse pointers", async () => {
     media(false);
     await ready();
-    fireEvent.pointerEnter(tile("p2"));
+    fireEvent.pointerEnter(frame("p2"));
     fireEvent.focus(
       within(tile("p1")).getByRole("button", { name: "vertical" }),
     );
@@ -240,10 +240,10 @@ describe("Fotos: quick look", () => {
 
   it("ignores touch pointers even when the device reports hover (iPad with a mouse)", async () => {
     await ready();
-    fireEvent.pointerEnter(tile("p2"), { pointerType: "touch" });
+    fireEvent.pointerEnter(frame("p2"), { pointerType: "touch" });
     act(() => void vi.advanceTimersByTime(2000));
     expect(lookImgs()).toHaveLength(0);
-    fireEvent.pointerEnter(tile("p2"), { pointerType: "mouse" });
+    fireEvent.pointerEnter(frame("p2"), { pointerType: "mouse" });
     act(() => void vi.advanceTimersByTime(400));
     expect(lookImgs()).toHaveLength(1);
   });
@@ -251,7 +251,7 @@ describe("Fotos: quick look", () => {
   it("real click order (pointerdown, focus, click) does not reopen the look", async () => {
     await ready();
     const btn = within(tile("p3")).getByRole("button", { name: "square" });
-    fireEvent.pointerEnter(tile("p3"), { pointerType: "mouse" });
+    fireEvent.pointerEnter(frame("p3"), { pointerType: "mouse" });
     act(() => void vi.advanceTimersByTime(400));
     fireEvent.pointerDown(btn, { pointerType: "mouse" });
     fireEvent.focus(btn);
@@ -273,7 +273,7 @@ describe("Fotos: quick look", () => {
       y: window.innerHeight - 20,
       toJSON() {},
     });
-    fireEvent.pointerEnter(tile("p4"));
+    fireEvent.pointerEnter(frame("p4"));
     act(() => void vi.advanceTimersByTime(400));
     const look = document.querySelector("[data-quick-look]") as HTMLElement;
     expect(look.className).toMatch(/fixed/);

@@ -31,6 +31,8 @@ function show() {
 }
 const tile = (id: string) =>
   document.querySelector(`[data-photo-id="${id}"]`) as HTMLElement;
+const frame = (id: string) =>
+  tile(id).querySelector<HTMLElement>("[data-thumb-frame]")!;
 const looks = () => document.querySelectorAll("[data-quick-look]");
 
 beforeEach(() => {
@@ -54,7 +56,7 @@ describe("adversarial: photo-fit quick look", () => {
   it("clicking a hovered tile does not re-open the quick look via the focus that follows pointerdown", async () => {
     await ready();
     const btn = within(tile("p1")).getByRole("button", { name: "n1" });
-    fireEvent.pointerEnter(tile("p1"));
+    fireEvent.pointerEnter(frame("p1"));
     act(() => void vi.advanceTimersByTime(400));
     expect(looks()).toHaveLength(1);
     fireEvent.pointerDown(btn); // real browsers: pointerdown, then focus
@@ -78,7 +80,7 @@ describe("adversarial: photo-fit quick look", () => {
 
   it("a view-sm that fails to load does not leave an empty bordered box", async () => {
     await ready();
-    fireEvent.pointerEnter(tile("p1"));
+    fireEvent.pointerEnter(frame("p1"));
     act(() => void vi.advanceTimersByTime(400));
     fireEvent.error(document.querySelector("[data-quick-look] img")!);
     expect(looks()).toHaveLength(0);
