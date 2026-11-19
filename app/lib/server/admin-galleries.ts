@@ -18,6 +18,13 @@ import { adminAction } from "./admin";
 import type { DriveClient } from "./drive-types";
 import { adminImageToken } from "./images";
 import { warmCoverPhoto } from "./warm";
+import {
+  listCoverIdSql,
+  DEVICE_FIELDS,
+  focusOf,
+  resolveCover,
+  type Device,
+} from "./cover";
 import { hashPin } from "./crypto";
 import { deleteGallery, isDeleting } from "./gallery-delete";
 import { RESERVED_SLUGS } from "./slug";
@@ -89,9 +96,7 @@ export async function listGalleries(
       status: g.status,
       expiresAt: g.expiresAt,
       syncIssuesJson: g.syncIssuesJson,
-      coverPhotoId: sql<string | null>`COALESCE(
-        (SELECT p.id FROM photos p WHERE p.id = galleries.cover_photo_id AND p.gallery_id = galleries.id AND p.missing_since IS NULL),
-        (SELECT p.id FROM photos p WHERE p.gallery_id = galleries.id AND p.missing_since IS NULL ORDER BY p.set_name, p.sort, p.base_name LIMIT 1))`,
+      coverPhotoId: listCoverIdSql(),
       photoCount: sql<number>`(SELECT count(*) FROM photos p WHERE p.gallery_id = galleries.id AND p.missing_since IS NULL)`,
       deleting: sql<number>`${isDeletingSql}`,
       views: sql<number>`(SELECT count(*) FROM gallery_views v WHERE v.gallery_id = galleries.id)`,
@@ -206,19 +211,10 @@ export async function loadGalleryEdit(env: Env, id: string) {
   // Proofing serves only preview-wm: photos without it 404 for clients.
   const noWm = ps.filter((p) => !p.hasWm);
   const issues = groupIssues(g.syncIssuesJson);
-  const proofing = g.mode === "proofing";
-  // Mirror of the public payload (gallery.ts): in Prueba only photos with a
-  // preview-wm can be a cover; a mobile cover without one is dropped (desktop
-  // cover used) and a desktop cover without one falls to the first that has it.
-  const chosenCover = ps.find((p) => p.id === g.coverPhotoId);
-  const firstWm = ps.find((p) => p.hasWm);
-  const baseCover = chosenCover ?? ps[0];
-  const coverPhotoId =
-    proofing && baseCover && !baseCover.hasWm && firstWm
-      ? firstWm.id
-      : (chosenCover?.id ?? null);
-  const mobileRow = ps.find((p) => p.id === g.coverPhotoIdMobile);
-  const mobileCoverNoWm = proofing && !!mobileRow && !mobileRow.hasWm;
+  const cover = resolveCover(
+    ps.map((p) => ({ id: p.id, hasWm: !!p.hasWm })),
+    g,
+  );
   if (g.mode === "proofing" && noWm.length > 0) {
     issues.groups.push({
       type: "missing_wm",
@@ -248,21 +244,14 @@ export async function loadGalleryEdit(env: Env, id: string) {
       gridGap: g.gridGap,
       hasPin: g.pinHash !== null,
       showOnHome: g.showOnHome,
-      coverPhotoId,
-      coverFocus:
-        g.coverFocusX !== null && g.coverFocusY !== null
-          ? { x: g.coverFocusX, y: g.coverFocusY }
-          : null,
+      coverPhotoId: cover.editCover,
+      coverFocus: focusOf(g.coverFocusX, g.coverFocusY),
       // Optional mobile cover: only while that photo is visible.
-      coverPhotoIdMobile: mobileRow && !mobileCoverNoWm ? mobileRow.id : null,
-      ...(mobileCoverNoWm ? { mobileCoverNoWm: true as const } : {}),
-      coverFocusMobile:
-        mobileRow &&
-        !mobileCoverNoWm &&
-        g.coverFocusMobileX !== null &&
-        g.coverFocusMobileY !== null
-          ? { x: g.coverFocusMobileX, y: g.coverFocusMobileY }
-          : null,
+      coverPhotoIdMobile: cover.mobile,
+      ...(cover.mobileNoWm ? { mobileCoverNoWm: true as const } : {}),
+      coverFocusMobile: cover.mobile
+        ? focusOf(g.coverFocusMobileX, g.coverFocusMobileY)
+        : null,
     },
     /** Deletion started but not finished: the editor only offers to continue it. */
     deleting: await isDeleting(env, g.driveFolderId),
@@ -691,8 +680,6 @@ async function savePin(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   return done(intent, t("admin.msg.pinSaved"));
 }
 
-type Device = "desktop" | "mobile";
-
 /**
  * Which cover a cover/focus form targets: absent or "desktop" = the desktop
  * cover, "mobile" = the optional mobile cover. Anything else (other strings,
@@ -718,14 +705,8 @@ async function saveCover(
     return fail(intent, t("admin.msg.invalidRequest"));
   const photoId = raw ?? "";
   const db = getDb(env);
-  const clear =
-    device === "mobile"
-      ? {
-          coverPhotoIdMobile: null,
-          coverFocusMobileX: null,
-          coverFocusMobileY: null,
-        }
-      : { coverPhotoId: null, coverFocusX: null, coverFocusY: null };
+  const cols = DEVICE_FIELDS[device];
+  const clear = { [cols.photo]: null, [cols.fx]: null, [cols.fy]: null };
   if (photoId === "") {
     await db
       .update(schema.galleries)
@@ -752,11 +733,7 @@ async function saveCover(
   // A new photo resets that device's focal point to the center.
   await db
     .update(schema.galleries)
-    .set(
-      device === "mobile"
-        ? { ...clear, coverPhotoIdMobile: p.id }
-        : { ...clear, coverPhotoId: p.id },
-    )
+    .set({ ...clear, [cols.photo]: p.id })
     .where(eq(schema.galleries.id, g.id));
   // The new cover is about to be looked at (here and by clients): fill R2 for
   // that photo in the background so nobody waits for a cold Drive fetch.
@@ -825,11 +802,7 @@ async function saveFocus(
   }
   await getDb(env)
     .update(schema.galleries)
-    .set(
-      device === "mobile"
-        ? { coverFocusMobileX: x, coverFocusMobileY: y }
-        : { coverFocusX: x, coverFocusY: y },
-    )
+    .set({ [DEVICE_FIELDS[device].fx]: x, [DEVICE_FIELDS[device].fy]: y })
     .where(eq(schema.galleries.id, g.id));
   return done(
     intent,
