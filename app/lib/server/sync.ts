@@ -907,18 +907,45 @@ async function syncAlbum(
   await flushBatches(run, stmts);
 }
 
+const emptyResult = (): SyncResult => ({
+  galleries: { created: 0, updated: 0, archived: 0 },
+  photos: { added: 0, updated: 0, removed: 0 },
+  issues: 0,
+  subrequests: 0,
+});
+
+/**
+ * Scans Drive and reads the gallery rows. Folders of deleted galleries
+ * (tombstones, or a deletion still in progress) are invisible to sync: not
+ * re-created, not updated, not "missing". `allRows` still includes them so
+ * their slugs stay taken.
+ */
+async function loadLibrary(
+  { env, db, drive, guard, op }: SyncRun,
+  rootId: string,
+): Promise<{
+  albums: AlbumDraft[];
+  allRows: GalleryRow[];
+  existing: GalleryRow[];
+}> {
+  op();
+  const ignored = await ignoredFolderIds(env as Env);
+  const albums = (await scan(rootId, drive, guard)).filter(
+    (a) => !ignored.has(a.folder.id),
+  );
+  op();
+  const allRows = await db.select().from(schema.galleries);
+  const existing = allRows.filter((g) => !ignored.has(g.driveFolderId));
+  return { albums, allRows, existing };
+}
+
 export async function runSync(
   env: SyncEnv,
   opts: SyncOptions,
 ): Promise<SyncResult> {
   const { drive, force = false, budget = 45 } = opts;
   const now = opts.now ?? new Date();
-  const result: SyncResult = {
-    galleries: { created: 0, updated: 0, archived: 0 },
-    photos: { added: 0, updated: 0, removed: 0 },
-    issues: 0,
-    subrequests: 0,
-  };
+  const result = emptyResult();
   const startSubs = drive.subrequests();
   const guard = makeGuard(drive, budget);
   const db = getDb(env as Env);
@@ -952,19 +979,8 @@ export async function runSync(
       };
     const nextToken = detected.nextToken;
 
-    // 3. Scan (no writes yet).
-    // Folders of deleted galleries (tombstones, or a deletion still in progress)
-    // are invisible to sync: not re-created, not updated, not "missing".
-    op();
-    const ignored = await ignoredFolderIds(env as Env);
-    const albums = (await scan(rootId, drive, guard)).filter(
-      (a) => !ignored.has(a.folder.id),
-    );
-
-    // 4. Reconcile.
-    op();
-    const allRows = await db.select().from(schema.galleries);
-    const existing = allRows.filter((g) => !ignored.has(g.driveFolderId));
+    // 3-4. Scan (no writes yet) and read the current galleries.
+    const { albums, allRows, existing } = await loadLibrary(run, rootId);
     if (albums.length === 0 && existing.length > 0) {
       // A transient empty listing must never archive the library.
       console.error("sync: root listing is empty but galleries exist; aborted");
