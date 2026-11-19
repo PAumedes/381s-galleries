@@ -6,6 +6,8 @@ import { metaT, type MetaMatches } from "../i18n/meta";
 import { adminHeaders } from "../lib/server/admin";
 import { galleryAction, loadGalleryEdit } from "../lib/server/admin-galleries";
 import { requireAdmin } from "../lib/server/auth";
+import { executionContext } from "../lib/server/context";
+import { getDrive } from "../lib/server/drive-factory";
 import { publicOrigin } from "../lib/server/public-url";
 import type { Route } from "./+types/admin.g.$id";
 
@@ -27,8 +29,14 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return editData(request, env, params.id);
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
-  return galleryAction(request, env, params.id);
+export async function action({ request, params, context }: Route.ActionArgs) {
+  // A cover save warms R2 for that photo in the background (never in mock
+  // mode: the mock Drive serves placeholders).
+  const warm =
+    env.DRIVE_MODE === "mock"
+      ? undefined
+      : { ctx: context.get(executionContext), drive: getDrive(env) };
+  return galleryAction(request, env, params.id, warm);
 }
 
 export default function AdminGalleryEdit({ loaderData }: Route.ComponentProps) {

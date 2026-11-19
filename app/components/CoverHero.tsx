@@ -1,9 +1,16 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { Ref } from "react";
 
 import { coverObjectPosition, type Focus } from "../lib/cover-focus";
 import { isDarkPalette, type CoverLayout, type Palette } from "../lib/design";
 
+import { FadeImg } from "./FadeImg";
 import { Logo } from "./Logo";
 import { ChevronDown } from "./icons";
 
@@ -17,6 +24,8 @@ export type CoverImage = {
   src: string;
   focus: Focus | null;
   aspect: number | null;
+  /** Small version shown until `src` loads (admin previews only). */
+  placeholder?: string | null;
 };
 
 /**
@@ -30,6 +39,7 @@ export function CoverHero({
   date,
   studio,
   src,
+  placeholder = null,
   proofing,
   focus,
   aspect = null,
@@ -47,6 +57,8 @@ export function CoverHero({
   studio: string;
   /** Cover image URL (null = no photo). */
   src: string | null;
+  /** Small version shown until `src` loads, then faded out (admin previews). */
+  placeholder?: string | null;
   proofing: boolean;
   /** Focal point on the image (percent of its width/height); null = centered. */
   focus: Focus | null;
@@ -69,7 +81,10 @@ export function CoverHero({
   device?: "desktop" | "mobile";
 }) {
   const Title = embedded ? "p" : "h1";
-  const imgRef = useRef<HTMLImageElement>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const setImgNode = useCallback((el: HTMLImageElement | null) => {
+    imgRef.current = el;
+  }, []);
   const [narrow, setNarrow] = useState(false);
   const hasMobile = !!mobile;
   useEffect(() => {
@@ -84,6 +99,7 @@ export function CoverHero({
     mobile && (device ? device === "mobile" : narrow) ? mobile : null;
   const onMobile = active !== null;
   const shownSrc = device && active ? active.src : src;
+  const shownPlaceholder = device && active ? active.placeholder : placeholder;
   const shownFocus = active ? active.focus : focus;
   const shownAspect = active ? active.aspect : aspect;
   const [frame, setFrame] = useState<{ w: number; h: number } | null>(null);
@@ -114,8 +130,9 @@ export function CoverHero({
     />
   );
   const img = shownSrc && (
-    <img
-      ref={imgRef}
+    <FadeImg
+      onElement={setImgNode}
+      placeholder={shownPlaceholder}
       data-cover-img=""
       data-cover-device={onMobile ? "mobile" : "desktop"}
       src={shownSrc}

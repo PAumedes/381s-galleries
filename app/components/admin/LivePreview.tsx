@@ -16,7 +16,12 @@ import { useStudioName } from "../../lib/use-studio-name";
 import { CoverHero } from "../CoverHero";
 import { Grid } from "../Grid";
 import { Monitor, Phone } from "../icons";
-import { adminImgUrl, ImgUrlProvider } from "../img-url";
+import {
+  adminImgSrc,
+  adminImgUrl,
+  ImgUrlProvider,
+  type Versions,
+} from "../img-url";
 import type { GalleryPhoto } from "../types";
 import { paletteKey } from "./DesignPanel";
 
@@ -53,8 +58,19 @@ const toggle =
   "text-micro flex min-h-tap items-center gap-2 border px-3 uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-9";
 
 /** Admin URL of the cover image (the watermarked one in Prueba). */
-export const coverSrc = (id: string, proofing: boolean) =>
-  `/admin/img/${encodeURIComponent(id)}/${proofing ? "view-sm-wm" : "view-sm"}`;
+export const coverSrc = (id: string, proofing: boolean, v?: string | null) =>
+  adminImgSrc(id, proofing ? "view-sm-wm" : "view-sm", v);
+
+/**
+ * Small stand-in shown while the cover loads: the thumbnail (the watermarked
+ * one in Prueba, never a clean file there). The photo grid and the cover
+ * chooser load the same URL, so the browser has it already.
+ */
+export const coverPlaceholderSrc = (
+  id: string,
+  proofing: boolean,
+  v?: string | null,
+) => adminImgSrc(id, proofing ? "thumb-wm" : "thumb", v);
 
 /**
  * "Así se ve": the real client page (the same CoverHero and Grid the public
@@ -74,6 +90,7 @@ export function LivePreview({
   cover,
   mobileCover = null,
   photos = null,
+  versions,
   device,
   onDevice,
   heading,
@@ -93,6 +110,8 @@ export function LivePreview({
   mobileCover?: CoverSpec | null;
   /** The gallery photos: shown as the real grid below the cover. Null = cover only. */
   photos?: readonly PreviewPhoto[] | null;
+  /** Admin image tokens by photo id (`?v=`: privately cacheable URLs). */
+  versions?: Versions;
   device: PreviewDevice;
   onDevice: (d: PreviewDevice) => void;
   heading?: string;
@@ -124,7 +143,10 @@ export function LivePreview({
     return () => ro.disconnect();
   }, [vp.w]);
 
-  const imgUrl = useMemo(() => adminImgUrl(proofing), [proofing]);
+  const imgUrl = useMemo(
+    () => adminImgUrl(proofing, versions),
+    [proofing, versions],
+  );
   const gridPhotos = useMemo<GalleryPhoto[] | null>(
     () =>
       photos
@@ -230,14 +252,36 @@ export function LivePreview({
                   title={title}
                   date={formatEventDate(eventDate, localeFor(lang))}
                   studio={studio}
-                  src={cover ? coverSrc(cover.id, proofing) : null}
+                  src={
+                    cover
+                      ? coverSrc(cover.id, proofing, versions?.[cover.id])
+                      : null
+                  }
+                  placeholder={
+                    cover
+                      ? coverPlaceholderSrc(
+                          cover.id,
+                          proofing,
+                          versions?.[cover.id],
+                        )
+                      : null
+                  }
                   proofing={false}
                   focus={cover?.focus ?? null}
                   aspect={cover?.aspect ?? null}
                   mobile={
                     mobileCover
                       ? {
-                          src: coverSrc(mobileCover.id, proofing),
+                          src: coverSrc(
+                            mobileCover.id,
+                            proofing,
+                            versions?.[mobileCover.id],
+                          ),
+                          placeholder: coverPlaceholderSrc(
+                            mobileCover.id,
+                            proofing,
+                            versions?.[mobileCover.id],
+                          ),
                           focus: mobileCover.focus,
                           aspect: mobileCover.aspect,
                         }

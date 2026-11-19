@@ -376,7 +376,9 @@ describe("Portada: two clearly different cards", () => {
     ).toBe("10");
     expect(
       (
-        pick.querySelector("[data-testid=focus-picker] img") as HTMLImageElement
+        pick.querySelector(
+          "[data-testid=focus-picker] img:not([data-placeholder])",
+        ) as HTMLImageElement
       ).getAttribute("src"),
     ).toBe("/admin/img/p3/view-sm");
     expect(
@@ -435,7 +437,7 @@ describe("Diseño: live preview of the whole gallery before saving", () => {
     show("/admin/g/g1?tab=diseno");
     expect(page().querySelector("[data-cover-layout]")).toBeTruthy();
     const thumbs = page().querySelectorAll(
-      'img[src^="/admin/img/"][src$="/thumb"]',
+      'img:not([data-placeholder])[src^="/admin/img/"][src$="/thumb"]',
     );
     expect(thumbs.length).toBe(4);
   });

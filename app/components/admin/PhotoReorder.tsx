@@ -6,6 +6,7 @@ import { movePhoto, moveTo, sortPhotos } from "../../lib/admin-gallery";
 import type { MoveDir } from "../../lib/admin-gallery";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
 import { Expand, Monitor, Phone } from "../icons";
+import { adminImgSrc } from "../img-url";
 import {
   FRAME_BY_MODE,
   GRID_BY_SIZE,
@@ -21,6 +22,8 @@ export interface ReorderPhoto {
   set: string;
   name: string;
   takenAt: string | null;
+  /** Admin image token (`?v=`), when known. */
+  v?: string | null;
 }
 
 type Orders = Record<string, string[]>;
@@ -346,7 +349,7 @@ export function PhotoReorder({
                         className="focus-visible:outline-ink absolute inset-0 cursor-grab outline-offset-2 focus-visible:outline-2"
                       >
                         <img
-                          src={`/admin/img/${id}/thumb`}
+                          src={adminImgSrc(id, "thumb", p.v)}
                           alt={p.name}
                           loading="lazy"
                           decoding="async"

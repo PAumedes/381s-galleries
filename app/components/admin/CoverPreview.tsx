@@ -4,7 +4,9 @@ import { Form, useNavigation } from "react-router";
 import { useT } from "../../i18n/use-t";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
 import type { CoverLayout, Palette } from "../../lib/design";
+import { FadeImg } from "../FadeImg";
 import { ChevronDown, Monitor, Phone } from "../icons";
+import { adminImgSrc, type Versions } from "../img-url";
 import { coverSrc, LivePreview, type PreviewDevice } from "./LivePreview";
 
 type Focus = { x: number; y: number };
@@ -62,6 +64,7 @@ export function CoverPreview({
   mobileNoWm = false,
   photos = [],
   coverAuto = false,
+  versions,
   device: deviceProp,
   onDevice,
 }: {
@@ -85,6 +88,8 @@ export function CoverPreview({
   photos?: readonly ChooserPhoto[];
   /** The desktop cover is automatic (first photo). */
   coverAuto?: boolean;
+  /** Admin image tokens by photo id (`?v=`). */
+  versions?: Versions;
   /** Controlled device (optional; shared with the editor's other previews). */
   device?: PreviewDevice;
   onDevice?: (d: PreviewDevice) => void;
@@ -253,8 +258,9 @@ export function CoverPreview({
             style={shown}
             className="focus-visible:outline-ink absolute cursor-crosshair touch-manipulation focus-visible:outline-2 focus-visible:outline-offset-2"
           >
-            <img
-              src={coverSrc(pickId, false)}
+            <FadeImg
+              src={coverSrc(pickId, false, versions?.[pickId])}
+              placeholder={adminImgSrc(pickId, "thumb", versions?.[pickId])}
               alt=""
               draggable={false}
               onLoad={(e) => {
@@ -267,7 +273,7 @@ export function CoverPreview({
                       : { ...n, [pickId]: { w, h } },
                   );
               }}
-              className="pointer-events-none size-full object-contain select-none"
+              className="pointer-events-none absolute inset-0 size-full object-contain select-none"
             />
             {/* Crosshair: thin lines through the point + a ring on it. */}
             <span
@@ -382,7 +388,7 @@ export function CoverPreview({
                       className={`bg-grey-100 focus-visible:outline-ink block aspect-square w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 ${p.id === pickId ? "outline-ink outline-2 outline-offset-1" : ""}`}
                     >
                       <img
-                        src={`/admin/img/${encodeURIComponent(p.id)}/thumb`}
+                        src={adminImgSrc(p.id, "thumb", versions?.[p.id])}
                         alt=""
                         loading="lazy"
                         draggable={false}
@@ -426,6 +432,7 @@ export function CoverPreview({
                 }
               : null
           }
+          versions={versions}
           device={device}
           onDevice={setDevice}
         />

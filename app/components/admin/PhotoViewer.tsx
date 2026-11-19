@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { useT } from "../../i18n/use-t";
+import { adminImgSrc } from "../img-url";
 import { ChevronLeft, ChevronRight, Close } from "../icons";
 
 const BTN =
@@ -19,7 +20,7 @@ export function PhotoViewer({
   onClose,
 }: {
   ids: readonly string[];
-  names: ReadonlyMap<string, { name: string }>;
+  names: ReadonlyMap<string, { name: string; v?: string | null }>;
   current: string;
   onChange: (id: string) => void;
   onClose: () => void;
@@ -95,7 +96,7 @@ export function PhotoViewer({
       <div className="relative flex min-h-0 flex-1 items-center justify-center px-12 pb-6">
         <img
           key={current}
-          src={`/admin/img/${encodeURIComponent(current)}/view-sm`}
+          src={adminImgSrc(current, "view-sm", names.get(current)?.v)}
           alt={name}
           draggable={false}
           className="max-h-full max-w-full object-contain select-none"
