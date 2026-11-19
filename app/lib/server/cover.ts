@@ -10,6 +10,7 @@ import type { schema } from "../../db";
  *   else the first visible photo (gallery order) is used.
  * - In Prueba (proofing) only a photo with a preview-wm can be served, so a
  *   cover without one falls to the first photo that has one.
+ * - In Prueba with no preview-wm at all there is no cover (null).
  * - The optional mobile cover follows the same visibility rule; in Prueba one
  *   without a preview-wm is not served (the desktop cover is used instead).
  */
@@ -74,7 +75,10 @@ export function resolveCover(
   const mobileRow = rows.find((p) => p.id === gallery.coverPhotoIdMobile);
   const mobileNoWm = proofing && !!mobileRow && !mobileRow.hasWm;
   return {
-    cover: fallsToWm ? firstWm.id : (base?.id ?? null),
+    // Prueba with no preview-wm at all: nothing can be served, so no cover
+    // (naming one would be a 404).
+    cover:
+      proofing && !firstWm ? null : fallsToWm ? firstWm.id : (base?.id ?? null),
     editCover: fallsToWm ? firstWm.id : (chosen?.id ?? null),
     mobile: mobileRow && !mobileNoWm ? mobileRow.id : null,
     mobileNoWm,
@@ -83,9 +87,11 @@ export function resolveCover(
 
 const PHOTO_ORDER = "p.set_name, p.sort, p.base_name";
 
-const SERVABLE =
-  "p.missing_since IS NULL AND (galleries.mode = 'delivery' OR p.drive_wm_id IS NOT NULL)";
-const VISIBLE = "p.missing_since IS NULL";
+/** A preview-wm exists: NULL and '' both mean none (same as `!!driveWmId`). */
+export const hasWmSql = (col = "p.drive_wm_id"): SQL<number> =>
+  sql<number>`(NULLIF(${sql.raw(col)}, '') IS NOT NULL)`;
+
+const SERVABLE = `p.missing_since IS NULL AND (galleries.mode = 'delivery' OR NULLIF(p.drive_wm_id, '') IS NOT NULL)`;
 
 function coverSql(ok: string): SQL<string | null> {
   const cond = sql.raw(ok);
@@ -102,8 +108,7 @@ function coverSql(ok: string): SQL<string | null> {
 export const homeCoverIdSql = () => coverSql(SERVABLE);
 
 /**
- * Admin list: the same rule, but a Prueba gallery with no preview-wm at all
- * still shows its first visible photo (as the public page names it).
+ * Admin list: the same rule as the home and the public page. A Prueba gallery
+ * with no preview-wm at all has no cover (null), never a clean photo.
  */
-export const listCoverIdSql = (): SQL<string | null> =>
-  sql<string | null>`COALESCE(${coverSql(SERVABLE)}, ${coverSql(VISIBLE)})`;
+export const listCoverIdSql = homeCoverIdSql;

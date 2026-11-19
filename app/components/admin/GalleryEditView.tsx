@@ -720,9 +720,29 @@ function GalleryEditViewInner({
                     {fe.mode}
                   </p>
                 )}
-                {proofing && !data.hasWmFiles && (
-                  <p role="alert" className="text-small text-ink font-medium">
-                    {t("admin.edit.mode.noWm")}
+                {proofing && data.wmCount === 0 && data.photoCount > 0 && (
+                  <p role="status" className="text-small text-ink font-medium">
+                    {t("admin.edit.mode.noWm", { count: data.photoCount })}
+                  </p>
+                )}
+                {proofing &&
+                  data.wmCount > 0 &&
+                  data.wmCount < data.photoCount && (
+                    <p
+                      role="status"
+                      className="text-small text-ink font-medium"
+                    >
+                      {t("admin.edit.mode.someNoWm", {
+                        missing: data.photoCount - data.wmCount,
+                        count: data.photoCount,
+                      })}
+                    </p>
+                  )}
+                {proofing && g.showOnHome && (
+                  <p role="status" className="text-small text-ink font-medium">
+                    {t("admin.edit.mode.homeReminder")}
+                    {data.wmCount === 0 &&
+                      ` ${t("admin.edit.mode.homeNeedsWm")}`}
                   </p>
                 )}
                 {proofing && data.hasWmFiles && !data.hasThumbWmFiles && (

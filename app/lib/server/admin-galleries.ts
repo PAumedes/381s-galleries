@@ -19,6 +19,7 @@ import type { DriveClient } from "./drive-types";
 import { adminImageToken } from "./images";
 import { warmCoverPhoto } from "./warm";
 import {
+  hasWmSql,
   listCoverIdSql,
   DEVICE_FIELDS,
   focusOf,
@@ -179,7 +180,7 @@ export async function loadGalleryEdit(env: Env, id: string) {
       takenAt: schema.photos.takenAt,
       width: schema.photos.width,
       height: schema.photos.height,
-      hasWm: sql<number>`(${schema.photos.driveWmId} IS NOT NULL)`,
+      hasWm: hasWmSql("photos.drive_wm_id"),
       hasThumbWm: sql<number>`(${schema.photos.driveThumbWmId} IS NOT NULL)`,
       driveHighresId: schema.photos.driveHighresId,
       driveWebId: schema.photos.driveWebId,
@@ -255,6 +256,9 @@ export async function loadGalleryEdit(env: Env, id: string) {
     },
     /** Deletion started but not finished: the editor only offers to continue it. */
     deleting: await isDeleting(env, g.driveFolderId),
+    /** Counts only (never ids): visible photos, and those with a preview-wm. */
+    photoCount: ps.length,
+    wmCount: ps.length - noWm.length,
     hasWmFiles: ps.some((p) => p.hasWm),
     hasThumbWmFiles: ps.some((p) => p.hasThumbWm),
     photos,
