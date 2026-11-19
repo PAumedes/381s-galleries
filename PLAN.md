@@ -311,6 +311,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 
 ### Refactor log
 - [x] `runSync` decomposed (branch refactor-runsync): lock, `detectChanges`, `loadLibrary`, `applyLibrary` (`syncAlbum`, `galleryStatements`, `photoStatements`, `archiveAbsent`), `flushBatches`; pure helpers in `app/lib/server/sync-helpers.ts`. Behaviour pinned first by `test/sync-phases.test.ts` (incl. an exact-SQL golden snapshot). Not done: splitting `scan`/R2 flush out of `sync.ts` (still ~900 lines).
+- [x] `GalleryEditViewInner` decomposed (branch refactor-gallery-edit, 745 -> ~135 lines; `GalleryEditView.tsx` 997 -> 191): sections and tabs are components in `app/components/admin/gallery-edit/` (`DetailsSection`, `StatusSection`, `PinSection`, `HomeSection`, `OptionsSection` with the T6.19 warnings, `DangerSection`, `PhotosTab`, `CoverTab`, `DesignSection`/`DesignBar`, `ShareSections`, `EditorHeader`, `EditorColumns`, `EditorPreview`), hooks `useDesignDraft` (draft + leave guard) and `useCoverPrefetch`, shared `ui.tsx`/`types.ts`. Behaviour pinned first by `test/dom/GalleryEditCharacterization.test.tsx` (per-section behaviour and posts, plus a normalised DOM snapshot per state). Not done: the expiry fields stay inside `DetailsSection` (same form), `btn`/`inputCls` class strings are still duplicated in other admin components.
 
 ### Backlog (not now)
 - Email notifications (Resend / Gmail SMTP)

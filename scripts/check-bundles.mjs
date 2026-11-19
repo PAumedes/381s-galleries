@@ -24,8 +24,9 @@ export function adminIntents(appDir = APP_DIR) {
   for (const f of readdirSync(routes))
     if (/^(admin|api\.admin).*\.tsx$/.test(f)) files.push(path.join(routes, f));
   const comps = path.join(appDir, "components", "admin");
-  for (const f of readdirSync(comps))
-    if (f.endsWith(".tsx")) files.push(path.join(comps, f));
+  // Recursive: editor sections live in components/admin/gallery-edit/.
+  for (const f of readdirSync(comps, { recursive: true }))
+    if (String(f).endsWith(".tsx")) files.push(path.join(comps, String(f)));
   const found = new Set();
   const patterns = [
     /name="intent"\s+value="([A-Za-z]+)"/g,
