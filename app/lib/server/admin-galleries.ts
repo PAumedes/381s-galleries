@@ -9,6 +9,7 @@ import {
   ISSUE_LABELS,
   isValidDate,
   normalizeSearch,
+  resolveExpiry,
   utcIsoToLocal,
 } from "../admin-gallery";
 import type { Filter } from "../admin-gallery";
@@ -432,9 +433,10 @@ async function saveDetails(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
     else {
       // A date without a time means "until the end of that day" (studio time).
       expiresAt = expDate
-        ? localToUtcIso(
+        ? resolveExpiry(
             expDate,
             expTime || "23:59",
+            g.expiresAt,
             validTimezone(env.TIMEZONE),
           )
         : null;

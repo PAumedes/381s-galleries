@@ -127,3 +127,19 @@ export function localToUtcIso(
   const ms = candidates.length ? Math.min(...candidates) : wall - before;
   return new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
 }
+
+/**
+ * Local date+time from the edit form -> UTC. If they equal the stored instant
+ * shown in the zone, keep the stored instant (an untouched save must not move
+ * the second occurrence of an ambiguous fall-back hour).
+ */
+export function resolveExpiry(
+  date: string,
+  time: string,
+  existing: string | null,
+  tz?: string,
+): string | null {
+  const cur = existing ? utcIsoToLocal(existing, tz) : null;
+  if (existing && cur?.date === date && cur.time === time) return existing;
+  return localToUtcIso(date, time, tz);
+}
