@@ -1,5 +1,7 @@
 # Guía de despliegue — 381 Studios Galerías
 
+> **Este es el runbook del dueño original** (dominio `381studios.ar`, su cuenta de Cloudflare y su base de datos). **Si hacés tu propia copia (fork), no uses este archivo: seguí [docs/SELF-HOSTING.md](docs/SELF-HOSTING.md)** ([English](docs/SELF-HOSTING.en.md)).
+
 Todo se hace desde el navegador: **nunca necesitás compilar ni instalar nada en tu PC**. El despliegue lo hace GitHub Actions.
 
 ## 0. Qué vas a necesitar

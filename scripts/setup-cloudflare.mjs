@@ -75,7 +75,7 @@ async function listD1(run) {
 }
 
 /** Blank out comments (same length; strings kept) so regexes ignore them. */
-function maskJsonc(src) {
+export function maskJsonc(src) {
   let out = "";
   for (let i = 0; i < src.length;) {
     const c = src[i];

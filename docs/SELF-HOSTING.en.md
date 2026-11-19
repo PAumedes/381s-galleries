@@ -141,7 +141,7 @@ You edit a single file, `wrangler.jsonc`, in the browser.
 
    Optional: if you want a public contact email on your `/privacy` page, add one more line in the same place, with a comma at the end: `"PUBLIC_CONTACT_EMAIL": "<CONTACT_EMAIL>",`. Without it, `/privacy` shows a generic text ("contact the studio through the usual channels") instead of an email.
 
-4. **Do not touch** anything else (not even `database_id`: it is filled in by step 8). Keep the quotes and the comma at the end of each line.
+4. **Do not touch** anything else: not `database_id` (step 8 fills it in; while it still holds the original owner's id, **Deploy** stops with a message asking you to run Setup and never touches the owner's database), nor `name`, `database_name` or `bucket_name` (they live in your own Cloudflare account, so they can stay the same). Keep the quotes and the comma at the end of each line.
 5. Click **Commit changes…** → message "My values" → **Commit changes**.
 
 **What you will see next:** in the **Actions** tab a **Deploy** run appears. It may fail (red cross) until you have run Setup in step 8. That is expected: it can fail in **Checks** (see Common problems), or because of a database (D1) error, since the app is not fully installed yet. Do not try to fix it now; carry on and judge the result after step 8.
