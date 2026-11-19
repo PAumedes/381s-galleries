@@ -6,6 +6,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { DEFAULT_STUDIO_NAME } from "../../app/lib/default-studio-name";
 import { createRoutesStub } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -165,7 +166,7 @@ describe("cover preview", () => {
     const el = await preview();
     expect(within(el).getByText("Boda Ana")).toBeTruthy();
     expect(within(el).getByText(/1 de noviembre de 2026/)).toBeTruthy();
-    expect(within(el).getByText("381 Studios")).toBeTruthy();
+    expect(within(el).getByText(DEFAULT_STUDIO_NAME)).toBeTruthy();
     expect(previewImg(el).getAttribute("src")).toBe("/admin/img/p2/view-sm");
     expect(el.querySelector('[data-theme="claro"]')).toBeTruthy();
   });
