@@ -8,6 +8,7 @@
  */
 import { and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../db";
+import { ignoredFolderIds } from "./gallery-delete";
 import { getRootFolderId } from "./drive-factory";
 import { DriveError, FOLDER_MIME, SHORTCUT_MIME } from "./drive-types";
 import type { DriveClient, DriveFile } from "./drive-types";
@@ -581,11 +582,18 @@ export async function runSync(
     }
 
     // 3. Scan (no writes yet).
-    const albums = await scan(rootId, drive, guard);
+    // Folders of deleted galleries (tombstones, or a deletion still in progress)
+    // are invisible to sync: not re-created, not updated, not "missing".
+    op();
+    const ignored = await ignoredFolderIds(env as Env);
+    const albums = (await scan(rootId, drive, guard)).filter(
+      (a) => !ignored.has(a.folder.id),
+    );
 
     // 4. Reconcile.
     op();
-    const existing = await db.select().from(schema.galleries);
+    const allRows = await db.select().from(schema.galleries);
+    const existing = allRows.filter((g) => !ignored.has(g.driveFolderId));
     if (albums.length === 0 && existing.length > 0) {
       // A transient empty listing must never archive the library.
       console.error("sync: root listing is empty but galleries exist; aborted");
@@ -596,7 +604,7 @@ export async function runSync(
       };
     }
     const byFolder = new Map(existing.map((g) => [g.driveFolderId, g]));
-    const takenSlugs = new Set(existing.map((g) => g.slug.toLowerCase()));
+    const takenSlugs = new Set(allRows.map((g) => g.slug.toLowerCase()));
     const syncedAt = nowIso(now);
     // Removed photo ids whose R2 keys still need deleting (persisted with the row deletes).
     let pendingIds = pending;

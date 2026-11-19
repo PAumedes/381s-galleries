@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { redirect } from "react-router";
 import { getDb, photoVisible, schema } from "../../db";
 import type { Db } from "../../db";
 import {
@@ -18,6 +19,7 @@ import type { DriveClient } from "./drive-types";
 import { adminImageToken } from "./images";
 import { warmCoverPhoto } from "./warm";
 import { hashPin } from "./crypto";
+import { deleteGallery, isDeleting } from "./gallery-delete";
 import { RESERVED_SLUGS } from "./slug";
 import { isExpired } from "./time";
 
@@ -47,6 +49,9 @@ const FILTER_STATUS: Record<Filter, "published" | "draft" | "archived" | null> =
 
 // ------------------------------------------------------------------ list
 
+/** A gallery whose deletion is in progress (tombstoned, row not gone yet): stays listed so it can be continued. */
+const isDeletingSql = sql<boolean>`EXISTS (SELECT 1 FROM ignored_folders i WHERE i.drive_folder_id = ${schema.galleries.driveFolderId})`;
+
 export interface GalleryListRow {
   id: string;
   title: string;
@@ -63,6 +68,8 @@ export interface GalleryListRow {
   /** Per-photo download rows only (bulk header rows are excluded). */
   downloads: number;
   issueCount: number;
+  /** Deletion started but not finished: the list offers "Continuar eliminación". */
+  deleting: boolean;
 }
 
 export async function listGalleries(
@@ -86,6 +93,7 @@ export async function listGalleries(
         (SELECT p.id FROM photos p WHERE p.id = galleries.cover_photo_id AND p.gallery_id = galleries.id AND p.missing_since IS NULL),
         (SELECT p.id FROM photos p WHERE p.gallery_id = galleries.id AND p.missing_since IS NULL ORDER BY p.set_name, p.sort, p.base_name LIMIT 1))`,
       photoCount: sql<number>`(SELECT count(*) FROM photos p WHERE p.gallery_id = galleries.id AND p.missing_since IS NULL)`,
+      deleting: sql<number>`${isDeletingSql}`,
       views: sql<number>`(SELECT count(*) FROM gallery_views v WHERE v.gallery_id = galleries.id)`,
       downloads: sql<number>`(SELECT count(*) FROM downloads d WHERE d.gallery_id = galleries.id AND d.photo_id IS NOT NULL)`,
     })
@@ -110,6 +118,7 @@ export async function listGalleries(
     : rows;
   return matched.map(({ syncIssuesJson, ...r }) => ({
     ...r,
+    deleting: !!r.deleting,
     expired: isExpired(r.expiresAt, now),
     issueCount: groupIssues(syncIssuesJson).total,
   }));
@@ -255,6 +264,8 @@ export async function loadGalleryEdit(env: Env, id: string) {
           ? { x: g.coverFocusMobileX, y: g.coverFocusMobileY }
           : null,
     },
+    /** Deletion started but not finished: the editor only offers to continue it. */
+    deleting: await isDeleting(env, g.driveFolderId),
     hasWmFiles: ps.some((p) => p.hasWm),
     hasThumbWmFiles: ps.some((p) => p.hasThumbWm),
     photos,
@@ -273,6 +284,8 @@ export interface GalleryActionResult {
   fieldErrors?: Record<string, string>;
   /** Reorder only: the photo set changed since the page was loaded. */
   stale?: boolean;
+  /** Delete only: the deletion is not finished yet; submit again. */
+  continuing?: boolean;
 }
 
 const fail = (
@@ -325,6 +338,10 @@ export async function galleryAction(
     return fail("", t("admin.msg.invalidRequest"));
   }
   const intent = str(form, "intent");
+  if (intent === "delete") return deleteIntent(env, g, form, t);
+  // A gallery being deleted accepts nothing else.
+  if (await isDeleting(env, g.driveFolderId))
+    return fail(intent, t("admin.msg.stale"));
   switch (intent) {
     case "details":
       return saveDetails(env, g, form, t);
@@ -350,6 +367,42 @@ export async function galleryAction(
 }
 
 type GalleryRow = typeof schema.galleries.$inferSelect;
+
+/**
+ * Danger zone: the admin must type the gallery slug (checked here, not in JS).
+ * Success redirects to /admin; an unfinished deletion asks to be submitted again.
+ */
+async function deleteIntent(
+  env: Env,
+  g: GalleryRow,
+  f: FormData,
+  t: TFunction,
+): Promise<GalleryActionResult> {
+  const intent = "delete";
+  if (str(f, "slug").trim().toLowerCase() !== g.slug.toLowerCase())
+    return fail(intent, t("admin.msg.deleteSlugMismatch"));
+  let outcome: Awaited<ReturnType<typeof deleteGallery>>;
+  try {
+    outcome = await deleteGallery(env, g.id);
+  } catch {
+    // R2 or D1 failed: the gallery stays marked (and listed as "deleting");
+    // submitting again resumes, every step is repeatable.
+    console.error("delete gallery failed");
+    return fail(intent, t("admin.msg.deleteFailed"));
+  }
+  switch (outcome) {
+    case "deleted":
+      throw redirect("/admin?deleted=1", 303);
+    case "continue":
+      return fail(intent, t("admin.msg.deleteContinuing"), undefined, {
+        continuing: true,
+      });
+    case "busy":
+      return fail(intent, t("admin.msg.deleteBusy"));
+    case "not_found":
+      throw new Response("Not found", { status: 404 });
+  }
+}
 
 async function saveDetails(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   const intent = "details";

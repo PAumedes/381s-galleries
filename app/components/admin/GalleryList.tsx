@@ -284,6 +284,14 @@ export function GalleryList({
                     className={`row-start-2 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden xl:py-2 xl:pr-3`}
                   >
                     <StatusPill status={g.status} expired={g.expired} />
+                    {g.deleting && (
+                      <Link
+                        to={`/admin/g/${g.id}`}
+                        className="text-micro mt-1 block underline"
+                      >
+                        {t("admin.list.deleting")}
+                      </Link>
+                    )}
                   </td>
                   <td
                     role="cell"

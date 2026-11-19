@@ -25,6 +25,11 @@ import {
   SETUP_BODY_MAX_BYTES,
 } from "../lib/server/logo";
 import type { LogoError } from "../lib/server/logo";
+import {
+  folderHandle,
+  ignoredFolders,
+  reincludeByHandle,
+} from "../lib/server/gallery-delete";
 import { disconnectGoogle, isGoogleConnected } from "../lib/server/google-auth";
 import {
   deleteSetting,
@@ -62,6 +67,13 @@ export async function setupData(request: Request, e: Env) {
     cacheWarm: await warmProgress(e),
     logo: await getLogoVersions(e),
     lastError,
+    // Opaque handles only: Drive ids never reach the browser.
+    ignoredFolders: await Promise.all(
+      (await ignoredFolders(e)).map(async (f) => ({
+        handle: await folderHandle(e, f.driveFolderId),
+        deletedAt: f.deletedAt,
+      })),
+    ),
   };
 }
 
@@ -186,6 +198,19 @@ async function readForm(request: Request): Promise<FormData | null> {
   }
 }
 
+async function reinclude(
+  e: Env,
+  form: FormData,
+  t: TFunction,
+): Promise<SetupActionResult> {
+  if (form.get("confirm") !== "1")
+    return fail("reinclude", t("admin.msg.reincludeConfirm"));
+  const removed = await reincludeByHandle(e, String(form.get("handle") ?? ""));
+  return removed
+    ? { intent: "reinclude", ok: true, message: t("admin.msg.reincluded") }
+    : fail("reinclude", t("admin.msg.stale"));
+}
+
 export async function setupAction(
   request: Request,
   e: Env,
@@ -216,6 +241,8 @@ export async function setupAction(
       await putSetting(e, SETTINGS_KEYS.studioName, name);
       return { intent, ok: true, message: t("admin.msg.nameSaved") };
     }
+    case "reinclude":
+      return reinclude(e, form, t);
     case "logo":
       return uploadLogo(e, form, t);
     case "logoReset":

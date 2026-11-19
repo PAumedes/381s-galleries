@@ -31,15 +31,17 @@ export async function adminIndexData(request: Request, env: Env) {
   const flag = q.get("google");
   const reason = q.get("reason");
   const message =
-    flag === "connected"
-      ? t("admin.google.connected")
-      : flag === "error"
-        ? t(
-            reason !== null && Object.hasOwn(REASON_KEYS, reason)
-              ? REASON_KEYS[reason]!
-              : "admin.google.error",
-          )
-        : null;
+    q.get("deleted") === "1"
+      ? t("admin.msg.galleryDeleted")
+      : flag === "connected"
+        ? t("admin.google.connected")
+        : flag === "error"
+          ? t(
+              reason !== null && Object.hasOwn(REASON_KEYS, reason)
+                ? REASON_KEYS[reason]!
+                : "admin.google.error",
+            )
+          : null;
   const filter = parseFilter(q.get("estado"));
   const search = (q.get("q") ?? "").trim().slice(0, 100);
   return {

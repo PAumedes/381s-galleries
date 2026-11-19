@@ -16,6 +16,8 @@ export interface SetupViewData {
   /** Versions of the uploaded logos (null = bundled). */
   logo?: { onLight: string | null; onDark: string | null };
   lastError: { at: string; message: string } | null;
+  /** Deleted galleries' Drive folders that sync skips (only id + date are kept). */
+  ignoredFolders?: { handle: string; deletedAt: string }[];
 }
 
 export interface SetupActionData {
@@ -449,6 +451,42 @@ export function SetupView({
         actionData={actionData}
         busy={busy}
       />
+
+      <Section title={t("admin.setup.section.ignored")}>
+        <p className="text-small text-grey-600">
+          {t("admin.setup.ignored.note")}
+        </p>
+        {(data.ignoredFolders ?? []).length === 0 ? (
+          <p className="text-small">{t("admin.setup.ignored.empty")}</p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {(data.ignoredFolders ?? []).map((f) => (
+              <li key={f.handle} className="flex flex-col gap-1">
+                <span className="text-small text-grey-600">
+                  {t("admin.setup.ignored.deletedAt", {
+                    date: dateTime(f.deletedAt),
+                  })}
+                </span>
+                <Form
+                  method="post"
+                  onSubmit={(ev) => {
+                    if (!window.confirm(t("admin.setup.ignored.confirm")))
+                      ev.preventDefault();
+                  }}
+                >
+                  <input type="hidden" name="intent" value="reinclude" />
+                  <input type="hidden" name="confirm" value="1" />
+                  <input type="hidden" name="handle" value={f.handle} />
+                  <button type="submit" className={btn} disabled={busy}>
+                    {t("admin.setup.ignored.reinclude")}
+                  </button>
+                </Form>
+              </li>
+            ))}
+          </ul>
+        )}
+        <Feedback data={actionData} intent="reinclude" />
+      </Section>
     </div>
   );
 }
