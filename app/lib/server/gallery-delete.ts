@@ -19,7 +19,7 @@
  *  4. one atomic D1 batch deletes every row tied to the gallery.
  * Drive is never touched (the app only reads it) and neither is the studio logo.
  */
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../db";
 import { SETTINGS_KEYS } from "./settings";
 
@@ -203,6 +203,6 @@ export async function isDeleting(
   const [r] = await getDb(env)
     .select({ id: schema.ignoredFolders.driveFolderId })
     .from(schema.ignoredFolders)
-    .where(and(eq(schema.ignoredFolders.driveFolderId, driveFolderId)));
+    .where(eq(schema.ignoredFolders.driveFolderId, driveFolderId));
   return !!r;
 }
