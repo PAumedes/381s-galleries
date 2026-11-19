@@ -28,6 +28,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
+          node scripts/check-fork-config.mjs
           if grep -q '"database_id": *"00000000-0000-0000-0000-000000000000"' wrangler.jsonc; then
             echo "::notice::Run the Setup workflow first (Actions > Setup > Run workflow). Deploy skipped."
             exit 0

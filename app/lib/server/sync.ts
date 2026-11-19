@@ -6,6 +6,7 @@
  * the desired state in memory, and only then writes (one D1 batch per
  * gallery). A budget overrun therefore aborts before any write.
  */
+import { D1_BATCH_MAX, D1_IN_CHUNK, PHOTO_INSERT_ROWS } from "./d1-limits";
 import { and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../db";
 import { ignoredFolderIds } from "./gallery-delete";
@@ -38,7 +39,6 @@ const PENDING_DELETES_CAP = 2000;
 const ISSUES_CAP = 200;
 /** Workers limit is 1000 subrequests to Cloudflare services (D1/R2/KV). */
 const CF_SUBREQUEST_CAP = 900;
-const BATCH_MAX = 100;
 const R2_KEYS = ["thumb", "view-sm", "view-lg"] as const;
 const R2_DELETE_MAX = 1000;
 
@@ -619,7 +619,7 @@ export async function runSync(
     // (the changes token is stored only after success) just re-diffs.
     const flush = async (stmts: BatchItem[]) => {
       if (stmts.length === 0) return;
-      for (const part of chunk(stmts, BATCH_MAX)) {
+      for (const part of chunk(stmts, D1_BATCH_MAX)) {
         op();
         await db.batch(part as [BatchItem, ...BatchItem[]]);
       }
@@ -629,7 +629,7 @@ export async function runSync(
     const rowsByGallery = new Map<string, Row[]>();
     for (const ids of chunk(
       albums.flatMap((a) => byFolder.get(a.folder.id)?.id ?? []),
-      90,
+      D1_IN_CHUNK,
     )) {
       op();
       for (const r of await db
@@ -766,13 +766,13 @@ export async function runSync(
               }),
           );
         }
-        for (const ids of chunk(goneIds, 90))
+        for (const ids of chunk(goneIds, D1_IN_CHUNK))
           stmts.push(
             db.delete(schema.photos).where(inArray(schema.photos.id, ids)),
           );
         for (const ids of chunk(
           toMark.map((r) => r.id),
-          90,
+          D1_IN_CHUNK,
         ))
           stmts.push(
             db
@@ -794,8 +794,8 @@ export async function runSync(
             cmp(x.setName, y.setName),
         );
         let sort = rows.reduce((m, r) => Math.max(m, r.sort), -1) + 1;
-        // D1 allows 100 bound parameters per statement; a photo row binds ~18.
-        for (const part of chunk(fresh, 5))
+        // D1 allows 100 bound parameters per statement (d1-limits.ts); a photo row binds ~18.
+        for (const part of chunk(fresh, PHOTO_INSERT_ROWS))
           stmts.push(
             db.insert(schema.photos).values(
               part.map((p) => ({
@@ -818,7 +818,7 @@ export async function runSync(
     const firstSeen = absent.filter((g) => g.folderMissingSince === null);
     for (const ids of chunk(
       firstSeen.map((g) => g.id),
-      90,
+      D1_IN_CHUNK,
     ))
       gstmts.push(
         db
@@ -832,7 +832,7 @@ export async function runSync(
     for (const prev of ["draft", "published"] as const)
       for (const ids of chunk(
         due.filter((g) => g.status === prev).map((g) => g.id),
-        90,
+        D1_IN_CHUNK,
       ))
         gstmts.push(
           db
