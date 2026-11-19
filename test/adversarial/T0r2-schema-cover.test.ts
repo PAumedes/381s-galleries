@@ -1,13 +1,10 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, describe, expect, it } from "vitest";
 
 describe("T0r2 adversarial: schema", () => {
   beforeAll(async () => {
-    await applyD1Migrations(
-      env.DB,
-      (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-    );
+    await migrateDb();
     for (const n of ["a", "b"]) {
       await env.DB.prepare(
         "INSERT INTO galleries (id, drive_folder_id, slug, title) VALUES (?,?,?,'T')",

@@ -1,4 +1,4 @@
-import { applyD1Migrations } from "cloudflare:test";
+import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeAll, expect, it } from "vitest";
@@ -12,10 +12,7 @@ import type { DriveClient } from "../../app/lib/server/drive-types";
 const db = getDb(env);
 const G = "gggggggg-0000-0000-0000-0000000000f1";
 beforeAll(async () => {
-  await applyD1Migrations(
-    env.DB,
-    (env as unknown as { TEST_MIGRATIONS: D1Migration[] }).TEST_MIGRATIONS,
-  );
+  await migrateDb();
 });
 
 it("tokens issued for a multi-id (bulk-gated) request stop working when allow_bulk is turned off", async () => {
