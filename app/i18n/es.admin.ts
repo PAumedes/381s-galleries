@@ -489,4 +489,11 @@ export const esAdmin = {
   "admin.export.col.browserVersion": "Versión",
   "admin.export.col.os": "Sistema",
   "admin.export.col.device": "Dispositivo",
+  "admin.reorder.view": "Vista",
+  "admin.reorder.fit": "Ajustar",
+  "admin.reorder.fill": "Rellenar",
+  "admin.reorder.size": "Tamaño",
+  "admin.reorder.sizeS": "Pequeño",
+  "admin.reorder.sizeM": "Mediano",
+  "admin.reorder.sizeL": "Grande",
 } as const;
