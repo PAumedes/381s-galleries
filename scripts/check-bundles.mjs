@@ -141,7 +141,7 @@ export function checkBundles(clientDir, { literals = [] } = {}) {
     : [];
   if (adminJs.length === 0) {
     problems.push(
-      `${ADMIN_DIR}/ is missing or empty: admin chunks were not split out`,
+      `${ADMIN_DIR}/ is missing or empty; rebuild (admin chunks were not split out)`,
     );
   }
   for (const file of walk(clientDir)) {

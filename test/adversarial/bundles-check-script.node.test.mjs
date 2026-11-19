@@ -47,9 +47,14 @@ describe("check-bundles marker rot", () => {
       readdirSync(d, { withFileTypes: true }).flatMap((e) =>
         e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)],
       );
-    const adminJs = walk(path.join(clientDir, "admin-assets")).map((f) =>
-      readFileSync(f, "utf8"),
-    );
+    const adminDir = path.join(clientDir, "admin-assets");
+    const adminFiles = existsSync(adminDir) ? walk(adminDir) : [];
+    // a stale or partial build must fail clearly, not crash with ENOENT
+    expect(
+      adminFiles.length,
+      "admin-assets/ is missing or empty; rebuild (pnpm build)",
+    ).toBeGreaterThan(0);
+    const adminJs = adminFiles.map((f) => readFileSync(f, "utf8"));
     const dead = MARKERS.filter((m) =>
       ["adminAction", "requireAdmin"].includes(m.name),
     )
@@ -57,6 +62,15 @@ describe("check-bundles marker rot", () => {
       .map((m) => m.name);
     // a marker that never matches even the admin bundle can never fail
     expect(dead).toEqual([]);
+  });
+
+  it("a stale build without admin-assets fails clearly (no ENOENT, never ok)", () => {
+    const dir = build({ "assets/app.js": "console.log(1)" });
+    const r = checkBundles(dir);
+    expect(r.ok).toBe(false);
+    expect(r.problems.join("\n")).toContain(
+      "admin-assets/ is missing or empty; rebuild",
+    );
   });
 
   it("refuses to pass silently when the dictionary format drifts (0 keys parsed)", () => {
