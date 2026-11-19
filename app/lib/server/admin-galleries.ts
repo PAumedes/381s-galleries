@@ -18,7 +18,7 @@ import type { DriveClient } from "./drive-types";
 import { adminImageToken } from "./images";
 import { warmCoverPhoto } from "./warm";
 import {
-  coverIdSql,
+  listCoverIdSql,
   DEVICE_FIELDS,
   focusOf,
   resolveCover,
@@ -89,7 +89,7 @@ export async function listGalleries(
       status: g.status,
       expiresAt: g.expiresAt,
       syncIssuesJson: g.syncIssuesJson,
-      coverPhotoId: coverIdSql(false),
+      coverPhotoId: listCoverIdSql(),
       photoCount: sql<number>`(SELECT count(*) FROM photos p WHERE p.gallery_id = galleries.id AND p.missing_since IS NULL)`,
       views: sql<number>`(SELECT count(*) FROM gallery_views v WHERE v.gallery_id = galleries.id)`,
       downloads: sql<number>`(SELECT count(*) FROM downloads d WHERE d.gallery_id = galleries.id AND d.photo_id IS NOT NULL)`,

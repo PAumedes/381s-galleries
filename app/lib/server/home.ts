@@ -1,6 +1,6 @@
 import { inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "../../db";
-import { coverIdSql, focusOf } from "./cover";
+import { focusOf, homeCoverIdSql } from "./cover";
 import { imageVersionToken } from "./images";
 import { isExpired } from "./time";
 
@@ -39,7 +39,7 @@ export async function loadHome(env: Env): Promise<{ items: HomeItem[] }> {
   const db = getDb(env);
   // Cover: chosen photo when visible (and servable), else the first one, in the
   // same order as the gallery page.
-  const cover = coverIdSql(true);
+  const cover = homeCoverIdSql();
   const rows = await db
     .select({
       slug: g.slug,

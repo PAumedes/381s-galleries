@@ -83,18 +83,27 @@ export function resolveCover(
 
 const PHOTO_ORDER = "p.set_name, p.sort, p.base_name";
 
+const SERVABLE =
+  "p.missing_since IS NULL AND (galleries.mode = 'delivery' OR p.drive_wm_id IS NOT NULL)";
+const VISIBLE = "p.missing_since IS NULL";
+
+function coverSql(ok: string): SQL<string | null> {
+  const cond = sql.raw(ok);
+  return sql<string | null>`COALESCE(
+    (SELECT p.id FROM photos p WHERE p.id = galleries.cover_photo_id AND p.gallery_id = galleries.id AND ${cond}),
+    (SELECT p.id FROM photos p WHERE p.gallery_id = galleries.id AND ${cond} ORDER BY ${sql.raw(PHOTO_ORDER)} LIMIT 1))`;
+}
+
 /**
  * SQL twin of `resolveCover(...).cover` for list queries (`galleries` is the
- * outer table). `proofingAware` = in Prueba only photos with a preview-wm
- * count (the public home); without it every visible photo does.
+ * outer table). Public home: in Prueba only photos with a preview-wm count, so
+ * a gallery without any has no cover (null) and is left off the home.
  */
-export function coverIdSql(proofingAware: boolean): SQL<string | null> {
-  const ok = sql.raw(
-    proofingAware
-      ? "p.missing_since IS NULL AND (galleries.mode = 'delivery' OR p.drive_wm_id IS NOT NULL)"
-      : "p.missing_since IS NULL",
-  );
-  return sql<string | null>`COALESCE(
-    (SELECT p.id FROM photos p WHERE p.id = galleries.cover_photo_id AND p.gallery_id = galleries.id AND ${ok}),
-    (SELECT p.id FROM photos p WHERE p.gallery_id = galleries.id AND ${ok} ORDER BY ${sql.raw(PHOTO_ORDER)} LIMIT 1))`;
-}
+export const homeCoverIdSql = () => coverSql(SERVABLE);
+
+/**
+ * Admin list: the same rule, but a Prueba gallery with no preview-wm at all
+ * still shows its first visible photo (as the public page names it).
+ */
+export const listCoverIdSql = (): SQL<string | null> =>
+  sql<string | null>`COALESCE(${coverSql(SERVABLE)}, ${coverSql(VISIBLE)})`;

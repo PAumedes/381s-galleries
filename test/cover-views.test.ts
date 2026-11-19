@@ -188,11 +188,11 @@ const COVER_TABLE: [
   ["delivery", "nowm", "p1", ["p1", "p1", "p1", "p1"]],
   ["delivery", "nowm", "p2", ["p2", "p2", "p2", "p2"]],
   ["delivery", "nowm", "p3", ["p1", null, "p1", "p1"]],
-  ["proofing", "mixed", "foreign", ["p2", "p2", "p2", "p1"]],
-  ["proofing", "mixed", "none", ["p2", "p2", "p2", "p1"]],
-  ["proofing", "mixed", "p1", ["p2", "p2", "p2", "p1"]],
+  ["proofing", "mixed", "foreign", ["p2", "p2", "p2", "p2"]],
+  ["proofing", "mixed", "none", ["p2", "p2", "p2", "p2"]],
+  ["proofing", "mixed", "p1", ["p2", "p2", "p2", "p2"]],
   ["proofing", "mixed", "p2", ["p2", "p2", "p2", "p2"]],
-  ["proofing", "mixed", "p3", ["p2", "p2", "p2", "p1"]],
+  ["proofing", "mixed", "p3", ["p2", "p2", "p2", "p2"]],
   ["proofing", "nowm", "foreign", ["p1", null, null, "p1"]],
   ["proofing", "nowm", "none", ["p1", null, null, "p1"]],
   ["proofing", "nowm", "p1", ["p1", "p1", null, "p1"]],
@@ -272,12 +272,12 @@ describe("cover rule: four views on one fixture matrix (characterization)", () =
  * the desired one (see the commit/PR notes for the recommendation).
  */
 describe("cover rule: known disagreements (current behaviour)", () => {
-  it("D1 admin list ignores the proofing/preview-wm rule: it shows p1 where the public page and home show p2", async () => {
+  it("D1 admin list now follows the public rule in proofing: p2 (first preview-wm), like the public page and home", async () => {
     await seed("proofing", "mixed", "p1", "none");
     const v = await views();
     expect(v.public.cover).toBe("p2");
     expect(v.home?.cover).toBe("p2");
-    expect(v.list).toBe("p1"); // no preview-wm: the public would 404 it
+    expect(v.list).toBe("p2");
   });
 
   it("D2 proofing with no preview-wm at all: public page still names a cover (p1, a 404), home hides the gallery, list shows p1", async () => {
