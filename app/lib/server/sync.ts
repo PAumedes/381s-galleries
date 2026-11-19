@@ -9,9 +9,33 @@
 import { D1_BATCH_MAX, D1_IN_CHUNK, PHOTO_INSERT_ROWS } from "./d1-limits";
 import { and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../db";
+import {
+  buildAlbum,
+  capIssues,
+  chunk,
+  cmp,
+  DEFAULT_SET,
+  isFolder,
+  isLive,
+  issueCmp,
+  keyOf,
+  nfc,
+  parsePending,
+  parseFolderDate,
+  recipeOf,
+} from "./sync-helpers";
+import type {
+  AlbumDraft,
+  Located,
+  PhotoDraft,
+  Recipe,
+  SyncIssue,
+} from "./sync-helpers";
+export { parseFolderDate } from "./sync-helpers";
+export type { IssueType, SyncIssue } from "./sync-helpers";
 import { ignoredFolderIds } from "./gallery-delete";
 import { getRootFolderId } from "./drive-factory";
-import { DriveError, FOLDER_MIME, SHORTCUT_MIME } from "./drive-types";
+import { DriveError } from "./drive-types";
 import type { DriveClient, DriveFile } from "./drive-types";
 import * as settings from "./settings";
 import { SETTINGS_KEYS } from "./settings";
@@ -20,42 +44,16 @@ import { uniqueSlug } from "./slug";
 const LOCK_KEY = SETTINGS_KEYS.syncLock;
 const TOKEN_KEY = SETTINGS_KEYS.driveChangesToken;
 const LOCK_MS = 5 * 60_000;
-const DEFAULT_SET = "Highlights";
-const RECIPES = [
-  "high-res",
-  "web",
-  "ig",
-  "thumb",
-  "preview-wm",
-  "thumb-wm",
-] as const;
-type Recipe = (typeof RECIPES)[number];
 /** A photo/folder must be missing for longer than this before it is deleted/archived. */
 export const SYNC_DELETE_GRACE_MS = 60 * 60_000;
 const PENDING_DELETES_KEY = SETTINGS_KEYS.r2PendingDeletes;
 const LAST_ERROR_KEY = SETTINGS_KEYS.syncLastError;
 // ids are 36 chars; keep the JSON value well under D1's 100 KB statement limit.
 const PENDING_DELETES_CAP = 2000;
-const ISSUES_CAP = 200;
 /** Workers limit is 1000 subrequests to Cloudflare services (D1/R2/KV). */
 const CF_SUBREQUEST_CAP = 900;
 const R2_KEYS = ["thumb", "view-sm", "view-lg"] as const;
 const R2_DELETE_MAX = 1000;
-
-export type IssueType =
-  | "unknown_folder"
-  | "stray_file"
-  | "not_jpeg"
-  | "duplicate"
-  | "missing_highres"
-  | "missing_web"
-  | "missing_thumb"
-  | "highres_empty";
-export interface SyncIssue {
-  type: IssueType;
-  set: string | null;
-  name: string;
-}
 
 export interface SyncResult {
   skipped?: "unchanged" | "locked" | "no_root" | "empty_root";
@@ -82,46 +80,6 @@ export class SyncBudgetError extends Error {
 
 type SyncEnv = Pick<Env, "DB" | "CACHE" | "DRIVE_MODE">;
 
-const nfc = (s: string) => s.normalize("NFC").trim();
-const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-
-/**
- * Splits a leading date off an album folder name ("2026-11-14 Boda",
- * "2026-11-14_Boda", "2026-11-14 - Boda", "20261114 Boda"). Invalid calendar
- * dates and date-only names are left untouched.
- */
-export function parseFolderDate(name: string): {
-  title: string;
-  eventDate: string | null;
-} {
-  const m = /^(\d{4})-?(\d{2})-?(\d{2})(?:\s*[-_]\s*|[\s_]+)(\S.*)$/u.exec(
-    name,
-  );
-  if (m) {
-    const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
-    const dt = new Date(Date.UTC(y, mo - 1, d));
-    if (
-      dt.getUTCFullYear() === y &&
-      dt.getUTCMonth() === mo - 1 &&
-      dt.getUTCDate() === d
-    )
-      return { title: m[4].trim(), eventDate: `${m[1]}-${m[2]}-${m[3]}` };
-  }
-  return { title: name, eventDate: null };
-}
-
-const isFolder = (f: DriveFile) => f.mimeType === FOLDER_MIME;
-const isLive = (f: DriveFile) => !f.trashed && f.mimeType !== SHORTCUT_MIME;
-const isJpeg = (f: DriveFile) =>
-  f.mimeType === "image/jpeg" || /\.jpe?g$/i.test(f.name);
-
-function baseNameOf(filename: string): string {
-  const dot = filename.lastIndexOf(".");
-  return nfc(dot > 0 ? filename.slice(0, dot) : filename);
-}
-const recipeOf = (name: string): Recipe | undefined =>
-  RECIPES.find((r) => r === nfc(name).toLowerCase());
-
 // ------------------------------------------------------------------ budget
 
 /** Tracks external (Drive + OAuth) subrequests against the run's budget. */
@@ -143,130 +101,6 @@ function makeGuard(drive: DriveClient, budget: number): Guard {
       if (used() > budget) throw new SyncBudgetError();
     },
   };
-}
-
-// ---------------------------------------------------------------- scanning
-
-interface PhotoDraft {
-  setName: string;
-  baseName: string;
-  highres: DriveFile;
-  web?: DriveFile;
-  ig?: DriveFile;
-  thumb?: DriveFile;
-  wm?: DriveFile;
-  thumbWm?: DriveFile;
-  width: number | null;
-  height: number | null;
-}
-
-interface AlbumDraft {
-  folder: DriveFile;
-  hasWm: boolean;
-  photos: PhotoDraft[];
-  issues: SyncIssue[];
-}
-
-interface Located {
-  recipe: Recipe;
-  set: string;
-  file: DriveFile;
-}
-
-function buildAlbum(
-  folder: DriveFile,
-  located: Located[],
-  issues: SyncIssue[],
-  hasWm: boolean,
-): AlbumDraft {
-  // recipe -> key -> winning file (newest modifiedTime, then id)
-  const byRecipe = new Map<Recipe, Map<string, Located & { base: string }>>();
-  const groups = new Map<string, (Located & { base: string })[]>();
-  for (const l of located) {
-    if (!isJpeg(l.file)) {
-      issues.push({ type: "not_jpeg", set: l.set, name: l.file.name });
-      continue;
-    }
-    const base = baseNameOf(l.file.name);
-    const k = `${l.recipe}\0${l.set.toLowerCase()}\0${base.toLowerCase()}`;
-    const g = groups.get(k) ?? [];
-    g.push({ ...l, base });
-    groups.set(k, g);
-  }
-  for (const g of groups.values()) {
-    g.sort(
-      (a, b) =>
-        cmp(b.file.modifiedTime, a.file.modifiedTime) ||
-        cmp(a.file.id, b.file.id),
-    );
-    const w = g[0];
-    if (g.length > 1)
-      issues.push({ type: "duplicate", set: w.set, name: w.base });
-    const m = byRecipe.get(w.recipe) ?? new Map();
-    m.set(`${w.set.toLowerCase()}\0${w.base.toLowerCase()}`, w);
-    byRecipe.set(w.recipe, m);
-  }
-
-  const hi = byRecipe.get("high-res") ?? new Map();
-  const photos: PhotoDraft[] = [];
-  for (const [key, h] of hi) {
-    const pick = (r: Recipe) => byRecipe.get(r)?.get(key)?.file;
-    const web = pick("web");
-    const ig = pick("ig");
-    const thumb = pick("thumb");
-    const wm = pick("preview-wm");
-    const thumbWm = pick("thumb-wm");
-    let width = h.file.width ?? null;
-    let height = h.file.height ?? null;
-    if (!(width && height)) {
-      width = height = null;
-      const alt = [web, ig, thumb, wm, thumbWm].find(
-        (f) => f?.width && f?.height,
-      );
-      if (alt) {
-        const k = 2048 / Math.max(alt.width!, alt.height!);
-        width = Math.round(alt.width! * k);
-        height = Math.round(alt.height! * k);
-      }
-    }
-    if (!web) issues.push({ type: "missing_web", set: h.set, name: h.base });
-    if (!thumb)
-      issues.push({ type: "missing_thumb", set: h.set, name: h.base });
-    photos.push({
-      setName: h.set,
-      baseName: h.base,
-      highres: h.file,
-      web,
-      ig,
-      thumb,
-      wm,
-      thumbWm,
-      width,
-      height,
-    });
-  }
-  for (const r of RECIPES) {
-    if (r === "high-res") continue;
-    for (const [key, v] of byRecipe.get(r) ?? [])
-      if (!hi.has(key))
-        issues.push({ type: "missing_highres", set: v.set, name: v.base });
-  }
-
-  const seen = new Set<string>();
-  const uniq = issues
-    .filter((i) => {
-      const k = `${i.type}\0${i.set}\0${i.name}`;
-      if (seen.has(k)) return false;
-      seen.add(k);
-      return true;
-    })
-    .sort(
-      (a, b) =>
-        cmp(a.type, b.type) ||
-        cmp(a.set ?? "", b.set ?? "") ||
-        cmp(a.name, b.name),
-    );
-  return { folder, hasWm, photos, issues: uniq };
 }
 
 async function scan(
@@ -393,24 +227,8 @@ const photoFields = (p: PhotoDraft) => ({
   takenAt: p.highres.takenAt ?? null,
 });
 
-const keyOf = (set: string, base: string) =>
-  `${set.toLowerCase()}\0${base.toLowerCase()}`;
-
-const chunk = <T>(a: T[], n: number): T[][] =>
-  Array.from({ length: Math.ceil(a.length / n) }, (_, i) =>
-    a.slice(i * n, (i + 1) * n),
-  );
-
 /** Count of ops against the Cloudflare-services subrequest pool (D1/R2). */
 type Op = (n?: number) => void;
-
-function capIssues(issues: SyncIssue[]): string {
-  if (issues.length <= ISSUES_CAP) return JSON.stringify(issues);
-  return JSON.stringify([
-    ...issues.slice(0, ISSUES_CAP),
-    { truncated: issues.length - ISSUES_CAP },
-  ]);
-}
 
 // Op-counting wrappers: every settings read/write is one D1 subrequest.
 async function getSetting(env: SyncEnv, key: string, op: Op) {
@@ -426,18 +244,6 @@ async function putSetting(env: SyncEnv, key: string, value: string, op: Op) {
 async function dropSetting(env: SyncEnv, key: string, op: Op) {
   op();
   await settings.deleteSetting(env, key);
-}
-
-function parsePending(raw: string | undefined): string[] {
-  if (!raw) return [];
-  try {
-    const v: unknown = JSON.parse(raw);
-    return Array.isArray(v)
-      ? v.filter((x): x is string => typeof x === "string")
-      : [];
-  } catch {
-    return [];
-  }
 }
 
 /**
@@ -474,9 +280,6 @@ async function flushR2(
   await dropSetting(env, PENDING_DELETES_KEY, op);
   return [];
 }
-
-const issueCmp = (a: SyncIssue, b: SyncIssue) =>
-  cmp(a.type, b.type) || cmp(a.set ?? "", b.set ?? "") || cmp(a.name, b.name);
 
 /**
  * Lock (expiry-based; only an expired lock can be taken over).
