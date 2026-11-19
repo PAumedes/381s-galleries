@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { maskJsonc } from "./setup-cloudflare.mjs";
 
 export const OWNER_REPO = "PAumedes/381s-galleries";
-export const OWNER_DB_ID = "5aa33a23-9b94-45dd-a3b8-11305cd8affb";
+export const OWNER_DB_ID = "5aa33a23-9b94-45dd-a3b8-11305cd8affb".toLowerCase();
 
 /** First database_id in the (comment-stripped) wrangler config, or null. */
 export function readDatabaseId(src) {
@@ -19,10 +19,20 @@ export function readDatabaseId(src) {
   return m ? m[1] : null;
 }
 
+/** Every database_id in the (comment-stripped) config, trimmed and lowercased. */
+export function readDatabaseIds(src) {
+  return [...maskJsonc(src).matchAll(/"database_id"\s*:\s*"([^"]*)"/g)].map(
+    (m) => m[1].trim().toLowerCase(),
+  );
+}
+
+const normRepo = (r) => (r ?? "").trim().toLowerCase();
+const isFork = (r) =>
+  normRepo(r) !== "" && normRepo(r) !== OWNER_REPO.toLowerCase();
+
 export function checkForkConfig({ config, repository }) {
-  const id = readDatabaseId(config);
-  const repo = (repository ?? "").trim().toLowerCase();
-  if (id === OWNER_DB_ID && repo && repo !== OWNER_REPO.toLowerCase()) {
+  const usesOwnerDb = readDatabaseIds(config).includes(OWNER_DB_ID);
+  if (usesOwnerDb && isFork(repository)) {
     return {
       ok: false,
       message:
@@ -35,10 +45,23 @@ export function checkForkConfig({ config, repository }) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const r = checkForkConfig({
-    config: readFileSync("wrangler.jsonc", "utf8"),
-    repository: process.env.GITHUB_REPOSITORY,
-  });
+  const repository = process.env.GITHUB_REPOSITORY;
+  let config;
+  try {
+    config = readFileSync("wrangler.jsonc", "utf8");
+  } catch {
+    // Owner: never block (later steps fail clearly). Fork: cannot verify, stop.
+    if (isFork(repository)) {
+      console.log(
+        "::error::Could not read wrangler.jsonc, so the fork setup cannot be verified. " +
+          "Make sure the file exists at the repository root. " +
+          "(No se pudo leer wrangler.jsonc; verifica que exista en la raiz del repositorio.)",
+      );
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+  const r = checkForkConfig({ config, repository });
   if (!r.ok) console.log(`::error::${r.message}`);
   process.exit(r.ok ? 0 : 1);
 }
