@@ -91,6 +91,7 @@ export const enAdmin = {
     "The typeface is always Montserrat. The preview shows every change instantly; they apply when you save.",
   "admin.edit.statusNote":
     "Only published galleries that haven't expired are visible to clients.",
+  "admin.edit.photosReady": "Photos ready: {warmed} / {total}",
   "admin.edit.action.publish": "Publish",
   "admin.edit.action.archive": "Archive",
   "admin.edit.action.draft": "Move to drafts",

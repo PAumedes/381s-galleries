@@ -203,9 +203,13 @@ async function staleRows(env: Env): Promise<{
   return { rows, writes };
 }
 
-/** "Fotos en caché: N / M": photos whose marker is current vs visible photos. */
+/**
+ * "Fotos en caché: N / M": photos whose marker is current vs visible photos
+ * (of one gallery when `galleryId` is given). Two COUNT queries, no per-photo work.
+ */
 export async function warmProgress(
   env: Env,
+  galleryId?: string,
 ): Promise<{ warmed: number; total: number }> {
   const db = getDb(env);
   const count = (extra?: SQL) =>
@@ -213,7 +217,13 @@ export async function warmProgress(
       .select({ n: sql<number>`count(*)` })
       .from(P)
       .innerJoin(G, eq(G.id, P.galleryId))
-      .where(and(eligible, extra))
+      .where(
+        and(
+          eligible,
+          galleryId ? eq(P.galleryId, galleryId) : undefined,
+          extra,
+        ),
+      )
       .then((r) => r[0]?.n ?? 0);
   const [total, warmed] = await Promise.all([
     count(),

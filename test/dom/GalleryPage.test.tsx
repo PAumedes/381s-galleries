@@ -129,7 +129,7 @@ describe("gallery theme", () => {
     expect(document.querySelector('[data-theme="oscuro"]')).toBeTruthy();
     expect(logos().every((s) => s === "white")).toBe(true);
     // cover is unchanged
-    expect(document.querySelector('img[src="/img/Cer0/view-lg"]')).toBeTruthy();
+    expect(document.querySelector('img[src="/img/Cer0/view-sm"]')).toBeTruthy();
   });
 
   it("T6.22: the top-bar wordmark is hidden on phones and clipped in its grid column", async () => {
@@ -180,10 +180,10 @@ describe("gallery theme", () => {
 });
 
 describe("GalleryView", () => {
-  it("hero uses the cover view-lg image and shows title and localized date", async () => {
+  it("hero uses the cover image (view-sm src, view-lg in srcset) and shows title and localized date", async () => {
     stub(<GalleryView gallery={gallery()} photos={photos} />);
     await screen.findByRole("heading", { level: 1, name: "Boda Ana" });
-    const hero = document.querySelector('img[src="/img/Cer0/view-lg"]');
+    const hero = document.querySelector('img[src="/img/Cer0/view-sm"]');
     expect(hero).toBeTruthy();
     expect(screen.getByText(/March 14, 2026/)).toBeTruthy();
     expect(screen.getByText(/© \d{4} 381 Studios/)).toBeTruthy();

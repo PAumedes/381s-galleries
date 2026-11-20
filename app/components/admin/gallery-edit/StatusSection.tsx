@@ -3,15 +3,18 @@ import { Form } from "react-router";
 import { useT } from "../../../i18n/use-t";
 import type { MessageKey } from "../../../i18n/t";
 import type { GalleryActionResult } from "../../../lib/server/admin-galleries";
-import type { EditGallery } from "./types";
+import type { EditGallery, GalleryEditData } from "./types";
 import { btn, btnPrimary, Feedback, Section } from "./ui";
 
 export function StatusSection({
   status,
+  cacheProgress = null,
   busy,
   actionData,
 }: {
   status: EditGallery["status"];
+  /** Photos already in the R2 cache / visible (null: unknown, e.g. mock mode). */
+  cacheProgress?: GalleryEditData["cacheProgress"];
   busy: boolean;
   actionData: GalleryActionResult | undefined;
 }) {
@@ -20,6 +23,14 @@ export function StatusSection({
   return (
     <Section title={t("admin.edit.section.status")}>
       <p className="text-small text-grey-700">{t("admin.edit.statusNote")}</p>
+      {status === "published" && cacheProgress && cacheProgress.total > 0 && (
+        <p data-testid="photos-ready" className="text-small text-grey-700">
+          {t("admin.edit.photosReady", {
+            warmed: cacheProgress.warmed,
+            total: cacheProgress.total,
+          })}
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
         {(
           {
