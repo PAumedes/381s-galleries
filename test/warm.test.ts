@@ -206,9 +206,7 @@ describe("warmBatch", () => {
     await warmBatch(e, { drive });
     expect(calls.sort()).toEqual([
       "TWM-d",
-      "WM-a",
-      "WM-a",
-      "WM-b",
+      "WM-a", // thumb and view-sm are one file: fetched once, copied in R2
       "WM-b",
       "WM-d",
     ]);

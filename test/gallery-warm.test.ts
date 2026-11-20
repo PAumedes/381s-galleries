@@ -305,3 +305,55 @@ describe("T6.30 warmGalleryOnOpen", () => {
     expect(calls.filter((c) => c === "WEB-p000")).toHaveLength(1);
   });
 });
+
+describe("T6.30 adversary fixes", () => {
+  it("does not mark the gallery done while a file failed: the next pass retries it", async () => {
+    await gallery();
+    await photos(2);
+    const a = fakeDrive({ fail: new Set(["TH-p001"]) });
+    await warmGalleryOnOpen(e, a.drive, SLUG);
+    // later runs finish the pass; the failed file is tried again
+    for (let i = 0; i < 3; i++)
+      await warmGalleryOnOpen(
+        e,
+        fakeDrive({ fail: new Set(["TH-p001"]) }).drive,
+        SLUG,
+      );
+    const ok = fakeDrive();
+    await warmGalleryOnOpen(e, ok.drive, SLUG);
+    expect(ok.calls).toContain("TH-p001");
+    expect(await cached("p001", "thumb")).toBe(true);
+  });
+
+  it("a visitor miss stops waiting for a stuck fill after a short while and goes to Drive itself", async () => {
+    await gallery();
+    await photos(1);
+    let release!: () => void;
+    const stuck = new Promise<void>((r) => (release = r));
+    const a = fakeDrive({ gate: stuck });
+    const stuckRun = warmGalleryOnOpen(e, a.drive, SLUG);
+    await new Promise((r) => setTimeout(r, 50));
+    const b = fakeDrive();
+    const res = await serveImage(
+      new Request("https://x.test/img/p000/thumb"),
+      { photoId: "p000", variant: "thumb" },
+      e,
+      { waitUntil: () => {} },
+      { drive: b.drive },
+    );
+    release();
+    await stuckRun;
+    expect(res.status).toBe(200);
+    expect(b.calls).toEqual(["TH-p000"]);
+  }, 10_000);
+
+  it("copies a sibling variant that is the same Drive file instead of fetching it again", async () => {
+    await gallery({ mode: "proofing" });
+    await photos(1);
+    const { drive, calls } = fakeDrive();
+    await warmGalleryOnOpen(e, drive, SLUG);
+    expect(calls).toEqual(["WM-p000"]);
+    for (const v of ["thumb", "view-sm", "view-lg"])
+      expect((await env.CACHE.head(`p000/${v}`))?.customMetadata?.wm).toBe("1");
+  });
+});

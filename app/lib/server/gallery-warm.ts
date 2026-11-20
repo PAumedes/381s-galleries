@@ -13,8 +13,9 @@
  * Resolution, validation and metadata are `fillCache`'s: Prueba only ever
  * fetches and stores watermarked files.
  */
-import { and, asc, eq, ne } from "drizzle-orm";
+import { and, asc, eq, ne, sql } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
+import { isAvailable } from "./access";
 import type { DriveClient } from "./drive-types";
 import { fillCacheShared } from "./images";
 import type { Variant } from "./images";
@@ -54,19 +55,47 @@ export interface OpenWarmResult {
 /** Galleries being warmed in this isolate (one run at a time each). */
 const running = new Set<string>();
 
+/** Grid-order position of a photo: the keyset the cursor remembers. */
+type GridKey = [setName: string, sort: number, baseName: string];
+
 interface Cursor {
   phase: number;
-  offset: number;
+  /** Last photo handled in this phase (null: from the start). */
+  after: GridKey | null;
+  /** A file failed during this pass: finishing it starts a new pass, not "done". */
+  failed: boolean;
 }
 
+const START: Cursor = { phase: 0, after: null, failed: false };
+
+/** Stored cursor as JSON `{p, a, f, s}` (s = warm_stamp) or `{d: 1, s}`; anything else restarts. */
 function parseCursor(raw: string | undefined, stamp: string): Cursor | "done" {
-  const [a, b, c] = (raw ?? "").split(":");
-  if (a === "done" && b === stamp) return "done";
-  const phase = Number(a);
-  const offset = Number(b);
-  if (c === stamp && Number.isInteger(phase) && Number.isInteger(offset))
-    return { phase, offset };
-  return { phase: 0, offset: 0 };
+  try {
+    const c = JSON.parse(raw ?? "") as Record<string, unknown>;
+    if (c.s !== stamp) return START;
+    if (c.d === 1) return "done";
+    const a = c.a;
+    const after =
+      Array.isArray(a) &&
+      a.length === 3 &&
+      typeof a[0] === "string" &&
+      typeof a[1] === "number" &&
+      typeof a[2] === "string"
+        ? (a as GridKey)
+        : null;
+    if (!Number.isInteger(c.p) || (c.p as number) < 0) return START;
+    return { phase: c.p as number, after, failed: c.f === 1 };
+  } catch {
+    return START;
+  }
+}
+
+function serializeCursor(c: Cursor | "done", stamp: string): string {
+  return JSON.stringify(
+    c === "done"
+      ? { d: 1, s: stamp }
+      : { p: c.phase, a: c.after, f: c.failed ? 1 : 0, s: stamp },
+  );
 }
 
 /** Warms the next photos of the open gallery `slug`. Never throws on Drive/R2 errors. */
@@ -78,11 +107,8 @@ export async function warmGalleryOnOpen(
   const result: OpenWarmResult = { warmed: 0, failed: 0 };
   if (env.DRIVE_MODE === "mock") return { ...result, skipped: "mock" };
   const db = getDb(env);
-  const [g] = await db
-    .select({ id: G.id, mode: G.mode })
-    .from(G)
-    .where(and(eq(G.slug, slug), eq(G.status, "published")));
-  if (!g) return { ...result, skipped: "unavailable" };
+  const [g] = await db.select().from(G).where(eq(G.slug, slug));
+  if (!isAvailable(g)) return { ...result, skipped: "unavailable" };
   const syncLock = await getSetting(env, SETTINGS_KEYS.syncLock);
   if (syncLock && syncLock.split("|")[0] > new Date().toISOString())
     return { ...result, skipped: "sync_running" };
@@ -98,7 +124,7 @@ export async function warmGalleryOnOpen(
 
   running.add(g.id);
   try {
-    let { phase, offset } = cursor;
+    let { phase, after, failed: sawFailure } = cursor;
     const start = drive.subrequests();
     const proofing = g.mode === "proofing";
     let scanned = 0;
@@ -106,6 +132,9 @@ export async function warmGalleryOnOpen(
       const rows = await db
         .select({
           id: P.id,
+          setName: P.setName,
+          sort: P.sort,
+          baseName: P.baseName,
           driveHighresId: P.driveHighresId,
           driveWebId: P.driveWebId,
           driveIgId: P.driveIgId,
@@ -116,13 +145,20 @@ export async function warmGalleryOnOpen(
         })
         .from(P)
         .innerJoin(G, and(eq(G.id, P.galleryId), ne(G.status, "archived")))
-        .where(and(eq(P.galleryId, g.id), photoVisible))
+        .where(
+          and(
+            eq(P.galleryId, g.id),
+            photoVisible,
+            after
+              ? sql`(${P.setName}, ${P.sort}, ${P.baseName}) > (${after[0]}, ${after[1]}, ${after[2]})`
+              : undefined,
+          ),
+        )
         .orderBy(asc(P.setName), asc(P.sort), asc(P.baseName))
-        .limit(OPEN_WARM_SCAN)
-        .offset(offset);
+        .limit(OPEN_WARM_SCAN);
       if (rows.length === 0) {
         phase++;
-        offset = 0;
+        after = null;
         continue;
       }
       for (const row of rows) {
@@ -159,27 +195,26 @@ export async function warmGalleryOnOpen(
         }
         // A failing photo is passed over (the cron and real views retry it),
         // but the run stops: Drive is probably unhappy.
-        offset++;
+        after = [row.setName, row.sort, row.baseName];
         scanned++;
         if (failed) {
+          sawFailure = true;
           result.stopped = "error";
           break walk;
         }
       }
     }
+    // A finished pass with a failed file starts over (cheap: cached files only
+    // cost a head) so the file is retried; the rate rule bounds how often.
+    let next: Cursor | "done" = { phase, after, failed: sawFailure };
+    if (phase >= PHASES.length) next = sawFailure ? START : "done";
     // Only while the gallery still exists: a delete that ran meanwhile must
     // not be followed by a stray cursor row.
     await env.DB.prepare(
       `INSERT INTO settings (key, value) SELECT ?1, ?2 WHERE EXISTS (SELECT 1 FROM galleries WHERE id = ?3)
        ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
     )
-      .bind(
-        cursorKey,
-        phase >= PHASES.length
-          ? `done:${stamp}`
-          : `${phase}:${offset}:${stamp}`,
-        g.id,
-      )
+      .bind(cursorKey, serializeCursor(next, stamp), g.id)
       .run();
     return result;
   } finally {
