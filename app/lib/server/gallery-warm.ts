@@ -19,7 +19,7 @@ import type { DriveClient } from "./drive-types";
 import { fillCacheShared } from "./images";
 import type { Variant } from "./images";
 import { rateLimit } from "./rate-limit";
-import { SETTINGS_KEYS, getSetting, putSetting } from "./settings";
+import { SETTINGS_KEYS, getSetting } from "./settings";
 
 /** External (Drive + OAuth) subrequests one open may spend; Workers Free allows 50 per invocation. */
 export const OPEN_WARM_BUDGET = 16;
@@ -167,11 +167,20 @@ export async function warmGalleryOnOpen(
         }
       }
     }
-    await putSetting(
-      env,
-      cursorKey,
-      phase >= PHASES.length ? `done:${stamp}` : `${phase}:${offset}:${stamp}`,
-    );
+    // Only while the gallery still exists: a delete that ran meanwhile must
+    // not be followed by a stray cursor row.
+    await env.DB.prepare(
+      `INSERT INTO settings (key, value) SELECT ?1, ?2 WHERE EXISTS (SELECT 1 FROM galleries WHERE id = ?3)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    )
+      .bind(
+        cursorKey,
+        phase >= PHASES.length
+          ? `done:${stamp}`
+          : `${phase}:${offset}:${stamp}`,
+        g.id,
+      )
+      .run();
     return result;
   } finally {
     running.delete(g.id);

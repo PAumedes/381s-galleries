@@ -227,6 +227,27 @@ describe("T6.30 warmGalleryOnOpen", () => {
     expect(a.calls).toHaveLength(0);
   });
 
+  it("does not leave a cursor behind when the gallery is deleted mid-run", async () => {
+    await gallery();
+    await photos(3);
+    let open!: () => void;
+    const gate = new Promise<void>((r) => (open = r));
+    const { drive } = fakeDrive({ gate });
+    const run = warmGalleryOnOpen(e, drive, SLUG);
+    await new Promise((r) => setTimeout(r, 50));
+    await db.delete(schema.photos);
+    await db.delete(schema.galleries);
+    open();
+    await run;
+    expect(
+      (
+        await env.DB.prepare(
+          "SELECT key FROM settings WHERE key LIKE 'warm_cursor:%'",
+        ).all()
+      ).results,
+    ).toHaveLength(0);
+  });
+
   it("is rate limited per gallery", async () => {
     await gallery();
     await photos(30);

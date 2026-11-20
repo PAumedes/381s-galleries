@@ -196,11 +196,15 @@ async function deleteLocked(
     return "continue";
   }
 
-  await env.DB.batch(
-    Object.values(DELETE_STATEMENTS).map((s) =>
+  await env.DB.batch([
+    ...Object.values(DELETE_STATEMENTS).map((s) =>
       env.DB.prepare(s).bind(galleryId),
     ),
-  );
+    // Per-gallery rows in the (otherwise exempt) settings table.
+    env.DB.prepare("DELETE FROM settings WHERE key = ?1").bind(
+      SETTINGS_KEYS.warmCursorPrefix + galleryId,
+    ),
+  ]);
   return "deleted";
 }
 

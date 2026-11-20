@@ -202,9 +202,22 @@ describe("deleteGallery", () => {
       ),
     ]);
     await env.CACHE.put("brand/logo-on-light", "logo");
+    await env.DB.batch([
+      sql(
+        "INSERT INTO settings (key, value) VALUES (?1, 'done:x')",
+        `warm_cursor:${A}`,
+      ),
+      sql(
+        "INSERT INTO settings (key, value) VALUES (?1, 'done:x')",
+        `warm_cursor:${B}`,
+      ),
+    ]);
     const before = await snapshot();
 
     expect(await deleteGallery(e, A)).toBe("deleted");
+    // T6.30: the warm-on-open cursor is gallery data
+    expect(await count("settings", "key = ?1", `warm_cursor:${A}`)).toBe(0);
+    expect(await count("settings", "key = ?1", `warm_cursor:${B}`)).toBe(1);
 
     for (const t of GALLERY_TABLES) {
       const col = t === "galleries" ? "id" : "gallery_id";
