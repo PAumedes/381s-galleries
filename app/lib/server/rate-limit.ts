@@ -15,7 +15,7 @@ export type RateRule = {
  * hit atomically and returns whether it is still within `max` for the window.
  * Expired rows of the same scope are pruned opportunistically.
  */
-export async function rateLimit(
+async function rateLimit(
   env: LimitEnv,
   scope: string,
   key: string,
@@ -77,7 +77,7 @@ export async function refundRateLimit(
 }
 
 /** Whole seconds (>= 1) until the counter's current window ends. */
-export async function retryAfterSeconds(
+async function retryAfterSeconds(
   env: LimitEnv,
   scope: string,
   key: string,
