@@ -98,16 +98,78 @@ function serializeCursor(c: Cursor | "done", stamp: string): string {
   );
 }
 
-/** Warms the next photos of the open gallery `slug`. Never throws on Drive/R2 errors. */
+const ROW_COLUMNS = {
+  id: P.id,
+  setName: P.setName,
+  sort: P.sort,
+  baseName: P.baseName,
+  driveHighresId: P.driveHighresId,
+  driveWebId: P.driveWebId,
+  driveIgId: P.driveIgId,
+  driveThumbId: P.driveThumbId,
+  driveWmId: P.driveWmId,
+  driveThumbWmId: P.driveThumbWmId,
+  variantVersions: P.variantVersions,
+};
+type WarmRow = Pick<typeof P.$inferSelect, keyof typeof ROW_COLUMNS>;
+type GalleryRow = typeof G.$inferSelect;
+
+/**
+ * Fills `variants` of one photo while the run's Drive budget lasts. "failed":
+ * Drive/R2 refused (the photo is passed over, the cron and real views retry
+ * it); "budget": stopped before the call that would not fit.
+ */
+async function fillRow(
+  env: Env,
+  drive: DriveClient,
+  photo: WarmRow & { proofing: boolean },
+  variants: readonly Variant[],
+  start: number,
+  result: OpenWarmResult,
+): Promise<"ok" | "budget" | "failed"> {
+  for (const variant of variants) {
+    if (drive.subrequests() - start + CALL_RESERVE > OPEN_WARM_BUDGET) {
+      result.stopped = "budget";
+      return "budget";
+    }
+    try {
+      if ((await fillCacheShared(env, photo, variant, drive)) === "filled")
+        result.warmed++;
+    } catch (err) {
+      // Name only: messages may hold Drive ids.
+      console.error(
+        "warm-open: fill failed",
+        err instanceof Error ? err.name : "error",
+      );
+      result.failed++;
+      return "failed";
+    }
+  }
+  return "ok";
+}
+
+/**
+ * Open warm: `slug` of the gallery a visitor just opened. Warms the next
+ * photos of the grid. Never throws on Drive/R2 errors.
+ */
 export async function warmGalleryOnOpen(
   env: Env,
   drive: DriveClient,
   slug: string,
 ): Promise<OpenWarmResult> {
+  if (env.DRIVE_MODE === "mock")
+    return { warmed: 0, failed: 0, skipped: "mock" };
+  const [g] = await getDb(env).select().from(G).where(eq(G.slug, slug));
+  return warmGallery(env, drive, g);
+}
+
+async function warmGallery(
+  env: Env,
+  drive: DriveClient,
+  g: GalleryRow | undefined,
+): Promise<OpenWarmResult> {
   const result: OpenWarmResult = { warmed: 0, failed: 0 };
-  if (env.DRIVE_MODE === "mock") return { ...result, skipped: "mock" };
   const db = getDb(env);
-  const [g] = await db.select().from(G).where(eq(G.slug, slug));
   if (!isAvailable(g)) return { ...result, skipped: "unavailable" };
   const syncLock = await getSetting(env, SETTINGS_KEYS.syncLock);
   if (syncLock && syncLock.split("|")[0] > new Date().toISOString())
@@ -128,20 +190,8 @@ export async function warmGalleryOnOpen(
     const proofing = g.mode === "proofing";
     let scanned = 0;
     walk: while (phase < PHASES.length) {
-      const rows = await db
-        .select({
-          id: P.id,
-          setName: P.setName,
-          sort: P.sort,
-          baseName: P.baseName,
-          driveHighresId: P.driveHighresId,
-          driveWebId: P.driveWebId,
-          driveIgId: P.driveIgId,
-          driveThumbId: P.driveThumbId,
-          driveWmId: P.driveWmId,
-          driveThumbWmId: P.driveThumbWmId,
-          variantVersions: P.variantVersions,
-        })
+      const rows: WarmRow[] = await db
+        .select(ROW_COLUMNS)
         .from(P)
         .innerJoin(G, and(eq(G.id, P.galleryId), ne(G.status, "archived")))
         .where(
@@ -165,38 +215,20 @@ export async function warmGalleryOnOpen(
           result.stopped = "scan";
           break walk;
         }
-        let failed = false;
-        for (const variant of PHASES[phase]) {
-          if (drive.subrequests() - start + CALL_RESERVE > OPEN_WARM_BUDGET) {
-            result.stopped = "budget";
-            break walk;
-          }
-          try {
-            if (
-              (await fillCacheShared(
-                env,
-                { ...row, proofing },
-                variant,
-                drive,
-              )) === "filled"
-            )
-              result.warmed++;
-          } catch (err) {
-            // Name only: messages may hold Drive ids.
-            console.error(
-              "warm-open: fill failed",
-              err instanceof Error ? err.name : "error",
-            );
-            result.failed++;
-            failed = true;
-            break;
-          }
-        }
+        const step = await fillRow(
+          env,
+          drive,
+          { ...row, proofing },
+          PHASES[phase],
+          start,
+          result,
+        );
+        if (step === "budget") break walk;
         // A failing photo is passed over (the cron and real views retry it),
         // but the run stops: Drive is probably unhappy.
         after = [row.setName, row.sort, row.baseName];
         scanned++;
-        if (failed) {
+        if (step === "failed") {
           sawFailure = true;
           result.stopped = "error";
           break walk;
