@@ -23,7 +23,7 @@ import { hit, type RateRule } from "./rate-limit";
 import { SETTINGS_KEYS, getSetting } from "./settings";
 
 /** External (Drive + OAuth) subrequests one open may spend; Workers Free allows 50 per invocation. */
-export const OPEN_WARM_BUDGET = 16;
+export const OPEN_WARM_BUDGET = 36;
 /** Worst case of ONE Drive call: the file, 3 retries and an OAuth refresh. */
 const CALL_RESERVE = 3 + 2;
 /** Photos looked at per run (bounds D1 rows and R2 head calls). */
@@ -167,6 +167,7 @@ async function warmGallery(
   env: Env,
   drive: DriveClient,
   g: GalleryRow | undefined,
+  start = drive.subrequests(),
 ): Promise<OpenWarmResult> {
   const result: OpenWarmResult = { warmed: 0, failed: 0 };
   const db = getDb(env);
@@ -186,7 +187,6 @@ async function warmGallery(
   running.add(g.id);
   try {
     let { phase, after, failed: sawFailure } = cursor;
-    const start = drive.subrequests();
     const proofing = g.mode === "proofing";
     let scanned = 0;
     walk: while (phase < PHASES.length) {
@@ -251,4 +251,77 @@ async function warmGallery(
   } finally {
     running.delete(g.id);
   }
+}
+
+/** What a cover needs in R2 before the first visitor: grid thumb, hero view-sm and view-lg. */
+const COVER_VARIANTS: readonly Variant[] = ["thumb", "view-sm", "view-lg"];
+
+/**
+ * Publish warm (T6.37): the gallery just became visible. Fills the cover(s)
+ * first (the first photo when none is chosen), then continues the open warm
+ * (same cursor, rate rule and budget, so nothing is fetched twice). Never
+ * throws on Drive/R2 errors; a draft or archived gallery is skipped. No mock
+ * check: the caller passes a `drive` only outside mock mode.
+ */
+export async function warmGalleryAtPublish(
+  env: Env,
+  drive: DriveClient,
+  galleryId: string,
+): Promise<OpenWarmResult> {
+  const db = getDb(env);
+  const [g] = await db.select().from(G).where(eq(G.id, galleryId));
+  if (!isAvailable(g)) return { warmed: 0, failed: 0, skipped: "unavailable" };
+  const start = drive.subrequests();
+  const result: OpenWarmResult = { warmed: 0, failed: 0 };
+  try {
+    const [first] = await db
+      .select(ROW_COLUMNS)
+      .from(P)
+      .where(and(eq(P.galleryId, g.id), photoVisible))
+      .orderBy(asc(P.setName), asc(P.sort), asc(P.baseName))
+      .limit(1);
+    const ids = [g.coverPhotoId ?? first?.id, g.coverPhotoIdMobile].filter(
+      (id): id is string => !!id,
+    );
+    for (const id of new Set(ids)) {
+      const [row] = await db
+        .select(ROW_COLUMNS)
+        .from(P)
+        .where(and(eq(P.id, id), eq(P.galleryId, g.id), photoVisible));
+      if (!row) continue;
+      const step = await fillRow(
+        env,
+        drive,
+        { ...row, proofing: g.mode === "proofing" },
+        COVER_VARIANTS,
+        start,
+        result,
+      );
+      if (step === "budget") return result;
+    }
+    const rest = await warmGallery(env, drive, g, start);
+    return {
+      ...rest,
+      warmed: rest.warmed + result.warmed,
+      failed: rest.failed + result.failed,
+    };
+  } catch (err) {
+    console.error(
+      "warm-publish: failed",
+      err instanceof Error ? err.name : "error",
+    );
+    return result;
+  }
+}
+
+/** Hands the publish warm to `waitUntil`; nothing without ctx/drive (mock mode). */
+export function scheduleWarmAtPublish(
+  env: Env,
+  deps:
+    | { ctx?: Pick<ExecutionContext, "waitUntil">; drive?: DriveClient }
+    | undefined,
+  galleryId: string,
+): void {
+  if (!deps?.ctx || !deps.drive) return;
+  deps.ctx.waitUntil(warmGalleryAtPublish(env, deps.drive, galleryId));
 }
