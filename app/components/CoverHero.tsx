@@ -98,8 +98,11 @@ export function CoverHero({
   const active =
     mobile && (device ? device === "mobile" : narrow) ? mobile : null;
   const onMobile = active !== null;
-  const shownSrc = device && active ? active.src : src;
-  const shownPlaceholder = device && active ? active.placeholder : placeholder;
+  // Narrow public viewport: the `<picture>` source already picks the mobile
+  // file; also pointing the `<img>` at it covers browsers that ignore
+  // `<source media>` (same URL, so no second download).
+  const shownSrc = active ? active.src : src;
+  const shownPlaceholder = active ? active.placeholder : placeholder;
   const shownFocus = active ? active.focus : focus;
   const shownAspect = active ? active.aspect : aspect;
   const [frame, setFrame] = useState<{ w: number; h: number } | null>(null);
@@ -129,8 +132,14 @@ export function CoverHero({
       onContextMenu={(e) => e.preventDefault()}
     />
   );
-  const img = shownSrc && (
+  // Public page with a mobile cover: the browser picks the file by viewport.
+  const sources =
+    mobile && !device ? (
+      <source media={MOBILE_COVER_MEDIA} srcSet={mobile.src} />
+    ) : undefined;
+  const photo = shownSrc && (
     <FadeImg
+      sources={sources}
       onElement={setImgNode}
       placeholder={shownPlaceholder}
       data-cover-img=""
@@ -143,16 +152,6 @@ export function CoverHero({
       className="absolute inset-0 size-full object-cover"
     />
   );
-  // Public page with a mobile cover: the browser picks the file by viewport.
-  const photo =
-    img && mobile && !device ? (
-      <picture>
-        <source media={MOBILE_COVER_MEDIA} srcSet={mobile.src} />
-        {img}
-      </picture>
-    ) : (
-      img
-    );
   const protect = proofing && layout !== "minima" ? " img-protect" : "";
   const noMenu = proofing
     ? (e: React.MouseEvent) => e.preventDefault()

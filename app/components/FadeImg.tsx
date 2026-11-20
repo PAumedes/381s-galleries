@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import type { ImgHTMLAttributes } from "react";
+import type { ImgHTMLAttributes, ReactNode } from "react";
 
 /**
  * An image that shows `placeholder` (a small version the browser already has)
@@ -8,11 +8,14 @@ import type { ImgHTMLAttributes } from "react";
  * parent via `className`). Without a placeholder it is a plain `<img>`.
  * The placeholder stays underneath (the real image is opaque), so there is
  * no flash at the end of the fade.
+ * `sources` (`<source>` elements) wrap only the real image in a `<picture>`:
+ * the placeholder stays outside it (a `<picture>` holds one `<img>`).
  */
 export function FadeImg({
   placeholder = null,
   src,
   onElement,
+  sources,
   className = "",
   style,
   onLoad,
@@ -22,6 +25,8 @@ export function FadeImg({
   placeholder?: string | null;
   /** Receives the real image element (null on unmount), e.g. to measure it. */
   onElement?: (el: HTMLImageElement | null) => void;
+  /** `<source>` elements: the browser picks the file, the `<img>` is the fallback. */
+  sources?: ReactNode;
 }) {
   const [loaded, setLoaded] = useState<string | null>(null);
   // The real image failed: drop the placeholder instead of a blurry stand-in forever.
@@ -41,6 +46,24 @@ export function FadeImg({
       ? " opacity-100 transition-opacity duration-base"
       : " opacity-0"
     : "";
+  const real = (
+    <img
+      {...rest}
+      ref={setRef}
+      src={src}
+      data-failed={hasFailed ? "true" : undefined}
+      className={className + fade}
+      style={style}
+      onLoad={(e) => {
+        setLoaded(src ?? null);
+        onLoad?.(e);
+      }}
+      onError={(e) => {
+        setFailed(src ?? null);
+        onError?.(e);
+      }}
+    />
+  );
   return (
     <>
       {placeholder && !hasFailed && (
@@ -54,22 +77,14 @@ export function FadeImg({
           style={style}
         />
       )}
-      <img
-        {...rest}
-        ref={setRef}
-        src={src}
-        data-failed={hasFailed ? "true" : undefined}
-        className={className + fade}
-        style={style}
-        onLoad={(e) => {
-          setLoaded(src ?? null);
-          onLoad?.(e);
-        }}
-        onError={(e) => {
-          setFailed(src ?? null);
-          onError?.(e);
-        }}
-      />
+      {sources ? (
+        <picture>
+          {sources}
+          {real}
+        </picture>
+      ) : (
+        real
+      )}
     </>
   );
 }

@@ -1,0 +1,68 @@
+/* global fetch, WebSocket, console */
+// usage: node chrome-cover-srcs.mjs <html-file> <width>
+// Prints (JSON) the currentSrc of every `img[data-cover-img]` that headless
+// Chrome (mobile emulation, CDP) picks for that page at that viewport width.
+import process from "node:process";
+import { setTimeout } from "node:timers";
+import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
+
+const [file, w] = process.argv.slice(2);
+const html = readFileSync(file, "utf8");
+const port = 9900 + Math.floor(Math.random() * 90);
+const ch = spawn(
+  "google-chrome",
+  [
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-gpu",
+    `--remote-debugging-port=${port}`,
+    "about:blank",
+  ],
+  { stdio: "ignore" },
+);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+try {
+  let list;
+  for (let i = 0; i < 50 && !list; i++) {
+    try {
+      list = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
+    } catch {
+      await sleep(200);
+    }
+  }
+  const ws = new WebSocket(
+    list.find((t) => t.type === "page").webSocketDebuggerUrl,
+  );
+  await new Promise((r) => (ws.onopen = r));
+  let id = 0;
+  const pend = {};
+  ws.onmessage = (e) => {
+    const m = JSON.parse(e.data);
+    if (m.id && pend[m.id]) pend[m.id](m.result);
+  };
+  const send = (method, params = {}) =>
+    new Promise((r) => {
+      pend[++id] = r;
+      ws.send(JSON.stringify({ id, method, params }));
+    });
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: Number(w),
+    height: 900,
+    deviceScaleFactor: 2,
+    mobile: true,
+  });
+  await send("Page.enable");
+  await send("Page.navigate", {
+    url: "data:text/html;charset=utf-8," + encodeURIComponent(html),
+  });
+  await sleep(800);
+  const r = await send("Runtime.evaluate", {
+    returnByValue: true,
+    expression: `[...document.querySelectorAll('img[data-cover-img]')].map(i => i.currentSrc)`,
+  });
+  console.log(JSON.stringify(r.result.value));
+} finally {
+  ch.kill();
+  process.exit(0);
+}
