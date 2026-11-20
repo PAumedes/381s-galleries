@@ -143,7 +143,9 @@ export function AddToHomeHint({
         </p>
       ) : (
         <>
-          <p className="text-body min-w-0 basis-full min-[28rem]:basis-0 min-[28rem]:flex-1">{t("pwa.androidText")}</p>
+          <p className="text-body min-w-0 basis-full min-[28rem]:basis-0 min-[28rem]:flex-1">
+            {t("pwa.androidText")}
+          </p>
           <button
             type="button"
             onClick={accept}
