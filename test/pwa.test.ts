@@ -1,5 +1,4 @@
 import { migrateDb, resetTables } from "./support/d1";
-import { shape } from "./support/http";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../app/db";
