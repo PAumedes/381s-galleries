@@ -115,6 +115,34 @@ describe("T6.35 focal point drag on touch", () => {
     expect(submitted).toHaveLength(0);
   });
 
+  it("losing pointer capture ends the drag, reverts the marker and does not save", async () => {
+    show();
+    const el = await picker();
+    size(el);
+    fireEvent.pointerDown(el, { ...ptr("touch"), clientX: 150, clientY: 75 });
+    fireEvent.pointerMove(el, { ...ptr("touch"), clientX: 250, clientY: 125 });
+    expect(marker().style.left).toBe("75%");
+    fireEvent.lostPointerCapture(el, ptr("touch"));
+    expect(marker().style.left).toBe("50%");
+    expect(el.style.touchAction).toBe("");
+    const ev = new Event("touchmove", { bubbles: true, cancelable: true });
+    el.dispatchEvent(ev);
+    expect(ev.defaultPrevented).toBe(false);
+    fireEvent.pointerUp(el, { ...ptr("touch"), clientX: 250, clientY: 125 });
+    expect(submitted).toHaveLength(0);
+  });
+
+  it("the capture released after a normal release changes nothing", async () => {
+    show();
+    const el = await picker();
+    size(el);
+    fireEvent.pointerDown(el, { ...ptr("touch"), clientX: 150, clientY: 75 });
+    fireEvent.pointerMove(el, { ...ptr("touch"), clientX: 250, clientY: 125 });
+    fireEvent.pointerUp(el, { ...ptr("touch"), clientX: 250, clientY: 125 });
+    fireEvent.lostPointerCapture(el, ptr("touch"));
+    expect(marker().style.left).toBe("75%");
+  });
+
   it("a plain tap sets the point but does not save (the button still does)", async () => {
     show();
     const el = await picker();

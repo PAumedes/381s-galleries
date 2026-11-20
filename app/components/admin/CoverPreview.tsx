@@ -173,6 +173,7 @@ export function CoverPreview({
     dragging,
     handlers: dragHandlers,
   } = useFocalDrag({
+    point: cur,
     onPoint: setCur,
     onCommit: (f) =>
       submit(
