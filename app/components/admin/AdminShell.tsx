@@ -4,7 +4,6 @@ import { NavLink, useLocation } from "react-router";
 import { useFormat } from "../../i18n/use-format";
 import { useT } from "../../i18n/use-t";
 import type { MessageKey } from "../../i18n/t";
-import { fmtStudio } from "../../lib/studio-time";
 import { Logo } from "../Logo";
 import { AdminLangToggle } from "./AdminLangToggle";
 
@@ -19,11 +18,6 @@ const NAV: { to: string; label: MessageKey; end: boolean }[] = [
   { to: "/admin", label: "admin.nav.galleries", end: true },
   { to: "/admin/setup", label: "admin.nav.settings", end: false },
 ];
-
-/** "2026-11-16T13:00:00Z" -> "16/11/2026 10:00" (studio time, Spanish format). */
-export function fmtTime(iso: string, tz?: string): string {
-  return fmtStudio(iso, tz) || iso;
-}
 
 export function StatusLine({ status }: { status: AdminStatus }) {
   const t = useT();
