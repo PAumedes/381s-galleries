@@ -5,14 +5,13 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
+import { isZoomed } from "./useZoomed";
+
 const SWIPE_DISTANCE = 50;
 const SWIPE_VELOCITY = 0.5; // px per ms
 const SWIPE_MIN_FAST = 20;
 const CLOSE_DISTANCE = 80;
 const DRAG_SLOP = 10;
-
-const isZoomed = () =>
-  typeof window !== "undefined" && (window.visualViewport?.scale ?? 1) > 1.01;
 
 type SwipeInput = {
   hasPrev: boolean;

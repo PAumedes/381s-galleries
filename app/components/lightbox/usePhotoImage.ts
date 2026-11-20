@@ -12,8 +12,10 @@ export const withRetry = (url: string, n: number) =>
 export function usePhotoImage(
   photos: readonly GalleryPhoto[],
   photo: GalleryPhoto,
+  isReady: (photo: GalleryPhoto) => boolean = () => false,
 ) {
   const [loadedId, setLoadedId] = useState<string | null>(null);
+  const [shownId, setShownId] = useState<string | null>(null);
   const [failedId, setFailedId] = useState<string | null>(null);
   // Retry counter is per photo: a retry on one photo must not affect others.
   const [retryState, setRetryState] = useState<{ id: string; n: number }>({
@@ -29,14 +31,19 @@ export function usePhotoImage(
   // tries again.
   if (failedId !== null && failedId !== photo.id) setFailedId(null);
 
-  const loaded = loadedId === photo.id;
-  const failed = failedId === photo.id;
-  // Keep the last loaded photo on screen while the new one loads.
-  const behind =
-    !loaded && !failed && loadedId !== null
-      ? photos.find((p) => p.id === loadedId)
-      : undefined;
   const retry = retryState.id === photo.id ? retryState.n : 0;
+  // A neighbour the preloader already loaded is on screen from the first
+  // frame (it comes from the memory cache). It is not a real load of this
+  // <img>: a retry (new URL) must start hidden again.
+  const preloaded = retry === 0 && isReady(photo);
+  const loaded = loadedId === photo.id || preloaded;
+  const failed = failedId === photo.id;
+  // Keep the last photo shown on screen while the new one loads.
+  if (loaded && shownId !== photo.id) setShownId(photo.id);
+  const behind =
+    !loaded && !failed && shownId !== null && shownId !== photo.id
+      ? photos.find((p) => p.id === shownId)
+      : undefined;
 
   return {
     loaded,

@@ -941,17 +941,18 @@ describe("Lightbox characterization: preload", () => {
     globalThis.Image = RealImage;
   });
 
-  it("next first, then previous, with sizes, srcset and view-sm src", () => {
+  it("next first, then previous, then two ahead, with sizes, srcset and view-sm src", () => {
     setup({ index: 3 });
     expect(made.map((m) => m.src)).toEqual([
       "/img/p4/view-sm",
       "/img/p2/view-sm",
+      "/img/p5/view-sm",
     ]);
     expect(made[0].sizes).toBe("(min-width: 768px) 92vw, 100vw");
     expect(made[0].srcset).toBe("/img/p4/view-sm 1200w, /img/p4/view-lg 2048w");
   });
 
-  it("cleanup cancels in-flight preloads on navigation and unmount; re-runs per index only", () => {
+  it("navigation keeps in-flight preloads still in the window; unmount cancels them; re-runs per index only", () => {
     const stable = photos(10);
     function H() {
       const [i, setI] = useState(3);
@@ -966,22 +967,22 @@ describe("Lightbox characterization: preload", () => {
       );
     }
     const { unmount } = render(<H />);
-    expect(made).toHaveLength(2);
+    expect(made).toHaveLength(3);
     const first = [...made];
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(made).toHaveLength(4);
-    for (const m of first) {
+    // Only p3 (behind) and p6 (ahead) are new; nothing is cancelled.
+    expect(made).toHaveLength(5);
+    for (const m of first) expect(m.src).not.toBe("");
+    // Unrelated re-render (favourite state etc.) does not preload again.
+    fireEvent.pointerMove(dialog(), { pointerType: "mouse", clientX: 3 });
+    expect(made).toHaveLength(5);
+    unmount();
+    for (const m of made) {
       expect(m.src).toBe("");
       expect(m.onload).toBeNull();
       expect(m.onerror).toBeNull();
       expect(m.removed).toEqual(["srcset"]);
     }
-    // Unrelated re-render (favourite state etc.) does not preload again.
-    fireEvent.pointerMove(dialog(), { pointerType: "mouse", clientX: 3 });
-    expect(made).toHaveLength(4);
-    const live = made.slice(2);
-    unmount();
-    for (const m of live) expect(m.src).toBe("");
   });
 
   it("a finished preload is no longer cancelled on cleanup", () => {
