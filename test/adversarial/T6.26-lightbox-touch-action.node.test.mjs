@@ -1,13 +1,12 @@
-/* global fetch, WebSocket */
+/* global WebSocket */
 import process from "node:process";
 import { setTimeout } from "node:timers";
-import { spawn, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 import { compile } from "tailwindcss";
+import { launchChrome } from "../support/chrome.mjs";
 
 const require = createRequire(import.meta.url);
 const SRC = readFileSync("app/components/Lightbox.tsx", "utf8");
@@ -38,32 +37,9 @@ const rootTouch = () => /: "(touch-[^"]*)"/.exec(SRC)[1].split(/\s+/);
 // Real Chrome, real touch events via CDP: does a downward swipe reach the page
 // as pointer events (pointerup) or does the browser claim it (pointercancel)?
 async function swipeDown(html) {
-  const port = 9900 + Math.floor(Math.random() * 90);
-  const ch = spawn(
-    "google-chrome",
-    [
-      "--headless=new",
-      "--no-sandbox",
-      "--disable-gpu",
-      `--remote-debugging-port=${port}`,
-      // Own profile per launch: parallel Chromes sharing the default one fight
-      // over its lock and the later one never opens its debugging port.
-      `--user-data-dir=${mkdtempSync(join(tmpdir(), "chrome-"))}`,
-      "--no-first-run",
-      "about:blank",
-    ],
-    { stdio: "ignore" },
-  );
+  const { ch, list } = await launchChrome();
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   try {
-    let list;
-    for (let i = 0; i < 150 && !list; i++) {
-      try {
-        list = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
-      } catch {
-        await sleep(200);
-      }
-    }
     const ws = new WebSocket(
       list.find((t) => t.type === "page").webSocketDebuggerUrl,
     );

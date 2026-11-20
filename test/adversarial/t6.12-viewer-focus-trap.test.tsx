@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createRoutesStub, Outlet } from "react-router";
 import { describe, expect, it } from "vitest";
 import { PhotoViewer } from "../../app/components/admin/PhotoViewer";
@@ -54,7 +54,11 @@ describe("T6.12 PhotoViewer (aria-modal dialog)", () => {
     const last = buttons[buttons.length - 1] as HTMLElement;
     last.focus();
     // Lightbox preventDefaults + wraps; here nothing handles Tab.
-    const notPrevented = fireEvent.keyDown(last, { key: "Tab" });
-    expect(notPrevented).toBe(false);
+    // The key handler is attached in an effect that can run a tick after the
+    // dialog shows up (flaky on a loaded runner): retry until it is there.
+    await waitFor(() => {
+      const notPrevented = fireEvent.keyDown(last, { key: "Tab" });
+      expect(notPrevented).toBe(false);
+    });
   });
 });
