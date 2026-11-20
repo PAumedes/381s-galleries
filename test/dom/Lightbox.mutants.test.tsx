@@ -159,12 +159,17 @@ describe("Lightbox mutants: usePreloadNeighbours", () => {
       </ImgUrlProvider>
     );
     const { rerender } = render(ui(a));
-    expect(made.map((m) => m.src)).toEqual(["/a/p4/view-sm", "/a/p2/view-sm"]);
+    expect(made.map((m) => m.src)).toEqual([
+      "/a/p4/view-sm",
+      "/a/p2/view-sm",
+      "/a/p5/view-sm",
+    ]);
     rerender(ui(b));
-    expect(made.slice(0, 2).map((m) => m.src)).toEqual(["", ""]);
-    expect(made.slice(2).map((m) => m.src)).toEqual([
+    expect(made.slice(0, 3).map((m) => m.src)).toEqual(["", "", ""]);
+    expect(made.slice(3).map((m) => m.src)).toEqual([
       "/b/p4/view-sm",
       "/b/p2/view-sm",
+      "/b/p5/view-sm",
     ]);
   });
 });

@@ -174,11 +174,11 @@ describe("Lightbox rapid navigation", () => {
       globalThis.Image = RealImage;
     });
 
-    it("cancels stale preloads: in-flight never exceeds the two neighbours", () => {
+    it("releases stale preloads: in-flight never exceeds the cache size (6)", () => {
       render(<Harness start={0} />);
       for (let k = 0; k < 15; k++) next();
-      expect(peak).toBeLessThanOrEqual(2);
-      expect(live).toBeLessThanOrEqual(2);
+      expect(peak).toBeLessThanOrEqual(6);
+      expect(live).toBeLessThanOrEqual(6);
     });
   });
 

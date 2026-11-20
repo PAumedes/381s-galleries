@@ -72,7 +72,7 @@ function LightboxView({
   useModalLock(closeRef);
   useLightboxKeys(dialogRef, close, prev, next);
 
-  usePreloadNeighbours(photos, index, imgUrl);
+  const isReady = usePreloadNeighbours(photos, index, imgUrl);
 
   const { visible, wake, onKeyWake, onFocusWake } = useIdleChrome(dialogRef);
   const { notePress, onStageClick } = usePressOrigin(stageRef, onClose);
@@ -112,7 +112,7 @@ function LightboxView({
       onClickCapture={swipe.onClickCapture}
       onFocus={onFocusWake}
       onKeyDown={onKeyWake}
-      className={`on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white ${visible ? "" : "cursor-none"}${protect ? " img-protect" : ""}`}
+      className={`on-dark fixed inset-0 touch-pinch-zoom bg-night text-white ${visible ? "" : "cursor-none"}${protect ? " img-protect" : ""}`}
       style={{ zIndex: "var(--z-lightbox)" }}
       onContextMenu={protect ? (e) => e.preventDefault() : undefined}
     >
@@ -121,6 +121,7 @@ function LightboxView({
         t={t}
         photos={photos}
         photo={photo}
+        isReady={isReady}
         index={index}
         dragX={dragX}
         protect={protect}

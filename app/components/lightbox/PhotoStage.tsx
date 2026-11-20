@@ -4,16 +4,15 @@ import type { TFunction } from "../../i18n/t";
 import { Retry } from "../icons";
 import { useImgUrl } from "../img-url";
 import type { GalleryPhoto } from "../types";
-import { srcSetOf } from "./srcset";
+import { photoImgProps } from "./srcset";
 import { usePhotoImage, withRetry } from "./usePhotoImage";
-
-const SIZES = "(min-width: 768px) 92vw, 100vw";
 
 type PhotoStageProps = {
   stageRef: Ref<HTMLDivElement>;
   t: TFunction;
   photos: readonly GalleryPhoto[];
   photo: GalleryPhoto;
+  isReady: (photo: GalleryPhoto) => boolean;
   index: number;
   dragX: number;
   protect: boolean;
@@ -26,15 +25,17 @@ export function PhotoStage({
   t,
   photos,
   photo,
+  isReady,
   index,
   dragX,
   protect,
   onClick,
 }: PhotoStageProps) {
   const imgUrl = useImgUrl();
-  const srcSet = srcSetOf(imgUrl);
-  const image = usePhotoImage(photos, photo);
+  const image = usePhotoImage(photos, photo, isReady);
   const { loaded, failed, behind, retry } = image;
+  const behindProps = behind && photoImgProps(imgUrl, behind);
+  const own = photoImgProps(imgUrl, photo);
   return (
     <div
       ref={stageRef}
@@ -60,12 +61,12 @@ export function PhotoStage({
         </div>
       ) : (
         <>
-          {behind && (
+          {behindProps && (
             <img
               data-testid="lightbox-prev"
-              src={imgUrl(behind.id, "view-sm", behind.v)}
-              srcSet={srcSet(behind.id, behind.v)}
-              sizes={SIZES}
+              src={behindProps.src}
+              srcSet={behindProps.srcSet}
+              sizes={behindProps.sizes}
               alt=""
               aria-hidden="true"
               draggable={false}
@@ -76,9 +77,9 @@ export function PhotoStage({
             key={`${photo.id}:${retry}`}
             ref={(el) => image.imgRef(el)}
             data-testid="lightbox-img"
-            src={withRetry(imgUrl(photo.id, "view-sm", photo.v), retry)}
-            srcSet={retry ? undefined : srcSet(photo.id, photo.v)}
-            sizes={SIZES}
+            src={withRetry(own.src, retry)}
+            srcSet={retry ? undefined : own.srcSet}
+            sizes={own.sizes}
             alt={t("grid.photo", { n: index + 1 })}
             draggable={false}
             onLoad={() => image.onLoad()}

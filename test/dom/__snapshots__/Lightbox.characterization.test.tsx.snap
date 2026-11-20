@@ -2,7 +2,7 @@
 
 exports[`Lightbox characterization: DOM snapshots > Spanish 1`] = `
 "<div>
-<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Foto 2" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Foto 2" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
 <img data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Foto 2" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-0" srcset="/img/p1/view-sm 1200w, /img/p1/view-lg 2048w" src="/img/p1/view-sm">
 </div>
@@ -47,7 +47,7 @@ exports[`Lightbox characterization: DOM snapshots > Spanish 1`] = `
 
 exports[`Lightbox characterization: DOM snapshots > controls hidden, mid-drag 1`] = `
 "<div>
-<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 3" data-theme="oscuro" data-controls="hidden" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white cursor-none" style="z-index: var(--z-lightbox);">
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 3" data-theme="oscuro" data-controls="hidden" class="on-dark fixed inset-0 touch-pinch-zoom bg-night text-white cursor-none" style="z-index: var(--z-lightbox);">
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
 <img data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 3" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-opacity duration-slow motion-reduce:transition-none opacity-0" srcset="/img/p2/view-sm 1200w, /img/p2/view-lg 2048w" src="/img/p2/view-sm" style="transform: translateX(50px);">
 </div>
@@ -80,7 +80,7 @@ exports[`Lightbox characterization: DOM snapshots > controls hidden, mid-drag 1`
 
 exports[`Lightbox characterization: DOM snapshots > default, first photo, no callbacks 1`] = `
 "<div>
-<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 1" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 1" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
 <img data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 1" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-0" srcset="/img/p0/view-sm 1200w, /img/p0/view-lg 2048w" src="/img/p0/view-sm">
 </div>
@@ -113,7 +113,7 @@ exports[`Lightbox characterization: DOM snapshots > default, first photo, no cal
 
 exports[`Lightbox characterization: DOM snapshots > error state 1`] = `
 "<div>
-<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 3" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 3" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
 <div role="status" data-testid="lightbox-error" class="flex flex-col items-center gap-2 text-sm text-white/60">
 <span>Couldn't load image</span>
@@ -153,7 +153,7 @@ exports[`Lightbox characterization: DOM snapshots > error state 1`] = `
 
 exports[`Lightbox characterization: DOM snapshots > proofing (protect) at the last photo 1`] = `
 "<div>
-<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 10" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white  img-protect" style="z-index: var(--z-lightbox);">
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 10" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pinch-zoom bg-night text-white  img-protect" style="z-index: var(--z-lightbox);">
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
 <img data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 10" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-0" srcset="/img/p9/view-sm 1200w, /img/p9/view-lg 2048w" src="/img/p9/view-sm">
 <span data-testid="lightbox-shield" aria-hidden="true" class="col-start-1 row-start-1 block h-full w-full">
@@ -188,7 +188,7 @@ exports[`Lightbox characterization: DOM snapshots > proofing (protect) at the la
 
 exports[`Lightbox characterization: DOM snapshots > with favourite + download, middle photo, loaded 1`] = `
 "<div>
-<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 5" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pan-y touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
+<div role="dialog" aria-modal="true" tabindex="-1" aria-label="Photo 5" data-theme="oscuro" data-controls="visible" class="on-dark fixed inset-0 touch-pinch-zoom bg-night text-white " style="z-index: var(--z-lightbox);">
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center select-none">
 <img data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 5" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-100" srcset="/img/p4/view-sm 1200w, /img/p4/view-lg 2048w" src="/img/p4/view-sm">
 </div>
