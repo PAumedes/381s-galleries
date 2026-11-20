@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 
+import type { PreviewDevice } from "../../../lib/preview-device";
+import { previewHref } from "../../../lib/preview-device";
 import { useT } from "../../../i18n/use-t";
 import { External } from "../../icons";
 import { StatusPill } from "../GalleryList";
@@ -7,7 +9,15 @@ import type { EditGallery } from "./types";
 import { btn } from "./ui";
 
 /** Back link, title, status pill and the "preview as client" link. */
-export function EditorHeader({ g }: { g: EditGallery }) {
+export function EditorHeader({
+  g,
+  device,
+  tab,
+}: {
+  g: EditGallery;
+  device: PreviewDevice;
+  tab: string;
+}) {
   const t = useT();
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -20,7 +30,7 @@ export function EditorHeader({ g }: { g: EditGallery }) {
       <h1 className="text-title text-ink min-w-0 break-words">{g.title}</h1>
       <StatusPill status={g.status} />
       <a
-        href={`/admin/g/${encodeURIComponent(g.id)}/preview`}
+        href={previewHref(g.id, device, tab)}
         target="_blank"
         rel="noopener noreferrer"
         title={t("admin.edit.previewHint")}

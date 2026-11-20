@@ -24,3 +24,15 @@ export async function css(candidates) {
   });
   return c.build(candidates);
 }
+
+/** Every class name in the className="..." strings of the given sources. */
+export function classesOf(sources) {
+  return [
+    ...new Set(
+      sources
+        .flatMap((s) => [...s.matchAll(/["'`]([^"'`]*)["'`]/g)])
+        .flatMap((m) => m[1].split(/\s+/))
+        .filter(Boolean),
+    ),
+  ];
+}

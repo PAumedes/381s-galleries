@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub, useActionData, useLoaderData } from "react-router";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   GalleryEditView,
   type GalleryEditData,
@@ -138,6 +138,9 @@ async function openMobileChooser() {
   await screen.findByTestId("cover-preview");
   await userEvent.click(screen.getByRole("button", { name: "Portada móvil" }));
 }
+
+// The editor remembers its device in sessionStorage: start every test clean.
+beforeEach(() => sessionStorage.clear());
 
 afterEach(() => {
   cleanup();

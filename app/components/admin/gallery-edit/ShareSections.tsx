@@ -1,3 +1,4 @@
+import { previewHref, type PreviewDevice } from "../../../lib/preview-device";
 import { useT } from "../../../i18n/use-t";
 import { External } from "../../icons";
 import { SharePanel } from "../SharePanel";
@@ -8,9 +9,11 @@ import { btn, Section } from "./ui";
 export function ShareSections({
   g,
   origin,
+  device,
 }: {
   g: EditGallery;
   origin?: string;
+  device: PreviewDevice;
 }) {
   const t = useT();
   return (
@@ -32,7 +35,7 @@ export function ShareSections({
         </p>
         <div>
           <a
-            href={`/admin/g/${encodeURIComponent(g.id)}/preview`}
+            href={previewHref(g.id, device, "compartir")}
             target="_blank"
             rel="noopener noreferrer"
             className={`${btn} inline-flex items-center gap-2`}

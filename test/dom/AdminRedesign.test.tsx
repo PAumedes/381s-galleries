@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   GalleryEditView,
@@ -123,6 +123,8 @@ const tile = (id: string) =>
   document.querySelector(`[data-photo-id="${id}"]`) as HTMLElement;
 
 afterEach(() => vi.restoreAllMocks());
+// The editor remembers its device in sessionStorage: start every test clean.
+beforeEach(() => sessionStorage.clear());
 
 describe("Fotos: cover indicator only once", () => {
   it("shows exactly one desktop cover badge, on the cover photo, and no cover text on the others", async () => {
@@ -294,7 +296,7 @@ describe("editor sections and layout", () => {
   it("'Vista previa' opens the admin preview of the real gallery in a new tab", () => {
     show();
     const a = screen.getByRole("link", { name: /Vista previa/ });
-    expect(a.getAttribute("href")).toBe("/admin/g/g1/preview");
+    expect(a.getAttribute("href")).toBe("/admin/g/g1/preview?device=desktop");
     expect(a.getAttribute("target")).toBe("_blank");
     expect(a.getAttribute("rel")).toMatch(/noopener/);
   });
@@ -644,7 +646,7 @@ describe("admin preview page", () => {
       screen
         .getByRole("link", { name: "Volver al editor" })
         .getAttribute("href"),
-    ).toBe("/admin/g/g1");
+    ).toBe("/admin/g/g1?device=desktop");
     const srcs = [...document.querySelectorAll("img")].map((i) =>
       i.getAttribute("src"),
     );
