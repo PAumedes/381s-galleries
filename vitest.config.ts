@@ -42,6 +42,9 @@ export default defineConfig(async () => {
           test: {
             name: "workers",
             include: ["test/**/*.test.ts", "app/**/*.test.ts"],
+            // The shared CI runner is slow: tests that seed D1 and run a sync
+            // passed locally but hit the 5 s default there (flaky deploys).
+            testTimeout: 20_000,
           },
         },
         {
