@@ -98,7 +98,9 @@ describe("T6.36 admin gallery list rows on phones", () => {
   });
   it("date and photo count are ONE muted line of real text, at least 14px", async () => {
     const { tr } = await row({ photoCount: 120 });
-    const line = within(tr).getByText(/·\s*120 fotos/).closest("td")!;
+    const line = within(tr)
+      .getByText(/·\s*120 fotos/)
+      .closest("td")!;
     expect(line.textContent).toMatch(/2026.*·\s*120 fotos$/);
     expect(has(line, "max-xl:text-sm")).toBe(true);
     expect(has(line, "max-xl:text-grey-600")).toBe(true);

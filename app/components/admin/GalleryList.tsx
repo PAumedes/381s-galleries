@@ -261,7 +261,10 @@ export function GalleryList({
                   }}
                   className="border-grey-100 hover:bg-grey-50 grid cursor-pointer grid-cols-[5rem_1fr_auto] gap-x-3 gap-y-1 border-b py-3 max-xl:relative max-xl:py-4 xl:table-row xl:py-0"
                 >
-                  <td role="cell" className="max-xl:col-start-1 max-xl:row-span-3 max-xl:row-start-1 xl:py-2 xl:pr-3">
+                  <td
+                    role="cell"
+                    className="max-xl:col-start-1 max-xl:row-span-3 max-xl:row-start-1 xl:py-2 xl:pr-3"
+                  >
                     {g.coverPhotoId ? (
                       <img
                         src={`/admin/img/${g.coverPhotoId}/thumb`}
