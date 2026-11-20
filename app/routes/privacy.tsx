@@ -4,12 +4,13 @@ import { data } from "react-router";
 import { PrivacyPage } from "../components/PrivacyPage";
 import { getLang, langCookie } from "../i18n/lang";
 import type { Route } from "./+types/privacy";
+import { NOSNIFF, PRIVATE_NO_STORE } from "../lib/server/http";
 
 const SECURITY_HEADERS = {
-  "Cache-Control": "private, no-store",
+  "Cache-Control": PRIVATE_NO_STORE,
   "Referrer-Policy": "same-origin",
   "X-Frame-Options": "DENY",
-  "X-Content-Type-Options": "nosniff",
+  ...NOSNIFF,
 };
 
 export function meta() {
