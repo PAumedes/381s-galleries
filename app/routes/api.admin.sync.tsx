@@ -5,6 +5,7 @@ import { requireAdmin } from "../lib/server/auth";
 import { getDrive } from "../lib/server/drive-factory";
 import type { DriveClient } from "../lib/server/drive-types";
 import { runRecordedSync, SyncBudgetError } from "../lib/server/sync";
+import { methodNotAllowed } from "../lib/server/http";
 
 /** POST /api/admin/sync: forced sync, returns the SyncResult (no Drive ids). */
 export async function handleSync(
@@ -14,10 +15,7 @@ export async function handleSync(
 ): Promise<Response> {
   await requireAdmin(request, e);
   if (request.method !== "POST")
-    return new Response("Method Not Allowed", {
-      status: 405,
-      headers: { Allow: "POST" },
-    });
+    return methodNotAllowed("POST", "Method Not Allowed");
   // CSRF: the Access cookie is sent on cross-site requests, so refuse them.
   try {
     await adminAction(request, e);
