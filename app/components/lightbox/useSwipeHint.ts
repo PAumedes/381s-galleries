@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /** Versioned, no PII: only records that this browser has seen the hint. */
 export const SWIPE_HINT_KEY = "swipe-hint:v1";
@@ -32,24 +32,34 @@ const OFF: SwipeHint = { phase: "off", animated: false };
 /**
  * First-time swipe hint: touch devices only, once per browser, ~2s, dismissed
  * by the first pointer down. Reduced motion keeps it briefly with no fade.
+ * `enabled` is false when there is nothing to swipe to (single photo).
+ * The seen flag is written only when the hint finishes or is dismissed, so a
+ * quick close does not burn it; the effect is idempotent (StrictMode-safe).
  */
-export function useSwipeHint(): SwipeHint {
+export function useSwipeHint(enabled: boolean): SwipeHint {
   const [hint, setHint] = useState<SwipeHint>(OFF);
+  const seen = useRef<boolean | null>(null);
   useEffect(() => {
-    if (!media("(pointer: coarse)") || alreadySeen()) return;
-    markSeen();
+    if (!enabled || !media("(pointer: coarse)")) return;
+    seen.current ??= alreadySeen();
+    if (seen.current) return;
     const animated = !media("(prefers-reduced-motion: reduce)");
     const timers: ReturnType<typeof setTimeout>[] = [];
-    const end = () => {
+    const stop = () => {
       timers.forEach(clearTimeout);
       timers.length = 0;
       document.removeEventListener("pointerdown", fade, true);
+    };
+    const end = () => {
+      stop();
+      markSeen();
+      seen.current = true;
       setHint(OFF);
     };
     function fade() {
-      document.removeEventListener("pointerdown", fade, true);
-      timers.forEach(clearTimeout);
-      timers.length = 0;
+      stop();
+      markSeen();
+      seen.current = true;
       if (!animated) return end();
       setHint({ phase: "fading", animated });
       timers.push(setTimeout(end, SWIPE_HINT_FADE_MS));
@@ -59,10 +69,7 @@ export function useSwipeHint(): SwipeHint {
     setHint({ phase: "on", animated });
     document.addEventListener("pointerdown", fade, true);
     timers.push(setTimeout(fade, SWIPE_HINT_MS));
-    return () => {
-      timers.forEach(clearTimeout);
-      document.removeEventListener("pointerdown", fade, true);
-    };
-  }, []);
+    return stop;
+  }, [enabled]);
   return hint;
 }

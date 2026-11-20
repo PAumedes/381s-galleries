@@ -12,7 +12,7 @@ export function SwipeHint({
   hasPrev: boolean;
   hasNext: boolean;
 }) {
-  const { phase, animated } = useSwipeHint();
+  const { phase, animated } = useSwipeHint(hasPrev || hasNext);
   if (phase === "off") return null;
   const fade = animated
     ? `transition-opacity duration-slow ease-out-soft ${phase === "fading" ? "opacity-0" : "opacity-100"}`
@@ -22,6 +22,7 @@ export function SwipeHint({
     <div
       data-swipe-hint
       data-state={phase}
+      aria-hidden="true"
       className={`pointer-events-none absolute inset-0 ${fade}`}
     >
       {hasPrev && (
@@ -40,10 +41,7 @@ export function SwipeHint({
           className={`${chevron} right-2`}
         />
       )}
-      <p
-        aria-live="polite"
-        className="absolute inset-x-0 bottom-24 text-center text-body text-white/80"
-      >
+      <p className="absolute inset-x-0 bottom-24 text-center text-body text-white/80">
         {t("lightbox.swipeHint")}
       </p>
     </div>

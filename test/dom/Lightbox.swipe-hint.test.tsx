@@ -54,18 +54,17 @@ afterEach(() => {
 });
 
 describe("T6.28 swipe hint", () => {
-  it("shows chevrons and a polite label on first open on touch", () => {
+  it("shows chevrons and an aria-hidden label on first open on touch", () => {
     open();
     expect(hint()).not.toBeNull();
     expect(chevrons()).toHaveLength(2);
     for (const c of chevrons())
       expect(c.getAttribute("aria-hidden")).toBe("true");
     const label = screen.getByText("Swipe");
-    expect(label.closest("[aria-live]")?.getAttribute("aria-live")).toBe(
-      "polite",
+    expect(label.closest("[aria-hidden]")?.getAttribute("aria-hidden")).toBe(
+      "true",
     );
-    expect(localStorage.length).toBe(1);
-    expect(localStorage.key(0)).toBe(KEY);
+    expect(localStorage.getItem(KEY)).toBeNull();
   });
 
   it("uses the Spanish label", () => {
@@ -80,12 +79,22 @@ describe("T6.28 swipe hint", () => {
     expect(hint()?.getAttribute("data-state")).toBe("on");
     act(() => void vi.advanceTimersByTime(200));
     expect(hint()?.getAttribute("data-state")).toBe("fading");
+    expect(localStorage.getItem(KEY)).not.toBeNull();
     act(() => void vi.advanceTimersByTime(1000));
     expect(hint()).toBeNull();
   });
 
+  it("a quick close before the hint finishes does not burn the flag", () => {
+    open().unmount();
+    expect(localStorage.getItem(KEY)).toBeNull();
+    open();
+    expect(hint()).not.toBeNull();
+  });
+
   it("never shows again once seen (remount)", () => {
     const first = open();
+    act(() => void vi.advanceTimersByTime(2100));
+    expect(localStorage.getItem(KEY)).not.toBeNull();
     first.unmount();
     open();
     expect(hint()).toBeNull();
