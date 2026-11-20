@@ -49,6 +49,10 @@ export default defineConfig(async () => {
           test: {
             name: "scripts",
             environment: "node",
+            // Real-Chrome tests start a browser in beforeAll; on the shared CI
+            // runner that can pass the 10 s default hook timeout.
+            testTimeout: 30_000,
+            hookTimeout: 60_000,
             include: [
               "test/scripts/**/*.test.mjs",
               "test/adversarial/**/*.node.test.mjs",
@@ -61,6 +65,8 @@ export default defineConfig(async () => {
           test: {
             name: "dom",
             environment: "happy-dom",
+            testTimeout: 30_000,
+            hookTimeout: 60_000,
             include: [
               "test/dom/**/*.test.tsx",
               "test/adversarial/**/*.test.tsx",
