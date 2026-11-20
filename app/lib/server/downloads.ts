@@ -18,12 +18,12 @@ import { mockImageUrl } from "./drive-mock";
 import { DriveError } from "./drive-types";
 import type { DriveClient } from "./drive-types";
 import {
-  VISITOR_WINDOW_MS,
+  ANON_RATE,
   createAnonVisitor,
   visibleFavoritesQuery,
 } from "./favorites";
 import { jsonReply } from "./http";
-import { rateLimit, retryAfterSeconds } from "./rate-limit";
+import { hit, retryAfterFor, type RateRule } from "./rate-limit";
 import { rawUserAgent, visitorInfo } from "./visitor-info";
 
 export const DL_TOKEN_TTL_SECONDS = 10 * 60;
@@ -35,6 +35,24 @@ export const DL_MAX_IDS = 50;
 export const DL_GET_MAX_PER_WINDOW = 3000;
 /** Uses of one download token (retries, ranges, resumes). */
 export const DL_TOKEN_MAX_USES = 20;
+/** Token/bulk requests per ip+gallery. */
+const DL_RATE: RateRule = {
+  scope: "dl",
+  max: DL_MAX_PER_WINDOW,
+  windowMs: DL_WINDOW_MS,
+};
+/** `/dl` hits per ip+gallery. */
+const DL_GET_RATE: RateRule = {
+  scope: "dlget",
+  max: DL_GET_MAX_PER_WINDOW,
+  windowMs: DL_WINDOW_MS,
+};
+/** Uses of one token (window = the token's remaining TTL, set per hit). */
+const DL_TOKEN_RATE: RateRule = {
+  scope: "dlj",
+  max: DL_TOKEN_MAX_USES,
+  windowMs: DL_TOKEN_TTL_SECONDS * 1000,
+};
 const VARIANTS = ["highres", "web", "ig"] as const;
 type DlVariant = (typeof VARIANTS)[number];
 type PhotoRow = typeof schema.photos.$inferSelect;
@@ -164,30 +182,19 @@ async function finishGate(
   body: Record<string, unknown>,
 ): Promise<Gate | Response> {
   const ipHash = await clientIpHash(request, env, { prefix64: true });
-  const limitedReply = async (scope: string, windowMs: number) =>
+  const limitedReply = async (rule: RateRule) =>
     reply({ error: "rate_limited" }, 429, undefined, {
       "Retry-After": String(
-        ipHash
-          ? await retryAfterSeconds(env, scope, `${ipHash}:${g.id}`, windowMs)
-          : 60,
+        ipHash ? await retryAfterFor(env, rule, `${ipHash}:${g.id}`) : 60,
       ),
     });
-  if (
-    !ipHash ||
-    !(await rateLimit(
-      env,
-      "dl",
-      `${ipHash}:${g.id}`,
-      DL_MAX_PER_WINDOW,
-      DL_WINDOW_MS,
-    ))
-  ) {
-    return limitedReply("dl", DL_WINDOW_MS);
+  if (!ipHash || !(await hit(env, DL_RATE, `${ipHash}:${g.id}`))) {
+    return limitedReply(DL_RATE);
   }
   let cookie: string | undefined;
   if (!visitor) {
     const anon = await createAnonVisitor(request, env, g);
-    if (!anon) return limitedReply("anon", VISITOR_WINDOW_MS);
+    if (!anon) return limitedReply(ANON_RATE);
     visitor = anon.visitor;
     cookie = anon.cookie;
   }
@@ -410,29 +417,18 @@ export async function serveDownload(
   }
   const variant = claims.v;
 
-  const limited = async (scope: string, key: string, windowMs: number) =>
+  const limited = async (rule: RateRule, key: string, windowMs?: number) =>
     new Response("Too Many Requests", {
       status: 429,
       headers: {
         ...BASE_HEADERS,
         "Content-Type": "text/plain; charset=utf-8",
-        "Retry-After": String(
-          await retryAfterSeconds(env, scope, key, windowMs),
-        ),
+        "Retry-After": String(await retryAfterFor(env, rule, key, windowMs)),
       },
     });
   const ipHash = await clientIpHash(request, env, { prefix64: true });
-  if (
-    ipHash &&
-    !(await rateLimit(
-      env,
-      "dlget",
-      `${ipHash}:${claims.g}`,
-      DL_GET_MAX_PER_WINDOW,
-      DL_WINDOW_MS,
-    ))
-  )
-    return limited("dlget", `${ipHash}:${claims.g}`, DL_WINDOW_MS);
+  if (ipHash && !(await hit(env, DL_GET_RATE, `${ipHash}:${claims.g}`)))
+    return limited(DL_GET_RATE, `${ipHash}:${claims.g}`);
   const exp = (claims as { exp?: number }).exp;
   const ttlMs = Math.max(
     1000,
@@ -440,8 +436,8 @@ export async function serveDownload(
       ? exp * 1000 - Date.now()
       : DL_TOKEN_TTL_SECONDS * 1000,
   );
-  if (!(await rateLimit(env, "dlj", claims.jti, DL_TOKEN_MAX_USES, ttlMs)))
-    return limited("dlj", claims.jti, ttlMs);
+  if (!(await hit(env, DL_TOKEN_RATE, claims.jti, ttlMs)))
+    return limited(DL_TOKEN_RATE, claims.jti, ttlMs);
 
   const db = getDb(env as Env);
   const [row] = await db
