@@ -7,6 +7,7 @@ import { mockImageUrl } from "./drive-mock";
 import type { MockVariant } from "./drive-mock";
 import { DriveError } from "./drive-types";
 import type { DriveClient } from "./drive-types";
+import { NO_STORE, NOSNIFF, textResponse } from "./http";
 
 export const VARIANTS = ["thumb", "view-sm", "view-lg"] as const;
 export type Variant = (typeof VARIANTS)[number];
@@ -24,28 +25,20 @@ const IMG_MISS_RATE: RateRule = {
   windowMs: 10 * 60 * 1000,
 };
 
-const BASE_HEADERS = { "X-Content-Type-Options": "nosniff" };
+const BASE_HEADERS = NOSNIFF;
 
 /** Identical for "no such photo", "not visible", "locked" and "invalid variant". */
 function notFound(): Response {
-  return new Response("Not found", {
-    status: 404,
-    headers: {
-      ...BASE_HEADERS,
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-store",
-    },
+  return textResponse("Not found", 404, {
+    ...BASE_HEADERS,
+    "Cache-Control": NO_STORE,
   });
 }
 
 function badGateway(): Response {
-  return new Response("Bad gateway", {
-    status: 502,
-    headers: {
-      ...BASE_HEADERS,
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-store",
-    },
+  return textResponse("Bad gateway", 502, {
+    ...BASE_HEADERS,
+    "Cache-Control": NO_STORE,
   });
 }
 
@@ -537,14 +530,10 @@ export async function serveImage(
       (await clientIpHash(request, env, { prefix64: true })) ?? "noip";
     const key = `${ipHash}:${gallery.id}`;
     if (!(await rateHit(env, IMG_MISS_RATE, key))) {
-      return new Response("Too many requests", {
-        status: 429,
-        headers: {
-          ...BASE_HEADERS,
-          "Content-Type": "text/plain; charset=utf-8",
-          "Cache-Control": "no-store",
-          "Retry-After": String(await retryAfterFor(env, IMG_MISS_RATE, key)),
-        },
+      return textResponse("Too many requests", 429, {
+        ...BASE_HEADERS,
+        "Cache-Control": NO_STORE,
+        "Retry-After": String(await retryAfterFor(env, IMG_MISS_RATE, key)),
       });
     }
   }
