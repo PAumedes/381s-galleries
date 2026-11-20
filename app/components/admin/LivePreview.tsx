@@ -12,6 +12,7 @@ import {
   type Palette,
 } from "../../lib/design";
 import { formatEventDate } from "../../lib/event-date";
+import type { PreviewDevice } from "../../lib/preview-device";
 import { useStudioName } from "../../lib/use-studio-name";
 import { CoverHero } from "../CoverHero";
 import { Grid } from "../Grid";
@@ -25,7 +26,7 @@ import {
 import type { GalleryPhoto } from "../types";
 import { paletteKey } from "./DesignPanel";
 
-export type PreviewDevice = "desktop" | "mobile";
+export type { PreviewDevice };
 export type CoverSpec = {
   id: string;
   aspect: number | null;

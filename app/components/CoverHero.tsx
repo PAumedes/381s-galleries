@@ -8,17 +8,14 @@ import {
 import type { Ref } from "react";
 
 import { coverObjectPosition, type Focus } from "../lib/cover-focus";
+import { MOBILE_COVER_MEDIA } from "../lib/preview-device";
 import { isDarkPalette, type CoverLayout, type Palette } from "../lib/design";
 
 import { FadeImg } from "./FadeImg";
 import { Logo } from "./Logo";
 import { ChevronDown } from "./icons";
 
-/**
- * Viewports that get the optional mobile cover (a `<picture>` source, so the
- * browser downloads only the one it shows).
- */
-export const MOBILE_COVER_MEDIA = "(max-width: 767px)";
+export { MOBILE_COVER_MEDIA };
 
 export type CoverImage = {
   src: string;

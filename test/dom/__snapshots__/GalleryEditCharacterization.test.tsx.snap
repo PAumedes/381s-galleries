@@ -7,7 +7,7 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase bg-ink text-paper border-ink">Publicada</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -275,7 +275,7 @@ exports[`gallery editor characterization: snapshots per state > renders comparti
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=compartir" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -329,7 +329,7 @@ exports[`gallery editor characterization: snapshots per state > renders comparti
 <h2 class="text-micro text-grey-700 uppercase">Vista del cliente</h2>
 <p class="text-small text-grey-700">Mirá la galería real como la ve un cliente, aunque sea un borrador o tenga PIN. Solo vos podés abrirla; no cuenta visitas ni descargas.</p>
 <div>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 inline-flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=compartir" target="_blank" rel="noopener noreferrer" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 inline-flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -436,7 +436,7 @@ exports[`gallery editor characterization: snapshots per state > renders comparti
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galleries</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase bg-ink text-paper border-ink">Published</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=compartir" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -490,7 +490,7 @@ exports[`gallery editor characterization: snapshots per state > renders comparti
 <h2 class="text-micro text-grey-700 uppercase">Client view</h2>
 <p class="text-small text-grey-700">See the real gallery as a client sees it, even if it is a draft or has a PIN. Only you can open it; it counts no views or downloads.</p>
 <div>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 inline-flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=compartir" target="_blank" rel="noopener noreferrer" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 inline-flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -597,7 +597,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Archivada</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -860,7 +860,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -1129,7 +1129,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -1398,7 +1398,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -1666,7 +1666,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galleries</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Draft</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -1934,7 +1934,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -2206,7 +2206,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -2473,7 +2473,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -2742,7 +2742,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -3012,7 +3012,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -3289,7 +3289,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -3566,7 +3566,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -3842,7 +3842,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -4118,7 +4118,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase bg-ink text-paper border-ink">Publicada</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -4386,7 +4386,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase bg-ink text-paper border-ink">Publicada</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -4654,7 +4654,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase bg-ink text-paper border-ink">Publicada</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -4927,7 +4927,7 @@ exports[`gallery editor characterization: snapshots per state > renders diseno e
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galleries</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Draft</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=diseno" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -5314,7 +5314,7 @@ exports[`gallery editor characterization: snapshots per state > renders diseno e
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=diseno" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -5701,7 +5701,7 @@ exports[`gallery editor characterization: snapshots per state > renders diseno f
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=diseno" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -6090,7 +6090,7 @@ exports[`gallery editor characterization: snapshots per state > renders fotos em
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=fotos" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -6128,7 +6128,7 @@ exports[`gallery editor characterization: snapshots per state > renders fotos en
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galleries</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Draft</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=fotos" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -6380,7 +6380,7 @@ exports[`gallery editor characterization: snapshots per state > renders fotos es
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=fotos" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -6632,7 +6632,7 @@ exports[`gallery editor characterization: snapshots per state > renders portada 
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=portada" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -6815,7 +6815,7 @@ exports[`gallery editor characterization: snapshots per state > renders portada 
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=portada" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
@@ -6998,7 +6998,7 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
 <h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
 <span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>

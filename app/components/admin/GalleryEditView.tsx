@@ -16,10 +16,10 @@ import { fieldErrorsOf } from "./gallery-edit/field-errors";
 import { PhotosTab } from "./gallery-edit/PhotosTab";
 import { ShareSections } from "./gallery-edit/ShareSections";
 import type { GalleryEditData } from "./gallery-edit/types";
+import { usePreviewDevice } from "./use-preview-device";
 import { useCoverPrefetch } from "./gallery-edit/useCoverPrefetch";
 import { useDesignDraft } from "./gallery-edit/useDesignDraft";
 import { GalleryTabs, isEditorTab, type EditorTab } from "./GalleryTabs";
-import { type PreviewDevice } from "./LivePreview";
 import { usePendingCover, withPendingCover } from "./optimistic-cover";
 
 export type { GalleryEditData };
@@ -82,7 +82,7 @@ function GalleryEditViewInner({
   const draft = useDesignDraft(saved);
   const { design, dirty: designDirty } = draft;
   // One device for every preview of the editor (switching tabs keeps it).
-  const [device, setDevice] = useState<PreviewDevice>("desktop");
+  const [device, setDevice] = usePreviewDevice();
   const designFormId = useId();
   const cover = resolveEditorCover(g, data.photos);
   const previewState = {
@@ -110,7 +110,7 @@ function GalleryEditViewInner({
     <div
       className={`flex flex-col gap-6 ${designDirty && tab === "diseno" ? "max-lg:pb-24" : ""}`}
     >
-      <EditorHeader g={g} />
+      <EditorHeader g={g} device={device} tab={tab} />
       <GalleryTabs
         id={g.id}
         current={tab}
@@ -182,7 +182,7 @@ function GalleryEditViewInner({
 
       {tab === "compartir" && (
         <EditorColumns
-          main={<ShareSections g={g} origin={origin} />}
+          main={<ShareSections g={g} origin={origin} device={device} />}
           preview={preview(t("admin.preview.hint"))}
         />
       )}

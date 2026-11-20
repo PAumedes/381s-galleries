@@ -300,7 +300,7 @@ describe("gallery editor characterization: header and tabs", () => {
       screen.getByRole("link", { name: "← Galerías" }).getAttribute("href"),
     ).toBe("/admin");
     const pv = screen.getByRole("link", { name: /Vista previa/ });
-    expect(pv.getAttribute("href")).toBe("/admin/g/g1/preview");
+    expect(pv.getAttribute("href")).toBe("/admin/g/g1/preview?device=desktop");
     expect(pv.getAttribute("target")).toBe("_blank");
     expect(pv.getAttribute("rel")).toBe("noopener noreferrer");
   });
@@ -895,7 +895,9 @@ describe("gallery editor characterization: share", () => {
     show({ tab: "compartir" });
     await ready();
     const a = screen.getByRole("link", { name: /Abrir/ });
-    expect(a.getAttribute("href")).toBe("/admin/g/g1/preview");
+    expect(a.getAttribute("href")).toBe(
+      "/admin/g/g1/preview?device=desktop&tab=compartir",
+    );
     expect(a.getAttribute("rel")).toBe("noopener noreferrer");
   });
 });

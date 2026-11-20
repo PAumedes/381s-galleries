@@ -1,38 +1,17 @@
 /* global WebSocket */
-import process from "node:process";
 import { setTimeout } from "node:timers";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
-import { compile } from "tailwindcss";
 import { launchChrome } from "../support/chrome.mjs";
+import { css } from "../support/tailwind-css.mjs";
 
-const require = createRequire(import.meta.url);
 const SRC = readFileSync("app/components/AddToHomeHint.tsx", "utf8");
 const EN = readFileSync("app/i18n/en.public.ts", "utf8");
 const str = (k) => new RegExp(`"${k}": "([^"]*)"`).exec(EN)[1];
 
 const HAS_CHROME =
   spawnSync("google-chrome", ["--version"], { stdio: "ignore" }).status === 0;
-
-async function css(candidates) {
-  const app = readFileSync("app/app.css", "utf8").replace(
-    /@import "@fontsource[^;]*;/,
-    "",
-  );
-  const c = await compile(app, {
-    base: process.cwd() + "/app",
-    loadStylesheet: async (id, base) => {
-      const path = id === "tailwindcss" ? "tailwindcss/index.css" : id;
-      const file = path.startsWith(".")
-        ? require.resolve(path, { paths: [base] })
-        : require.resolve(path, { paths: [process.cwd()] });
-      return { path: file, base, content: readFileSync(file, "utf8") };
-    },
-  });
-  return c.build(candidates);
-}
 
 // Real Chrome with touch emulation (pointer: coarse), via CDP.
 async function measure(html, width, height) {

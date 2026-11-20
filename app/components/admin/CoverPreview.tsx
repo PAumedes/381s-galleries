@@ -1,5 +1,5 @@
 import { useId, useLayoutEffect, useRef, useState } from "react";
-import { Form, useNavigation } from "react-router";
+import { Form, useNavigation, useSubmit } from "react-router";
 
 import { useT } from "../../i18n/use-t";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
@@ -8,13 +8,17 @@ import { FadeImg } from "../FadeImg";
 import { ChevronDown, Monitor, Phone } from "../icons";
 import { adminImgSrc, type Versions } from "../img-url";
 import { coverSrc, LivePreview, type PreviewDevice } from "./LivePreview";
+import {
+  clamp,
+  focusAt,
+  round1,
+  useFocalDrag,
+  type Focus,
+} from "./use-focal-drag";
 
-type Focus = { x: number; y: number };
 type Size = { w: number; h: number };
 
 const STEP = 5;
-const clamp = (n: number) => Math.min(100, Math.max(0, n));
-const round1 = (n: number) => Math.round(n * 10) / 10;
 
 const btn =
   "text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10";
@@ -155,13 +159,33 @@ export function CoverPreview({
   }
 
   function onClick(ev: React.MouseEvent) {
-    const r = ev.currentTarget.getBoundingClientRect();
-    if (!r.width || !r.height) return;
-    setCur({
-      x: round1(clamp(((ev.clientX - r.left) / r.width) * 100)),
-      y: round1(clamp(((ev.clientY - r.top) / r.height) * 100)),
-    });
+    const f = focusAt(
+      ev.currentTarget.getBoundingClientRect(),
+      ev.clientX,
+      ev.clientY,
+    );
+    if (f) setCur(f);
   }
+  // Touch: drag the point, save on release.
+  const submit = useSubmit();
+  const {
+    ref: dragRef,
+    dragging,
+    handlers: dragHandlers,
+  } = useFocalDrag({
+    point: cur,
+    onPoint: setCur,
+    onCommit: (f) =>
+      submit(
+        {
+          intent: "focus",
+          device: editing,
+          focusX: String(f.x),
+          focusY: String(f.y),
+        },
+        { method: "post" },
+      ),
+  });
   function onKeyDown(ev: React.KeyboardEvent) {
     const d =
       ev.key === "ArrowLeft"
@@ -253,9 +277,11 @@ export function CoverPreview({
             data-testid="focus-picker"
             aria-label={t("admin.cover.pickerLabel")}
             aria-valuetext={valueText}
+            ref={dragRef}
             onClick={onClick}
             onKeyDown={onKeyDown}
-            style={shown}
+            {...dragHandlers}
+            style={dragging ? { ...shown, touchAction: "none" } : shown}
             className="focus-visible:outline-ink absolute cursor-crosshair touch-manipulation focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             <FadeImg
