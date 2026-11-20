@@ -1,8 +1,6 @@
 // Pure helpers shared by the admin gallery list/edit pages (server and client).
 
 import { es } from "../i18n/es";
-import { fmtPlainDate } from "../i18n/format";
-import type { Lang } from "../i18n/lang";
 import type { MessageKey } from "../i18n/t";
 
 export const FILTERS = [
@@ -29,11 +27,6 @@ export function parseFilter(v: string | null | undefined): Filter {
 
 // ----------------------------------------------------- Buenos Aires time
 export { localToUtcIso, isValidDate, utcIsoToLocal } from "./studio-time";
-
-/** `2026-11-01` -> `01/11/2026` (es) / `Nov 1, 2026` (en); unchanged when not a plain date. */
-export function fmtDate(date: string | null, lang: Lang = "es"): string {
-  return fmtPlainDate(lang, date);
-}
 
 // ----------------------------------------------------------- sync issues
 /** Message key of each sync issue type. */
