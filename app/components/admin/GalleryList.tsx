@@ -21,27 +21,40 @@ const STATUS_KEY = {
 export function StatusPill({
   status,
   expired = false,
+  proofing = false,
+  className = "inline-block px-2 py-0.5",
 }: {
   status: keyof typeof STATUS_KEY;
   expired?: boolean;
+  /** A live proof (Prueba) gallery reads "Prueba" instead of "Publicada". */
+  proofing?: boolean;
+  /** Box sizing (display, padding, min height); colours and type stay fixed. */
+  className?: string;
 }) {
   const t = useT();
+  const live = status === "published" && !expired;
   const label =
     expired && status === "published"
       ? t("admin.state.expired")
-      : t(STATUS_KEY[status]);
+      : live && proofing
+        ? t("admin.mode.proofing")
+        : t(STATUS_KEY[status]);
   const tone =
     status === "published" && !expired
       ? "bg-ink text-paper border-ink"
       : "border-grey-400 text-grey-700";
   return (
-    <span
-      className={`text-micro inline-block border px-2 py-0.5 uppercase ${tone}`}
-    >
+    <span className={`text-micro border uppercase ${className} ${tone}`}>
       {label}
     </span>
   );
 }
+
+/** One row on phones (360 px): tight tracking, no wrapping, sideways scroll as a fallback. */
+export const FILTER_NAV_CLS =
+  "flex flex-nowrap gap-0.5 overflow-x-auto md:flex-wrap md:gap-1 md:overflow-visible";
+export const FILTER_CHIP_CLS =
+  "text-micro flex min-h-tap shrink-0 items-center whitespace-nowrap px-1.5 uppercase max-md:tracking-wide md:min-h-0 md:px-3 md:py-2";
 
 function filterHref(f: Filter, q: string): string {
   const p = new URLSearchParams();
@@ -145,16 +158,13 @@ export function GalleryList({
           {t("admin.list.search.submit")}
         </button>
       </Form>
-      <nav
-        aria-label={t("admin.filter.label")}
-        className="flex flex-wrap gap-1"
-      >
+      <nav aria-label={t("admin.filter.label")} className={FILTER_NAV_CLS}>
         {FILTERS.map((f) => (
           <Link
             key={f}
             to={filterHref(f, q)}
             aria-current={f === filter ? "page" : undefined}
-            className={`text-micro flex min-h-tap items-center px-3 uppercase md:min-h-0 md:py-2 ${f === filter ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`}
+            className={`${FILTER_CHIP_CLS} ${f === filter ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`}
           >
             {t(FILTER_KEYS[f])}
           </Link>
@@ -249,9 +259,9 @@ export function GalleryList({
                     if (!(ev.target as HTMLElement).closest("a"))
                       void navigate(`/admin/g/${g.id}`);
                   }}
-                  className="border-grey-100 hover:bg-grey-50 grid cursor-pointer grid-cols-3 gap-x-3 gap-y-1 border-b py-3 xl:table-row xl:py-0"
+                  className="border-grey-100 hover:bg-grey-50 grid cursor-pointer grid-cols-[5rem_1fr_auto] gap-x-3 gap-y-1 border-b py-3 max-xl:relative max-xl:py-4 xl:table-row xl:py-0"
                 >
-                  <td role="cell" className="xl:py-2 xl:pr-3">
+                  <td role="cell" className="max-xl:row-span-3 xl:py-2 xl:pr-3">
                     {g.coverPhotoId ? (
                       <img
                         src={`/admin/img/${g.coverPhotoId}/thumb`}
@@ -272,32 +282,31 @@ export function GalleryList({
                   >
                     <Link
                       to={`/admin/g/${g.id}`}
-                      className="text-body text-ink flex min-h-tap items-center font-medium underline-offset-4 hover:underline xl:inline xl:min-h-0"
+                      className="text-body text-ink block font-medium underline-offset-4 hover:underline max-xl:line-clamp-2 max-xl:text-base max-xl:font-bold max-xl:after:absolute max-xl:after:inset-0 xl:inline"
                     >
                       {g.title}
                     </Link>
                     {g.clientName && (
-                      <div className="text-grey-600">{g.clientName}</div>
+                      <div className="text-grey-600 max-xl:text-sm">
+                        {g.clientName}
+                      </div>
                     )}
-                    <div className="text-grey-600">/{g.slug}</div>
-                  </td>
-                  <td
-                    role="cell"
-                    data-label={t("admin.list.col.date")}
-                    className={`row-start-2 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden xl:py-2 xl:pr-3`}
-                  >
-                    {g.eventDate ? fmt.date(g.eventDate) : "—"}
+                    <div className="text-grey-600 max-xl:hidden">/{g.slug}</div>
                   </td>
                   <td
                     role="cell"
                     data-label={t("admin.list.col.status")}
-                    className={`row-start-2 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden xl:py-2 xl:pr-3`}
+                    className="max-xl:row-start-2 xl:py-2 xl:pr-3"
                   >
-                    <StatusPill status={g.status} expired={g.expired} />
+                    <StatusPill
+                      status={g.status}
+                      expired={g.expired}
+                      proofing={g.mode === "proofing"}
+                    />
                     {g.deleting && (
                       <Link
                         to={`/admin/g/${g.id}`}
-                        className="text-micro mt-1 block underline"
+                        className="text-micro relative z-10 mt-1 block underline"
                       >
                         {t("admin.list.deleting")}
                       </Link>
@@ -305,35 +314,42 @@ export function GalleryList({
                   </td>
                   <td
                     role="cell"
+                    data-label={t("admin.list.col.date")}
+                    className="max-xl:text-grey-600 max-xl:row-start-3 max-xl:text-sm xl:py-2 xl:pr-3"
+                  >
+                    {g.eventDate ? fmt.date(g.eventDate) : "—"}
+                  </td>
+                  <td
+                    role="cell"
                     data-label={t("admin.list.col.photos")}
-                    className={`row-start-3 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden tabular-nums xl:py-2 xl:pr-3 xl:text-right`}
+                    className="max-xl:text-grey-600 max-xl:row-start-3 max-xl:text-sm max-xl:after:ml-1 max-xl:after:content-[attr(data-label)] max-xl:after:lowercase tabular-nums xl:py-2 xl:pr-3 xl:text-right"
                   >
                     {fmt.number(g.photoCount)}
                   </td>
                   <td
                     role="cell"
                     data-label={t("admin.list.col.views")}
-                    className={`row-start-3 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden tabular-nums xl:py-2 xl:pr-3 xl:text-right`}
+                    className="tabular-nums max-xl:hidden xl:py-2 xl:pr-3 xl:text-right"
                   >
                     {fmt.number(g.views)}
                   </td>
                   <td
                     role="cell"
                     data-label={t("admin.list.col.downloads")}
-                    className={`row-start-3 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden tabular-nums xl:py-2 xl:pr-3 xl:text-right`}
+                    className="tabular-nums max-xl:hidden xl:py-2 xl:pr-3 xl:text-right"
                   >
                     {fmt.number(g.downloads)}
                   </td>
                   <td
                     role="cell"
                     data-label={t("admin.list.col.expires")}
-                    className={`row-start-4 before:text-micro before:text-grey-600 before:block before:uppercase before:content-[attr(data-label)] xl:before:hidden col-span-3 xl:py-2 xl:pr-3`}
+                    className="max-xl:hidden xl:py-2 xl:pr-3"
                   >
                     {expiry(g.expiresAt)}
                   </td>
                   <td
                     role="cell"
-                    className="col-start-3 row-start-2 empty:hidden xl:py-2 xl:empty:table-cell"
+                    className="max-xl:col-start-3 max-xl:row-start-2 max-xl:self-center empty:hidden xl:py-2 xl:empty:table-cell"
                   >
                     {g.issueCount > 0 && (
                       <span

@@ -323,6 +323,16 @@ describe("gallery list: client name and ?q search", () => {
     );
     expect(all.find((g) => g.slug === "acme-2026")!.clientName).toBeNull();
   });
+  it("T6.36: rows carry the mode (delivery by default, proofing when set)", async () => {
+    await three();
+    await db
+      .update(schema.galleries)
+      .set({ mode: "proofing" })
+      .where(eq(schema.galleries.slug, "xv-sofi"));
+    const all = await listGalleries(env, "todas");
+    expect(all.find((g) => g.slug === "xv-sofi")!.mode).toBe("proofing");
+    expect(all.find((g) => g.slug === "acme-2026")!.mode).toBe("delivery");
+  });
   it("no q or blank q = everything", async () => {
     await three();
     expect(await titles()).toHaveLength(3);
