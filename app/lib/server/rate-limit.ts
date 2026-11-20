@@ -2,6 +2,13 @@ import { nowIso } from "../../db";
 
 type LimitEnv = Pick<Env, "DB">;
 
+/** One named limit: row scope, hits allowed per window, window length. */
+export type RateRule = {
+  readonly scope: string;
+  readonly max: number;
+  readonly windowMs: number;
+};
+
 /**
  * The one fixed-window limiter, on the `rate_limits` table. Row key is
  * `<scope>:<key>` (scopes: `pin`, `visitor`, `anon`, later `dl`). Counts this
@@ -84,4 +91,28 @@ export async function retryAfterSeconds(
   const start = row ? Date.parse(row.window_start) : NaN;
   const left = Number.isNaN(start) ? windowMs : start + windowMs - Date.now();
   return Math.max(1, Math.ceil(left / 1000));
+}
+
+/**
+ * Count one hit of `key` against `rule`; true while within `rule.max`.
+ * `windowMs` overrides the rule's window for keys with their own lifetime
+ * (e.g. a download token's TTL).
+ */
+export function hit(
+  env: LimitEnv,
+  rule: RateRule,
+  key: string,
+  windowMs: number = rule.windowMs,
+): Promise<boolean> {
+  return rateLimit(env, rule.scope, key, rule.max, windowMs);
+}
+
+/** `retryAfterSeconds` for a rule (same optional per-key window as `hit`). */
+export function retryAfterFor(
+  env: LimitEnv,
+  rule: RateRule,
+  key: string,
+  windowMs: number = rule.windowMs,
+): Promise<number> {
+  return retryAfterSeconds(env, rule.scope, key, windowMs);
 }
