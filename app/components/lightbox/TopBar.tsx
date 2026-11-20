@@ -2,7 +2,7 @@ import type { Ref } from "react";
 
 import type { TFunction } from "../../i18n/t";
 import { Close, Download, Heart, HeartFilled } from "../icons";
-import { BTN } from "./styles";
+import { BTN, ICON } from "./styles";
 
 type TopBarProps = {
   t: TFunction;
@@ -35,7 +35,7 @@ export function TopBar({
     <div
       className={`absolute inset-x-0 top-0 flex items-center justify-between px-4 py-2 ${chrome}`}
     >
-      <span className="text-micro-label text-white/70">
+      <span className="text-micro uppercase pointer-coarse:text-[0.9375rem]/5 pointer-coarse:tracking-wider text-white/70 pointer-coarse:tabular-nums">
         {t("lightbox.counter", { n: index + 1, total })}
       </span>
       <div className="flex">
@@ -47,7 +47,11 @@ export function TopBar({
             aria-pressed={favorite}
             onClick={() => onFavorite(photoId)}
           >
-            {favorite ? <HeartFilled /> : <Heart />}
+            {favorite ? (
+              <HeartFilled className={ICON} />
+            ) : (
+              <Heart className={ICON} />
+            )}
           </button>
         )}
         {onDownload && (
@@ -57,7 +61,7 @@ export function TopBar({
             aria-label={t("download.title")}
             onClick={() => onDownload(photoId)}
           >
-            <Download />
+            <Download className={ICON} />
           </button>
         )}
         <button
@@ -67,7 +71,7 @@ export function TopBar({
           aria-label={t("lightbox.close")}
           onClick={onClose}
         >
-          <Close />
+          <Close className={ICON} />
         </button>
       </div>
     </div>
