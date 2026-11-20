@@ -1,6 +1,7 @@
 import { inArray } from "drizzle-orm";
 import { getDb, schema } from "../../db";
 import { deleteSetting, putSetting, SETTINGS_KEYS } from "./settings";
+import { NO_STORE, NOSNIFF } from "./http";
 
 /** Largest accepted logo file (also the cap for a setup form body, plus overhead). */
 export const LOGO_MAX_BYTES = 512 * 1024;
@@ -545,10 +546,7 @@ export async function serveLogo(
   const notFound = () =>
     new Response("Not found", {
       status: 404,
-      headers: {
-        "Cache-Control": "no-store",
-        "X-Content-Type-Options": "nosniff",
-      },
+      headers: { "Cache-Control": NO_STORE, ...NOSNIFF },
     });
   if (!isLogoVariant(variant)) return notFound();
   const meta = (await readMetas(env))[variant];
