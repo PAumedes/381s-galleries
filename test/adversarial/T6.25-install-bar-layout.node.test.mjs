@@ -92,7 +92,16 @@ async function measure(html, width, height) {
     await send("Page.navigate", {
       url: "data:text/html;charset=utf-8," + encodeURIComponent(html),
     });
-    await sleep(1000);
+    // Wait for the page instead of a fixed sleep (slow CI runner).
+    for (let i = 0; i < 100; i++) {
+      const ready = await send("Runtime.evaluate", {
+        returnByValue: true,
+        expression:
+          "document.readyState === 'complete' && !!document.body.firstElementChild",
+      });
+      if (ready?.result?.value) break;
+      await sleep(100);
+    }
     const r = await send("Runtime.evaluate", {
       returnByValue: true,
       expression: `(() => { const b = document.querySelector('[role=status]').getBoundingClientRect(); const p = document.querySelector('[role=status] p'); return {barH: b.height, pW: p.getBoundingClientRect().width, overflow: p.scrollWidth > p.clientWidth + 1, coarse: matchMedia('(pointer: coarse)').matches}; })()`,

@@ -93,7 +93,16 @@ async function swipeDown(html) {
     await send("Page.navigate", {
       url: "data:text/html;charset=utf-8," + encodeURIComponent(html),
     });
-    await sleep(800);
+    // Wait for the page instead of a fixed sleep (slow CI runner).
+    for (let i = 0; i < 100; i++) {
+      const ready = await send("Runtime.evaluate", {
+        returnByValue: true,
+        expression:
+          "document.readyState === 'complete' && !!document.body.firstElementChild",
+      });
+      if (ready?.result?.value) break;
+      await sleep(100);
+    }
     const touch = (type, y) =>
       send("Input.dispatchTouchEvent", {
         type,

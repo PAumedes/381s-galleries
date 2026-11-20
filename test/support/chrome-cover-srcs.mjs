@@ -62,11 +62,23 @@ try {
   await send("Page.navigate", {
     url: "data:text/html;charset=utf-8," + encodeURIComponent(html),
   });
-  await sleep(800);
-  const r = await send("Runtime.evaluate", {
-    returnByValue: true,
-    expression: `[...document.querySelectorAll('img[data-cover-img]')].map(i => i.currentSrc)`,
-  });
+  // Poll instead of a fixed sleep: on a loaded runner the browser picks the
+  // <picture> source a bit later, and currentSrc is "" until it has.
+  const read = () =>
+    send("Runtime.evaluate", {
+      returnByValue: true,
+      expression: `[...document.querySelectorAll('img[data-cover-img]')].map(i => i.currentSrc)`,
+    });
+  let r = await read();
+  for (
+    let i = 0;
+    i < 100 &&
+    !(r.result.value.length > 0 && r.result.value.every((s) => s !== ""));
+    i++
+  ) {
+    await sleep(100);
+    r = await read();
+  }
   console.log(JSON.stringify(r.result.value));
 } finally {
   ch.kill();
