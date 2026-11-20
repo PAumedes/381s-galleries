@@ -1,4 +1,5 @@
 import { requireAdmin } from "./auth";
+import { methodNotAllowed, NO_STORE } from "./http";
 
 /**
  * Admin-only JavaScript lives under this prefix (see vite/admin-chunks.ts) and
@@ -42,9 +43,8 @@ export async function adminAssetResponse(
   }
 
   if (request.method !== "GET" && request.method !== "HEAD") {
-    return new Response("Method not allowed", {
-      status: 405,
-      headers: { Allow: "GET, HEAD", "Cache-Control": "no-store" },
+    return methodNotAllowed("GET, HEAD", "Method not allowed", {
+      "Cache-Control": NO_STORE,
     });
   }
   if (!SAFE_NAME.test(url.pathname) || url.pathname.includes("..")) {

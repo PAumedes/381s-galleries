@@ -1,4 +1,5 @@
 import { migrateDb } from "./support/d1";
+import { shape } from "./support/http";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
@@ -722,6 +723,15 @@ describe("POST /api/admin/sync", () => {
     const r = await handleSync(new Request(url), e, createMockDrive());
     expect(r.status).toBe(405);
     expect(r.headers.get("Allow")).toBe("POST");
+  });
+  it("T6.33 405 shape", async () => {
+    expect(
+      await shape(await handleSync(new Request(url), e, createMockDrive())),
+    ).toEqual({
+      status: 405,
+      body: "Method Not Allowed",
+      headers: { allow: "POST", "content-type": "text/plain;charset=UTF-8" },
+    });
   });
   it("forces a sync and returns JSON without drive ids", async () => {
     await setRoot(buildFixtures().rootId);

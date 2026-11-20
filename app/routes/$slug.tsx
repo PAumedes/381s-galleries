@@ -17,12 +17,13 @@ import { loadGallery, unlockGallery } from "../lib/server/gallery";
 import { warmGalleryOnOpen } from "../lib/server/gallery-warm";
 import { publicOrigin } from "../lib/server/public-url";
 import type { Route } from "./+types/$slug";
+import { NOSNIFF, PRIVATE_NO_STORE } from "../lib/server/http";
 
 const SECURITY_HEADERS = {
-  "Cache-Control": "private, no-store",
+  "Cache-Control": PRIVATE_NO_STORE,
   "Referrer-Policy": "same-origin",
   "X-Frame-Options": "DENY",
-  "X-Content-Type-Options": "nosniff",
+  ...NOSNIFF,
   "X-Robots-Tag": "noindex, nofollow",
 };
 

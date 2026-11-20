@@ -1,4 +1,5 @@
 import { clearCache } from "./support/cache";
+import { shape } from "./support/http";
 import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -427,6 +428,22 @@ describe("setup action: logoReset", () => {
       e,
     );
     expect(res.status).toBe(404);
+  });
+  it("T6.33 404 shape", async () => {
+    const res = await serveLogo(
+      new Request("http://localhost/brand/logo/nope"),
+      "nope",
+      e,
+    );
+    expect(await shape(res)).toEqual({
+      status: 404,
+      body: "Not found",
+      headers: {
+        "cache-control": "no-store",
+        "content-type": "text/plain;charset=UTF-8",
+        "x-content-type-options": "nosniff",
+      },
+    });
   });
   it("is admin-only and same-site only", async () => {
     await setupAction(upload(PNG), e);

@@ -24,6 +24,7 @@ import { pwaMeta } from "./lib/pwa";
 import { DEFAULT_STUDIO_NAME } from "./lib/default-studio-name";
 import { validTimezone } from "./lib/studio-time";
 import { makeT } from "./i18n/t";
+import { PRIVATE_NO_STORE } from "./lib/server/http";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   // /admin (and its .data requests) use the admin_lang cookie; the public
@@ -72,7 +73,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 // cookie: never let a shared cache store it.
 export function headers(_: Route.HeadersArgs) {
   return {
-    "Cache-Control": "private, no-store",
+    "Cache-Control": PRIVATE_NO_STORE,
     Vary: "Cookie, Accept-Language",
   };
 }

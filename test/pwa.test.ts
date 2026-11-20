@@ -50,6 +50,19 @@ const GENERIC = {
   display: "standalone",
 };
 
+describe("T6.33 manifest headers", () => {
+  it("per-gallery manifest wire headers", async () => {
+    await addGallery();
+    const r = await get("boda-ana");
+    expect(Object.fromEntries(r.headers)).toEqual({
+      "cache-control": "private, max-age=300",
+      "content-type": "application/manifest+json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+      "x-robots-tag": "noindex, nofollow",
+    });
+  });
+});
+
 describe("per-gallery manifest", () => {
   it("public gallery: title, start_url, scope, theme, icons, headers", async () => {
     await addGallery();

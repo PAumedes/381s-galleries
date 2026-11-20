@@ -2,14 +2,15 @@ import { crossSite } from "./access";
 import { requireAdmin } from "./auth";
 import { getSetting, SETTINGS_KEYS } from "./settings";
 import { DEFAULT_STUDIO_NAME } from "../default-studio-name";
+import { NOSNIFF, PRIVATE_NO_STORE } from "./http";
 
 /** Response headers every admin page and action must carry. */
 export function adminHeaders(): Record<string, string> {
   return {
-    "Cache-Control": "private, no-store",
+    "Cache-Control": PRIVATE_NO_STORE,
     "X-Robots-Tag": "noindex, nofollow",
     "X-Frame-Options": "DENY",
-    "X-Content-Type-Options": "nosniff",
+    ...NOSNIFF,
   };
 }
 

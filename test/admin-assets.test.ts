@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { shape } from "./support/http";
 import {
   ADMIN_ASSET_PREFIX,
   adminAssetResponse,
@@ -102,6 +103,31 @@ describe("adminAssetResponse", () => {
     expect(res!.status).toBe(404);
     expect(res!.headers.get("Cache-Control")).toBe("no-store");
   };
+
+  it("T6.33 404/405 shapes", async () => {
+    const denied = await adminAssetResponse(
+      new Request(`${ORIGIN}/admin-assets/a-1.js`),
+      env,
+    );
+    expect(await shape(denied!)).toEqual({
+      status: 404,
+      body: "Not found",
+      headers: { "cache-control": "no-store", "content-type": "text/plain" },
+    });
+    const res = await adminAssetResponse(
+      await asAdmin("/admin-assets/a-1.js", "POST"),
+      env,
+    );
+    expect(await shape(res!)).toEqual({
+      status: 405,
+      body: "Method not allowed",
+      headers: {
+        allow: "GET, HEAD",
+        "cache-control": "no-store",
+        "content-type": "text/plain;charset=UTF-8",
+      },
+    });
+  });
 
   it("exposes the prefix", () => {
     expect(ADMIN_ASSET_PREFIX).toBe("/admin-assets/");
