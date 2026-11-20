@@ -274,6 +274,35 @@ export async function fillCache(
   return "filled";
 }
 
+/** Fills in flight in this isolate, so concurrent warms and visitors share one Drive fetch. */
+const inFlight = new Map<string, Promise<FillResult>>();
+
+/** The in-flight fill of an R2 key (`<photoId>/<variant>`), if one is running here. */
+export function pendingFill(key: string): Promise<FillResult> | undefined {
+  return inFlight.get(key);
+}
+
+/**
+ * `fillCache`, but a second caller for the same photo and variant while one is
+ * running awaits that one instead of fetching Drive again. Rejects like it.
+ */
+export function fillCacheShared(
+  env: Pick<Env, "CACHE">,
+  photo: SourcePhoto & { proofing: boolean },
+  variant: Variant,
+  drive: DriveClient,
+): Promise<FillResult> {
+  const key = `${photo.id}/${variant}`;
+  let fill = inFlight.get(key);
+  if (!fill) {
+    fill = fillCache(env, photo, variant, drive).finally(() =>
+      inFlight.delete(key),
+    );
+    inFlight.set(key, fill);
+  }
+  return fill;
+}
+
 export interface ImageDeps {
   drive: DriveClient;
 }
@@ -394,10 +423,21 @@ export async function serveImage(
         ? "private, no-store"
         : "private, max-age=600";
   const wmFlag = watermark ? "1" : "0";
-  let hit = adminClean ? null : await env.CACHE.get(key);
-  if (hit && !isValidHit(hit, src)) {
-    await hit.body.cancel();
-    hit = null;
+  const lookup = async () => {
+    if (adminClean) return null;
+    const found = await env.CACHE.get(key);
+    if (found && !isValidHit(found, src)) {
+      await found.body.cancel();
+      return null;
+    }
+    return found;
+  };
+  let hit = await lookup();
+  // A warm is already fetching this very file: wait for it instead of a second Drive stream.
+  const pending = hit || adminClean ? undefined : pendingFill(key);
+  if (pending) {
+    await pending.catch(() => {});
+    hit = await lookup();
   }
   if (hit) {
     const headers: Record<string, string> = {

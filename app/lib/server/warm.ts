@@ -13,7 +13,7 @@ import { and, asc, desc, eq, isNull, lte, ne, or, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { getDb, nowIso, photoVisible, schema } from "../../db";
 import type { DriveClient } from "./drive-types";
-import { fillCache, resolveSource } from "./images";
+import { fillCache, fillCacheShared, resolveSource } from "./images";
 import type { SourcePhoto, Variant } from "./images";
 import {
   SETTINGS_KEYS,
@@ -61,9 +61,6 @@ export const COVER_WARM_BUDGET = 8;
  */
 const COVER_CALL_RESERVE = 3 + 2;
 
-/** Fills in flight in this isolate, so concurrent saves share one Drive fetch. */
-const inFlight = new Map<string, Promise<unknown>>();
-
 /**
  * After a successful cover save: puts that ONE photo's cover variants in R2
  * (same resolution, validation and metadata as /img, so Prueba stores only
@@ -100,16 +97,8 @@ export async function warmCoverPhoto(
   for (const variant of COVER_WARM_VARIANTS) {
     if (drive.subrequests() - start + COVER_CALL_RESERVE > COVER_WARM_BUDGET)
       break;
-    const key = `${photo.id}/${variant}`;
-    let fill = inFlight.get(key);
-    if (!fill) {
-      fill = fillCache(env, photo, variant, drive).finally(() =>
-        inFlight.delete(key),
-      );
-      inFlight.set(key, fill);
-    }
     try {
-      await fill;
+      await fillCacheShared(env, photo, variant, drive);
     } catch {
       // Next variant; the first real view retries this one.
     }

@@ -27,6 +27,8 @@ export const SETTINGS_KEYS = {
   warmIdle: "warm_idle",
   /** Random value bumped by DB triggers whenever photos/watermark change (see migration 0012). */
   warmStamp: "warm_stamp",
+  /** Prefix: one row per gallery, `<phase>:<offset>:<warm_stamp>` or `done:<warm_stamp>` (gallery-warm.ts). */
+  warmCursorPrefix: "warm_cursor:",
 } as const;
 
 type SettingsEnv = Pick<Env, "DB">;

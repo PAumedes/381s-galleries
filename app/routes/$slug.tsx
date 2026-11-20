@@ -11,7 +11,10 @@ import { makeT } from "../i18n/t";
 import { galleryMeta } from "../lib/og";
 import { pwaMeta } from "../lib/pwa";
 import { DEFAULT_STUDIO_NAME } from "../lib/default-studio-name";
+import { executionContext } from "../lib/server/context";
+import { getDrive } from "../lib/server/drive-factory";
 import { loadGallery, unlockGallery } from "../lib/server/gallery";
+import { warmGalleryOnOpen } from "../lib/server/gallery-warm";
 import { publicOrigin } from "../lib/server/public-url";
 import type { Route } from "./+types/$slug";
 
@@ -32,8 +35,15 @@ function baseHeaders(request: Request): Headers {
   return h;
 }
 
-export async function loader({ request, params }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
   const result = await loadGallery(request, params.slug, env);
+  // Fill R2 for the next photos in the background (bounded, best effort).
+  if (result.data.state === "open")
+    context
+      .get(executionContext)
+      .waitUntil(
+        warmGalleryOnOpen(env, getDrive(env), params.slug).catch(() => {}),
+      );
   const headers = baseHeaders(request);
   if (result.setCookie) headers.append("Set-Cookie", result.setCookie);
   return data(
