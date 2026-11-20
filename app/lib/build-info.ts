@@ -13,10 +13,17 @@ export interface BuildId {
 const SHA = /^[0-9a-f]{4,40}$/i;
 const ISO_DAY = /^(\d{4}-\d{2}-\d{2})(?:T|$)/;
 
+const SHORT_SHA = 7;
+
+function validDay(iso?: string): string | null {
+  const day = iso?.match(ISO_DAY)?.[1];
+  return day && !Number.isNaN(Date.parse(`${day}T00:00:00Z`)) ? day : null;
+}
+
 export function formatBuildId(sha?: string, iso?: string): BuildId {
   return {
-    sha: sha && SHA.test(sha) ? sha : "dev",
-    date: iso?.match(ISO_DAY)?.[1] ?? null,
+    sha: sha && SHA.test(sha) ? sha.slice(0, SHORT_SHA) : "dev",
+    date: validDay(iso),
   };
 }
 
