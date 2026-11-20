@@ -83,6 +83,7 @@ export const enPublic = {
   "lightbox.counter": "{n} / {total}",
   "lightbox.loadError": "Couldn't load image",
   "lightbox.retry": "Retry",
+  "lightbox.swipeHint": "Swipe",
 
   "error.notFound.title": "404",
   "error.notFound.message": "We couldn't find the page you're looking for.",

@@ -13,6 +13,7 @@ import { useSwipe } from "./lightbox/useSwipe";
 import { useZoomed } from "./lightbox/useZoomed";
 import { NavZone } from "./lightbox/NavZone";
 import { PhotoStage } from "./lightbox/PhotoStage";
+import { SwipeHint } from "./lightbox/SwipeHint";
 import { TopBar } from "./lightbox/TopBar";
 import type { GalleryPhoto } from "./types";
 
@@ -146,6 +147,7 @@ function LightboxView({
         onDownload={onDownload}
       />
 
+      <SwipeHint t={t} hasPrev={hasPrev} hasNext={hasNext} />
       <NavZone
         side="left"
         label={t("lightbox.previous")}

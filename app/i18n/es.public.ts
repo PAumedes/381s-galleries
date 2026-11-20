@@ -81,6 +81,7 @@ export const esPublic = {
   "lightbox.counter": "{n} / {total}",
   "lightbox.loadError": "No se pudo cargar la imagen",
   "lightbox.retry": "Reintentar",
+  "lightbox.swipeHint": "Deslizá",
 
   "error.notFound.title": "404",
   "error.notFound.message": "No encontramos la página que buscás.",
