@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
 import { clientIpHash, openGallery } from "./access";
 import { shortMac } from "./crypto";
-import { rateLimit, retryAfterSeconds } from "./rate-limit";
+import { hit as rateHit, retryAfterFor, type RateRule } from "./rate-limit";
 import { mockImageUrl } from "./drive-mock";
 import type { MockVariant } from "./drive-mock";
 import { DriveError } from "./drive-types";
@@ -18,8 +18,11 @@ const MOCK_KIND: Record<Variant, MockVariant> = {
 };
 
 /** Drive fetches (R2 misses) per IP and gallery per window. */
-export const IMG_MISS_MAX = 5000;
-export const IMG_MISS_WINDOW_MS = 10 * 60 * 1000;
+const IMG_MISS_RATE: RateRule = {
+  scope: "img",
+  max: 5000,
+  windowMs: 10 * 60 * 1000,
+};
 
 const BASE_HEADERS = { "X-Content-Type-Options": "nosniff" };
 
@@ -533,16 +536,14 @@ export async function serveImage(
     const ipHash =
       (await clientIpHash(request, env, { prefix64: true })) ?? "noip";
     const key = `${ipHash}:${gallery.id}`;
-    if (!(await rateLimit(env, "img", key, IMG_MISS_MAX, IMG_MISS_WINDOW_MS))) {
+    if (!(await rateHit(env, IMG_MISS_RATE, key))) {
       return new Response("Too many requests", {
         status: 429,
         headers: {
           ...BASE_HEADERS,
           "Content-Type": "text/plain; charset=utf-8",
           "Cache-Control": "no-store",
-          "Retry-After": String(
-            await retryAfterSeconds(env, "img", key, IMG_MISS_WINDOW_MS),
-          ),
+          "Retry-After": String(await retryAfterFor(env, IMG_MISS_RATE, key)),
         },
       });
     }
