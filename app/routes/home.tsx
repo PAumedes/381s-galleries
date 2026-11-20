@@ -6,6 +6,7 @@ import { loadHome } from "../lib/server/home";
 import { publicOrigin } from "../lib/server/public-url";
 import { homeMeta } from "../lib/og";
 import type { Route } from "./+types/home";
+import { PRIVATE_NO_STORE } from "../lib/server/http";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return homeMeta(
@@ -16,7 +17,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 // The list depends on live gallery state (PIN, status): never cache it.
 export function headers() {
-  return { "Cache-Control": "private, no-store" };
+  return { "Cache-Control": PRIVATE_NO_STORE };
 }
 
 // `args` is optional: tests (and no-request callers) call the loader bare.
