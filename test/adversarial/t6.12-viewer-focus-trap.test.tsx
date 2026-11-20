@@ -48,15 +48,16 @@ describe("T6.12 PhotoViewer (aria-modal dialog)", () => {
   it("Tab on the last control wraps inside the dialog instead of escaping to the page behind", async () => {
     open();
     const dialog = await screen.findByRole("dialog");
-    const buttons = Array.from(
-      dialog.querySelectorAll("button:not([disabled])"),
-    );
-    const last = buttons[buttons.length - 1] as HTMLElement;
-    last.focus();
-    // Lightbox preventDefaults + wraps; here nothing handles Tab.
-    // The key handler is attached in an effect that can run a tick after the
-    // dialog shows up (flaky on a loaded runner): retry until it is there.
+    // The control list can still grow while the viewer settles (e.g. an error
+    // state adds a Retry button), so pick the last control and press Tab in
+    // the same attempt, and retry until the dialog has settled.
     await waitFor(() => {
+      const buttons = Array.from(
+        dialog.querySelectorAll("button:not([disabled])"),
+      );
+      const last = buttons[buttons.length - 1] as HTMLElement;
+      last.focus();
+      // Lightbox preventDefaults + wraps; here nothing handles Tab.
       const notPrevented = fireEvent.keyDown(last, { key: "Tab" });
       expect(notPrevented).toBe(false);
     });
