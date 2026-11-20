@@ -525,6 +525,7 @@ export const esAdmin = {
   "admin.setup.ignored.note":
     "Carpetas de galerías eliminadas. La sincronización no las vuelve a crear. De ellas solo se guardan el identificador de la carpeta y la fecha de eliminación.",
   "admin.setup.ignored.empty": "No hay carpetas ignoradas.",
+  "admin.setup.build": "Versión: {id}",
   "admin.setup.ignored.deletedAt": "Eliminada el {date}",
   "admin.setup.ignored.reinclude": "Volver a incluir",
   "admin.setup.ignored.confirm":

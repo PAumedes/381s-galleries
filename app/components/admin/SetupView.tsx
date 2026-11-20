@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Form, useNavigation } from "react-router";
 
+import { BuildInfo } from "./BuildInfo";
 import { logoSource, Wordmark } from "../Logo";
 import { useFormat } from "../../i18n/use-format";
 import { useT } from "../../i18n/use-t";
@@ -500,6 +501,7 @@ export function SetupView({
         )}
         <Feedback data={actionData} intent="reinclude" />
       </Section>
+      <BuildInfo />
     </div>
   );
 }

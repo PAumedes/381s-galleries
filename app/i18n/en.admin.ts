@@ -521,6 +521,7 @@ export const enAdmin = {
   "admin.setup.ignored.note":
     "Folders of deleted galleries. Sync does not re-create them. Only the folder identifier and the deletion date are kept for them.",
   "admin.setup.ignored.empty": "No ignored folders.",
+  "admin.setup.build": "Version: {id}",
   "admin.setup.ignored.deletedAt": "Deleted on {date}",
   "admin.setup.ignored.reinclude": "Include again",
   "admin.setup.ignored.confirm":
