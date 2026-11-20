@@ -76,32 +76,6 @@ export const ChevronDown = (p: IconProps) => (
     <path d="M5.5 9.5 12 16l6.5-6.5" />
   </Icon>
 );
-export const Grid = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M4.5 4.5h6v6h-6zM13.5 4.5h6v6h-6zM4.5 13.5h6v6h-6zM13.5 13.5h6v6h-6z" />
-  </Icon>
-);
-export const Lock = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M5.5 11h13v8.5h-13zM8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
-  </Icon>
-);
-export const Check = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M5 12.5 10 17.5 19 7" />
-  </Icon>
-);
-export const Globe = (p: IconProps) => (
-  <Icon {...p}>
-    <circle cx="12" cy="12" r="8.5" />
-    <path d="M3.5 12h17M12 3.5c2.5 2.4 3.7 5.2 3.7 8.5S14.5 18.1 12 20.5C9.5 18.1 8.3 15.3 8.3 12S9.5 5.9 12 3.5Z" />
-  </Icon>
-);
-export const Play = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M8 5.5v13l10.5-6.5Z" />
-  </Icon>
-);
 export const Retry = (p: IconProps) => (
   <Icon {...p}>
     <path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5" />
