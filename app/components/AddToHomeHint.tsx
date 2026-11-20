@@ -134,20 +134,22 @@ export function AddToHomeHint({
   return (
     <div
       role="status"
-      className="bg-ink text-paper fixed inset-x-0 bottom-0 z-(--z-toast) flex items-center gap-3 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      className="bg-ink text-paper fixed inset-x-0 bottom-0 z-(--z-toast) flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 min-[28rem]:flex-nowrap pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
       {kind === "ios" ? (
-        <p className="text-small flex min-w-0 flex-1 items-center gap-2">
-          <Share className="size-5 shrink-0" aria-hidden="true" />
+        <p className="text-body flex min-w-0 flex-1 items-center gap-2">
+          <Share className="size-6 shrink-0" aria-hidden="true" />
           {t("pwa.ios")}
         </p>
       ) : (
         <>
-          <p className="text-small min-w-0 flex-1">{t("pwa.androidText")}</p>
+          <p className="text-body min-w-0 basis-full min-[28rem]:basis-0 min-[28rem]:flex-1">
+            {t("pwa.androidText")}
+          </p>
           <button
             type="button"
             onClick={accept}
-            className="text-micro-label motion-safe:transition-opacity min-h-11 shrink-0 border border-current px-4 uppercase hover:opacity-80"
+            className="motion-safe:transition-opacity min-h-12 min-w-0 basis-0 grow border border-current px-3 text-sm font-medium tracking-micro max-[22rem]:tracking-wider uppercase min-[28rem]:shrink-0 min-[28rem]:basis-auto min-[28rem]:grow-0 hover:opacity-80"
           >
             {t("pwa.install")}
           </button>
@@ -157,9 +159,9 @@ export function AddToHomeHint({
         type="button"
         onClick={close}
         aria-label={t("pwa.dismiss")}
-        className="flex size-11 shrink-0 items-center justify-center"
+        className="ml-auto flex size-12 shrink-0 items-center justify-center"
       >
-        <Close className="size-5" aria-hidden="true" />
+        <Close className="size-6" aria-hidden="true" />
       </button>
     </div>
   );

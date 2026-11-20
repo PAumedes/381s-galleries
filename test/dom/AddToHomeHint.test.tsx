@@ -225,3 +225,33 @@ describe("AddToHomeHint", () => {
     expect(await screen.findByRole("status")).toBeTruthy();
   });
 });
+
+describe("T6.25 AddToHomeHint touch sizes", () => {
+  const has = (el: Element, ...c: string[]) =>
+    c.forEach((x) =>
+      expect((el.getAttribute("class") ?? "").split(/\s+/)).toContain(x),
+    );
+
+  it("android: 15px message, 14px+ install button min-h-12, 48px dismiss with 24px icon, safe area kept", async () => {
+    await renderHint();
+    await fire(prompt());
+    await scrolled();
+    const btn = screen.getByRole("button", { name: "Add to Home Screen" });
+    has(btn, "min-h-12", "text-sm", "uppercase");
+    expect(btn.className).not.toContain("text-micro-label");
+    const msg = screen.getByText(en["pwa.androidText"]);
+    has(msg, "text-body");
+    const bar = screen.getByRole("status");
+    expect(bar.className).toContain("env(safe-area-inset-bottom)");
+    const dismiss = screen.getByRole("button", { name: "Close" });
+    has(dismiss, "size-12");
+    has(dismiss.querySelector("svg")!, "size-6");
+  });
+
+  it("ios: 15px message", async () => {
+    setUA(IOS_SAFARI);
+    await renderHint({ lang: "es" });
+    await scrolled();
+    has(screen.getByText(es["pwa.ios"]), "text-body");
+  });
+});
