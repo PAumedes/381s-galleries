@@ -23,13 +23,16 @@ export function preloadOrder(
  * cancelled; only entries that fell out of it and exceed the capacity are, and
  * only when still in flight.
  */
+const keyOf = (imgUrl: ImgUrlFn, photo: GalleryPhoto) =>
+  photoImgProps(imgUrl, photo).src;
+
 export class PreloadCache {
   private entries = new Map<string, Entry>();
 
   /** True when this photo (at this exact URL) finished loading. */
   isReady(imgUrl: ImgUrlFn, photo: GalleryPhoto): boolean {
     const e = this.entries.get(photo.id);
-    return !!e && e.ready && e.key === photoImgProps(imgUrl, photo).src;
+    return !!e && e.ready && e.key === keyOf(imgUrl, photo);
   }
 
   warm(imgUrl: ImgUrlFn, wanted: readonly GalleryPhoto[]) {
@@ -55,7 +58,7 @@ export class PreloadCache {
   }
 
   private has(imgUrl: ImgUrlFn, photo: GalleryPhoto) {
-    return this.entries.get(photo.id)?.key === photoImgProps(imgUrl, photo).src;
+    return this.entries.get(photo.id)?.key === keyOf(imgUrl, photo);
   }
 
   /** Drop least recently used entries outside the window to make room. */
