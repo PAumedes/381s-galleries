@@ -323,6 +323,7 @@ All Phase 1 code implements/uses the contract in `app/lib/server/drive-types.ts`
 - Video in galleries
 - Wall-monitor kiosk (`/kiosk/:slug` auto slideshow)
 - Face search (needs compute outside Workers)
+- Client folders (do after all current work): group a client's albums under one client in the admin (Pixieset-style folders, with permissions at that level), and use the client name in the public address: `gallery.381studios.ar/coca-cola/winter-campaign` and `/coca-cola/e-commerce`, plus a client homepage at `/coca-cola` listing that client's albums. Needs: client slug, redirects from the current `/:slug` URLs, per-client defaults/permissions.
 
 ## 8. Definition of done (every task)
 1. **TDD:** tests written first and seen failing (red), then implementation (green), then refactor.
