@@ -18,12 +18,13 @@ type SwipeInput = {
   hasNext: boolean;
   prev: () => void;
   next: () => void;
-  onClose: () => void;
+  /** `fromY`: how far the photo was pulled down when released. */
+  onClose: (fromY: number) => void;
 };
 
 /**
  * Touch gestures on the dialog root: horizontal swipe navigates, a downward
- * swipe closes, the photo follows the finger (`dragX`). Mouse is ignored and
+ * swipe closes, the photo follows the finger (`dragX` / `dragY`). Mouse is ignored and
  * a second finger or pinch-zoom cancels.
  */
 export function useSwipe({
@@ -34,6 +35,7 @@ export function useSwipe({
   onClose,
 }: SwipeInput) {
   const [dragX, setDragX] = useState(0);
+  const [dragY, setDragY] = useState(0);
   const pointers = useRef(new Set<number>());
   const drag = useRef<{ x: number; y: number; t: number; id: number } | null>(
     null,
@@ -41,13 +43,18 @@ export function useSwipe({
   // Set once a touch drag passes the slop; swallows the trailing click.
   const dragged = useRef(false);
 
+  const resetDrag = () => {
+    setDragX(0);
+    setDragY(0);
+  };
+
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     dragged.current = false;
     if (e.pointerType === "mouse") return;
     pointers.current.add(e.pointerId);
     if (pointers.current.size > 1 || isZoomed()) {
       drag.current = null;
-      setDragX(0);
+      resetDrag();
       return;
     }
     drag.current = {
@@ -70,6 +77,11 @@ export function useSwipe({
     if (Math.abs(dx) > Math.abs(dy)) {
       const blocked = (dx > 0 && !hasPrev) || (dx < 0 && !hasNext);
       setDragX(blocked ? dx / 4 : dx);
+      setDragY(0);
+    } else {
+      // Vertical wins: only a pull down moves the photo.
+      setDragX(0);
+      if (dragged.current) setDragY(Math.max(0, dy));
     }
   };
   const endDrag = (e: ReactPointerEvent<HTMLDivElement>, cancelled = false) => {
@@ -77,7 +89,7 @@ export function useSwipe({
     const d = drag.current;
     if (!d || d.id !== e.pointerId) return;
     drag.current = null;
-    setDragX(0);
+    resetDrag();
     if (cancelled || isZoomed()) return;
     const dx = e.clientX - d.x;
     const dy = e.clientY - d.y;
@@ -93,7 +105,7 @@ export function useSwipe({
       dy >= CLOSE_DISTANCE ||
       (dy >= SWIPE_MIN_FAST * 2 && dy / dt > SWIPE_VELOCITY)
     ) {
-      onClose();
+      onClose(Math.max(0, dy));
     }
   };
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => endDrag(e);
@@ -110,6 +122,7 @@ export function useSwipe({
 
   return {
     dragX,
+    dragY,
     handlers: {
       onPointerDown,
       onPointerMove,

@@ -33,9 +33,15 @@ export function TopBar({
 }: TopBarProps) {
   return (
     <div
-      className={`absolute inset-x-0 top-0 flex items-center justify-between px-4 py-2 ${chrome}`}
+      className={`absolute inset-x-0 top-0 isolate flex items-center justify-between px-4 py-2 ${chrome}`}
     >
-      <span className="text-micro uppercase pointer-coarse:text-[0.9375rem]/5 pointer-coarse:tracking-wider text-white/70 pointer-coarse:tabular-nums">
+      {/* Phones: a soft dark fade so the bar reads over bright photos. */}
+      <div
+        data-lb-scrim
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-28 bg-linear-to-b from-black/60 to-transparent phone:block"
+      />
+      <span className="text-micro uppercase phone:text-[1.125rem]/6 phone:tracking-wider text-white/70 phone:tabular-nums">
         {t("lightbox.counter", { n: index + 1, total })}
       </span>
       <div className="flex">

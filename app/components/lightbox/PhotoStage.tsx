@@ -1,20 +1,26 @@
-import type { Ref } from "react";
+import type { RefObject } from "react";
 
 import type { TFunction } from "../../i18n/t";
 import { Retry } from "../icons";
 import { useImgUrl } from "../img-url";
 import type { GalleryPhoto } from "../types";
+import { dragTransform } from "./motion";
 import { photoImgProps } from "./srcset";
+import { useSlide } from "./useSlide";
 import { usePhotoImage, withRetry } from "./usePhotoImage";
 
+const PHOTO_BOX =
+  "col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw]";
+
 type PhotoStageProps = {
-  stageRef: Ref<HTMLDivElement>;
+  stageRef: RefObject<HTMLDivElement | null>;
   t: TFunction;
   photos: readonly GalleryPhoto[];
   photo: GalleryPhoto;
   isReady: (photo: GalleryPhoto) => boolean;
   index: number;
   dragX: number;
+  dragY: number;
   protect: boolean;
   onClick: React.MouseEventHandler<HTMLDivElement>;
 };
@@ -28,6 +34,7 @@ export function PhotoStage({
   isReady,
   index,
   dragX,
+  dragY,
   protect,
   onClick,
 }: PhotoStageProps) {
@@ -36,11 +43,17 @@ export function PhotoStage({
   const { loaded, failed, behind, retry } = image;
   const behindProps = behind && photoImgProps(imgUrl, behind);
   const own = photoImgProps(imgUrl, photo);
+  const leaving = useSlide(stageRef, photos, index, dragX, isReady);
+  const neighbour = dragX ? photos[index + (dragX < 0 ? 1 : -1)] : undefined;
+  const neighbourProps =
+    neighbour && isReady(neighbour) && photoImgProps(imgUrl, neighbour);
+  const leavingProps = leaving && photoImgProps(imgUrl, leaving);
+  const transform = dragTransform(dragX, dragY);
   return (
     <div
       ref={stageRef}
       data-testid="lightbox-stage"
-      className="absolute inset-0 grid place-items-center select-none"
+      className="absolute inset-0 grid place-items-center overflow-hidden select-none"
       onClick={onClick}
     >
       {failed ? (
@@ -70,11 +83,41 @@ export function PhotoStage({
               alt=""
               aria-hidden="true"
               draggable={false}
-              className="pointer-events-none col-start-1 row-start-1 block h-[80vh] w-screen object-contain opacity-100 md:h-[86vh] md:w-[92vw]"
+              className={`${PHOTO_BOX} pointer-events-none opacity-100`}
+            />
+          )}
+          {neighbourProps && (
+            <img
+              data-testid="lightbox-neighbour"
+              src={neighbourProps.src}
+              srcSet={neighbourProps.srcSet}
+              sizes={neighbourProps.sizes}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className={`${PHOTO_BOX} pointer-events-none`}
+              style={{
+                transform: `translateX(${dragX + (dragX < 0 ? 1 : -1) * window.innerWidth}px)`,
+              }}
+            />
+          )}
+          {leavingProps && (
+            <img
+              data-testid="lightbox-leaving"
+              data-lb-photo
+              data-lb-leaving
+              src={leavingProps.src}
+              srcSet={leavingProps.srcSet}
+              sizes={leavingProps.sizes}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className={`${PHOTO_BOX} pointer-events-none`}
             />
           )}
           <img
             key={`${photo.id}:${retry}`}
+            data-lb-photo
             ref={(el) => image.imgRef(el)}
             data-testid="lightbox-img"
             src={withRetry(own.src, retry)}
@@ -84,23 +127,20 @@ export function PhotoStage({
             draggable={false}
             onLoad={() => image.onLoad()}
             onError={() => image.onError()}
-            className={`col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] ${
-              dragX === 0
+            className={`${PHOTO_BOX} ${
+              !dragX && !dragY
                 ? "transition-[opacity,transform] duration-slow ease-out-soft"
                 : "transition-opacity duration-slow"
             } motion-reduce:transition-none ${loaded ? "opacity-100" : "opacity-0"}`}
-            style={{
-              transform: dragX ? `translateX(${dragX}px)` : undefined,
-            }}
+            style={{ transform }}
           />
           {protect && (
             <span
               data-testid="lightbox-shield"
+              data-lb-photo
               aria-hidden="true"
               className="col-start-1 row-start-1 block h-full w-full"
-              style={{
-                transform: dragX ? `translateX(${dragX}px)` : undefined,
-              }}
+              style={{ transform }}
               onContextMenu={(e) => e.preventDefault()}
             />
           )}

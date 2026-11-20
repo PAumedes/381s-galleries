@@ -8,10 +8,10 @@ import { photos, t } from "./fixtures";
 const cls = (el: Element) => (el.getAttribute("class") ?? "").split(/\s+/);
 
 describe("T6.25 mobile sizes: lightbox", () => {
-  it("BTN keeps the 44px desktop size and grows to 48px on touch", () => {
+  it("BTN keeps the 44px desktop size and grows to 56px on phones", () => {
     const c = BTN.split(/\s+/);
     expect(c).toContain("size-11");
-    expect(c).toContain("pointer-coarse:size-12");
+    expect(c).toContain("phone:size-14");
   });
 
   it("icon className reaches the svg and keeps aria-hidden", () => {
@@ -27,7 +27,7 @@ describe("T6.25 mobile sizes: lightbox", () => {
     }
   });
 
-  it("top bar: icons are 24px on desktop, 28px on touch; counter is larger on touch", () => {
+  it("top bar: icons are 24px on desktop, 32px on phones; counter is 18px on phones", () => {
     render(
       <Lightbox
         photos={photos(41)}
@@ -44,12 +44,12 @@ describe("T6.25 mobile sizes: lightbox", () => {
         .getAllByRole("button", { name })[0]!
         .querySelector("svg")!;
       expect(cls(svg)).toContain("size-6");
-      expect(cls(svg)).toContain("pointer-coarse:size-7");
+      expect(cls(svg)).toContain("phone:size-8");
     }
     const counter = screen.getByText("1 / 41");
     expect(cls(counter)).toContain("text-micro");
     expect(cls(counter)).toContain("uppercase");
-    expect(cls(counter)).toContain("pointer-coarse:text-[0.9375rem]/5");
-    expect(cls(counter)).toContain("pointer-coarse:tabular-nums");
+    expect(cls(counter)).toContain("phone:text-[1.125rem]/6");
+    expect(cls(counter)).toContain("phone:tabular-nums");
   });
 });

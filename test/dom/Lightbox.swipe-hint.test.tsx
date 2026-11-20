@@ -38,8 +38,6 @@ function open(index = 3, n = 10, tt = t) {
   );
 }
 const hint = () => document.querySelector("[data-swipe-hint]");
-const chevrons = () =>
-  Array.from(document.querySelectorAll("[data-swipe-hint-chevron]"));
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -54,12 +52,10 @@ afterEach(() => {
 });
 
 describe("T6.28 swipe hint", () => {
-  it("shows chevrons and an aria-hidden label on first open on touch", () => {
+  it("shows an aria-hidden label (no chevrons: the side buttons are real) on first open on touch", () => {
     open();
     expect(hint()).not.toBeNull();
-    expect(chevrons()).toHaveLength(2);
-    for (const c of chevrons())
-      expect(c.getAttribute("aria-hidden")).toBe("true");
+    expect(document.querySelector("[data-swipe-hint-chevron]")).toBeNull();
     const label = screen.getByText("Swipe");
     expect(label.closest("[aria-hidden]")?.getAttribute("aria-hidden")).toBe(
       "true",
@@ -107,17 +103,9 @@ describe("T6.28 swipe hint", () => {
     expect(localStorage.length).toBe(0);
   });
 
-  it("skips the left chevron on the first photo and the right on the last", () => {
-    const a = open(0);
-    expect(chevrons().map((c) => c.getAttribute("data-side"))).toEqual([
-      "right",
-    ]);
-    a.unmount();
-    localStorage.clear();
-    open(9);
-    expect(chevrons().map((c) => c.getAttribute("data-side"))).toEqual([
-      "left",
-    ]);
+  it("is not shown on a single photo (nothing to swipe to)", () => {
+    open(0, 1);
+    expect(hint()).toBeNull();
   });
 
   it("dismisses on the first pointer down", () => {
