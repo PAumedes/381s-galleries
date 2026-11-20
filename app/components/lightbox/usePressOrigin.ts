@@ -5,6 +5,8 @@ import {
   type RefObject,
 } from "react";
 
+import { isZoomed } from "./useZoomed";
+
 const TOP_BAR_PX = 64;
 const SIDE_ZONE_FRACTION = 0.18; // slightly wider than the 15vw arrows
 const EDGE_TAP_FRACTION = 0.25; // touch: tap this much of each side to go on
@@ -68,6 +70,8 @@ export function usePressOrigin(
           : e.clientX > w * (1 - EDGE_TAP_FRACTION)
             ? "next"
             : null;
+      // Zoomed: the sides belong to panning; a tap there does nothing.
+      if (side && isZoomed()) return;
       if (side) return void (side === "prev" ? edge.prev() : edge.next());
     }
     if (pressed !== false && isEmptyBackdrop(e, e.clientX, e.clientY))

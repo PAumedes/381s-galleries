@@ -68,11 +68,13 @@ function LightboxView({
   const closeRef = useRef<HTMLButtonElement>(null);
   const photo = photos[index];
   const total = photos.length;
-  const { hasPrev, hasNext, prev, next, close } = useLightboxNav({
+  const { close, closeFrom, closing } = useAnimatedClose(dialogRef, onClose);
+  const { hasPrev, hasNext, prev, next } = useLightboxNav({
     index,
     total,
-    onClose,
+    onClose: close,
     onIndexChange,
+    blocked: closing,
   });
   useModalLock(closeRef);
   useLightboxKeys(dialogRef, close, prev, next);
@@ -80,8 +82,7 @@ function LightboxView({
   const isReady = usePreloadNeighbours(photos, index, imgUrl);
 
   const { visible, wake, onKeyWake, onFocusWake } = useIdleChrome(dialogRef);
-  const closeFrom = useAnimatedClose(dialogRef, onClose);
-  const { notePress, onStageClick } = usePressOrigin(stageRef, onClose, {
+  const { notePress, onStageClick } = usePressOrigin(stageRef, close, {
     prev,
     next,
   });
@@ -162,7 +163,7 @@ function LightboxView({
         photoId={photo.id}
         favorite={favorite}
         closeRef={closeRef}
-        onClose={onClose}
+        onClose={close}
         onFavorite={onFavorite}
         onDownload={onDownload}
       />

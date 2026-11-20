@@ -1,11 +1,13 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useCallback, useEffect, useRef, type RefObject } from "react";
 
 import { canAnimate, exitDown } from "./motion";
 
 /**
- * Swipe-down close: the photo slides off the bottom and the backdrop fades
- * before `onClose` runs (the parent unmounts the lightbox). Without Web
- * Animations, or with reduced motion, it closes at once.
+ * Close with a guard: `onClose` runs once, never after unmount, and while the
+ * swipe-down exit plays (`closing`) every other close, navigation or swipe is
+ * ignored. `closeFrom(y)` is the animated close (the photo slides off the
+ * bottom, the backdrop fades); without Web Animations, or with reduced
+ * motion, it closes at once.
  */
 export function useAnimatedClose(
   dialogRef: RefObject<HTMLElement | null>,
@@ -15,12 +17,33 @@ export function useAnimatedClose(
   useEffect(() => {
     latest.current = onClose;
   });
-  const closing = useRef(false);
-  return (fromY: number) => {
-    const root = dialogRef.current;
-    if (!root || !canAnimate()) return onClose();
-    if (closing.current) return;
-    closing.current = true;
-    void exitDown(root, fromY).then(() => latest.current());
-  };
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  const closing = useRef(false); // exit animation started
+  const called = useRef(false); // onClose already ran for that exit
+
+  const close = useCallback(() => {
+    if (closing.current && called.current) return;
+    called.current = true;
+    latest.current();
+  }, []);
+
+  const closeFrom = useCallback(
+    (fromY: number) => {
+      const root = dialogRef.current;
+      if (closing.current) return;
+      if (!root || !canAnimate()) return close();
+      closing.current = true;
+      void exitDown(root, fromY).then(() => {
+        if (mounted.current) close();
+      });
+    },
+    [dialogRef, close],
+  );
+  return { close, closeFrom, closing };
 }
