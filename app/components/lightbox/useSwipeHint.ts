@@ -65,7 +65,6 @@ export function useSwipeHint(enabled: boolean): SwipeHint {
       timers.push(setTimeout(end, SWIPE_HINT_FADE_MS));
     }
     // Browser-only facts (media, storage) are known only after mount.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHint({ phase: "on", animated });
     document.addEventListener("pointerdown", fade, true);
     timers.push(setTimeout(fade, SWIPE_HINT_MS));
