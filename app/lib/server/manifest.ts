@@ -1,12 +1,13 @@
 import { buildManifest } from "../pwa";
 import { getStudioName } from "./admin";
 import { findGallery, isAvailable, type AccessEnv } from "./access";
+import { NOSNIFF } from "./http";
 
 const HEADERS = {
   "Content-Type": "application/manifest+json; charset=utf-8",
   "Cache-Control": "private, max-age=300",
   "X-Robots-Tag": "noindex, nofollow",
-  "X-Content-Type-Options": "nosniff",
+  ...NOSNIFF,
 };
 
 /**
