@@ -104,7 +104,7 @@ async function page() {
   const bar =
     /role="status"[\s\S]*?className="([^"]*)"/.exec(SRC)?.[1] ??
     SRC.match(/className="(bg-ink[^"]*)"/)[1];
-  const p = /<p className="([^"]*)">\{t\("pwa.androidText"\)\}/.exec(SRC)[1];
+  const p = /<p className="([^"]*)">\s*\{t\("pwa.androidText"\)\}/.exec(SRC)[1];
   const btn = /onClick=\{accept\}\s*className="([^"]*)"/.exec(SRC)[1];
   const dis = /aria-label=\{t\("pwa.dismiss"\)\}\s*className="([^"]*)"/.exec(
     SRC,
