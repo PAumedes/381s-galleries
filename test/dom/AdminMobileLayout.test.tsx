@@ -96,17 +96,31 @@ describe("T6.36 admin gallery list rows on phones", () => {
       .find((c) => c.dataset.label === "Vence")!;
     expect(has(exp, "max-xl:hidden")).toBe(true);
   });
-  it("date and photo count are the muted secondary line, at least 14px", async () => {
-    const { tr } = await row();
-    const photos = within(tr).getByText("120").closest("td")!;
-    expect(has(photos, "max-xl:text-sm")).toBe(true);
-    expect(has(photos, "max-xl:text-grey-600")).toBe(true);
-    expect(photos.dataset.label).toBe("Fotos");
-    const date = within(tr)
+  it("date and photo count are ONE muted line of real text, at least 14px", async () => {
+    const { tr } = await row({ photoCount: 120 });
+    const line = within(tr).getByText(/·\s*120 fotos/).closest("td")!;
+    expect(line.textContent).toMatch(/2026.*·\s*120 fotos$/);
+    expect(has(line, "max-xl:text-sm")).toBe(true);
+    expect(has(line, "max-xl:text-grey-600")).toBe(true);
+    const photos = within(tr)
       .getAllByRole("cell")
-      .find((c) => c.dataset.label === "Fecha")!;
-    expect(has(date, "max-xl:text-sm")).toBe(true);
-    expect(has(date, "max-xl:text-grey-600")).toBe(true);
+      .find((c) => c.dataset.label === "Fotos")!;
+    expect(has(photos, "max-xl:hidden")).toBe(true);
+    expect(photos.className).not.toContain("after:");
+  });
+  it("the photo count is plural-aware: 1 foto, 2 fotos", async () => {
+    const one = await row({ photoCount: 1 });
+    expect(one.tr.textContent).toContain("· 1 foto");
+    expect(one.tr.textContent).not.toContain("1 fotos");
+  });
+  it("every phone cell has an explicit grid column and row", async () => {
+    const { tr } = await row({ issueCount: 2 });
+    for (const td of within(tr).getAllByRole("cell")) {
+      if (has(td, "max-xl:hidden") || td.className.includes("empty:hidden"))
+        continue;
+      expect(td.className, td.textContent!).toMatch(/max-xl:col-start-\d/);
+      expect(td.className, td.textContent!).toMatch(/max-xl:row-start-\d/);
+    }
   });
   it("one clear status badge; a published proof gallery reads Prueba", async () => {
     const { tr } = await row({ mode: "proofing" });
@@ -137,6 +151,16 @@ describe("T6.36 album header on phones", () => {
     ]);
     return render(<Stub initialEntries={["/admin/g/g1"]} />);
   }
+  it("a live proof gallery reads Prueba in the header pill too", async () => {
+    g.mode = "proofing";
+    try {
+      header();
+      expect(await screen.findByText("Prueba")).toBeTruthy();
+      expect(screen.queryByText("Publicada")).toBeNull();
+    } finally {
+      g.mode = "delivery";
+    }
+  });
   it("the back link takes its own row", async () => {
     header();
     const back = await screen.findByRole("link", { name: /Galerías/ });

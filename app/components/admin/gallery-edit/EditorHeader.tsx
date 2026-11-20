@@ -39,6 +39,7 @@ export function EditorHeader({
       <div className={HEADER_ACTIONS_CLS}>
         <StatusPill
           status={g.status}
+          proofing={g.mode === "proofing"}
           className={`${HEADER_ACTION_CLS} md:inline-block md:min-h-0 md:px-2 md:py-0.5`}
         />
         <a

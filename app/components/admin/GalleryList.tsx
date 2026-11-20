@@ -261,7 +261,7 @@ export function GalleryList({
                   }}
                   className="border-grey-100 hover:bg-grey-50 grid cursor-pointer grid-cols-[5rem_1fr_auto] gap-x-3 gap-y-1 border-b py-3 max-xl:relative max-xl:py-4 xl:table-row xl:py-0"
                 >
-                  <td role="cell" className="max-xl:row-span-3 xl:py-2 xl:pr-3">
+                  <td role="cell" className="max-xl:col-start-1 max-xl:row-span-3 max-xl:row-start-1 xl:py-2 xl:pr-3">
                     {g.coverPhotoId ? (
                       <img
                         src={`/admin/img/${g.coverPhotoId}/thumb`}
@@ -278,7 +278,7 @@ export function GalleryList({
                   </td>
                   <td
                     role="cell"
-                    className="col-span-2 min-w-0 xl:table-cell xl:py-2 xl:pr-3"
+                    className="min-w-0 max-xl:col-span-2 max-xl:col-start-2 max-xl:row-start-1 xl:table-cell xl:py-2 xl:pr-3"
                   >
                     <Link
                       to={`/admin/g/${g.id}`}
@@ -296,7 +296,7 @@ export function GalleryList({
                   <td
                     role="cell"
                     data-label={t("admin.list.col.status")}
-                    className="max-xl:row-start-2 xl:py-2 xl:pr-3"
+                    className="max-xl:col-start-2 max-xl:row-start-2 xl:py-2 xl:pr-3"
                   >
                     <StatusPill
                       status={g.status}
@@ -315,14 +315,18 @@ export function GalleryList({
                   <td
                     role="cell"
                     data-label={t("admin.list.col.date")}
-                    className="max-xl:text-grey-600 max-xl:row-start-3 max-xl:text-sm xl:py-2 xl:pr-3"
+                    className="max-xl:text-grey-600 max-xl:col-span-2 max-xl:col-start-2 max-xl:row-start-3 max-xl:text-sm xl:py-2 xl:pr-3"
                   >
                     {g.eventDate ? fmt.date(g.eventDate) : "—"}
+                    <span className="xl:hidden">
+                      {" · "}
+                      {t("admin.count.photos", { count: g.photoCount })}
+                    </span>
                   </td>
                   <td
                     role="cell"
                     data-label={t("admin.list.col.photos")}
-                    className="max-xl:text-grey-600 max-xl:row-start-3 max-xl:text-sm max-xl:after:ml-1 max-xl:after:content-[attr(data-label)] max-xl:after:lowercase tabular-nums xl:py-2 xl:pr-3 xl:text-right"
+                    className="tabular-nums max-xl:hidden xl:py-2 xl:pr-3 xl:text-right"
                   >
                     {fmt.number(g.photoCount)}
                   </td>
