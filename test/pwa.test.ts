@@ -1,4 +1,5 @@
 import { migrateDb, resetTables } from "./support/d1";
+import { shape } from "./support/http";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../app/db";
@@ -49,6 +50,19 @@ const GENERIC = {
   start_url: "/",
   display: "standalone",
 };
+
+describe("T6.33 manifest headers", () => {
+  it("per-gallery manifest wire headers", async () => {
+    await addGallery();
+    const r = await get("boda-ana");
+    expect(Object.fromEntries(r.headers)).toEqual({
+      "cache-control": "private, max-age=300",
+      "content-type": "application/manifest+json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+      "x-robots-tag": "noindex, nofollow",
+    });
+  });
+});
 
 describe("per-gallery manifest", () => {
   it("public gallery: title, start_url, scope, theme, icons, headers", async () => {

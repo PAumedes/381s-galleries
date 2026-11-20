@@ -1,4 +1,5 @@
 import { clearCache } from "./support/cache";
+import { shape } from "./support/http";
 import { migrateDb } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -127,6 +128,32 @@ async function expectGeneric404(res: Response) {
   expect(res.status).toBe(404);
   expect(await res.text()).toBe("Not found");
 }
+
+describe("T6.33 response shapes", () => {
+  it("404 shape", async () => {
+    expect(await shape(await get("thumb", { photoId: "nope" }))).toEqual({
+      status: 404,
+      body: "Not found",
+      headers: {
+        "cache-control": "no-store",
+        "content-type": "text/plain; charset=utf-8",
+        "x-content-type-options": "nosniff",
+      },
+    });
+  });
+  it("502 shape", async () => {
+    const f = fakeDrive({ status: 500 });
+    expect(await shape(await get("thumb", { drive: f.drive }))).toEqual({
+      status: 502,
+      body: "Bad gateway",
+      headers: {
+        "cache-control": "no-store",
+        "content-type": "text/plain; charset=utf-8",
+        "x-content-type-options": "nosniff",
+      },
+    });
+  });
+});
 
 describe("visibility", () => {
   it("serves a published public gallery without cookie", async () => {
@@ -483,6 +510,24 @@ describe("R2-miss rate limit (img:<ip>:<gallery>, 5000 / 10 min)", () => {
     expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(await res.text()).toBe("Too many requests");
     expect(f.calls).toEqual([]);
+  });
+  it("T6.33 429 shape", async () => {
+    await seed(5000);
+    const s = await shape(
+      await get("thumb", { drive: fakeDrive().drive, headers: hdr }),
+    );
+    const ra = s.headers["retry-after"];
+    expect(Number(ra)).toBeGreaterThanOrEqual(1);
+    expect(s).toEqual({
+      status: 429,
+      body: "Too many requests",
+      headers: {
+        "cache-control": "no-store",
+        "content-type": "text/plain; charset=utf-8",
+        "retry-after": ra,
+        "x-content-type-options": "nosniff",
+      },
+    });
   });
   it("still allowed at the limit", async () => {
     await seed(1499);

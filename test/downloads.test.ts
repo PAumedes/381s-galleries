@@ -1,4 +1,5 @@
 import { migrateDb, resetTables } from "./support/d1";
+import { shape } from "./support/http";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -843,6 +844,28 @@ describe("GET /dl/:token", () => {
     );
   });
 
+  it("T6.33 410/502/429 shapes", async () => {
+    await addGallery();
+    await addPhoto("p1");
+    const t = await issue();
+    const base = {
+      "cache-control": "private, no-store",
+      "content-type": "text/plain; charset=utf-8",
+      "referrer-policy": "no-referrer",
+      "x-content-type-options": "nosniff",
+    };
+    expect(await shape(await dl("garbage", fakeDrive().drive))).toEqual({
+      status: 410,
+      body: "Gone",
+      headers: base,
+    });
+    expect(await shape(await dl(t, fakeDrive({ status: 500 }).drive))).toEqual({
+      status: 502,
+      body: "Bad gateway",
+      headers: base,
+    });
+  });
+
   it("Drive 404 -> 410, other Drive errors -> 502 without leaking detail", async () => {
     await addGallery();
     await addPhoto("p1");
@@ -899,6 +922,34 @@ describe("GET /dl abuse limits", () => {
       (await dl(t, drive, { headers: { "CF-Connecting-IP": "8.8.8.8" } }))
         .status,
     ).toBe(200);
+  });
+
+  it("T6.33 429 shape", async () => {
+    await addGallery();
+    await addPhoto("p1");
+    const t = await issue();
+    const base = {
+      "cache-control": "private, no-store",
+      "content-type": "text/plain; charset=utf-8",
+      "referrer-policy": "no-referrer",
+      "x-content-type-options": "nosniff",
+    };
+    const ipHeaders = { "CF-Connecting-IP": "9.9.9.9" };
+    const ip = await clientIpHash(
+      new Request("https://x.test/", { headers: ipHeaders }),
+      env,
+    );
+    await seedKey(`dlget:${ip}:${G}`, 3000, 60_000);
+    const s = await shape(
+      await dl(t, fakeDrive().drive, { headers: ipHeaders }),
+    );
+    const ra = s.headers["retry-after"];
+    expect(Number(ra)).toBeGreaterThan(0);
+    expect(s).toEqual({
+      status: 429,
+      body: "Too Many Requests",
+      headers: { ...base, "retry-after": ra },
+    });
   });
 
   it("a token works 20 times, the 21st is 429 with Retry-After <= its TTL", async () => {
