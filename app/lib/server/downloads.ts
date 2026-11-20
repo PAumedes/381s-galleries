@@ -22,7 +22,7 @@ import {
   createAnonVisitor,
   visibleFavoritesQuery,
 } from "./favorites";
-import { jsonReply } from "./http";
+import { jsonReply, NOSNIFF, PRIVATE_NO_STORE, textResponse } from "./http";
 import { hit, retryAfterFor, type RateRule } from "./rate-limit";
 import { rawUserAgent, visitorInfo } from "./visitor-info";
 
@@ -378,20 +378,12 @@ export async function handleBulk(
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const BASE_HEADERS = {
-  "X-Content-Type-Options": "nosniff",
+  ...NOSNIFF,
   "Referrer-Policy": "no-referrer",
-  "Cache-Control": "private, no-store",
+  "Cache-Control": PRIVATE_NO_STORE,
 };
-const gone = () =>
-  new Response("Gone", {
-    status: 410,
-    headers: { ...BASE_HEADERS, "Content-Type": "text/plain; charset=utf-8" },
-  });
-const badGateway = () =>
-  new Response("Bad gateway", {
-    status: 502,
-    headers: { ...BASE_HEADERS, "Content-Type": "text/plain; charset=utf-8" },
-  });
+const gone = () => textResponse("Gone", 410, BASE_HEADERS);
+const badGateway = () => textResponse("Bad gateway", 502, BASE_HEADERS);
 
 export interface DownloadDeps {
   drive: DriveClient;
@@ -418,13 +410,9 @@ export async function serveDownload(
   const variant = claims.v;
 
   const limited = async (rule: RateRule, key: string, windowMs?: number) =>
-    new Response("Too Many Requests", {
-      status: 429,
-      headers: {
-        ...BASE_HEADERS,
-        "Content-Type": "text/plain; charset=utf-8",
-        "Retry-After": String(await retryAfterFor(env, rule, key, windowMs)),
-      },
+    textResponse("Too Many Requests", 429, {
+      ...BASE_HEADERS,
+      "Retry-After": String(await retryAfterFor(env, rule, key, windowMs)),
     });
   const ipHash = await clientIpHash(request, env, { prefix64: true });
   if (ipHash && !(await hit(env, DL_GET_RATE, `${ipHash}:${claims.g}`)))
@@ -509,7 +497,7 @@ export async function serveDownload(
     if (err instanceof DriveError && err.status === 416) {
       return new Response(null, {
         status: 416,
-        headers: { "Cache-Control": "private, no-store" },
+        headers: { "Cache-Control": PRIVATE_NO_STORE },
       });
     }
     console.error(
