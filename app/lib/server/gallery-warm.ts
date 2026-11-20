@@ -19,7 +19,7 @@ import { isAvailable } from "./access";
 import type { DriveClient } from "./drive-types";
 import { fillCacheShared } from "./images";
 import type { Variant } from "./images";
-import { rateLimit } from "./rate-limit";
+import { hit, type RateRule } from "./rate-limit";
 import { SETTINGS_KEYS, getSetting } from "./settings";
 
 /** External (Drive + OAuth) subrequests one open may spend; Workers Free allows 50 per invocation. */
@@ -29,11 +29,11 @@ const CALL_RESERVE = 3 + 2;
 /** Photos looked at per run (bounds D1 rows and R2 head calls). */
 export const OPEN_WARM_SCAN = 40;
 /** Warm runs per gallery and minute (opens beyond that are ignored). */
-export const OPEN_WARM_RATE = {
+export const OPEN_WARM_RATE: RateRule = {
   scope: "warm-open",
   max: 6,
   windowMs: 60_000,
-} as const;
+};
 
 /** Phase 0 first for the whole gallery, then phase 1. */
 const PHASES: readonly (readonly Variant[])[] = [
@@ -118,8 +118,7 @@ export async function warmGalleryOnOpen(
   const stamp = (await getSetting(env, SETTINGS_KEYS.warmStamp)) ?? "";
   const cursor = parseCursor(await getSetting(env, cursorKey), stamp);
   if (cursor === "done") return { ...result, skipped: "done" };
-  const { scope, max, windowMs } = OPEN_WARM_RATE;
-  if (!(await rateLimit(env, scope, g.id, max, windowMs)))
+  if (!(await hit(env, OPEN_WARM_RATE, g.id)))
     return { ...result, skipped: "limited" };
 
   running.add(g.id);
