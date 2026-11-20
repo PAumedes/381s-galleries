@@ -1,6 +1,10 @@
 @import "tailwindcss" source(".");
 @import "@fontsource-variable/montserrat";
 
+/* A phone in any mode: touch pointer or a narrow viewport (some phone
+   browsers report a fine pointer). Desktop: neither. */
+@custom-variant phone (@media (pointer: coarse), (max-width: 767px));
+
 @theme {
   --font-sans:
     "Montserrat Variable", ui-sans-serif, system-ui, sans-serif,

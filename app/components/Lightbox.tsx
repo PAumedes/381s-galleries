@@ -3,6 +3,9 @@ import { useEffect, useRef } from "react";
 import type { TFunction } from "../i18n/t";
 import { ChevronLeft, ChevronRight } from "./icons";
 import { useImgUrl } from "./img-url";
+import { pullBackdrop } from "./lightbox/motion";
+import { PHONE_DISC } from "./lightbox/styles";
+import { useAnimatedClose } from "./lightbox/useAnimatedClose";
 import { useIdleChrome } from "./lightbox/useIdleChrome";
 import { useLightboxKeys } from "./lightbox/useLightboxKeys";
 import { useLightboxNav } from "./lightbox/useLightboxNav";
@@ -65,11 +68,13 @@ function LightboxView({
   const closeRef = useRef<HTMLButtonElement>(null);
   const photo = photos[index];
   const total = photos.length;
-  const { hasPrev, hasNext, prev, next, close } = useLightboxNav({
+  const { close, closeFrom, closing } = useAnimatedClose(dialogRef, onClose);
+  const { hasPrev, hasNext, prev, next } = useLightboxNav({
     index,
     total,
-    onClose,
+    onClose: close,
     onIndexChange,
+    blocked: closing,
   });
   useModalLock(closeRef);
   useLightboxKeys(dialogRef, close, prev, next);
@@ -77,13 +82,20 @@ function LightboxView({
   const isReady = usePreloadNeighbours(photos, index, imgUrl);
 
   const { visible, wake, onKeyWake, onFocusWake } = useIdleChrome(dialogRef);
-  const { notePress, onStageClick } = usePressOrigin(stageRef, onClose);
-  const { dragX, handlers: swipe } = useSwipe({
+  const { notePress, onStageClick } = usePressOrigin(stageRef, close, {
+    prev,
+    next,
+  });
+  const {
+    dragX,
+    dragY,
+    handlers: swipe,
+  } = useSwipe({
     hasPrev,
     hasNext,
     prev,
     next,
-    onClose,
+    onClose: closeFrom,
   });
 
   // Pinch-zoom only keeps vertical swipes (close) ours; panning a zoomed photo
@@ -119,10 +131,18 @@ function LightboxView({
       onClickCapture={swipe.onClickCapture}
       onFocus={onFocusWake}
       onKeyDown={onKeyWake}
-      className={`on-dark fixed inset-0 ${touch} bg-night text-white ${visible ? "" : "cursor-none"}${protect ? " img-protect" : ""}`}
+      className={`on-dark fixed inset-0 ${touch} text-white ${visible ? "" : "cursor-none"}${protect ? " img-protect" : ""}`}
       style={{ zIndex: "var(--z-lightbox)" }}
       onContextMenu={protect ? (e) => e.preventDefault() : undefined}
     >
+      <div
+        data-lb-backdrop
+        aria-hidden="true"
+        className="absolute inset-0 bg-night"
+        style={{
+          opacity: dragY ? pullBackdrop(dragY, window.innerHeight) : undefined,
+        }}
+      />
       <PhotoStage
         stageRef={stageRef}
         t={t}
@@ -131,6 +151,7 @@ function LightboxView({
         isReady={isReady}
         index={index}
         dragX={dragX}
+        dragY={dragY}
         protect={protect}
         onClick={onStageClick}
       />
@@ -142,7 +163,7 @@ function LightboxView({
         photoId={photo.id}
         favorite={favorite}
         closeRef={closeRef}
-        onClose={onClose}
+        onClose={close}
         onFavorite={onFavorite}
         onDownload={onDownload}
       />
@@ -154,7 +175,7 @@ function LightboxView({
         enabled={hasPrev}
         onClick={prev}
       >
-        <ChevronLeft className={`size-12 ${chrome}`} />
+        <ChevronLeft className={`size-12 ${PHONE_DISC} ${chrome}`} />
       </NavZone>
       <NavZone
         side="right"
@@ -162,7 +183,7 @@ function LightboxView({
         enabled={hasNext}
         onClick={next}
       >
-        <ChevronRight className={`size-12 ${chrome}`} />
+        <ChevronRight className={`size-12 ${PHONE_DISC} ${chrome}`} />
       </NavZone>
     </div>
   );

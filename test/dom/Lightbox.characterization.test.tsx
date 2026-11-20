@@ -224,8 +224,8 @@ describe("Lightbox characterization: swipe", () => {
     expect(img().style.transform).toBe("translateX(10px)"); // 40 / 4
     move(250, 300); // towards next (exists)
     expect(img().style.transform).toBe("translateX(-50px)");
-    move(250, 400); // vertical drag does not touch dragX
-    expect(img().style.transform).toBe("translateX(-50px)");
+    move(250, 400); // vertical wins: the photo is pulled down instead (T6.34)
+    expect(img().style.transform).toMatch(/^translateY\(100px\)/);
     up(250, 300);
     expect(img().style.transform).toBe("");
   });

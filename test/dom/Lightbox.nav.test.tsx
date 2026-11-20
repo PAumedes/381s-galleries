@@ -36,9 +36,9 @@ describe("Lightbox navigation targets", () => {
       expect(c).toMatch(/\bw-\[1[2-8]vw\]/);
       expect(c).toMatch(/\binset-y-16\b/);
       // Class check only: media (pointer: coarse) cannot be emulated in jsdom.
-      // Zones stay in the accessibility tree on touch (sr-only, not hidden).
-      expect(c).toContain("pointer-coarse:sr-only");
-      expect(c).not.toContain("pointer-coarse:hidden");
+      // On phones they become visible 56px buttons (T6.34), never display:none.
+      expect(c).toContain("phone:size-14");
+      expect(c).not.toContain("sr-only");
       expect(btn(name).querySelector("svg")?.getAttribute("class")).toMatch(
         /\bsize-12\b/,
       );
@@ -331,8 +331,8 @@ describe("Lightbox navigation targets", () => {
 
     it("prev/next stay in the accessibility tree (not display:none by class)", () => {
       setup();
-      // Class check only (no media queries in jsdom): coarse pointers use
-      // sr-only, so assistive tech keeps prev/next.
+      // Class check only (no media queries in jsdom): phones keep
+      // them visible, so assistive tech keeps prev/next.
       for (const name of ["Previous", "Next"]) {
         expect(btn(name).className).not.toMatch(
           /(^|\s)(pointer-coarse:)?hidden\b/,
