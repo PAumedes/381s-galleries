@@ -124,7 +124,7 @@ export function CoverHero({
     return () => ro.disconnect();
   }, [shownSrc, layout]);
   const pos = coverObjectPosition(shownFocus, shownAspect, frame);
-  const shield = proofing && src && (
+  const shield = proofing && (src || mobile) && (
     <span
       data-testid="cover-shield"
       aria-hidden="true"
@@ -137,14 +137,15 @@ export function CoverHero({
     mobile && !device ? (
       <source media={MOBILE_COVER_MEDIA} srcSet={mobile.src} />
     ) : undefined;
-  const photo = shownSrc && (
+  // Mobile cover without a desktop one: no `src`, phones still pick the source.
+  const photo = (shownSrc || sources) && (
     <FadeImg
       sources={sources}
       onElement={setImgNode}
       placeholder={shownPlaceholder}
       data-cover-img=""
       data-cover-device={onMobile ? "mobile" : "desktop"}
-      src={shownSrc}
+      src={shownSrc ?? undefined}
       alt=""
       fetchPriority={embedded ? undefined : "high"}
       draggable={false}

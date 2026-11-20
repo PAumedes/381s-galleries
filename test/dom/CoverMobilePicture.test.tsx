@@ -110,3 +110,22 @@ describe("Mobile cover <picture> (T6.27)", () => {
     });
   });
 });
+
+describe("Mobile cover without a desktop cover (T6.27)", () => {
+  it("server HTML has the <picture> source for phones and no desktop src", () => {
+    const html = renderToStaticMarkup(
+      <CoverHero
+        title="T"
+        date={null}
+        studio="S"
+        src={null}
+        proofing
+        focus={null}
+        scrollLabel="go"
+        mobile={{ src: MOBILE, focus: null, aspect: 1.5 }}
+      />,
+    );
+    expect(html).toContain(`srcSet="${MOBILE}"`);
+    expect(html).toContain('data-testid="cover-shield"');
+  });
+});
