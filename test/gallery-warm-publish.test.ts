@@ -316,3 +316,24 @@ describe("T6.37 photos-ready indicator", () => {
     expect((await loadGalleryEdit(mockAdmin, G))!.cacheProgress).toBeNull();
   });
 });
+
+describe("T6.37 publish warm: marker and Prueba cover", () => {
+  it("sets the cron marker so 'Fotos listas' counts warmed photos", async () => {
+    await gallery();
+    await photos(3);
+    const { drive } = fakeDrive();
+    await warmGalleryAtPublish(e, drive, G);
+    const p = await warmProgress(e, G);
+    expect(p.total).toBe(3);
+    expect(p.warmed).toBe(3);
+  });
+
+  it("Prueba cover skips view-lg (same preview-wm file as view-sm)", async () => {
+    await gallery({ mode: "proofing" });
+    await photos(2);
+    const { drive, calls } = fakeDrive();
+    await warmGalleryAtPublish(e, drive, G);
+    // thumb + view-sm of the cover, then straight on to the next photo.
+    expect(calls.slice(0, 3)).toEqual(["WM-p000", "WM-p001"]);
+  });
+});

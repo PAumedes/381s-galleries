@@ -129,6 +129,34 @@ export async function expectedWarmKey(
 
 const P = schema.photos;
 const G = schema.galleries;
+
+/**
+ * Sets the cron's marker for a photo whose thumb and view-sm were just
+ * verified in R2 (same key semantics). A row whose stored expected key
+ * differs (a re-export or mode switch raced us) is left for the cron.
+ */
+export async function markWarmed(
+  env: Env,
+  photo: Photo,
+  proofing: boolean,
+): Promise<void> {
+  const key = await expectedWarmKey(photo, proofing);
+  await getDb(env)
+    .update(P)
+    .set({
+      cacheExpectedKey: key,
+      cacheWarmKey: key,
+      cacheWarmFailCount: 0,
+      cacheWarmRetryAt: null,
+    })
+    .where(
+      and(
+        eq(P.id, photo.id),
+        or(isNull(P.cacheExpectedKey), eq(P.cacheExpectedKey, key)),
+      ),
+    );
+}
+
 const eligible = and(ne(G.status, "archived"), photoVisible);
 
 /**

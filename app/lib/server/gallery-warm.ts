@@ -21,6 +21,7 @@ import { fillCacheShared } from "./images";
 import type { Variant } from "./images";
 import { hit, type RateRule } from "./rate-limit";
 import { SETTINGS_KEYS, getSetting } from "./settings";
+import { markWarmed } from "./warm";
 
 /** External (Drive + OAuth) subrequests one open may spend; Workers Free allows 50 per invocation. */
 export const OPEN_WARM_BUDGET = 36;
@@ -114,27 +115,39 @@ const ROW_COLUMNS = {
 type WarmRow = Pick<typeof P.$inferSelect, keyof typeof ROW_COLUMNS>;
 type GalleryRow = typeof G.$inferSelect;
 
+/** One cheap select: is the gallery still published and unexpired (it may have been unpublished mid-warm)? */
+async function stillAvailable(env: Env, galleryId: string): Promise<boolean> {
+  const [g] = await getDb(env).select().from(G).where(eq(G.id, galleryId));
+  return isAvailable(g);
+}
+
 /**
  * Fills `variants` of one photo while the run's Drive budget lasts. "failed":
  * Drive/R2 refused (the photo is passed over, the cron and real views retry
- * it); "budget": stopped before the call that would not fit.
+ * it); "budget": stopped before the call that would not fit; "gone": the
+ * gallery was unpublished/expired meanwhile. Once thumb and view-sm are both
+ * in R2 the cron's marker is set, so "Photos ready" counts the photo.
  */
 async function fillRow(
   env: Env,
   drive: DriveClient,
   photo: WarmRow & { proofing: boolean },
+  galleryId: string,
   variants: readonly Variant[],
   start: number,
   result: OpenWarmResult,
-): Promise<"ok" | "budget" | "failed"> {
+): Promise<"ok" | "budget" | "failed" | "gone"> {
+  const done = new Set<Variant>();
   for (const variant of variants) {
+    if (!(await stillAvailable(env, galleryId))) return "gone";
     if (drive.subrequests() - start + CALL_RESERVE > OPEN_WARM_BUDGET) {
       result.stopped = "budget";
       return "budget";
     }
     try {
-      if ((await fillCacheShared(env, photo, variant, drive)) === "filled")
-        result.warmed++;
+      const filled = await fillCacheShared(env, photo, variant, drive);
+      if (filled === "filled") result.warmed++;
+      if (filled !== "skipped") done.add(variant);
     } catch (err) {
       // Name only: messages may hold Drive ids.
       console.error(
@@ -144,8 +157,40 @@ async function fillRow(
       result.failed++;
       return "failed";
     }
+    if (done.has("thumb") && done.has("view-sm") && variant !== "thumb") {
+      await markWarmed(env, photo, photo.proofing).catch(() => undefined);
+    }
   }
   return "ok";
+}
+
+type Skip = NonNullable<OpenWarmResult["skipped"]>;
+
+/**
+ * The guards both warms share, in order: sync lock, one run per gallery,
+ * rate rule. Runs `body` holding the per-gallery lock.
+ */
+async function guarded(
+  env: Env,
+  g: GalleryRow,
+  body: () => Promise<OpenWarmResult>,
+): Promise<OpenWarmResult> {
+  const skip = (skipped: Skip): OpenWarmResult => ({
+    warmed: 0,
+    failed: 0,
+    skipped,
+  });
+  const syncLock = await getSetting(env, SETTINGS_KEYS.syncLock);
+  if (syncLock && syncLock.split("|")[0] > new Date().toISOString())
+    return skip("sync_running");
+  if (running.has(g.id)) return skip("running");
+  if (!(await hit(env, OPEN_WARM_RATE, g.id))) return skip("limited");
+  running.add(g.id);
+  try {
+    return await body();
+  } finally {
+    running.delete(g.id);
+  }
 }
 
 /**
@@ -160,36 +205,33 @@ export async function warmGalleryOnOpen(
   if (env.DRIVE_MODE === "mock")
     return { warmed: 0, failed: 0, skipped: "mock" };
   const [g] = await getDb(env).select().from(G).where(eq(G.slug, slug));
-  return warmGallery(env, drive, g);
+  if (!isAvailable(g)) return { warmed: 0, failed: 0, skipped: "unavailable" };
+  return guarded(env, g, () => walkGrid(env, drive, g));
 }
 
-async function warmGallery(
+/** The cursor-driven walk of the grid; the caller holds the guards. */
+async function walkGrid(
   env: Env,
   drive: DriveClient,
-  g: GalleryRow | undefined,
+  g: GalleryRow,
   start = drive.subrequests(),
 ): Promise<OpenWarmResult> {
   const result: OpenWarmResult = { warmed: 0, failed: 0 };
   const db = getDb(env);
-  if (!isAvailable(g)) return { ...result, skipped: "unavailable" };
-  const syncLock = await getSetting(env, SETTINGS_KEYS.syncLock);
-  if (syncLock && syncLock.split("|")[0] > new Date().toISOString())
-    return { ...result, skipped: "sync_running" };
-  if (running.has(g.id)) return { ...result, skipped: "running" };
-
   const cursorKey = SETTINGS_KEYS.warmCursorPrefix + g.id;
   const stamp = (await getSetting(env, SETTINGS_KEYS.warmStamp)) ?? "";
   const cursor = parseCursor(await getSetting(env, cursorKey), stamp);
   if (cursor === "done") return { ...result, skipped: "done" };
-  if (!(await hit(env, OPEN_WARM_RATE, g.id)))
-    return { ...result, skipped: "limited" };
 
-  running.add(g.id);
-  try {
+  {
     let { phase, after, failed: sawFailure } = cursor;
     const proofing = g.mode === "proofing";
     let scanned = 0;
     walk: while (phase < PHASES.length) {
+      if (!(await stillAvailable(env, g.id))) {
+        result.stopped = "error";
+        return result;
+      }
       const rows: WarmRow[] = await db
         .select(ROW_COLUMNS)
         .from(P)
@@ -219,11 +261,13 @@ async function warmGallery(
           env,
           drive,
           { ...row, proofing },
+          g.id,
           PHASES[phase],
           start,
           result,
         );
         if (step === "budget") break walk;
+        if (step === "gone") return result;
         // A failing photo is passed over (the cron and real views retry it),
         // but the run stops: Drive is probably unhappy.
         after = [row.setName, row.sort, row.baseName];
@@ -248,63 +292,73 @@ async function warmGallery(
       .bind(cursorKey, serializeCursor(next, stamp), g.id)
       .run();
     return result;
-  } finally {
-    running.delete(g.id);
   }
 }
 
-/** What a cover needs in R2 before the first visitor: grid thumb, hero view-sm and view-lg. */
-const COVER_VARIANTS: readonly Variant[] = ["thumb", "view-sm", "view-lg"];
+/**
+ * What a cover needs in R2 before the first visitor: grid thumb and hero
+ * view-sm, then (Entrega only, last and optional: it is the budget's call)
+ * view-lg. In Prueba view-lg is the same preview-wm file as view-sm.
+ */
+const coverVariants = (proofing: boolean): readonly Variant[] =>
+  proofing ? ["thumb", "view-sm"] : ["thumb", "view-sm", "view-lg"];
 
 /**
- * Publish warm (T6.37): the gallery just became visible. Fills the cover(s)
- * first (the first photo when none is chosen), then continues the open warm
- * (same cursor, rate rule and budget, so nothing is fetched twice). Never
- * throws on Drive/R2 errors; a draft or archived gallery is skipped. No mock
- * check: the caller passes a `drive` only outside mock mode.
+ * Publish warm (T6.37): the gallery just became visible. Same guards as the
+ * open warm (sync lock, one run, rate rule), held for the whole run. Fills
+ * the cover(s) first (the first photo when none is chosen), then continues
+ * the open warm (same cursor and budget, so nothing is fetched twice). Never
+ * throws; a draft/archived/expired gallery is skipped. No mock check: the
+ * caller passes a `drive` only outside mock mode.
  */
 export async function warmGalleryAtPublish(
   env: Env,
   drive: DriveClient,
   galleryId: string,
 ): Promise<OpenWarmResult> {
-  const db = getDb(env);
-  const [g] = await db.select().from(G).where(eq(G.id, galleryId));
-  if (!isAvailable(g)) return { warmed: 0, failed: 0, skipped: "unavailable" };
-  const start = drive.subrequests();
   const result: OpenWarmResult = { warmed: 0, failed: 0 };
   try {
-    const [first] = await db
-      .select(ROW_COLUMNS)
-      .from(P)
-      .where(and(eq(P.galleryId, g.id), photoVisible))
-      .orderBy(asc(P.setName), asc(P.sort), asc(P.baseName))
-      .limit(1);
-    const ids = [g.coverPhotoId ?? first?.id, g.coverPhotoIdMobile].filter(
-      (id): id is string => !!id,
-    );
-    for (const id of new Set(ids)) {
-      const [row] = await db
+    const db = getDb(env);
+    const [g] = await db.select().from(G).where(eq(G.id, galleryId));
+    if (!isAvailable(g))
+      return { warmed: 0, failed: 0, skipped: "unavailable" };
+    return await guarded(env, g, async () => {
+      const start = drive.subrequests();
+      const proofing = g.mode === "proofing";
+      const [first] = await db
         .select(ROW_COLUMNS)
         .from(P)
-        .where(and(eq(P.id, id), eq(P.galleryId, g.id), photoVisible));
-      if (!row) continue;
-      const step = await fillRow(
-        env,
-        drive,
-        { ...row, proofing: g.mode === "proofing" },
-        COVER_VARIANTS,
-        start,
-        result,
+        .where(and(eq(P.galleryId, g.id), photoVisible))
+        .orderBy(asc(P.setName), asc(P.sort), asc(P.baseName))
+        .limit(1);
+      const ids = [g.coverPhotoId ?? first?.id, g.coverPhotoIdMobile].filter(
+        (id): id is string => !!id,
       );
-      if (step === "budget") return result;
-    }
-    const rest = await warmGallery(env, drive, g, start);
-    return {
-      ...rest,
-      warmed: rest.warmed + result.warmed,
-      failed: rest.failed + result.failed,
-    };
+      for (const id of new Set(ids)) {
+        const [row] = await db
+          .select(ROW_COLUMNS)
+          .from(P)
+          .where(and(eq(P.id, id), eq(P.galleryId, g.id), photoVisible));
+        if (!row) continue;
+        const step = await fillRow(
+          env,
+          drive,
+          { ...row, proofing },
+          g.id,
+          coverVariants(proofing),
+          start,
+          result,
+        );
+        if (step !== "ok") return result;
+      }
+      if (!(await stillAvailable(env, g.id))) return result;
+      const rest = await walkGrid(env, drive, g, start);
+      return {
+        ...rest,
+        warmed: rest.warmed + result.warmed,
+        failed: rest.failed + result.failed,
+      };
+    });
   } catch (err) {
     console.error(
       "warm-publish: failed",
