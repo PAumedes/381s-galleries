@@ -31,12 +31,7 @@ async function css(candidates) {
 }
 
 // The dialog root's touch utilities, taken from the real component.
-const rootTouch = () =>
-  [...SRC.matchAll(/className=\{`([^`]*)`\}/g)]
-    .map((m) => m[1])
-    .find((c) => c.includes("fixed inset-0"))
-    .split(/\s+/)
-    .filter((c) => c.startsWith("touch-"));
+const rootTouch = () => /: "(touch-[^"]*)"/.exec(SRC)[1].split(/\s+/);
 
 // Real Chrome, real touch events via CDP: does a downward swipe reach the page
 // as pointer events (pointerup) or does the browser claim it (pointercancel)?

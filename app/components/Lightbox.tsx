@@ -10,6 +10,7 @@ import { useModalLock } from "./lightbox/useModalLock";
 import { usePressOrigin } from "./lightbox/usePressOrigin";
 import { usePreloadNeighbours } from "./lightbox/usePreloadNeighbours";
 import { useSwipe } from "./lightbox/useSwipe";
+import { useZoomed } from "./lightbox/useZoomed";
 import { NavZone } from "./lightbox/NavZone";
 import { PhotoStage } from "./lightbox/PhotoStage";
 import { TopBar } from "./lightbox/TopBar";
@@ -84,6 +85,11 @@ function LightboxView({
     onClose,
   });
 
+  // Pinch-zoom only keeps vertical swipes (close) ours; panning a zoomed photo
+  // needs the browser's pan, so it is allowed only while zoomed.
+  const touch = useZoomed()
+    ? "touch-pan-x touch-pan-y touch-pinch-zoom"
+    : "touch-pinch-zoom";
   const favorite = isFavorite?.(photo.id) ?? false;
   const chrome = `transition-opacity duration-slow ease-out-soft ${
     visible ? "opacity-100" : "pointer-events-none opacity-0"
@@ -112,7 +118,7 @@ function LightboxView({
       onClickCapture={swipe.onClickCapture}
       onFocus={onFocusWake}
       onKeyDown={onKeyWake}
-      className={`on-dark fixed inset-0 touch-pinch-zoom bg-night text-white ${visible ? "" : "cursor-none"}${protect ? " img-protect" : ""}`}
+      className={`on-dark fixed inset-0 ${touch} bg-night text-white ${visible ? "" : "cursor-none"}${protect ? " img-protect" : ""}`}
       style={{ zIndex: "var(--z-lightbox)" }}
       onContextMenu={protect ? (e) => e.preventDefault() : undefined}
     >

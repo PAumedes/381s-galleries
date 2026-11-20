@@ -23,6 +23,9 @@ export function preloadOrder(
  * cancelled; only entries that fell out of it and exceed the capacity are, and
  * only when still in flight.
  */
+/** Only versioned URLs are cacheable; unversioned (admin) ones are no-store. */
+const isCacheable = (url: string) => /[?&]v=/.test(url);
+
 const keyOf = (imgUrl: ImgUrlFn, photo: GalleryPhoto) =>
   photoImgProps(imgUrl, photo).src;
 
@@ -32,12 +35,15 @@ export class PreloadCache {
   /** True when this photo (at this exact URL) finished loading. */
   isReady(imgUrl: ImgUrlFn, photo: GalleryPhoto): boolean {
     const e = this.entries.get(photo.id);
-    return !!e && e.ready && e.key === keyOf(imgUrl, photo);
+    return (
+      !!e && e.ready && e.key === keyOf(imgUrl, photo) && isCacheable(e.key)
+    );
   }
 
   warm(imgUrl: ImgUrlFn, wanted: readonly GalleryPhoto[]) {
-    const fresh = wanted.filter((p) => !this.has(imgUrl, p));
-    this.evict(new Set(wanted.map((p) => p.id)), fresh.length);
+    // A changed key replaces its entry, so only unknown ids take new room.
+    const incoming = wanted.filter((p) => !this.entries.has(p.id)).length;
+    this.evict(new Set(wanted.map((p) => p.id)), incoming);
     for (const p of wanted) {
       const props = photoImgProps(imgUrl, p);
       const old = this.entries.get(p.id);
@@ -55,10 +61,6 @@ export class PreloadCache {
   dispose() {
     for (const e of this.entries.values()) this.release(e);
     this.entries.clear();
-  }
-
-  private has(imgUrl: ImgUrlFn, photo: GalleryPhoto) {
-    return this.entries.get(photo.id)?.key === keyOf(imgUrl, photo);
   }
 
   /** Drop least recently used entries outside the window to make room. */
