@@ -2,7 +2,9 @@
 import process from "node:process";
 import { setTimeout } from "node:timers";
 import { spawn, spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 import { compile } from "tailwindcss";
@@ -43,6 +45,10 @@ async function measure(html, width, height) {
       "--no-sandbox",
       "--disable-gpu",
       `--remote-debugging-port=${port}`,
+      // Own profile per launch: parallel Chromes sharing the default one fight
+      // over its lock and the later one never opens its debugging port.
+      `--user-data-dir=${mkdtempSync(join(tmpdir(), "chrome-"))}`,
+      "--no-first-run",
       "about:blank",
     ],
     { stdio: "ignore" },
@@ -50,7 +56,7 @@ async function measure(html, width, height) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   try {
     let list;
-    for (let i = 0; i < 50 && !list; i++) {
+    for (let i = 0; i < 150 && !list; i++) {
       try {
         list = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
       } catch {
