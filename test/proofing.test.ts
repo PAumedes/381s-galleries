@@ -379,7 +379,7 @@ describe("warm keys per mode", () => {
     const { drive, calls } = fakeDrive();
     const r = await warmBatch(e, { drive });
     expect(r.warmed).toBe(2);
-    expect(calls.sort()).toEqual(["TWM", "WM", "WM-b", "WM-b"]);
+    expect(calls.sort()).toEqual(["TWM", "WM", "WM-b"]); // b: thumb = view-sm file, copied in R2
     expect(await env.CACHE.head("a/view-lg")).toBeNull();
     expect((await env.CACHE.head("a/view-sm"))?.customMetadata?.wm).toBe("1");
     expect((await env.CACHE.head("a/thumb"))?.customMetadata?.wm).toBe("1");

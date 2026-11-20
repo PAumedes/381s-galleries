@@ -281,8 +281,9 @@ describe("cover save warms R2 for that photo only", () => {
     const r = recorder();
     await save({ photoId: "p1" }, mockAdmin, { ctx: r.ctx, drive });
     await r.done();
-    // thumb falls back to preview-wm (own key), view-sm is it; view-lg skipped.
-    expect(calls).toEqual(["WM-p1", "WM-p1"]);
+    // thumb falls back to preview-wm and view-sm is the same file: one Drive
+    // fetch, the other key is copied inside R2; view-lg skipped.
+    expect(calls).toEqual(["WM-p1"]);
     expect(await keys()).toEqual(["p1/thumb", "p1/view-sm"]);
   });
 

@@ -237,6 +237,36 @@ async function storeInCache(
   ]);
 }
 
+/** Copies the R2 object of another variant of `photoId` that is the same source file/version. */
+async function copyFromSibling(
+  env: Pick<Env, "CACHE">,
+  photoId: string,
+  variant: Variant,
+  src: Source,
+): Promise<boolean> {
+  for (const other of VARIANTS) {
+    if (other === variant) continue;
+    const head = await env.CACHE.head(`${photoId}/${other}`);
+    if (!head || !isValidHit(head, src)) continue;
+    const obj = await env.CACHE.get(`${photoId}/${other}`);
+    if (!obj) continue;
+    if (!isValidHit(obj, src)) {
+      await obj.body.cancel();
+      continue;
+    }
+    await env.CACHE.put(`${photoId}/${variant}`, obj.body, {
+      httpMetadata: { contentType: safeType(obj.httpMetadata?.contentType) },
+      customMetadata: {
+        fileId: src.fileId,
+        wm: src.watermark ? "1" : "0",
+        v: src.version,
+      },
+    });
+    return true;
+  }
+  return false;
+}
+
 export type FillResult = "cached" | "filled" | "skipped";
 
 /**
@@ -256,6 +286,9 @@ export async function fillCache(
   const key = `${photo.id}/${variant}`;
   const head = await env.CACHE.head(key);
   if (head && isValidHit(head, src)) return "cached";
+  // Another variant of this photo may already hold these very bytes (Prueba:
+  // thumb, view-sm and view-lg are one preview-wm file): copy, don't refetch.
+  if (await copyFromSibling(env, photo.id, variant, src)) return "filled";
   const upstream = await drive.streamFile(src.fileId);
   const rawLength = upstream.headers.get("Content-Length")?.trim();
   const length = rawLength ? Number(rawLength) : Number.NaN;
@@ -272,6 +305,71 @@ export async function fillCache(
     { fileId: src.fileId, wm: src.watermark ? "1" : "0", v: src.version },
   );
   return "filled";
+}
+
+/** Fills in flight in this isolate, by R2 key AND exact source (file, watermark, version). */
+const inFlight = new Map<string, Promise<FillResult>>();
+/** The newest fill per R2 key, so fills of different sources for one key run in order. */
+const tail = new Map<string, Promise<FillResult>>();
+
+function fillId(key: string, src: Source | null): string {
+  return src
+    ? `${key}|${src.fileId}|${src.watermark ? 1 : 0}|${src.version}`
+    : `${key}|-`;
+}
+
+/** The in-flight fill of exactly this R2 key and source, if one is running here. */
+export function pendingFill(
+  key: string,
+  src: Source,
+): Promise<FillResult> | undefined {
+  return inFlight.get(fillId(key, src));
+}
+
+/**
+ * `fillCache`, but a second caller for the same photo, variant AND source
+ * while one is running awaits that one instead of fetching Drive again. A
+ * caller with a different (newer) source never joins: it runs after the
+ * earlier fill of that key and re-validates against its own source, so R2 ends
+ * up holding what the last caller expects. Rejects like `fillCache`.
+ */
+export function fillCacheShared(
+  env: Pick<Env, "CACHE">,
+  photo: SourcePhoto & { proofing: boolean },
+  variant: Variant,
+  drive: DriveClient,
+): Promise<FillResult> {
+  const key = `${photo.id}/${variant}`;
+  const id = fillId(key, resolveSource(photo, photo.proofing, variant));
+  const running = inFlight.get(id);
+  if (running) return running;
+  const prior = tail.get(key);
+  const start = prior
+    ? prior
+        .catch(() => undefined)
+        .then(() => fillCache(env, photo, variant, drive))
+    : fillCache(env, photo, variant, drive);
+  const fill: Promise<FillResult> = start.finally(() => {
+    inFlight.delete(id);
+    if (tail.get(key) === fill) tail.delete(key);
+  });
+  inFlight.set(id, fill);
+  tail.set(key, fill);
+  return fill;
+}
+
+/** How long a visitor waits for a fill that is already running before fetching Drive itself. */
+export const PENDING_FILL_WAIT_MS = 2000;
+
+async function waitForFill(fill: Promise<unknown>): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    fill.catch(() => {}),
+    new Promise<void>((r) => {
+      timer = setTimeout(r, PENDING_FILL_WAIT_MS);
+    }),
+  ]);
+  clearTimeout(timer);
 }
 
 export interface ImageDeps {
@@ -394,10 +492,21 @@ export async function serveImage(
         ? "private, no-store"
         : "private, max-age=600";
   const wmFlag = watermark ? "1" : "0";
-  let hit = adminClean ? null : await env.CACHE.get(key);
-  if (hit && !isValidHit(hit, src)) {
-    await hit.body.cancel();
-    hit = null;
+  const lookup = async () => {
+    if (adminClean) return null;
+    const found = await env.CACHE.get(key);
+    if (found && !isValidHit(found, src)) {
+      await found.body.cancel();
+      return null;
+    }
+    return found;
+  };
+  let hit = await lookup();
+  // A warm is already fetching this very file: wait for it instead of a second Drive stream.
+  const pending = hit || adminClean ? undefined : pendingFill(key, src);
+  if (pending) {
+    await waitForFill(pending);
+    hit = await lookup();
   }
   if (hit) {
     const headers: Record<string, string> = {
