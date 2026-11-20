@@ -26,13 +26,6 @@ export type Design = {
   gridGap: GridGap;
 };
 
-export const DEFAULT_DESIGN: Design = {
-  palette: "claro",
-  coverLayout: "completa",
-  gridStyle: "filas",
-  gridGap: "normal",
-};
-
 /** Gutter between tiles, in px. */
 export const GAP_PX: Record<GridGap, number> = {
   compacto: 2,

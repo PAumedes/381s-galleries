@@ -15,7 +15,6 @@ import { handleSync } from "../app/routes/api.admin.sync";
 import { setupAction } from "../app/routes/admin.setup";
 import { loader as connect } from "../app/routes/admin.google.connect";
 import { loader as callback } from "../app/routes/admin.google.callback";
-import { fmtTime } from "../app/components/admin/AdminShell";
 import { formatEventDate } from "../app/lib/event-date";
 import { fmtStudio } from "../app/lib/studio-time";
 
@@ -108,9 +107,6 @@ describe("google connect/callback route auth", () => {
 });
 
 describe("shared helpers", () => {
-  it("fmtTime shows Buenos Aires time, no UTC", () => {
-    expect(fmtTime("2026-11-16T13:05:09Z")).toBe("16/11/2026 10:05");
-  });
   it("studio-time exports fmtStudio", () => {
     expect(fmtStudio("2026-01-01T02:30:00Z")).toBe("31/12/2025 23:30");
   });
