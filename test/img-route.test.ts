@@ -478,6 +478,10 @@ describe("R2-miss rate limit (img:<ip>:<gallery>, 5000 / 10 min)", () => {
     const res = await get("thumb", { drive: f.drive, headers: hdr });
     expect(res.status).toBe(429);
     expect(Number(res.headers.get("Retry-After"))).toBeGreaterThanOrEqual(1);
+    expect(res.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(await res.text()).toBe("Too many requests");
     expect(f.calls).toEqual([]);
   });
   it("still allowed at the limit", async () => {

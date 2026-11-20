@@ -309,6 +309,9 @@ describe("POST download-tokens: gates", () => {
     // window is 10 min and 60 s have elapsed
     expect(ra).toBeGreaterThan(500);
     expect(ra).toBeLessThanOrEqual(540);
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+    expect(res.headers.get("Content-Type")).toBe("application/json");
+    expect(await res.json()).toEqual({ error: "rate_limited" });
   });
 
   it("allows well over the old 120 requests (large galleries refresh tokens)", async () => {
@@ -888,6 +891,9 @@ describe("GET /dl abuse limits", () => {
     const ra = Number(res.headers.get("Retry-After"));
     expect(ra).toBeGreaterThan(0);
     expect(ra).toBeLessThanOrEqual(600);
+    expect(res.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
+    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(await res.text()).toBe("Too Many Requests");
     // another ip is unaffected
     expect(
       (await dl(t, drive, { headers: { "CF-Connecting-IP": "8.8.8.8" } }))

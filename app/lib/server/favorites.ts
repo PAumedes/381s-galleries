@@ -16,7 +16,7 @@ import {
   type VisitorRow,
 } from "./access";
 import { jsonReply } from "./http";
-import { rateLimit } from "./rate-limit";
+import { hit, type RateRule } from "./rate-limit";
 
 type FavEnv = AccessEnv;
 
@@ -24,6 +24,18 @@ export const FAVORITES_MAX = 2000;
 export const VISITOR_MAX_PER_WINDOW = 30;
 export const ANON_MAX_PER_WINDOW = 20; // per IP+gallery per 10 min; venues share Wi-Fi, each device needs one
 export const VISITOR_WINDOW_MS = 10 * 60 * 1000;
+/** Anonymous visitors created per IP+gallery. */
+export const ANON_RATE: RateRule = {
+  scope: "anon",
+  max: ANON_MAX_PER_WINDOW,
+  windowMs: VISITOR_WINDOW_MS,
+};
+/** Email-gate visitors created per IP+gallery. */
+const VISITOR_RATE: RateRule = {
+  scope: "visitor",
+  max: VISITOR_MAX_PER_WINDOW,
+  windowMs: VISITOR_WINDOW_MS,
+};
 export const DEFAULT_LIST = "Favoritos";
 // eslint-disable-next-line no-control-regex
 const CONTROL_RE = /[\u0000-\u001f\u007f-\u009f]/g;
@@ -109,17 +121,7 @@ export async function createAnonVisitor(
 ): Promise<{ visitor: VisitorRow; cookie: string } | null> {
   const ipHash = await clientIpHash(request, env, { prefix64: true });
   if (!ipHash) return null;
-  if (
-    !(await rateLimit(
-      env,
-      "anon",
-      `${ipHash}:${g.id}`,
-      ANON_MAX_PER_WINDOW,
-      VISITOR_WINDOW_MS,
-    ))
-  ) {
-    return null;
-  }
+  if (!(await hit(env, ANON_RATE, `${ipHash}:${g.id}`))) return null;
   const db = getDb(env as Env);
   const id = newId();
   await db.insert(schema.visitors).values({
@@ -173,17 +175,8 @@ export async function handleVisitor(
 
   const ipHash = await clientIpHash(request, env, { prefix64: true });
   if (!ipHash) return reply({ error: "rate_limited" }, 429);
-  if (
-    !(await rateLimit(
-      env,
-      "visitor",
-      `${ipHash}:${g.id}`,
-      VISITOR_MAX_PER_WINDOW,
-      VISITOR_WINDOW_MS,
-    ))
-  ) {
+  if (!(await hit(env, VISITOR_RATE, `${ipHash}:${g.id}`)))
     return reply({ error: "rate_limited" }, 429);
-  }
   const id = newId();
   await db.insert(schema.visitors).values({ id, galleryId: g.id, email, name });
   const cookie = await updateSession(request, g, { visitorId: id }, env);

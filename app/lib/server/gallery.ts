@@ -17,7 +17,12 @@ import { verifyPin } from "./crypto";
 import { focusOf, resolveCover } from "./cover";
 import { imageVersionToken } from "./images";
 import { asLang } from "../../i18n/lang";
-import { rateLimit, refundRateLimit, resetRateLimit } from "./rate-limit";
+import {
+  hit,
+  refundRateLimit,
+  resetRateLimit,
+  type RateRule,
+} from "./rate-limit";
 import { visitorInfo, type VisitorInfo } from "./visitor-info";
 
 type GalleryEnv = AccessEnv;
@@ -289,6 +294,18 @@ export const PIN_MAX_ATTEMPTS = 5;
 export const PIN_WINDOW_MS = 10 * 60 * 1000;
 /** Per gallery, across all IPs (a 4-digit PIN is otherwise guessable by rotating IPs). */
 export const PIN_GALLERY_MAX_ATTEMPTS = 100;
+/** Wrong-PIN guesses per IP+gallery. */
+const PIN_RATE: RateRule = {
+  scope: "pin",
+  max: PIN_MAX_ATTEMPTS,
+  windowMs: PIN_WINDOW_MS,
+};
+/** Wrong-PIN guesses per gallery, all IPs. */
+const PIN_GALLERY_RATE: RateRule = {
+  scope: "pinG",
+  max: PIN_GALLERY_MAX_ATTEMPTS,
+  windowMs: PIN_WINDOW_MS,
+};
 
 // Valid-format hash of nothing: unknown slugs still pay for one PBKDF2 run.
 const DUMMY_HASH = `pbkdf2$100000$${"A".repeat(22)}$${"A".repeat(43)}`;
@@ -316,13 +333,7 @@ export async function unlockGallery(
   const g = await findGallery(env, slug);
   const ipHash = await clientIpHash(request, env, { prefix64: true });
   const pinLimit = (galleryId: string, ip: string) =>
-    rateLimit(
-      env,
-      "pin",
-      `${ip}:${galleryId}`,
-      PIN_MAX_ATTEMPTS,
-      PIN_WINDOW_MS,
-    );
+    hit(env, PIN_RATE, `${ip}:${galleryId}`);
   if (!isAvailable(g)) {
     if (!ipHash) return { status: 429 };
     if (!(await pinLimit(UNKNOWN_GALLERY, ipHash))) return { status: 429 };
@@ -340,24 +351,15 @@ export async function unlockGallery(
 
   if (!ipHash) return { status: 429 };
   if (!(await pinLimit(g.id, ipHash))) return { status: 429 };
-  if (
-    !(await rateLimit(
-      env,
-      "pinG",
-      g.id,
-      PIN_GALLERY_MAX_ATTEMPTS,
-      PIN_WINDOW_MS,
-    ))
-  )
-    return { status: 429 };
+  if (!(await hit(env, PIN_GALLERY_RATE, g.id))) return { status: 429 };
   const ok = await verifyPin(pin, g.pinHash);
   if (!ok || !pin) return { status: 400 };
 
-  await resetRateLimit(env, "pin", `${ipHash}:${g.id}`);
+  await resetRateLimit(env, PIN_RATE.scope, `${ipHash}:${g.id}`);
   // Only wrong guesses consume the gallery-wide budget: refund just this
   // attempt's hit. Never reset the counter, or a correct PIN would hand
   // guessers a fresh budget (PLAN §6: 100 wrong guesses / 10 min / gallery).
-  await refundRateLimit(env, "pinG", g.id);
+  await refundRateLimit(env, PIN_GALLERY_RATE.scope, g.id);
   const setCookie = await updateSession(request, g, { unlocked: true }, env);
   return { status: 303, location, setCookie };
 }
