@@ -58,3 +58,25 @@ describe("T6.38 google-auth.ts public runtime exports", () => {
     );
   });
 });
+
+import * as logo from "../app/lib/server/logo";
+
+describe("T6.38 logo.ts public runtime exports", () => {
+  it("exports the same names", () => {
+    expect(Object.keys(logo).sort()).toEqual(
+      [
+        "LOGO_MAX_BYTES",
+        "LOGO_TYPES",
+        "LOGO_VARIANTS",
+        "SETUP_BODY_MAX_BYTES",
+        "getLogoVersions",
+        "isLogoVariant",
+        "readBodyLimited",
+        "resetLogos",
+        "saveLogo",
+        "serveLogo",
+        "validateLogo",
+      ].sort(),
+    );
+  });
+});
