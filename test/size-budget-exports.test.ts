@@ -22,3 +22,19 @@ describe("T6.38 admin-galleries.ts public runtime exports", () => {
     );
   });
 });
+
+import * as activity from "../app/lib/server/admin-activity";
+
+describe("T6.38 admin-activity.ts public runtime exports", () => {
+  it("exports the same names", () => {
+    expect(Object.keys(activity).sort()).toEqual(
+      [
+        "ACTIVITY_PAGE",
+        "activityCsv",
+        "favoritesTxt",
+        "loadActivity",
+        "loadFavoritesAdmin",
+      ].sort(),
+    );
+  });
+});
