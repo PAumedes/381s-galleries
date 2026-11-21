@@ -17,7 +17,8 @@ import type { TFunction } from "../../i18n/t";
 import { adminAction } from "./admin";
 import type { DriveClient } from "./drive-types";
 import { adminImageToken } from "./images";
-import { warmCoverPhoto } from "./warm";
+import { scheduleWarmAtPublish } from "./gallery-warm";
+import { warmCoverPhoto, warmProgress } from "./warm";
 import {
   hasWmSql,
   listCoverIdSql,
@@ -259,6 +260,9 @@ export async function loadGalleryEdit(env: Env, id: string) {
     },
     /** Deletion started but not finished: the editor only offers to continue it. */
     deleting: await isDeleting(env, g.driveFolderId),
+    /** Photos ready (R2 warm marker current) / visible; null in mock mode (nothing to warm). */
+    cacheProgress:
+      env.DRIVE_MODE === "mock" ? null : await warmProgress(env, g.id),
     /** Counts only (never ids): visible photos, and those with a preview-wm. */
     photoCount: ps.length,
     wmCount: ps.length - noWm.length,
@@ -348,7 +352,7 @@ export async function galleryAction(
     case "home":
       return saveHome(env, g, form, t);
     case "status":
-      return changeStatus(env, g, str(form, "to"), t);
+      return changeStatus(env, g, str(form, "to"), t, deps);
     case "pin":
       return savePin(env, g, form, t);
     case "cover":
@@ -613,7 +617,13 @@ async function saveDesign(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
   return done(intent, t("admin.msg.designSaved"));
 }
 
-async function changeStatus(env: Env, g: GalleryRow, to: string, t: TFunction) {
+async function changeStatus(
+  env: Env,
+  g: GalleryRow,
+  to: string,
+  t: TFunction,
+  deps?: GalleryActionDeps,
+) {
   const intent = "status";
   const db = getDb(env);
   let from: GalleryRow["status"];
@@ -665,7 +675,10 @@ async function changeStatus(env: Env, g: GalleryRow, to: string, t: TFunction) {
       and(eq(schema.galleries.id, g.id), eq(schema.galleries.status, from)),
     )
     .returning({ id: schema.galleries.id });
-  return res.length ? done(intent, message) : stale();
+  if (!res.length) return stale();
+  // Now visible to clients: fill R2 (cover first) before the first visitor.
+  if (set.status === "published") scheduleWarmAtPublish(env, deps, g.id);
+  return done(intent, message);
 }
 
 async function savePin(env: Env, g: GalleryRow, f: FormData, t: TFunction) {

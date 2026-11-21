@@ -15,6 +15,7 @@ import { LanguageToggle } from "./LanguageToggle";
 import { Lightbox } from "./Lightbox";
 import { Logo } from "./Logo";
 import { CoverHero } from "./CoverHero";
+import { coverFiles } from "./cover-files";
 import { Download, Heart, HeartFilled } from "./icons";
 import { SharePopover } from "./SharePopover";
 import { useFavorites } from "./use-favorites";
@@ -165,6 +166,8 @@ export function GalleryView({
 
   const date = formatEventDate(gallery.eventDate, lang);
   const coverPhoto = photos.find((p) => p.id === gallery.coverPhotoId);
+  const coverId = coverPhoto?.id ?? gallery.coverPhotoId;
+  const cover = coverId ? coverFiles(imgUrl, coverId, coverPhoto?.v) : null;
   const mobilePhoto = gallery.coverPhotoIdMobile
     ? photos.find((p) => p.id === gallery.coverPhotoIdMobile)
     : undefined;
@@ -191,20 +194,15 @@ export function GalleryView({
         title={gallery.title}
         date={date}
         studio={studio}
-        src={
-          coverPhoto
-            ? imgUrl(coverPhoto.id, "view-lg", coverPhoto.v)
-            : gallery.coverPhotoId
-              ? imgUrl(gallery.coverPhotoId, "view-lg")
-              : null
-        }
+        src={cover?.src ?? null}
+        srcSet={cover?.srcSet}
         proofing={proofing}
         focus={gallery.coverFocus ?? null}
         aspect={aspectOf(coverPhoto)}
         mobile={
           mobilePhoto
             ? {
-                src: imgUrl(mobilePhoto.id, "view-lg", mobilePhoto.v),
+                ...coverFiles(imgUrl, mobilePhoto.id, mobilePhoto.v),
                 focus: gallery.coverFocusMobile ?? null,
                 aspect: aspectOf(mobilePhoto),
               }

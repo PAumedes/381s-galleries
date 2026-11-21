@@ -44,7 +44,12 @@ export function DatosSections({
         busy={busy}
         actionData={actionData}
       />
-      <StatusSection status={g.status} busy={busy} actionData={actionData} />
+      <StatusSection
+        status={g.status}
+        cacheProgress={data.cacheProgress}
+        busy={busy}
+        actionData={actionData}
+      />
       <PinSection
         hasPin={g.hasPin}
         errors={fieldErrorsOf(actionData, "pin")}

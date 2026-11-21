@@ -89,6 +89,7 @@ export const esAdmin = {
     "La tipografía es siempre Montserrat. La vista previa muestra cada cambio al instante; se aplican al guardar.",
   "admin.edit.statusNote":
     "Solo las galerías publicadas y sin vencer son visibles para los clientes.",
+  "admin.edit.photosReady": "Fotos listas: {warmed} / {total}",
   "admin.edit.action.publish": "Publicar",
   "admin.edit.action.archive": "Archivar",
   "admin.edit.action.draft": "Pasar a borrador",

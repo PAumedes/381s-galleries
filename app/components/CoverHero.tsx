@@ -16,9 +16,13 @@ import { Logo } from "./Logo";
 import { ChevronDown } from "./icons";
 
 export { MOBILE_COVER_MEDIA };
+/** The cover is full-bleed: it needs a file as wide as the viewport. */
+const COVER_SIZES = "100vw";
 
 export type CoverImage = {
   src: string;
+  /** `src` candidates by width (`url 1200w, url 2048w`): phones take the small one. */
+  srcSet?: string;
   focus: Focus | null;
   aspect: number | null;
   /** Small version shown until `src` loads (admin previews only). */
@@ -36,6 +40,7 @@ export function CoverHero({
   date,
   studio,
   src,
+  srcSet,
   placeholder = null,
   proofing,
   focus,
@@ -54,6 +59,8 @@ export function CoverHero({
   studio: string;
   /** Cover image URL (null = no photo). */
   src: string | null;
+  /** Width candidates of `src` (the browser picks by viewport and DPR); `src` is then the fallback. */
+  srcSet?: string;
   /** Small version shown until `src` loads, then faded out (admin previews). */
   placeholder?: string | null;
   proofing: boolean;
@@ -99,6 +106,7 @@ export function CoverHero({
   // file; also pointing the `<img>` at it covers browsers that ignore
   // `<source media>` (same URL, so no second download).
   const shownSrc = active ? active.src : src;
+  const shownSrcSet = active ? active.srcSet : srcSet;
   const shownPlaceholder = active ? active.placeholder : placeholder;
   const shownFocus = active ? active.focus : focus;
   const shownAspect = active ? active.aspect : aspect;
@@ -132,7 +140,11 @@ export function CoverHero({
   // Public page with a mobile cover: the browser picks the file by viewport.
   const sources =
     mobile && !device ? (
-      <source media={MOBILE_COVER_MEDIA} srcSet={mobile.src} />
+      <source
+        media={MOBILE_COVER_MEDIA}
+        srcSet={mobile.srcSet ?? mobile.src}
+        sizes={mobile.srcSet ? COVER_SIZES : undefined}
+      />
     ) : undefined;
   // Mobile cover without a desktop one: no `src`, phones still pick the source.
   const photo = (shownSrc || sources) && (
@@ -143,6 +155,8 @@ export function CoverHero({
       data-cover-img=""
       data-cover-device={onMobile ? "mobile" : "desktop"}
       src={shownSrc ?? undefined}
+      srcSet={shownSrcSet}
+      sizes={shownSrcSet ? COVER_SIZES : undefined}
       alt=""
       fetchPriority={embedded ? undefined : "high"}
       draggable={false}
