@@ -393,6 +393,211 @@ export interface ImageOptions {
   admin?: boolean;
 }
 
+/** The variant asked for, resolved to a real one; null when it is not servable here. */
+function resolveVariant(
+  variant: string | undefined,
+  admin: boolean,
+): { v: Variant; adminWm: boolean } | null {
+  if (!variant) return null;
+  const adminWm = admin && Object.hasOwn(ADMIN_WM_VARIANTS, variant);
+  if (adminWm) return { v: ADMIN_WM_VARIANTS[variant], adminWm };
+  if (!(IMAGE_VARIANTS as readonly string[]).includes(variant)) return null;
+  if (admin && variant === "view-lg") return null;
+  return { v: variant as Variant, adminWm };
+}
+
+async function loadVisiblePhoto(env: Env, photoId: string) {
+  const rows = await getDb(env)
+    .select({ photo: schema.photos, gallery: schema.galleries })
+    .from(schema.photos)
+    .innerJoin(
+      schema.galleries,
+      eq(schema.galleries.id, schema.photos.galleryId),
+    )
+    .where(and(eq(schema.photos.id, photoId), photoVisible))
+    .limit(1);
+  return rows[0];
+}
+
+type PhotoRow = typeof schema.photos.$inferSelect;
+
+function mockRedirect(photo: PhotoRow, src: Source, v: Variant): Response {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      ...BASE_HEADERS,
+      Location: mockImageUrl(
+        photo.id,
+        src.watermark && v !== "thumb" ? "wm" : MOCK_KIND[v],
+        photo.width ?? 0,
+        photo.height ?? 0,
+      ),
+      "Cache-Control": "private, max-age=3600",
+    },
+  });
+}
+
+/**
+ * A request whose ?v= equals the current version token may be cached for a
+ * year (the URL changes whenever the file, watermark flag or version does).
+ * Otherwise <=10 min browser staleness is accepted (PLAN 5.3).
+ * Admin images: same idea with their own token (`adminImageToken`); without
+ * a matching one they stay `no-store`.
+ */
+async function cacheControlFor(
+  request: Request,
+  env: Env,
+  photo: PhotoRow,
+  proofing: boolean,
+  admin: boolean,
+): Promise<string> {
+  const asked = new URL(request.url).searchParams.get("v");
+  const current = asked
+    ? admin
+      ? await adminImageToken(env, photo)
+      : await imageVersionToken(env, photo, proofing)
+    : null;
+  if (asked && asked === current) return IMMUTABLE_CACHE_CONTROL;
+  return admin ? "private, no-store" : "private, max-age=600";
+}
+
+/** R2 lookup; a warm already fetching this very file is waited for instead of a second Drive stream. */
+async function readCached(
+  env: Env,
+  key: string,
+  src: Source,
+  bypass: boolean,
+): Promise<R2ObjectBody | null> {
+  const lookup = async () => {
+    if (bypass) return null;
+    const found = await env.CACHE.get(key);
+    if (found && !isValidHit(found, src)) {
+      await found.body.cancel();
+      return null;
+    }
+    return found;
+  };
+  const hit = await lookup();
+  const pending = hit || bypass ? undefined : pendingFill(key, src);
+  if (!pending) return hit;
+  await waitForFill(pending);
+  return lookup();
+}
+
+async function cachedResponse(
+  request: Request,
+  hit: R2ObjectBody,
+  cacheControl: string,
+): Promise<Response> {
+  const headers: Record<string, string> = {
+    ...BASE_HEADERS,
+    ETag: hit.httpEtag,
+    "Cache-Control": cacheControl,
+  };
+  if (etagMatches(request.headers.get("If-None-Match"), hit.httpEtag)) {
+    await hit.body.cancel();
+    return new Response(null, { status: 304, headers });
+  }
+  return new Response(hit.body, {
+    status: 200,
+    headers: {
+      ...headers,
+      "Content-Type": safeType(hit.httpMetadata?.contentType),
+      "Content-Length": String(hit.size),
+    },
+  });
+}
+
+/** R2 miss: about to spend Drive quota. Hits are free and unlimited. A 429 response when over the limit. */
+async function missRateLimited(
+  request: Request,
+  env: Env,
+  galleryId: string,
+): Promise<Response | null> {
+  const ipHash =
+    (await clientIpHash(request, env, { prefix64: true })) ?? "noip";
+  const key = `${ipHash}:${galleryId}`;
+  if (await rateHit(env, IMG_MISS_RATE, key)) return null;
+  return textResponse("Too many requests", 429, {
+    ...BASE_HEADERS,
+    "Cache-Control": NO_STORE,
+    "Retry-After": String(await retryAfterFor(env, IMG_MISS_RATE, key)),
+  });
+}
+
+/** Drive stream for a miss, or the error response (404 gone, 502 otherwise). */
+async function fetchUpstream(
+  drive: DriveClient,
+  fileId: string,
+): Promise<{ upstream: Response } | { error: Response }> {
+  try {
+    const upstream = await drive.streamFile(fileId);
+    return upstream.body ? { upstream } : { error: badGateway() };
+  } catch (err) {
+    if (err instanceof DriveError && err.status === 404)
+      return { error: notFound() };
+    console.error(
+      "img: drive error",
+      err instanceof DriveError ? err.status : "error",
+    );
+    return { error: badGateway() };
+  }
+}
+
+/** Content-Length as a non-negative integer, or null when absent/unusable. */
+function contentLengthOf(upstream: Response): number | null {
+  const raw = upstream.headers.get("Content-Length")?.trim();
+  const length = raw ? Number(raw) : Number.NaN;
+  return Number.isInteger(length) && length >= 0 ? length : null;
+}
+
+interface MissContext {
+  env: Env;
+  ctx: Pick<ExecutionContext, "waitUntil">;
+  key: string;
+  src: Source;
+  cacheControl: string;
+  /** Admin clean/watermark files never share R2 keys with the public ones. */
+  adminClean: boolean;
+}
+
+/**
+ * Streams the Drive response to the client and, when its length and version
+ * are known, tees it into R2 (best-effort, after the response).
+ */
+async function streamAndCache(
+  upstream: Response,
+  m: MissContext,
+): Promise<Response> {
+  const contentType = safeType(upstream.headers.get("Content-Type"));
+  const headers: Record<string, string> = {
+    ...BASE_HEADERS,
+    "Content-Type": contentType,
+    "Cache-Control": m.cacheControl,
+  };
+  const length = contentLengthOf(upstream);
+  if (length === 0) {
+    await upstream.body!.cancel();
+    return badGateway();
+  }
+  // Without a known source version a cached copy could never be validated.
+  if (length === null || !m.src.version || m.adminClean)
+    return new Response(upstream.body, { status: 200, headers });
+
+  headers["Content-Length"] = String(length);
+  const [toClient, toCache] = upstream.body!.tee();
+  m.ctx.waitUntil(
+    storeInCache(m.env, m.key, toCache, length, contentType, {
+      fileId: m.src.fileId,
+      wm: m.src.watermark ? "1" : "0",
+      v: m.src.version,
+    }).catch(() => {
+      // Caching is best-effort; the client already got the image.
+    }),
+  );
+  return new Response(toClient, { status: 200, headers });
+}
+
 /**
  * Core of GET /img/:photoId/:variant (PLAN 5.3), independent of React Router.
  *
@@ -414,170 +619,50 @@ export async function serveImage(
   deps: ImageDeps,
   opts: ImageOptions = {},
 ): Promise<Response> {
-  const { photoId, variant } = params;
-  const adminWm =
-    !!opts.admin && !!variant && Object.hasOwn(ADMIN_WM_VARIANTS, variant);
-  if (
-    !photoId ||
-    !variant ||
-    (!adminWm &&
-      (!(IMAGE_VARIANTS as readonly string[]).includes(variant) ||
-        (opts.admin && variant === "view-lg")))
-  )
-    return notFound();
-  const v = (adminWm ? ADMIN_WM_VARIANTS[variant] : variant) as Variant;
+  const { photoId } = params;
+  const admin = !!opts.admin;
+  const resolved = resolveVariant(params.variant, admin);
+  if (!photoId || !resolved) return notFound();
+  const { v, adminWm } = resolved;
 
-  const rows = await getDb(env)
-    .select({ photo: schema.photos, gallery: schema.galleries })
-    .from(schema.photos)
-    .innerJoin(
-      schema.galleries,
-      eq(schema.galleries.id, schema.photos.galleryId),
-    )
-    .where(and(eq(schema.photos.id, photoId), photoVisible))
-    .limit(1);
-  const row = rows[0];
+  const row = await loadVisiblePhoto(env, photoId);
   if (!row) return notFound();
   const { photo, gallery } = row;
-
-  if (!opts.admin && !(await openGallery(request, gallery, env)))
-    return notFound();
+  if (!admin && !(await openGallery(request, gallery, env))) return notFound();
 
   const proofing = gallery.mode === "proofing";
-  const src = resolveSource(photo, adminWm || (proofing && !opts.admin), v);
+  const src = resolveSource(photo, adminWm || (proofing && !admin), v);
   if (!src) return notFound();
+  if (env.DRIVE_MODE === "mock") return mockRedirect(photo, src, v);
+
   // Admin clean files in Prueba, and admin watermarked files outside Prueba,
   // must not share R2 keys with the public objects (clean vs watermarked), so
   // they bypass the cache. A watermarked file in Prueba is exactly what the
   // public gets: it reads (validated by isValidHit) and fills the same key.
-  const adminClean = !!opts.admin && (src.watermark ? !proofing : proofing);
-  const { fileId, watermark, version } = src;
-
-  if (env.DRIVE_MODE === "mock") {
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...BASE_HEADERS,
-        Location: mockImageUrl(
-          photo.id,
-          watermark && v !== "thumb" ? "wm" : MOCK_KIND[v],
-          photo.width ?? 0,
-          photo.height ?? 0,
-        ),
-        "Cache-Control": "private, max-age=3600",
-      },
-    });
-  }
-
+  const adminClean = admin && (src.watermark ? !proofing : proofing);
   const key = `${photo.id}/${v}`;
-  // A request whose ?v= equals the current version token may be cached for a
-  // year (the URL changes whenever the file, watermark flag or version does).
-  // Otherwise <=10 min browser staleness is accepted (PLAN 5.3).
-  // Admin images: same idea with their own token (`adminImageToken`); without
-  // a matching one they stay `no-store`.
-  const asked = new URL(request.url).searchParams.get("v");
-  const current = asked
-    ? opts.admin
-      ? await adminImageToken(env, photo)
-      : await imageVersionToken(env, photo, proofing)
-    : null;
-  const cacheControl =
-    asked && asked === current
-      ? IMMUTABLE_CACHE_CONTROL
-      : opts.admin
-        ? "private, no-store"
-        : "private, max-age=600";
-  const wmFlag = watermark ? "1" : "0";
-  const lookup = async () => {
-    if (adminClean) return null;
-    const found = await env.CACHE.get(key);
-    if (found && !isValidHit(found, src)) {
-      await found.body.cancel();
-      return null;
-    }
-    return found;
-  };
-  let hit = await lookup();
-  // A warm is already fetching this very file: wait for it instead of a second Drive stream.
-  const pending = hit || adminClean ? undefined : pendingFill(key, src);
-  if (pending) {
-    await waitForFill(pending);
-    hit = await lookup();
-  }
-  if (hit) {
-    const headers: Record<string, string> = {
-      ...BASE_HEADERS,
-      ETag: hit.httpEtag,
-      "Cache-Control": cacheControl,
-    };
-    if (etagMatches(request.headers.get("If-None-Match"), hit.httpEtag)) {
-      await hit.body.cancel();
-      return new Response(null, { status: 304, headers });
-    }
-    return new Response(hit.body, {
-      status: 200,
-      headers: {
-        ...headers,
-        "Content-Type": safeType(hit.httpMetadata?.contentType),
-        "Content-Length": String(hit.size),
-      },
-    });
-  }
-
-  // R2 miss: about to spend Drive quota. Hits above are free and unlimited.
-  if (!opts.admin) {
-    const ipHash =
-      (await clientIpHash(request, env, { prefix64: true })) ?? "noip";
-    const key = `${ipHash}:${gallery.id}`;
-    if (!(await rateHit(env, IMG_MISS_RATE, key))) {
-      return textResponse("Too many requests", 429, {
-        ...BASE_HEADERS,
-        "Cache-Control": NO_STORE,
-        "Retry-After": String(await retryAfterFor(env, IMG_MISS_RATE, key)),
-      });
-    }
-  }
-
-  let upstream: Response;
-  try {
-    upstream = await deps.drive.streamFile(fileId);
-  } catch (err) {
-    if (err instanceof DriveError && err.status === 404) return notFound();
-    console.error(
-      "img: drive error",
-      err instanceof DriveError ? err.status : "error",
-    );
-    return badGateway();
-  }
-  if (!upstream.body) return badGateway();
-
-  const contentType = safeType(upstream.headers.get("Content-Type"));
-  const headers: Record<string, string> = {
-    ...BASE_HEADERS,
-    "Content-Type": contentType,
-    "Cache-Control": cacheControl,
-  };
-  const rawLength = upstream.headers.get("Content-Length")?.trim();
-  const length = rawLength ? Number(rawLength) : Number.NaN;
-  const hasLength = Number.isInteger(length) && length >= 0;
-  if (hasLength && length === 0) {
-    await upstream.body.cancel();
-    return badGateway();
-  }
-  // Without a known source version a cached copy could never be validated.
-  if (!hasLength || !version || adminClean)
-    return new Response(upstream.body, { status: 200, headers });
-
-  headers["Content-Length"] = String(length);
-  const [toClient, toCache] = upstream.body.tee();
-  ctx.waitUntil(
-    storeInCache(env, key, toCache, length, contentType, {
-      fileId,
-      wm: wmFlag,
-      v: version,
-    }).catch(() => {
-      // Caching is best-effort; the client already got the image.
-    }),
+  const cacheControl = await cacheControlFor(
+    request,
+    env,
+    photo,
+    proofing,
+    admin,
   );
-  return new Response(toClient, { status: 200, headers });
+  const hit = await readCached(env, key, src, adminClean);
+  if (hit) return cachedResponse(request, hit, cacheControl);
+
+  if (!admin) {
+    const limited = await missRateLimited(request, env, gallery.id);
+    if (limited) return limited;
+  }
+  const fetched = await fetchUpstream(deps.drive, src.fileId);
+  if ("error" in fetched) return fetched.error;
+  return streamAndCache(fetched.upstream, {
+    env,
+    ctx,
+    key,
+    src,
+    cacheControl,
+    adminClean,
+  });
 }
