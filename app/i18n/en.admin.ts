@@ -381,7 +381,7 @@ export const enAdmin = {
   "admin.msg.coverNotInGallery":
     "That photo doesn't belong to the gallery or isn't visible.",
   "admin.preview.metaTitle": "Preview · Admin",
-  "admin.preview.bar": "Preview: this is what a client sees",
+  "admin.preview.bar": "Preview: what a client sees",
   "admin.preview.back": "Back to the editor",
   "admin.preview.withPin": "With PIN",
   "admin.tabs.photos": "Photos",
