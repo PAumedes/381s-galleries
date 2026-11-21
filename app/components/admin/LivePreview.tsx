@@ -16,7 +16,6 @@ import type { PreviewDevice } from "../../lib/preview-device";
 import { useStudioName } from "../../lib/use-studio-name";
 import { CoverHero } from "../CoverHero";
 import { Grid } from "../Grid";
-import { Monitor, Phone } from "../icons";
 import {
   adminImgSrc,
   adminImgUrl,
@@ -24,7 +23,7 @@ import {
   type Versions,
 } from "../img-url";
 import type { GalleryPhoto } from "../types";
-import { paletteKey } from "./DesignPanel";
+import { DeviceToggle, PreviewFooter } from "./LivePreviewParts";
 
 export type { PreviewDevice };
 export type CoverSpec = {
@@ -54,9 +53,6 @@ const VIEWPORTS = {
     mobile: { w: 390, h: 844, ratio: "390 / 844" },
   },
 } as const;
-
-const toggle =
-  "text-micro flex min-h-tap items-center gap-2 border px-3 uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-9";
 
 /** Admin URL of the cover image (the watermarked one in Prueba). */
 export const coverSrc = (id: string, proofing: boolean, v?: string | null) =>
@@ -180,28 +176,7 @@ export function LivePreview({
           {hint && <p className="text-small text-grey-600">{hint}</p>}
         </div>
       )}
-      <div
-        role="group"
-        aria-label={t("admin.preview.device")}
-        className="flex flex-wrap gap-2"
-      >
-        {(["desktop", "mobile"] as const).map((d) => (
-          <button
-            key={d}
-            type="button"
-            aria-pressed={device === d}
-            onClick={() => onDevice(d)}
-            className={`${toggle} ${device === d ? "border-ink bg-ink text-paper" : "border-grey-300 text-grey-700 hover:border-ink hover:text-ink"}`}
-          >
-            {d === "desktop" ? (
-              <Monitor aria-hidden="true" className="size-4" />
-            ) : (
-              <Phone aria-hidden="true" className="size-4" />
-            )}
-            {t(d === "desktop" ? "admin.cover.desktop" : "admin.cover.mobile")}
-          </button>
-        ))}
-      </div>
+      <DeviceToggle device={device} onDevice={onDevice} />
       <div
         className={
           device === "mobile"
@@ -311,35 +286,17 @@ export function LivePreview({
           </div>
         </div>
       </div>
-      <div className="text-micro text-grey-700 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 uppercase">
-        <span>
-          {t("admin.cover.palette", { name: t(paletteKey(palette)) })} ·{" "}
-          {proofing ? t("admin.cover.proofing") : t("admin.cover.delivery")}
-        </span>
-        {photos && (
-          <span className="flex gap-4">
-            {(["cover", "grid"] as const).map((to) => (
-              <button
-                key={to}
-                type="button"
-                onClick={() =>
-                  viewportRef.current?.scrollTo?.({
-                    top: to === "grid" ? vp.h : 0,
-                    behavior: "smooth",
-                  })
-                }
-                className="text-micro text-ink flex min-h-tap items-center uppercase underline-offset-4 hover:underline md:min-h-8"
-              >
-                {t(
-                  to === "grid"
-                    ? "admin.preview.toGrid"
-                    : "admin.preview.toCover",
-                )}
-              </button>
-            ))}
-          </span>
-        )}
-      </div>
+      <PreviewFooter
+        palette={palette}
+        proofing={proofing}
+        showJump={!!photos}
+        onJump={(to) =>
+          viewportRef.current?.scrollTo?.({
+            top: to === "grid" ? vp.h : 0,
+            behavior: "smooth",
+          })
+        }
+      />
       {children}
     </section>
   );
