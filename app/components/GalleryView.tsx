@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import type { TKey } from "../i18n/t";
 import { useLang, useT } from "../i18n/use-t";
 import { useStudioName } from "../lib/use-studio-name";
 import { AddToHomeHint } from "./AddToHomeHint";
@@ -16,10 +15,16 @@ import { Lightbox } from "./Lightbox";
 import { Logo } from "./Logo";
 import { CoverHero } from "./CoverHero";
 import { coverFiles } from "./cover-files";
-import { Download, Heart, HeartFilled } from "./icons";
-import { SharePopover } from "./SharePopover";
 import { useFavorites } from "./use-favorites";
 import { useImgUrl } from "./img-url";
+import { SetTabs } from "./SetTabs";
+import { Toast, TopBarActions } from "./GalleryTopBar";
+import {
+  reducedMotion,
+  useHideOnScroll,
+  useTabEdges,
+  useToast,
+} from "./use-gallery-chrome";
 import type { GalleryPhoto, OpenGallery } from "./types";
 
 const ALL = "\u0000all";
@@ -27,11 +32,6 @@ const FAV = "\u0000fav";
 
 const aspectOf = (p: GalleryPhoto | undefined) =>
   p?.width && p.height ? p.width / p.height : null;
-
-const reducedMotion = () =>
-  typeof window !== "undefined" &&
-  typeof window.matchMedia === "function" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export function GalleryView({
   gallery,
@@ -59,19 +59,16 @@ export function GalleryView({
   );
   const [open, setOpen] = useState<number | null>(null);
   // One toast slot: a newer message replaces the current one.
-  const [toast, setToast] = useState<{ key: TKey; n: number } | null>(null);
-  const showToast = useCallback(
-    (key: TKey) => setToast((cur) => ({ key, n: (cur?.n ?? 0) + 1 })),
-    [],
-  );
+  const { toast, showToast } = useToast();
   const [sheet, setSheet] = useState<
     { kind: "single"; id: string } | { kind: "bulk" } | null
   >(null);
-  const [hidden, setHidden] = useState(false);
-  const [edges, setEdges] = useState({ start: false, end: false });
   const tabsRef = useRef<HTMLElement>(null);
   const gridRef = useRef<HTMLElement>(null);
   const coverRef = useRef<HTMLElement>(null);
+
+  const hidden = useHideOnScroll(coverRef);
+  const { edges, updateEdges } = useTabEdges(tabsRef, active);
 
   const favs = useFavorites(
     gallery.slug,
@@ -95,56 +92,6 @@ export function GalleryView({
           : photos.filter((p) => p.set === active),
     [photos, active, favs.ids],
   );
-
-  // Hide the top bar on scroll down, show it on scroll up.
-  useEffect(() => {
-    let last = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      const past = y > (coverRef.current?.offsetHeight ?? 0);
-      if (Math.abs(y - last) > 6) {
-        setHidden(past && y > last);
-        last = y;
-      }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Fade mask on whichever edge of the tab row has more tabs beyond it.
-  const updateEdges = useCallback(() => {
-    const el = tabsRef.current;
-    if (!el) return;
-    const start = el.scrollLeft > 1;
-    const end = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
-    setEdges((e) => (e.start === start && e.end === end ? e : { start, end }));
-  }, []);
-
-  // Keep the active tab in view (horizontal only: never scrolls the page).
-  useEffect(() => {
-    const list = tabsRef.current;
-    const tab = list?.querySelector<HTMLElement>('[aria-current="true"]');
-    if (list && tab && typeof list.scrollTo === "function")
-      list.scrollTo({
-        left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2,
-        behavior: reducedMotion() ? "auto" : "smooth",
-      });
-    updateEdges();
-  }, [active, updateEdges]);
-
-  useEffect(() => {
-    window.addEventListener("resize", updateEdges);
-    return () => window.removeEventListener("resize", updateEdges);
-  }, [updateEdges]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const id = setTimeout(
-      () => setToast(null),
-      toast.key === "gallery.linkCopied" ? 2000 : 3000,
-    );
-    return () => clearTimeout(id);
-  }, [toast]);
 
   const scrollToGrid = useCallback(() => {
     gridRef.current?.scrollIntoView?.({
@@ -223,79 +170,36 @@ export function GalleryView({
           variant={isDarkPalette(gallery.palette) ? "light" : "dark"}
           className="hidden h-7 min-w-0 justify-self-start overflow-hidden sm:block"
         />
-        {tabs.length === 0 ? (
-          <div aria-hidden="true" />
-        ) : (
-          <nav
-            ref={tabsRef}
-            aria-label={t("gallery.sets")}
-            onScroll={updateEdges}
-            style={{
-              maskImage: `linear-gradient(to right, ${edges.start ? "transparent, #000 1.5rem" : "#000, #000 0"}, ${edges.end ? "#000 calc(100% - 1.5rem), transparent" : "#000 100%, #000"})`,
-            }}
-            className="flex min-w-0 snap-x snap-proximity items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                aria-current={active === tab.key ? "true" : undefined}
-                onClick={() => {
-                  setActive(tab.key);
-                  setOpen(null);
-                }}
-                className={`text-micro-label duration-base ease-out-soft min-h-11 shrink-0 snap-center border-b px-3 uppercase whitespace-nowrap transition-colors ${
-                  active === tab.key
-                    ? "border-ink text-ink"
-                    : "text-grey-600 hover:text-ink border-transparent"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        )}
-        <div className="flex items-center justify-self-end">
-          {downloadSlot}
-          {canDownload && gallery.allowBulk && (
-            <button
-              type="button"
-              onClick={() => setSheet({ kind: "bulk" })}
-              aria-label={t("download.title")}
-              className="text-grey-600 hover:text-ink flex size-11 items-center justify-center"
-            >
-              <Download className="size-5" aria-hidden="true" />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              setActive(
-                active === FAV
-                  ? multi
-                    ? ALL
-                    : (gallery.sets[0]?.name ?? ALL)
-                  : FAV,
-              );
-              setOpen(null);
-            }}
-            aria-label={t("favorites.title")}
-            aria-pressed={active === FAV}
-            className="text-grey-600 hover:text-ink flex size-11 items-center justify-center"
-          >
-            {active === FAV || favCount > 0 ? (
-              <HeartFilled className="size-5" aria-hidden="true" />
-            ) : (
-              <Heart className="size-5" aria-hidden="true" />
-            )}
-          </button>
-          {!preview && (
-            <SharePopover
-              title={gallery.title}
-              onCopied={() => showToast("gallery.linkCopied")}
-            />
-          )}
-        </div>
+        <SetTabs
+          tabs={tabs}
+          active={active}
+          tabsRef={tabsRef}
+          edges={edges}
+          onScroll={updateEdges}
+          onSelect={(key) => {
+            setActive(key);
+            setOpen(null);
+          }}
+        />
+        <TopBarActions
+          downloadSlot={downloadSlot}
+          showBulk={canDownload && gallery.allowBulk}
+          onBulk={() => setSheet({ kind: "bulk" })}
+          favOn={active === FAV}
+          hasFavs={favCount > 0}
+          onToggleFavs={() => {
+            setActive(
+              active === FAV
+                ? multi
+                  ? ALL
+                  : (gallery.sets[0]?.name ?? ALL)
+                : FAV,
+            );
+            setOpen(null);
+          }}
+          shareTitle={preview ? null : gallery.title}
+          onCopied={() => showToast("gallery.linkCopied")}
+        />
       </nav>
 
       <main
@@ -337,15 +241,7 @@ export function GalleryView({
 
       {!preview && <AddToHomeHint slug={gallery.slug} gridRef={gridRef} />}
 
-      {toast && (
-        <p
-          key={toast.n}
-          role="status"
-          className="text-micro-label bg-ink text-paper fixed bottom-6 left-1/2 z-(--z-toast) -translate-x-1/2 px-5 py-3 uppercase"
-        >
-          {t(toast.key)}
-        </p>
-      )}
+      {toast && <Toast key={toast.n} messageKey={toast.key} />}
 
       {open !== null && (
         <Lightbox

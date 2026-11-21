@@ -14,7 +14,7 @@ const HAS_CHROME =
   spawnSync("google-chrome", ["--version"], { stdio: "ignore" }).status === 0;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function until(fn, what, tries = 100) {
+async function until(fn, what, tries = 400) {
   for (let i = 0; i < tries; i++) {
     const v = await fn();
     if (v) return v;
@@ -48,6 +48,8 @@ async function buildPage() {
   const bundled = chunks.find((c) => c.type === "chunk").code;
   const srcs = [
     "app/components/admin/CoverPreview.tsx",
+    "app/components/admin/FocalPicker.tsx",
+    "app/components/admin/CoverChooser.tsx",
     "app/components/admin/LivePreview.tsx",
     "app/components/CoverHero.tsx",
   ].map((f) => readFileSync(f, "utf8"));

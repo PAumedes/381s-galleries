@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { restoreFocus, trapTab, useLatest } from "./dialog-keys";
 
 import type { TFunction } from "../i18n/t";
 import { EMAIL_RE } from "../lib/email";
 import { Close } from "./icons";
 
 export type GateResult = "ok" | "invalid" | "error";
-
-const FOCUSABLE = "button:not([disabled]), input:not([disabled])";
 
 export type EmailGateProps = {
   t: TFunction;
@@ -18,10 +17,7 @@ export type EmailGateProps = {
 export function EmailGate({ t, onSubmit, onClose }: EmailGateProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
-  const closeRef = useRef(onClose);
-  useEffect(() => {
-    closeRef.current = onClose;
-  });
+  const closeRef = useLatest(onClose);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,32 +31,15 @@ export function EmailGate({ t, onSubmit, onClose }: EmailGateProps) {
         e.preventDefault();
         closeRef.current();
       } else if (e.key === "Tab") {
-        const nodes = Array.from(
-          dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [],
-        );
-        if (nodes.length === 0) return;
-        const first = nodes[0];
-        const last = nodes[nodes.length - 1];
-        const active = document.activeElement;
-        if (!dialogRef.current?.contains(active)) {
-          e.preventDefault();
-          first.focus();
-        } else if (e.shiftKey && active === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && active === last) {
-          e.preventDefault();
-          first.focus();
-        }
+        trapTab(e, dialogRef.current);
       }
     };
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      if (opener && opener !== document.body && opener.isConnected)
-        opener.focus();
+      restoreFocus(opener);
     };
-  }, []);
+  }, [closeRef]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import src from "../../app/components/DownloadMenu.tsx?raw";
+import menu from "../../app/components/DownloadMenu.tsx?raw";
+import bulkViews from "../../app/components/DownloadBulkViews.tsx?raw";
+
+// The bulk screens (with the fieldset legends) live in DownloadBulkViews.
+const src = menu + bulkViews;
 
 // Token values copied from app/app.css ([data-theme] blocks); CSS ?raw is empty
 // in the workers pool, so they are inlined here.

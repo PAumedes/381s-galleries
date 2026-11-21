@@ -1,3 +1,4 @@
+import type { DownloadSize } from "../constants";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { schema, type getDb } from "../../db";
 
@@ -13,7 +14,7 @@ import { schema, type getDb } from "../../db";
 export interface ActivityOpts {
   /** Visitor email (case-insensitive) or `"anon"` (anonymous or no visitor). */
   visitor?: string;
-  variant?: "highres" | "web" | "ig";
+  variant?: DownloadSize;
   /** Keyset: rows strictly older than (createdAt, id). */
   before?: { createdAt: string; id: string };
   /** Hide per-photo rows that belong to a bulk header (they nest under it). */

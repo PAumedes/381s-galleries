@@ -1,3 +1,4 @@
+import type { GalleryMode, ImageVariant } from "../lib/constants";
 import type { CoverLayout, GridGap, GridStyle, Palette } from "../lib/design";
 
 export type GalleryPhoto = {
@@ -11,7 +12,7 @@ export type GalleryPhoto = {
   v?: string;
 };
 
-export type ImgVariant = "thumb" | "view-sm" | "view-lg";
+export type ImgVariant = ImageVariant;
 
 /** Builds an image URL; the admin preview swaps in `/admin/img` (see img-url.tsx). */
 export type ImgUrlFn = (id: string, variant: ImgVariant, v?: string) => string;
@@ -40,7 +41,7 @@ export type OpenGallery = {
   allowWeb: boolean;
   allowIg: boolean;
   /** 'proofing' (Prueba): watermarked images, no downloads, protected images. */
-  mode: "proofing" | "delivery";
+  mode: GalleryMode;
   palette: Palette;
   coverLayout: CoverLayout;
   gridStyle: GridStyle;
