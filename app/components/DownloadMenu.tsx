@@ -6,13 +6,18 @@ import {
   currentPicker,
   downloadBulk,
   downloadSingle,
-  estimateBytes,
-  formatBytes,
   type BulkProgress,
   type BulkScope,
   type DlVariant,
 } from "../lib/download-client";
 import { EmailRequiredError } from "./use-visitor";
+import { useBulkFocus } from "./use-bulk-focus";
+import {
+  BulkChooseView,
+  BulkProgressView,
+  ROW,
+  type BulkPhase,
+} from "./DownloadBulkViews";
 import { Close } from "./icons";
 import type { GalleryPhoto, OpenGallery } from "./types";
 
@@ -53,9 +58,6 @@ export type DownloadMenuProps = {
   onClose: () => void;
   onError?: () => void;
 };
-
-const ROW =
-  "text-small flex min-h-11 w-full items-center px-1 text-left transition-colors duration-base ease-out-soft";
 
 export function DownloadMenu(props: DownloadMenuProps) {
   const { t, onClose } = props;
@@ -192,8 +194,6 @@ function SingleBody({
   );
 }
 
-type Phase = "choose" | "running" | "done";
-
 function BulkBody({
   gallery,
   t,
@@ -215,7 +215,7 @@ function BulkBody({
   const [variant, setVariant] = useState<DlVariant>(
     sizes[0]?.variant ?? "highres",
   );
-  const [phase, setPhase] = useState<Phase>("choose");
+  const [phase, setPhase] = useState<BulkPhase>("choose");
   const [progress, setProgress] = useState<BulkProgress>({
     done: 0,
     total: 0,
@@ -232,29 +232,11 @@ function BulkBody({
     key: TKey;
     answer: (ok: boolean) => void;
   } | null>(null);
-  const cancelRef = useRef<HTMLButtonElement>(null);
-  const noRef = useRef<HTMLButtonElement>(null);
-  const closeBtnRef = useRef<HTMLButtonElement>(null);
-  const startRef = useRef<HTMLButtonElement>(null);
-  const moved = useRef(false);
+  const { cancelRef, noRef, closeBtnRef, startRef } = useBulkFocus(
+    phase,
+    confirming,
+  );
   useEffect(() => () => ctl.current?.abort(), []);
-  // Keep focus on the primary control of the current phase.
-  useEffect(() => {
-    if (phase === "running") cancelRef.current?.focus();
-    else if (phase === "done") closeBtnRef.current?.focus();
-    else if (moved.current) startRef.current?.focus();
-    moved.current = true;
-  }, [phase]);
-  const askedConfirm = useRef(false);
-  useEffect(() => {
-    if (confirming) {
-      askedConfirm.current = true;
-      noRef.current?.focus();
-    } else if (askedConfirm.current) {
-      askedConfirm.current = false;
-      cancelRef.current?.focus();
-    }
-  }, [confirming]);
   useEffect(() => {
     runningRef.current = phase === "running";
   }, [phase, runningRef]);
@@ -347,201 +329,39 @@ function BulkBody({
   };
 
   if (phase !== "choose") {
-    const pct = progress.total
-      ? Math.min(100, (progress.done / progress.total) * 100)
-      : 0;
     return (
-      <div className="flex flex-col gap-4">
-        {phase === "running" ? (
-          <>
-            <div
-              role="progressbar"
-              aria-label={t("download.title")}
-              aria-valuemin={0}
-              aria-valuenow={progress.done}
-              aria-valuemax={progress.total}
-              className="bg-grey-200 h-px w-full"
-            >
-              <div
-                className="bg-ink h-px transition-[width] duration-base ease-out-soft motion-reduce:transition-none"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-            <p className="text-micro-label text-grey-600">
-              {t("download.progress", {
-                done: progress.done,
-                total: progress.total,
-              })}
-            </p>
-            {progress.waiting !== undefined && (
-              <p role="status" className="text-small text-grey-700">
-                {t("download.waiting", { n: progress.waiting })}
-              </p>
-            )}
-            {fallback && (
-              <div className="flex flex-col gap-2">
-                <p role="note" className="text-small text-grey-700">
-                  {t(fallback.key)}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fallback.answer(true)}
-                    className="text-micro-label bg-ink text-paper h-11 flex-1 uppercase"
-                  >
-                    {t("download.continue")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fallback.answer(false)}
-                    className="text-micro-label border-ink h-11 flex-1 border uppercase"
-                  >
-                    {t("download.cancel")}
-                  </button>
-                </div>
-              </div>
-            )}
-            {confirming ? (
-              <div
-                role="alertdialog"
-                aria-label={t("download.confirmCancel")}
-                className="flex flex-col gap-2"
-              >
-                <p className="text-small">{t("download.confirmCancel")}</p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setConfirming(false);
-                      ctl.current?.abort();
-                      fallback?.answer(false);
-                    }}
-                    className="text-micro-label bg-ink text-paper h-11 flex-1 uppercase"
-                  >
-                    {t("download.yes")}
-                  </button>
-                  <button
-                    type="button"
-                    ref={noRef}
-                    onClick={() => setConfirming(false)}
-                    className="text-micro-label border-ink h-11 flex-1 border uppercase"
-                  >
-                    {t("download.no")}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                ref={cancelRef}
-                onClick={() => ctl.current?.abort()}
-                className="text-micro-label border-ink hover:bg-grey-50 h-11 border uppercase transition-colors duration-base ease-out-soft"
-              >
-                {t("download.cancel")}
-              </button>
-            )}
-          </>
-        ) : (
-          <>
-            <p role="status" className="text-small">
-              {t(
-                status === "cancelled" ? "download.cancelled" : "download.done",
-              )}
-            </p>
-            {progress.failed.length > 0 && (
-              <p className="text-small text-grey-600">
-                {t("download.failed", {
-                  count: progress.failed.length,
-                  n: progress.failed.length,
-                })}
-              </p>
-            )}
-            <button
-              type="button"
-              ref={closeBtnRef}
-              onClick={onClose}
-              className="text-micro-label bg-ink text-paper hover:bg-grey-800 h-11 uppercase transition-colors duration-base ease-out-soft"
-            >
-              {t("lightbox.close")}
-            </button>
-          </>
-        )}
-      </div>
+      <BulkProgressView
+        t={t}
+        phase={phase}
+        progress={progress}
+        status={status}
+        fallback={fallback}
+        confirming={confirming}
+        setConfirming={setConfirming}
+        onAbort={() => ctl.current?.abort()}
+        onClose={onClose}
+        noRef={noRef}
+        cancelRef={cancelRef}
+        closeBtnRef={closeBtnRef}
+      />
     );
   }
 
-  const radio = (
-    name: string,
-    checked: boolean,
-    label: string,
-    onChange: () => void,
-  ) => (
-    <label
-      key={label}
-      className={`${ROW} has-[:checked]:text-ink text-grey-600 hover:text-ink has-[:focus-visible]:outline-2 cursor-pointer gap-3`}
-    >
-      <input
-        type="radio"
-        name={name}
-        checked={checked}
-        onChange={onChange}
-        className="sr-only"
-      />
-      <span
-        aria-hidden="true"
-        className={`size-2 shrink-0 border ${checked ? "bg-ink border-ink" : "border-grey-400"}`}
-      />
-      {label}
-    </label>
-  );
-
   return (
-    <div className="flex flex-col gap-5">
-      {
-        <fieldset className="flex flex-col">
-          <legend className="text-micro-label text-grey-600 mb-1 uppercase">
-            {t("download.scope")}
-          </legend>
-          {scopes.map((s) =>
-            radio("dl-scope", scope === s.key, s.label, () => setScope(s.key)),
-          )}
-        </fieldset>
-      }
-      <fieldset className="flex flex-col">
-        <legend className="text-micro-label text-grey-600 mb-1 uppercase">
-          {t("download.size")}
-        </legend>
-        {sizes.map((s) =>
-          radio("dl-size", variant === s.variant, t(s.key), () =>
-            setVariant(s.variant),
-          ),
-        )}
-      </fieldset>
-      <p className="text-small text-grey-600">
-        {t("download.count", { count, n: count })} ·{" "}
-        {t("download.approx", {
-          size: formatBytes(estimateBytes(count, variant)),
-        })}
-      </p>
-      {warning && (
-        <p role="note" className="text-small text-grey-700">
-          {t(warning === "ios" ? "download.warnIos" : "download.warnLarge")}
-        </p>
-      )}
-      {error && (
-        <p role="alert" className="text-small text-grey-600">
-          {t("download.error")}
-        </p>
-      )}
-      <button
-        type="button"
-        ref={startRef}
-        disabled={count === 0 || phase !== "choose"}
-        onClick={() => void start().catch(() => setError(true))}
-        className="text-micro-label bg-ink text-paper hover:bg-grey-800 h-11 uppercase transition-colors duration-base ease-out-soft disabled:opacity-60"
-      >
-        {t("download.start")}
-      </button>
-    </div>
+    <BulkChooseView
+      t={t}
+      scopes={scopes}
+      scope={scope}
+      setScope={setScope}
+      sizes={sizes}
+      variant={variant}
+      setVariant={setVariant}
+      count={count}
+      warning={warning}
+      error={error}
+      startRef={startRef}
+      disabled={count === 0 || phase !== "choose"}
+      onStart={() => void start().catch(() => setError(true))}
+    />
   );
 }
