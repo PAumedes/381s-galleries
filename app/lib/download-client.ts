@@ -413,35 +413,62 @@ function defaultSaveBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
-  const { slug, scope, variant, signal, deps } = opts;
-  const fetchFn = doFetch(deps);
-  const sleep = (ms: number) =>
-    abortableSleep(deps?.sleep ?? defaultSleep, ms, signal);
+/** What every step of one bulk run shares: options, progress, the 429 waiter. */
+type Run = {
+  opts: BulkOptions;
+  fetchFn: typeof globalThis.fetch;
+  sleep: (ms: number) => Promise<void>;
+  progress: BulkProgress;
+  emit: () => void;
+  waiter: Waiter;
+  result: (
+    status: BulkResult["status"],
+    sink: BulkResult["sink"],
+  ) => BulkResult;
+};
+
+function createRun(opts: BulkOptions): Run {
+  const { signal, deps } = opts;
   const progress: BulkProgress = { done: 0, total: 0, bytes: 0, failed: [] };
   const emit = () =>
     opts.onProgress?.({ ...progress, failed: [...progress.failed] });
-  const waiter = createWaiter(deps, signal, (secs) => {
-    if (secs === null) delete progress.waiting;
-    else progress.waiting = secs;
-    emit();
-  });
-  const result = (
-    status: BulkResult["status"],
-    sink: BulkResult["sink"],
-  ): BulkResult => ({
-    ...progress,
-    failed: [...progress.failed],
-    status,
-    sink,
-  });
+  return {
+    opts,
+    fetchFn: doFetch(deps),
+    sleep: (ms) => abortableSleep(deps?.sleep ?? defaultSleep, ms, signal),
+    progress,
+    emit,
+    waiter: createWaiter(deps, signal, (secs) => {
+      if (secs === null) delete progress.waiting;
+      else progress.waiting = secs;
+      emit();
+    }),
+    result: (status, sink) => ({
+      ...progress,
+      failed: [...progress.failed],
+      status,
+      sink,
+    }),
+  };
+}
 
-  if (signal?.aborted) return result("cancelled", null);
+type PickedSink = {
+  writable: WritableStream<Uint8Array> | null;
+  /** The picker failed for a reason other than the visitor cancelling. */
+  pickerFailed: boolean;
+};
 
-  // The picker needs a live user activation: open it before any await.
-  const zipName = bulkZipName({ slug, scope, set: opts.set, variant });
-  const picker = deps?.showSaveFilePicker ?? currentPicker();
-  let pickerFailed = false;
+/**
+ * Opens the save picker (it needs a live user activation, so before any
+ * await) and settles it. Returns the cancelled result when the visitor
+ * cancels the picker or declines the fallback.
+ */
+async function openSink(
+  run: Run,
+  zipName: string,
+): Promise<PickedSink | BulkResult> {
+  const { opts } = run;
+  const picker = opts.deps?.showSaveFilePicker ?? currentPicker();
   let pickedP: Promise<WritableStream<Uint8Array> | null> =
     Promise.resolve(null);
   if (picker) {
@@ -458,61 +485,49 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
     pickedP.catch(() => {});
   }
   let writable: WritableStream<Uint8Array> | null = null;
+  let pickerFailed = false;
   try {
     writable = await pickedP;
   } catch (err) {
-    if (isAbort(err)) return result("cancelled", "picker");
+    if (isAbort(err)) return run.result("cancelled", "picker");
     pickerFailed = true;
   }
   if (pickerFailed && opts.confirmFallback && !(await opts.confirmFallback()))
-    return result("cancelled", "picker");
-  if (signal?.aborted) {
-    await writable?.abort().catch(() => {});
-    return result("cancelled", null);
-  }
+    return run.result("cancelled", "picker");
+  return { writable, pickerFailed };
+}
 
-  const planRes = await post(
-    slug,
+type BulkPlan = {
+  bulkId: string | null;
+  photoIds: string[];
+  totalBytes?: number;
+};
+
+/** Asks the server which photos the run covers; null when aborted meanwhile. */
+async function fetchPlan(run: Run): Promise<BulkPlan | null> {
+  const { opts } = run;
+  const res = await post(
+    opts.slug,
     "bulk",
-    { scope, ...(scope === "set" ? { set: opts.set } : {}), variant },
-    deps,
-    signal,
-    waiter,
+    {
+      scope: opts.scope,
+      ...(opts.scope === "set" ? { set: opts.set } : {}),
+      variant: opts.variant,
+    },
+    opts.deps,
+    opts.signal,
+    run.waiter,
   ).catch((e) => {
-    if (signal?.aborted) return null;
+    if (opts.signal?.aborted) return null;
     throw e;
   });
-  if (!planRes) return result("cancelled", null);
-  const plan = (await planRes.json()) as {
-    bulkId: string | null;
-    photoIds: string[];
-    totalBytes?: number;
-  };
-  progress.total = plan.photoIds.length;
-  if (!plan.bulkId || plan.photoIds.length === 0) {
-    emit();
-    return result("done", null);
-  }
-  const bulkId = plan.bulkId;
+  return res ? ((await res.json()) as BulkPlan) : null;
+}
 
-  if (
-    !writable &&
-    !pickerFailed &&
-    opts.confirmLarge &&
-    estimateBytes(plan.photoIds.length, variant, plan.totalBytes) >
-      LARGE_BYTES &&
-    !(await opts.confirmLarge())
-  )
-    return result("cancelled", "blob");
-  if (signal?.aborted) {
-    await writable?.abort().catch(() => {});
-    return result("cancelled", null);
-  }
-
-  const sink = writable ? "picker" : "blob";
-
+/** Path of a file inside the zip: set folders (scope "all", several sets), safe and unique names. */
+function createZipPaths(opts: BulkOptions): (token: Token) => string {
   const folders =
-    scope === "all" && opts.sets && new Set(opts.sets.values()).size > 1;
+    opts.scope === "all" && opts.sets && new Set(opts.sets.values()).size > 1;
   const used = new Set<string>();
   const folderOf = new Map<string, string>();
   const usedFolders = new Set<string>();
@@ -528,21 +543,41 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
     }
     return f;
   };
+  return (token) => {
+    const set = opts.sets?.get(token.photoId);
+    const path =
+      folders && set
+        ? `${folderName(set)}/${safeZipName(token.filename)}`
+        : safeZipName(token.filename);
+    return uniqueName(used, path);
+  };
+}
+
+type FetchedFile = { token: Token; res: Response | null };
+
+/**
+ * One file with the run's retry policy: network/5xx retried with backoff, a
+ * 410 refreshed once per photo, a 429 waited out (one shared pause for all
+ * workers), 403/404 final. `res` is null when the file failed or aborted.
+ */
+function createFileFetcher(
+  run: Run,
+  bulkId: string,
+): (first: Token) => Promise<FetchedFile> {
+  const { signal } = run.opts;
   const refreshed = new Set<string>();
   let pause: Promise<void> | null = null;
   const startPause = (ms: number): boolean => {
     if (!pause) {
-      if (!waiter.canWait(ms)) return false;
-      pause = waiter.wait(ms).finally(() => {
+      if (!run.waiter.canWait(ms)) return false;
+      pause = run.waiter.wait(ms).finally(() => {
         pause = null;
       });
     }
     return true;
   };
 
-  async function fetchFile(
-    first: Token,
-  ): Promise<{ token: Token; res: Response | null }> {
+  return async function fetchFile(first) {
     let token = first;
     let tries = 0;
     let rateTries = 0;
@@ -551,7 +586,7 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
       while (pause) await pause;
       let res: Response | null = null;
       try {
-        res = await fetchFn(token.url, { signal });
+        res = await run.fetchFn(token.url, { signal });
       } catch {
         if (signal?.aborted) return { token, res: null };
       }
@@ -562,13 +597,13 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
           refreshed.add(token.photoId);
           try {
             const r = await requestTokens(
-              slug,
+              run.opts.slug,
               [token.photoId],
-              variant,
+              run.opts.variant,
               bulkId,
-              deps,
+              run.opts.deps,
               signal,
-              waiter,
+              run.waiter,
             );
             const fresh = r.tokens.find((t) => t.photoId === token.photoId);
             if (fresh) {
@@ -594,106 +629,163 @@ export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
         if ([403, 404, 410].includes(res.status)) return { token, res: null };
       }
       if (tries >= RETRIES) return { token, res: null };
-      await sleep(BACKOFF_MS * 2 ** tries++);
+      await run.sleep(BACKOFF_MS * 2 ** tries++);
     }
-  }
+  };
+}
 
-  type Item = { token: Token; res: Response | null };
-  async function* tokenSource(): AsyncGenerator<Token> {
-    for (let i = 0; i < plan.photoIds.length; i += BATCH_SIZE) {
-      if (signal?.aborted) throw abortError();
-      // Just in time: tokens only live 10 minutes.
-      const batch = plan.photoIds.slice(i, i + BATCH_SIZE);
-      const r = await requestTokens(
-        slug,
-        batch,
-        variant,
-        bulkId,
-        deps,
-        signal,
-        waiter,
-      );
-      for (const id of [...r.missing, ...r.unavailable]) {
-        progress.failed.push(id);
-        progress.done++;
-        emit();
-      }
-      yield* r.tokens;
-    }
-  }
-
-  async function* innerEntries() {
-    const source = tokenSource();
-    const pending: Promise<Item>[] = [];
-    let exhausted = false;
-    emit();
-    for (;;) {
-      while (pending.length < CONCURRENCY && !exhausted) {
-        if (signal?.aborted) throw abortError();
-        const next = await source.next();
-        if (next.done) exhausted = true;
-        else {
-          const token = next.value;
-          pending.push(fetchFile(token));
-        }
-      }
-      const head = pending.shift();
-      if (!head) break;
-      const { token, res } = await head;
-      if (signal?.aborted) throw abortError();
-      if (!res) {
-        progress.failed.push(token.filename);
-      } else {
-        const set = opts.sets?.get(token.photoId);
-        const path =
-          folders && set
-            ? `${folderName(set)}/${safeZipName(token.filename)}`
-            : safeZipName(token.filename);
-        const input = res.body
-          ? res.body.pipeThrough(
-              new TransformStream<Uint8Array, Uint8Array>({
-                transform(chunk, ctl) {
-                  progress.bytes += chunk.byteLength;
-                  ctl.enqueue(chunk);
-                },
-              }),
-            )
-          : await res.blob();
-        yield { name: uniqueName(used, path), input, lastModified: new Date() };
-      }
+/** Download tokens in batches, just in time (they only live 10 minutes). */
+async function* tokenSource(
+  run: Run,
+  plan: BulkPlan,
+  bulkId: string,
+): AsyncGenerator<Token> {
+  const { opts, progress } = run;
+  for (let i = 0; i < plan.photoIds.length; i += BATCH_SIZE) {
+    if (opts.signal?.aborted) throw abortError();
+    const batch = plan.photoIds.slice(i, i + BATCH_SIZE);
+    const r = await requestTokens(
+      opts.slug,
+      batch,
+      opts.variant,
+      bulkId,
+      opts.deps,
+      opts.signal,
+      run.waiter,
+    );
+    for (const id of [...r.missing, ...r.unavailable]) {
+      progress.failed.push(id);
       progress.done++;
-      emit();
+      run.emit();
     }
+    yield* r.tokens;
   }
+}
 
+/** Counts the bytes of a response body as the zip consumes it. */
+function countingBody(res: Response, progress: BulkProgress) {
+  return res.body
+    ? res.body.pipeThrough(
+        new TransformStream<Uint8Array, Uint8Array>({
+          transform(chunk, ctl) {
+            progress.bytes += chunk.byteLength;
+            ctl.enqueue(chunk);
+          },
+        }),
+      )
+    : res.blob();
+}
+
+/** The zip entries: up to CONCURRENCY files in flight, yielded in token order. */
+async function* zipEntries(run: Run, plan: BulkPlan, bulkId: string) {
+  const { opts, progress } = run;
+  const fetchFile = createFileFetcher(run, bulkId);
+  const pathFor = createZipPaths(opts);
+  const source = tokenSource(run, plan, bulkId);
+  const pending: Promise<FetchedFile>[] = [];
+  let exhausted = false;
+  run.emit();
+  for (;;) {
+    while (pending.length < CONCURRENCY && !exhausted) {
+      if (opts.signal?.aborted) throw abortError();
+      const next = await source.next();
+      if (next.done) exhausted = true;
+      else pending.push(fetchFile(next.value));
+    }
+    const head = pending.shift();
+    if (!head) break;
+    const { token, res } = await head;
+    if (opts.signal?.aborted) throw abortError();
+    if (!res) {
+      progress.failed.push(token.filename);
+    } else {
+      const input = await countingBody(res, progress);
+      yield { name: pathFor(token), input, lastModified: new Date() };
+    }
+    progress.done++;
+    run.emit();
+  }
+}
+
+/** Streams the zip into the picked file or an in-memory Blob; maps aborts to a cancelled result. */
+async function writeZip(
+  run: Run,
+  entries: AsyncGenerator<{
+    name: string;
+    input: ReadableStream<Uint8Array> | Blob;
+    lastModified: Date;
+  }>,
+  {
+    writable,
+    zipName,
+  }: { writable: WritableStream<Uint8Array> | null; zipName: string },
+): Promise<BulkResult> {
+  const { signal, deps } = run.opts;
+  const sink = writable ? "picker" : "blob";
   // client-zip wraps what the generator throws; remember the original.
   let fatal: unknown;
-  async function* entries() {
+  async function* watched() {
     try {
-      yield* innerEntries();
+      yield* entries;
     } catch (e) {
       fatal ??= e;
       throw e;
     }
   }
-
   try {
-    const zip = downloadZip(entries());
+    const zip = downloadZip(watched());
     if (writable) {
       await zip.body!.pipeTo(writable, { signal });
     } else {
       const blob = await zip.blob();
-      if (signal?.aborted) return result("cancelled", sink);
+      if (signal?.aborted) return run.result("cancelled", sink);
       (deps?.saveBlob ?? defaultSaveBlob)(blob, zipName);
     }
   } catch (caught) {
     const err = fatal ?? caught;
-    if (signal?.aborted || isAbort(err)) {
-      await writable?.abort().catch(() => {});
-      return result("cancelled", sink);
-    }
     await writable?.abort().catch(() => {});
+    if (signal?.aborted || isAbort(err)) return run.result("cancelled", sink);
     throw err;
   }
-  return result("done", sink);
+  return run.result("done", sink);
+}
+
+export async function downloadBulk(opts: BulkOptions): Promise<BulkResult> {
+  const { slug, scope, variant, signal } = opts;
+  const run = createRun(opts);
+  if (signal?.aborted) return run.result("cancelled", null);
+
+  const zipName = bulkZipName({ slug, scope, set: opts.set, variant });
+  const picked = await openSink(run, zipName);
+  if ("status" in picked) return picked;
+  const { writable, pickerFailed } = picked;
+  const cancelNow = async () => {
+    await writable?.abort().catch(() => {});
+    return run.result("cancelled", null);
+  };
+  if (signal?.aborted) return cancelNow();
+
+  const plan = await fetchPlan(run);
+  if (!plan) return run.result("cancelled", null);
+  run.progress.total = plan.photoIds.length;
+  if (!plan.bulkId || plan.photoIds.length === 0) {
+    run.emit();
+    return run.result("done", null);
+  }
+
+  if (
+    !writable &&
+    !pickerFailed &&
+    opts.confirmLarge &&
+    estimateBytes(plan.photoIds.length, variant, plan.totalBytes) >
+      LARGE_BYTES &&
+    !(await opts.confirmLarge())
+  )
+    return run.result("cancelled", "blob");
+  if (signal?.aborted) return cancelNow();
+
+  return writeZip(run, zipEntries(run, plan, plan.bulkId), {
+    writable,
+    zipName,
+  });
 }
