@@ -1,27 +1,19 @@
-import { useId, useLayoutEffect, useRef, useState } from "react";
-import { Form, useNavigation, useSubmit } from "react-router";
+import { useId, useState } from "react";
+import { Form, useNavigation } from "react-router";
 
 import { useT } from "../../i18n/use-t";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
 import type { CoverLayout, Palette } from "../../lib/design";
-import { FadeImg } from "../FadeImg";
-import { ChevronDown, Monitor, Phone } from "../icons";
-import { adminImgSrc, type Versions } from "../img-url";
-import { coverSrc, LivePreview, type PreviewDevice } from "./LivePreview";
-import {
-  clamp,
-  focusAt,
-  round1,
-  useFocalDrag,
-  type Focus,
-} from "./use-focal-drag";
+import { Monitor, Phone } from "../icons";
+import type { Versions } from "../img-url";
+import { LivePreview, type PreviewDevice } from "./LivePreview";
+import { btn } from "./gallery-edit/ui";
+import { CoverChooser } from "./CoverChooser";
+import { FocalPicker } from "./FocalPicker";
+import type { Focus } from "./use-focal-drag";
 
 type Size = { w: number; h: number };
 
-const STEP = 5;
-
-const btn =
-  "text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10";
 const seg =
   "text-micro flex min-h-tap flex-1 items-center justify-center gap-2 px-3 uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-9";
 
@@ -109,8 +101,6 @@ export function CoverPreview({
   };
   const [focus, setFocus] = useSynced(initialFocus);
   const [mobileFocus, setMobileFocus] = useSynced(mobileCover?.focus ?? null);
-  const boxRef = useRef<HTMLDivElement>(null);
-  const [box, setBox] = useState<Size | null>(null);
   const [natural, setNatural] = useState<Record<string, Size>>({});
 
   // Which cover the picker edits: the mobile one only when it exists.
@@ -128,83 +118,6 @@ export function CoverPreview({
   const cur = editing === "mobile" ? mobileFocus : focus;
   const setCur = editing === "mobile" ? setMobileFocus : setFocus;
 
-  useLayoutEffect(() => {
-    const el = boxRef.current;
-    if (!el) return;
-    const measure = () => {
-      const w = el.clientWidth;
-      const h = el.clientHeight;
-      setBox((b) =>
-        w > 0 && h > 0 ? (b && b.w === w && b.h === h ? b : { w, h }) : null,
-      );
-    };
-    measure();
-    if (typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [pickId]);
-
-  // The uncropped image, letterboxed (object-fit: contain) inside the box.
-  let shown: React.CSSProperties = { inset: 0 };
-  if (pickAspect && box) {
-    const w = Math.min(box.w, box.h * pickAspect);
-    const h = w / pickAspect;
-    shown = {
-      left: (box.w - w) / 2,
-      top: (box.h - h) / 2,
-      width: w,
-      height: h,
-    };
-  }
-
-  function onClick(ev: React.MouseEvent) {
-    const f = focusAt(
-      ev.currentTarget.getBoundingClientRect(),
-      ev.clientX,
-      ev.clientY,
-    );
-    if (f) setCur(f);
-  }
-  // Touch: drag the point, save on release.
-  const submit = useSubmit();
-  const {
-    ref: dragRef,
-    dragging,
-    handlers: dragHandlers,
-  } = useFocalDrag({
-    point: cur,
-    onPoint: setCur,
-    onCommit: (f) =>
-      submit(
-        {
-          intent: "focus",
-          device: editing,
-          focusX: String(f.x),
-          focusY: String(f.y),
-        },
-        { method: "post" },
-      ),
-  });
-  function onKeyDown(ev: React.KeyboardEvent) {
-    const d =
-      ev.key === "ArrowLeft"
-        ? [-STEP, 0]
-        : ev.key === "ArrowRight"
-          ? [STEP, 0]
-          : ev.key === "ArrowUp"
-            ? [0, -STEP]
-            : ev.key === "ArrowDown"
-              ? [0, STEP]
-              : null;
-    if (!d) return;
-    ev.preventDefault();
-    setCur((c) => ({
-      x: round1(clamp((c?.x ?? 50) + d[0]!)),
-      y: round1(clamp((c?.y ?? 50) + d[1]!)),
-    }));
-  }
-
   const fb =
     actionData?.intent === "focus" || actionData?.intent === "cover"
       ? actionData
@@ -212,8 +125,6 @@ export function CoverPreview({
   const fx = cur?.x ?? 50;
   const fy = cur?.y ?? 50;
   const valueText = t("admin.cover.focalValue", { x: fx, y: fy });
-  const nameOf = (id: string | null) =>
-    photos.find((p) => p.id === id)?.name ?? "";
 
   const picker = (
     <section
@@ -265,64 +176,24 @@ export function CoverPreview({
           {t("admin.cover.mobileFallback")}
         </p>
       )}
-      {pickId ? (
-        <div
-          ref={boxRef}
-          data-testid="focus-box"
-          className="bg-grey-100 relative h-72 w-full md:h-80"
-        >
-          <div
-            role="application"
-            tabIndex={0}
-            data-testid="focus-picker"
-            aria-label={t("admin.cover.pickerLabel")}
-            aria-valuetext={valueText}
-            ref={dragRef}
-            onClick={onClick}
-            onKeyDown={onKeyDown}
-            {...dragHandlers}
-            style={dragging ? { ...shown, touchAction: "none" } : shown}
-            className="focus-visible:outline-ink absolute cursor-crosshair touch-manipulation focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
-            <FadeImg
-              src={coverSrc(pickId, false, versions?.[pickId])}
-              placeholder={adminImgSrc(pickId, "thumb", versions?.[pickId])}
-              alt=""
-              draggable={false}
-              onLoad={(e) => {
-                const w = e.currentTarget.naturalWidth;
-                const h = e.currentTarget.naturalHeight;
-                if (w && h)
-                  setNatural((n) =>
-                    n[pickId]?.w === w && n[pickId]?.h === h
-                      ? n
-                      : { ...n, [pickId]: { w, h } },
-                  );
-              }}
-              className="pointer-events-none absolute inset-0 size-full object-contain select-none"
-            />
-            {/* Crosshair: thin lines through the point + a ring on it. */}
-            <span
-              aria-hidden="true"
-              style={{ left: `${fx}%` }}
-              className="pointer-events-none absolute inset-y-0 w-px -translate-x-1/2 bg-white/70 mix-blend-difference"
-            />
-            <span
-              aria-hidden="true"
-              style={{ top: `${fy}%` }}
-              className="pointer-events-none absolute inset-x-0 h-px -translate-y-1/2 bg-white/70 mix-blend-difference"
-            />
-            <span
-              data-testid="focus-marker"
-              aria-hidden="true"
-              style={{ left: `${fx}%`, top: `${fy}%` }}
-              className="pointer-events-none absolute size-6 -translate-1/2 rounded-full border-2 border-white bg-black/30 shadow"
-            />
-          </div>
-        </div>
-      ) : (
-        <p className="text-small text-grey-600">{t("admin.cover.noPhotos")}</p>
-      )}
+      <FocalPicker
+        pickId={pickId}
+        aspect={pickAspect}
+        cur={cur}
+        setCur={setCur}
+        editing={editing}
+        versions={versions}
+        valueText={valueText}
+        fx={fx}
+        fy={fy}
+        onNatural={(id, size) =>
+          setNatural((n) =>
+            n[id]?.w === size.w && n[id]?.h === size.h
+              ? n
+              : { ...n, [id]: size },
+          )
+        }
+      />
       <p role="status" aria-live="polite" className="text-small text-grey-700">
         {valueText}
         {fb?.ok ? ` · ${fb.message}` : ""}
@@ -354,80 +225,16 @@ export function CoverPreview({
         </p>
       )}
 
-      {photos.length > 0 && (
-        <div className="border-grey-200 flex flex-col gap-3 border-t pt-4">
-          <p className="text-small">
-            {editing === "mobile"
-              ? t("admin.cover.photoMobile", { name: nameOf(pickId) })
-              : coverAuto
-                ? t("admin.cover.photoAuto", { name: nameOf(pickId) })
-                : t("admin.cover.photo", { name: nameOf(pickId) })}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {device === "desktop" && !coverAuto && (
-              <Form method="post">
-                <input type="hidden" name="intent" value="cover" />
-                <input type="hidden" name="photoId" value="" />
-                <button type="submit" className={btn} disabled={busy}>
-                  {t("admin.edit.photos.useFirst")}
-                </button>
-              </Form>
-            )}
-            {device === "mobile" && mobileCover && (
-              <Form method="post">
-                <input type="hidden" name="intent" value="cover" />
-                <input type="hidden" name="device" value="mobile" />
-                <input type="hidden" name="photoId" value="" />
-                <button type="submit" className={btn} disabled={busy}>
-                  {t("admin.cover.useDesktop")}
-                </button>
-              </Form>
-            )}
-          </div>
-          <details
-            className="group/choose"
-            open={device === "mobile" && !mobileCover ? true : undefined}
-          >
-            <summary className="text-micro text-ink flex min-h-tap cursor-pointer list-none items-center gap-2 uppercase underline-offset-4 hover:underline md:min-h-8 [&::-webkit-details-marker]:hidden">
-              {device === "mobile" && !mobileCover
-                ? t("admin.cover.chooseMobile")
-                : t("admin.cover.change")}
-              <ChevronDown
-                aria-hidden="true"
-                className="size-4 transition-transform group-open/choose:rotate-180"
-              />
-            </summary>
-            <ul className="mt-3 grid max-h-80 grid-cols-4 gap-1 overflow-y-auto sm:grid-cols-6">
-              {photos.map((p) => (
-                <li key={p.id} className="list-none">
-                  <Form method="post">
-                    <input type="hidden" name="intent" value="cover" />
-                    {device === "mobile" && (
-                      <input type="hidden" name="device" value="mobile" />
-                    )}
-                    <input type="hidden" name="photoId" value={p.id} />
-                    <button
-                      type="submit"
-                      disabled={busy}
-                      aria-label={t("admin.cover.useNamed", { name: p.name })}
-                      aria-current={p.id === pickId ? "true" : undefined}
-                      className={`bg-grey-100 focus-visible:outline-ink block aspect-square w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 ${p.id === pickId ? "outline-ink outline-2 outline-offset-1" : ""}`}
-                    >
-                      <img
-                        src={adminImgSrc(p.id, "thumb", versions?.[p.id])}
-                        alt=""
-                        loading="lazy"
-                        draggable={false}
-                        className="size-full object-cover"
-                      />
-                    </button>
-                  </Form>
-                </li>
-              ))}
-            </ul>
-          </details>
-        </div>
-      )}
+      <CoverChooser
+        photos={photos}
+        editing={editing}
+        device={device}
+        coverAuto={coverAuto}
+        hasMobileCover={!!mobileCover}
+        pickId={pickId}
+        versions={versions}
+        busy={busy}
+      />
     </section>
   );
 
