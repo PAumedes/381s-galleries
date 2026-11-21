@@ -27,11 +27,23 @@ const data = {
   hasPin: true,
   expired: true,
   gallery: {
-    slug: "boda-ana", requireEmail: true, title: "Boda Ana", eventDate: null,
-    coverPhotoId: null, coverPhotoIdMobile: null, coverFocusMobile: null,
-    mode: "proofing", allowBulk: false, allowHighres: false, allowWeb: false,
-    allowIg: false, palette: "claro", coverLayout: "completa",
-    gridStyle: "filas", gridGap: "normal", sets: [{ name: "A", count: 0 }],
+    slug: "boda-ana",
+    requireEmail: true,
+    title: "Boda Ana",
+    eventDate: null,
+    coverPhotoId: null,
+    coverPhotoIdMobile: null,
+    coverFocusMobile: null,
+    mode: "proofing",
+    allowBulk: false,
+    allowHighres: false,
+    allowWeb: false,
+    allowIg: false,
+    palette: "claro",
+    coverLayout: "completa",
+    gridStyle: "filas",
+    gridGap: "normal",
+    sets: [{ name: "A", count: 0 }],
   },
   photos: [],
 };
@@ -43,7 +55,9 @@ async function html(lang, search) {
       id: "root",
       path: "/",
       loader: () => ({ lang, messages: msgs }),
-      children: [{ path: "p", Component: () => h(AdminGalleryPreview, { data }) }],
+      children: [
+        { path: "p", Component: () => h(AdminGalleryPreview, { data }) },
+      ],
     },
   ];
   const handler = createStaticHandler(routes);
@@ -58,12 +72,18 @@ async function html(lang, search) {
   return { inner, style: await css(cls) };
 }
 
-async function run(lang, width, { rootPx = 16, dir = "ltr", expr, search = "" }) {
+async function run(
+  lang,
+  width,
+  { rootPx = 16, dir = "ltr", expr, search = "" },
+) {
   const { inner, style } = await html(lang, search);
   const doc = `<!doctype html><html dir=${dir} style="font-size:${rootPx}px"><meta name=viewport content="width=device-width,initial-scale=1"><style>${style}</style><body style="margin:0">${inner}`;
   const { ch, list } = await launchChrome();
   try {
-    const ws = new WebSocket(list.find((t) => t.type === "page").webSocketDebuggerUrl);
+    const ws = new WebSocket(
+      list.find((t) => t.type === "page").webSocketDebuggerUrl,
+    );
     await new Promise((r) => (ws.onopen = r));
     let id = 0;
     const pend = {};
@@ -72,16 +92,32 @@ async function run(lang, width, { rootPx = 16, dir = "ltr", expr, search = "" })
       if (m.id && pend[m.id]) pend[m.id](m.result);
     };
     const send = (method, params = {}) =>
-      new Promise((r) => { pend[++id] = r; ws.send(JSON.stringify({ id, method, params })); });
-    await send("Emulation.setDeviceMetricsOverride", { width, height: 900, deviceScaleFactor: 2, mobile: true });
+      new Promise((r) => {
+        pend[++id] = r;
+        ws.send(JSON.stringify({ id, method, params }));
+      });
+    await send("Emulation.setDeviceMetricsOverride", {
+      width,
+      height: 900,
+      deviceScaleFactor: 2,
+      mobile: true,
+    });
     await send("Page.enable");
-    await send("Page.navigate", { url: "data:text/html;charset=utf-8," + encodeURIComponent(doc) });
+    await send("Page.navigate", {
+      url: "data:text/html;charset=utf-8," + encodeURIComponent(doc),
+    });
     for (let i = 0; i < 100; i++) {
-      const r = await send("Runtime.evaluate", { returnByValue: true, expression: "document.readyState==='complete'&&!!document.querySelector('[data-admin-preview-bar]')" });
+      const r = await send("Runtime.evaluate", {
+        returnByValue: true,
+        expression:
+          "document.readyState==='complete'&&!!document.querySelector('[data-admin-preview-bar]')",
+      });
       if (r?.result?.value) break;
       await sleep(100);
     }
-    return (await send("Runtime.evaluate", { returnByValue: true, expression: expr })).result.value;
+    return (
+      await send("Runtime.evaluate", { returnByValue: true, expression: expr })
+    ).result.value;
   } finally {
     ch.kill();
   }
@@ -116,7 +152,10 @@ describe.skipIf(!HAS_CHROME)("T6.42b real AdminGalleryPreview", () => {
       }
 
   it("back link keeps device and tab", async () => {
-    const m = await run("es", 360, { expr: M, search: "?device=phone&tab=fotos" });
+    const m = await run("es", 360, {
+      expr: M,
+      search: "?device=phone&tab=fotos",
+    });
     expect(m.href).toMatch(/\/admin\/g\/g1/);
   }, 60000);
 
