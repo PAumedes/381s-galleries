@@ -1,54 +1,23 @@
-import { Form, Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import { useFormat } from "../../i18n/use-format";
 import { useT } from "../../i18n/use-t";
 import { withCode } from "../../i18n/rich";
-import type { MessageKey } from "../../i18n/t";
 import { SAMPLE_ROOT_NAME } from "../../lib/sample-root-name";
 import { useStudioTimezone } from "../../lib/use-studio-timezone";
 import { FILTERS, FILTER_KEYS, utcIsoToLocal } from "../../lib/admin-gallery";
 import type { Filter } from "../../lib/admin-gallery";
 import type { GalleryListRow } from "../../lib/server/admin-galleries";
+import {
+  GalleryListHead,
+  GalleryRow,
+  SearchForm,
+  StatusPill,
+} from "./GalleryListParts";
+
+export { StatusPill };
 
 export type GalleryListItem = GalleryListRow;
-
-const STATUS_KEY = {
-  published: "admin.state.published",
-  draft: "admin.state.draft",
-  archived: "admin.state.archived",
-} as const satisfies Record<string, MessageKey>;
-
-export function StatusPill({
-  status,
-  expired = false,
-  proofing = false,
-  className = "inline-block px-2 py-0.5",
-}: {
-  status: keyof typeof STATUS_KEY;
-  expired?: boolean;
-  /** A live proof (Prueba) gallery reads "Prueba" instead of "Publicada". */
-  proofing?: boolean;
-  /** Box sizing (display, padding, min height); colours and type stay fixed. */
-  className?: string;
-}) {
-  const t = useT();
-  const live = status === "published" && !expired;
-  const label =
-    expired && status === "published"
-      ? t("admin.state.expired")
-      : live && proofing
-        ? t("admin.mode.proofing")
-        : t(STATUS_KEY[status]);
-  const tone =
-    status === "published" && !expired
-      ? "bg-ink text-paper border-ink"
-      : "border-grey-400 text-grey-700";
-  return (
-    <span className={`text-micro border uppercase ${className} ${tone}`}>
-      {label}
-    </span>
-  );
-}
 
 /** One row on phones (360 px): tight tracking, no wrapping, sideways scroll as a fallback. */
 export const FILTER_NAV_CLS =
@@ -133,31 +102,7 @@ export function GalleryList({
     return <EmptyLibrary rootName={rootName} />;
   return (
     <div className="flex flex-col gap-4">
-      <Form
-        method="get"
-        action="/admin"
-        role="search"
-        className="flex max-w-xl items-center gap-2"
-      >
-        {filter !== "todas" && (
-          <input type="hidden" name="estado" value={filter} />
-        )}
-        <input
-          type="search"
-          name="q"
-          defaultValue={q}
-          maxLength={100}
-          placeholder={t("admin.list.search.placeholder")}
-          aria-label={t("admin.list.search.label")}
-          className="border-grey-300 bg-white w-full border px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-        />
-        <button
-          type="submit"
-          className="text-micro border-ink border px-4 py-2 uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-        >
-          {t("admin.list.search.submit")}
-        </button>
-      </Form>
+      <SearchForm filter={filter} q={q} />
       <nav aria-label={t("admin.filter.label")} className={FILTER_NAV_CLS}>
         {FILTERS.map((f) => (
           <Link
@@ -180,196 +125,15 @@ export function GalleryList({
             role="table"
             className="text-small block w-full text-left xl:table xl:min-w-[56rem]"
           >
-            <thead
-              role="rowgroup"
-              className="text-micro text-grey-600 sr-only uppercase xl:not-sr-only xl:table-header-group"
-            >
-              <tr role="row" className="border-grey-200 border-b">
-                <th
-                  scope="col"
-                  role="columnheader"
-                  className="w-20 py-2 pr-3 font-medium"
-                >
-                  <span className="sr-only">{t("admin.list.col.cover")}</span>
-                </th>
-                <th
-                  scope="col"
-                  role="columnheader"
-                  className="py-2 pr-3 font-medium"
-                >
-                  {t("admin.list.col.title")}
-                </th>
-                <th
-                  scope="col"
-                  role="columnheader"
-                  className="py-2 pr-3 font-medium"
-                >
-                  {t("admin.list.col.date")}
-                </th>
-                <th
-                  scope="col"
-                  role="columnheader"
-                  className="py-2 pr-3 font-medium"
-                >
-                  {t("admin.list.col.status")}
-                </th>
-                <th
-                  scope="col"
-                  role="columnheader"
-                  className="py-2 pr-3 text-right font-medium"
-                >
-                  {t("admin.list.col.photos")}
-                </th>
-                <th
-                  scope="col"
-                  role="columnheader"
-                  className="py-2 pr-3 text-right font-medium"
-                >
-                  {t("admin.list.col.views")}
-                </th>
-                <th
-                  scope="col"
-                  role="columnheader"
-                  className="py-2 pr-3 text-right font-medium"
-                >
-                  {t("admin.list.col.downloads")}
-                </th>
-                <th
-                  scope="col"
-                  role="columnheader"
-                  className="py-2 pr-3 font-medium"
-                >
-                  {t("admin.list.col.expires")}
-                </th>
-                <th
-                  scope="col"
-                  role="columnheader"
-                  className="py-2 font-medium"
-                >
-                  {t("admin.list.col.issues")}
-                </th>
-              </tr>
-            </thead>
+            <GalleryListHead />
             <tbody role="rowgroup" className="block xl:table-row-group">
               {galleries.map((g) => (
-                <tr
+                <GalleryRow
                   key={g.id}
-                  role="row"
-                  onClick={(ev) => {
-                    if (!(ev.target as HTMLElement).closest("a"))
-                      void navigate(`/admin/g/${g.id}`);
-                  }}
-                  className="border-grey-100 hover:bg-grey-50 grid cursor-pointer grid-cols-[5rem_1fr_auto] gap-x-3 gap-y-1 border-b py-3 max-xl:relative max-xl:py-4 xl:table-row xl:py-0"
-                >
-                  <td
-                    role="cell"
-                    className="max-xl:col-start-1 max-xl:row-span-3 max-xl:row-start-1 xl:py-2 xl:pr-3"
-                  >
-                    {g.coverPhotoId ? (
-                      <img
-                        src={`/admin/img/${g.coverPhotoId}/thumb`}
-                        alt=""
-                        loading="lazy"
-                        className="bg-grey-100 h-14 w-20 object-cover"
-                      />
-                    ) : (
-                      <span
-                        aria-hidden="true"
-                        className="bg-grey-100 block h-14 w-20"
-                      />
-                    )}
-                  </td>
-                  <td
-                    role="cell"
-                    className="min-w-0 max-xl:col-span-2 max-xl:col-start-2 max-xl:row-start-1 xl:table-cell xl:py-2 xl:pr-3"
-                  >
-                    <Link
-                      to={`/admin/g/${g.id}`}
-                      className="text-body text-ink block font-medium underline-offset-4 hover:underline max-xl:line-clamp-2 max-xl:text-base max-xl:font-bold max-xl:after:absolute max-xl:after:inset-0 xl:inline"
-                    >
-                      {g.title}
-                    </Link>
-                    {g.clientName && (
-                      <div className="text-grey-600 max-xl:text-sm">
-                        {g.clientName}
-                      </div>
-                    )}
-                    <div className="text-grey-600 max-xl:hidden">/{g.slug}</div>
-                  </td>
-                  <td
-                    role="cell"
-                    data-label={t("admin.list.col.status")}
-                    className="max-xl:col-start-2 max-xl:row-start-2 xl:py-2 xl:pr-3"
-                  >
-                    <StatusPill
-                      status={g.status}
-                      expired={g.expired}
-                      proofing={g.mode === "proofing"}
-                    />
-                    {g.deleting && (
-                      <Link
-                        to={`/admin/g/${g.id}`}
-                        className="text-micro relative z-10 mt-1 block underline"
-                      >
-                        {t("admin.list.deleting")}
-                      </Link>
-                    )}
-                  </td>
-                  <td
-                    role="cell"
-                    data-label={t("admin.list.col.date")}
-                    className="max-xl:text-grey-600 max-xl:col-span-2 max-xl:col-start-2 max-xl:row-start-3 max-xl:text-sm xl:py-2 xl:pr-3"
-                  >
-                    {g.eventDate ? fmt.date(g.eventDate) : "—"}
-                    <span className="xl:hidden">
-                      {" · "}
-                      {t("admin.count.photos", { count: g.photoCount })}
-                    </span>
-                  </td>
-                  <td
-                    role="cell"
-                    data-label={t("admin.list.col.photos")}
-                    className="tabular-nums max-xl:hidden xl:py-2 xl:pr-3 xl:text-right"
-                  >
-                    {fmt.number(g.photoCount)}
-                  </td>
-                  <td
-                    role="cell"
-                    data-label={t("admin.list.col.views")}
-                    className="tabular-nums max-xl:hidden xl:py-2 xl:pr-3 xl:text-right"
-                  >
-                    {fmt.number(g.views)}
-                  </td>
-                  <td
-                    role="cell"
-                    data-label={t("admin.list.col.downloads")}
-                    className="tabular-nums max-xl:hidden xl:py-2 xl:pr-3 xl:text-right"
-                  >
-                    {fmt.number(g.downloads)}
-                  </td>
-                  <td
-                    role="cell"
-                    data-label={t("admin.list.col.expires")}
-                    className="max-xl:hidden xl:py-2 xl:pr-3"
-                  >
-                    {expiry(g.expiresAt)}
-                  </td>
-                  <td
-                    role="cell"
-                    className="max-xl:col-start-3 max-xl:row-start-2 max-xl:self-center empty:hidden xl:py-2 xl:empty:table-cell"
-                  >
-                    {g.issueCount > 0 && (
-                      <span
-                        aria-label={t("admin.list.issueBadge", {
-                          count: g.issueCount,
-                        })}
-                        className="text-micro border-ink inline-block border px-2 py-0.5"
-                      >
-                        {fmt.number(g.issueCount)}
-                      </span>
-                    )}
-                  </td>
-                </tr>
+                  g={g}
+                  onOpen={() => void navigate(`/admin/g/${g.id}`)}
+                  expiry={expiry}
+                />
               ))}
             </tbody>
           </table>
