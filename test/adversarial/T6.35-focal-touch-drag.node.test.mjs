@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { build } from "vite";
 import { describe, expect, it } from "vitest";
 import { launchChrome } from "../support/chrome.mjs";
 import { classesOf, css } from "../support/tailwind-css.mjs";
@@ -24,21 +25,27 @@ async function until(fn, what, tries = 100) {
 
 async function buildPage() {
   const dir = mkdtempSync(join(tmpdir(), "focal-"));
-  const out = join(dir, "bundle.js");
-  const r = spawnSync(
-    "node_modules/.bin/esbuild",
-    [
-      "test/support/focal-drag-entry.tsx",
-      "--bundle",
-      "--jsx=automatic",
-      "--format=iife",
-      '--define:process.env.NODE_ENV="production"',
-      `--outfile=${out}`,
-      "--log-level=error",
-    ],
-    { encoding: "utf8", cwd: process.cwd() },
-  );
-  if (r.status !== 0) throw new Error(r.stderr);
+  // Vite is a real dependency (esbuild is not, and may be missing on CI).
+  const built = await build({
+    configFile: false,
+    logLevel: "silent",
+    root: process.cwd(),
+    esbuild: { jsx: "automatic", jsxDev: false },
+    define: { "process.env.NODE_ENV": '"production"' },
+    build: {
+      write: false,
+      minify: false,
+      lib: {
+        entry: `${process.cwd()}/test/support/focal-drag-entry.tsx`,
+        formats: ["iife"],
+        name: "App",
+      },
+    },
+  });
+  const chunks = Array.isArray(built)
+    ? built.flatMap((o) => o.output)
+    : built.output;
+  const bundled = chunks.find((c) => c.type === "chunk").code;
   const srcs = [
     "app/components/admin/CoverPreview.tsx",
     "app/components/admin/LivePreview.tsx",
@@ -48,7 +55,7 @@ async function buildPage() {
   const file = join(dir, "page.html");
   writeFileSync(
     file,
-    `<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><style>${style}</style><body style="margin:0"><div id=root></div><script>${readFileSync(out, "utf8").replace(/<\/script/g, "<\\/script")}</script>`,
+    `<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><style>${style}</style><body style="margin:0"><div id=root></div><script>${bundled.replace(/<\/script/g, "<\\/script")}</script>`,
   );
   return "file://" + file;
 }
