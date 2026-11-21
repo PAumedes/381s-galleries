@@ -25,6 +25,9 @@ import { NO_STORE, NOSNIFF, textResponse } from "./http";
 
 export type Variant = ImageVariant;
 
+/** Pre-refactor name for the variant list; kept for existing importers. */
+export { IMAGE_VARIANTS as VARIANTS };
+
 export {
   adminImageToken,
   IMMUTABLE_CACHE_CONTROL,
