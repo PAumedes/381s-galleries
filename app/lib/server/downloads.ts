@@ -1,76 +1,34 @@
-import { DOWNLOAD_SIZES, type DownloadSize } from "../constants";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
-import { wellFormed } from "../text";
 import { getDb, photoVisible, schema } from "../../db";
 import {
   clientIpHash,
   crossSite,
   findGallery,
-  isAvailable,
   openGallery,
   requireVisitor,
-  type AccessEnv,
   type GalleryRow,
   type VisitorRow,
 } from "./access";
 import { pinFingerprint } from "./auth";
-import { newId, signToken, verifyToken } from "./crypto";
-import { mockImageUrl } from "./drive-mock";
-import { DriveError } from "./drive-types";
-import type { DriveClient } from "./drive-types";
+import { newId, signToken } from "./crypto";
 import {
   ANON_RATE,
   createAnonVisitor,
   visibleFavoritesQuery,
 } from "./favorites";
-import { jsonReply, NOSNIFF, PRIVATE_NO_STORE, textResponse } from "./http";
+import { jsonReply } from "./http";
 import { hit, retryAfterFor, type RateRule } from "./rate-limit";
 import { rawUserAgent, visitorInfo } from "./visitor-info";
-
-export const DL_TOKEN_TTL_SECONDS = 10 * 60;
-export const DL_WINDOW_MS = 10 * 60 * 1000;
-/** Token/bulk requests per ip+gallery per window (a big bulk run needs one per 50 files plus refreshes). */
-export const DL_MAX_PER_WINDOW = 300;
-export const DL_MAX_IDS = 50;
-/** `/dl` hits per ip+gallery per window (zips with retries and refreshes). */
-export const DL_GET_MAX_PER_WINDOW = 3000;
-/** Uses of one download token (retries, ranges, resumes). */
-export const DL_TOKEN_MAX_USES = 20;
-/** Token/bulk requests per ip+gallery. */
-const DL_RATE: RateRule = {
-  scope: "dl",
-  max: DL_MAX_PER_WINDOW,
-  windowMs: DL_WINDOW_MS,
-};
-/** `/dl` hits per ip+gallery. */
-const DL_GET_RATE: RateRule = {
-  scope: "dlget",
-  max: DL_GET_MAX_PER_WINDOW,
-  windowMs: DL_WINDOW_MS,
-};
-/** Uses of one token (window = the token's remaining TTL, set per hit). */
-const DL_TOKEN_RATE: RateRule = {
-  scope: "dlj",
-  max: DL_TOKEN_MAX_USES,
-  windowMs: DL_TOKEN_TTL_SECONDS * 1000,
-};
-type DlVariant = DownloadSize;
-type PhotoRow = typeof schema.photos.$inferSelect;
-type DlEnv = AccessEnv & Pick<Env, "DOWNLOAD_SECRET">;
-
-interface DlToken {
-  t: "dl";
-  jti: string;
-  g: string;
-  p: string;
-  v: DlVariant;
-  vid: string;
-  pf: string;
-  b?: string;
-}
-
-const isVariant = (v: unknown): v is DlVariant =>
-  typeof v === "string" && (DOWNLOAD_SIZES as readonly string[]).includes(v);
+import {
+  DL_MAX_IDS,
+  DL_RATE,
+  DL_TOKEN_TTL_SECONDS,
+  downloadFilename,
+  fileIdFor,
+  isVariant,
+  variantAllowed,
+} from "./download-shared";
+import type { DlEnv, DlToken, DlVariant, PhotoRow } from "./download-shared";
 
 const reply = jsonReply;
 const notFound = () => reply({ error: "not_found" }, 404);
@@ -87,49 +45,6 @@ async function readJson(
   } catch {
     return null;
   }
-}
-
-function variantAllowed(g: GalleryRow, v: DlVariant): boolean {
-  // Proofing (Prueba): nothing is downloadable, whatever the allow_* flags say.
-  if (g.mode === "proofing") return false;
-  return v === "highres"
-    ? g.allowHighres
-    : v === "web"
-      ? g.allowWeb
-      : g.allowIg;
-}
-
-function fileIdFor(p: PhotoRow, v: DlVariant): string | null {
-  return (
-    (v === "highres"
-      ? p.driveHighresId
-      : v === "web"
-        ? p.driveWebId
-        : p.driveIgId) || null
-  );
-}
-
-/** Download file name: no path separators / control chars (unicode kept). */
-export function downloadFilename(baseName: string, v: DlVariant): string {
-  const base =
-    wellFormed(baseName)
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\u0000-\u001f\u007f-\u009f/\\]/g, "")
-      .trim()
-      // Truncate by code point so an astral character is never split.
-      .match(/[\s\S]/gu)
-      ?.slice(0, 200)
-      .join("") || "photo";
-  return `${base}${v === "highres" ? "" : `-${v}`}.jpg`;
-}
-
-function contentDisposition(filename: string): string {
-  const ascii = filename.replace(/[^\x20-\x7e]|["\\%]/g, "_");
-  const star = encodeURIComponent(wellFormed(filename)).replace(
-    /['()*]/g,
-    (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase(),
-  );
-  return `attachment; filename="${ascii}"; filename*=UTF-8''${star}`;
 }
 
 interface Gate {
@@ -397,216 +312,6 @@ export async function handleBulk(
   );
 }
 
-// ------------------------------------------------------------------ /dl/:token
-
-const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const BASE_HEADERS = {
-  ...NOSNIFF,
-  "Referrer-Policy": "no-referrer",
-  "Cache-Control": PRIVATE_NO_STORE,
-};
-const gone = () => textResponse("Gone", 410, BASE_HEADERS);
-const badGateway = () => textResponse("Bad gateway", 502, BASE_HEADERS);
-
-export interface DownloadDeps {
-  drive: DriveClient;
-}
-
-/** The signed token's claims, or null when forged, expired or malformed. */
-async function verifyDownloadToken(
-  token: string,
-  env: DlEnv,
-): Promise<DlToken | null> {
-  const claims = await verifyToken<DlToken>(token, env.DOWNLOAD_SECRET);
-  if (
-    !claims ||
-    claims.t !== "dl" ||
-    typeof claims.jti !== "string" ||
-    typeof claims.g !== "string" ||
-    typeof claims.p !== "string" ||
-    typeof claims.pf !== "string" ||
-    !isVariant(claims.v)
-  )
-    return null;
-  return claims;
-}
-
-/** 429 when the IP or the token itself has used up its allowance; null otherwise. */
-async function downloadRateLimited(
-  request: Request,
-  env: DlEnv,
-  claims: DlToken,
-): Promise<Response | null> {
-  const limited = async (rule: RateRule, key: string, windowMs?: number) =>
-    textResponse("Too Many Requests", 429, {
-      ...BASE_HEADERS,
-      "Retry-After": String(await retryAfterFor(env, rule, key, windowMs)),
-    });
-  const ipHash = await clientIpHash(request, env, { prefix64: true });
-  if (ipHash && !(await hit(env, DL_GET_RATE, `${ipHash}:${claims.g}`)))
-    return limited(DL_GET_RATE, `${ipHash}:${claims.g}`);
-  const exp = (claims as { exp?: number }).exp;
-  const ttlMs = Math.max(
-    1000,
-    typeof exp === "number"
-      ? exp * 1000 - Date.now()
-      : DL_TOKEN_TTL_SECONDS * 1000,
-  );
-  if (!(await hit(env, DL_TOKEN_RATE, claims.jti, ttlMs)))
-    return limited(DL_TOKEN_RATE, claims.jti, ttlMs);
-  return null;
-}
-
-/** The photo, gallery and Drive file a token still entitles to; null = gone. */
-async function loadDownloadTarget(env: DlEnv, claims: DlToken) {
-  const [row] = await getDb(env as Env)
-    .select({ photo: schema.photos, gallery: schema.galleries })
-    .from(schema.photos)
-    .innerJoin(
-      schema.galleries,
-      eq(schema.galleries.id, schema.photos.galleryId),
-    )
-    .where(
-      and(
-        eq(schema.photos.id, claims.p),
-        eq(schema.photos.galleryId, claims.g),
-        photoVisible,
-      ),
-    );
-  if (!row) return null;
-  const { photo, gallery } = row;
-  if (!isAvailable(gallery)) return null;
-  if (claims.pf !== (await pinFingerprint(gallery.pinHash, env))) return null;
-  if (!variantAllowed(gallery, claims.v)) return null;
-  if (claims.b && !gallery.allowBulk) return null;
-  const fileId = fileIdFor(photo, claims.v);
-  return fileId ? { photo, gallery, fileId } : null;
-}
-
-async function logDownload(
-  request: Request,
-  env: DlEnv,
-  claims: DlToken,
-  photo: PhotoRow,
-  galleryId: string,
-): Promise<void> {
-  const info = await visitorInfo(request, env, galleryId);
-  await getDb(env as Env)
-    .insert(schema.downloads)
-    .values({
-      galleryId,
-      photoId: photo.id,
-      visitorId: typeof claims.vid === "string" ? claims.vid : null,
-      variant: claims.v,
-      kind: claims.b ? "bulk" : "single",
-      tokenId: claims.jti,
-      bulkId: claims.b && claims.b !== "multi" ? claims.b : null,
-      ...info,
-      ua: rawUserAgent(request),
-    })
-    .onConflictDoNothing();
-}
-
-/** Drive stream (Range forwarded), or the error response (gone / 416 / 502). */
-async function fetchDownloadUpstream(
-  drive: DriveClient,
-  fileId: string,
-  range: string | null,
-): Promise<{ upstream: Response } | { error: Response }> {
-  try {
-    return {
-      upstream: await drive.streamFile(fileId, { range: range ?? undefined }),
-    };
-  } catch (err) {
-    if (err instanceof DriveError && err.status === 404)
-      return { error: gone() };
-    if (err instanceof DriveError && err.status === 416) {
-      return {
-        error: new Response(null, {
-          status: 416,
-          headers: { "Cache-Control": PRIVATE_NO_STORE },
-        }),
-      };
-    }
-    console.error(
-      "dl: drive error",
-      err instanceof DriveError ? err.status : "error",
-    );
-    return { error: badGateway() };
-  }
-}
-
-/** Attachment response mirroring the upstream status, length and range headers. */
-async function attachmentResponse(
-  upstream: Response,
-  photo: PhotoRow,
-  variant: DlVariant,
-  isHead: boolean,
-): Promise<Response> {
-  const type = (upstream.headers.get("Content-Type") ?? "")
-    .split(";")[0]
-    .trim()
-    .toLowerCase();
-  const headers = new Headers({
-    ...BASE_HEADERS,
-    "Content-Type": IMAGE_TYPES.includes(type) ? type : "image/jpeg",
-    "Content-Disposition": contentDisposition(
-      downloadFilename(photo.baseName, variant),
-    ),
-  });
-  for (const h of ["Content-Length", "Content-Range", "Accept-Ranges"]) {
-    const v = upstream.headers.get(h);
-    if (v) headers.set(h, v);
-  }
-  if (isHead) {
-    await upstream.body?.cancel();
-    return new Response(null, { status: upstream.status, headers });
-  }
-  return new Response(upstream.body, { status: upstream.status, headers });
-}
-
-export async function serveDownload(
-  request: Request,
-  token: string,
-  env: DlEnv,
-  deps: DownloadDeps,
-): Promise<Response> {
-  const claims = await verifyDownloadToken(token, env);
-  if (!claims) return gone();
-  const limited = await downloadRateLimited(request, env, claims);
-  if (limited) return limited;
-  const target = await loadDownloadTarget(env, claims);
-  if (!target) return gone();
-  const { photo, gallery, fileId } = target;
-
-  const isHead = request.method === "HEAD";
-  const log = () =>
-    isHead
-      ? Promise.resolve()
-      : logDownload(request, env, claims, photo, gallery.id);
-
-  if (env.DRIVE_MODE === "mock") {
-    await log();
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...BASE_HEADERS,
-        Location: mockImageUrl(
-          photo.id,
-          claims.v,
-          photo.width ?? 0,
-          photo.height ?? 0,
-        ),
-      },
-    });
-  }
-
-  const fetched = await fetchDownloadUpstream(
-    deps.drive,
-    fileId,
-    request.headers.get("Range"),
-  );
-  if ("error" in fetched) return fetched.error;
-  await log();
-  return attachmentResponse(fetched.upstream, photo, claims.v, isHead);
-}
+export { serveDownload } from "./download-serve";
+export type { DownloadDeps } from "./download-serve";
+export * from "./download-shared";
