@@ -15,10 +15,10 @@ import { Lightbox } from "./Lightbox";
 import { Logo } from "./Logo";
 import { CoverHero } from "./CoverHero";
 import { coverFiles } from "./cover-files";
-import { Download, Heart, HeartFilled } from "./icons";
-import { SharePopover } from "./SharePopover";
 import { useFavorites } from "./use-favorites";
 import { useImgUrl } from "./img-url";
+import { SetTabs } from "./SetTabs";
+import { Toast, TopBarActions } from "./GalleryTopBar";
 import {
   reducedMotion,
   useHideOnScroll,
@@ -170,79 +170,36 @@ export function GalleryView({
           variant={isDarkPalette(gallery.palette) ? "light" : "dark"}
           className="hidden h-7 min-w-0 justify-self-start overflow-hidden sm:block"
         />
-        {tabs.length === 0 ? (
-          <div aria-hidden="true" />
-        ) : (
-          <nav
-            ref={tabsRef}
-            aria-label={t("gallery.sets")}
-            onScroll={updateEdges}
-            style={{
-              maskImage: `linear-gradient(to right, ${edges.start ? "transparent, #000 1.5rem" : "#000, #000 0"}, ${edges.end ? "#000 calc(100% - 1.5rem), transparent" : "#000 100%, #000"})`,
-            }}
-            className="flex min-w-0 snap-x snap-proximity items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                aria-current={active === tab.key ? "true" : undefined}
-                onClick={() => {
-                  setActive(tab.key);
-                  setOpen(null);
-                }}
-                className={`text-micro-label duration-base ease-out-soft min-h-11 shrink-0 snap-center border-b px-3 uppercase whitespace-nowrap transition-colors ${
-                  active === tab.key
-                    ? "border-ink text-ink"
-                    : "text-grey-600 hover:text-ink border-transparent"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        )}
-        <div className="flex items-center justify-self-end">
-          {downloadSlot}
-          {canDownload && gallery.allowBulk && (
-            <button
-              type="button"
-              onClick={() => setSheet({ kind: "bulk" })}
-              aria-label={t("download.title")}
-              className="text-grey-600 hover:text-ink flex size-11 items-center justify-center"
-            >
-              <Download className="size-5" aria-hidden="true" />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              setActive(
-                active === FAV
-                  ? multi
-                    ? ALL
-                    : (gallery.sets[0]?.name ?? ALL)
-                  : FAV,
-              );
-              setOpen(null);
-            }}
-            aria-label={t("favorites.title")}
-            aria-pressed={active === FAV}
-            className="text-grey-600 hover:text-ink flex size-11 items-center justify-center"
-          >
-            {active === FAV || favCount > 0 ? (
-              <HeartFilled className="size-5" aria-hidden="true" />
-            ) : (
-              <Heart className="size-5" aria-hidden="true" />
-            )}
-          </button>
-          {!preview && (
-            <SharePopover
-              title={gallery.title}
-              onCopied={() => showToast("gallery.linkCopied")}
-            />
-          )}
-        </div>
+        <SetTabs
+          tabs={tabs}
+          active={active}
+          tabsRef={tabsRef}
+          edges={edges}
+          onScroll={updateEdges}
+          onSelect={(key) => {
+            setActive(key);
+            setOpen(null);
+          }}
+        />
+        <TopBarActions
+          downloadSlot={downloadSlot}
+          showBulk={canDownload && gallery.allowBulk}
+          onBulk={() => setSheet({ kind: "bulk" })}
+          favOn={active === FAV}
+          hasFavs={favCount > 0}
+          onToggleFavs={() => {
+            setActive(
+              active === FAV
+                ? multi
+                  ? ALL
+                  : (gallery.sets[0]?.name ?? ALL)
+                : FAV,
+            );
+            setOpen(null);
+          }}
+          shareTitle={preview ? null : gallery.title}
+          onCopied={() => showToast("gallery.linkCopied")}
+        />
       </nav>
 
       <main
@@ -284,15 +241,7 @@ export function GalleryView({
 
       {!preview && <AddToHomeHint slug={gallery.slug} gridRef={gridRef} />}
 
-      {toast && (
-        <p
-          key={toast.n}
-          role="status"
-          className="text-micro-label bg-ink text-paper fixed bottom-6 left-1/2 z-(--z-toast) -translate-x-1/2 px-5 py-3 uppercase"
-        >
-          {t(toast.key)}
-        </p>
-      )}
+      {toast && <Toast key={toast.n} messageKey={toast.key} />}
 
       {open !== null && (
         <Lightbox
