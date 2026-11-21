@@ -25,14 +25,17 @@ export async function css(candidates) {
   return c.build(candidates);
 }
 
-/** Every class name in the className="..." strings of the given sources. */
+/**
+ * Every class-like token in the given sources (over-inclusive on purpose:
+ * Tailwind ignores tokens that are not utilities). Splitting on whitespace and
+ * quote/markup characters, not matching quote pairs: pairing goes out of phase
+ * as soon as a file has an apostrophe in a comment or text, which silently
+ * dropped classes such as `h-72` from the test CSS.
+ */
 export function classesOf(sources) {
   return [
     ...new Set(
-      sources
-        .flatMap((s) => [...s.matchAll(/["'`]([^"'`]*)["'`]/g)])
-        .flatMap((m) => m[1].split(/\s+/))
-        .filter(Boolean),
+      sources.flatMap((s) => s.split(/[\s"'`<>{}=,;]+/)).filter(Boolean),
     ),
   ];
 }
