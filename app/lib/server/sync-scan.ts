@@ -46,12 +46,12 @@ export function makeGuard(drive: DriveClient, budget: number): Guard {
   };
 }
 
-export async function scan(
-  rootId: string,
-  drive: DriveClient,
-  guard: Guard,
-): Promise<AlbumDraft[]> {
-  const many = async (ids: string[]) => {
+type ListMany = (ids: string[]) => Promise<Map<string, DriveFile[]>>;
+
+/** One level of the breadth-first walk: listChildrenMany within the budget (40 ids per call). */
+const listLevel =
+  (drive: DriveClient, guard: Guard): ListMany =>
+  async (ids) => {
     if (ids.length === 0) return new Map<string, DriveFile[]>();
     guard.reserve(Math.ceil(ids.length / 40));
     const r = await drive.listChildrenMany(ids);
@@ -59,50 +59,68 @@ export async function scan(
     return r;
   };
 
-  // Level 0/1: root -> album folders. Verify the root first: an unknown id
-  // would otherwise list as empty and archive every gallery.
+/** Level 0/1: root -> album folders. Verify the root first: an unknown id would otherwise list as empty and archive every gallery. */
+async function listAlbums(
+  rootId: string,
+  drive: DriveClient,
+  guard: Guard,
+  many: ListMany,
+): Promise<DriveFile[]> {
   guard.reserve(1);
   const meta = await drive.getMeta(rootId);
   guard.check();
   if (!isFolder(meta) || meta.trashed)
     throw new DriveError(400, "Root is not a usable folder");
-  const albums = ((await many([rootId])).get(rootId) ?? [])
+  return ((await many([rootId])).get(rootId) ?? [])
     .filter((f) => isFolder(f) && isLive(f))
     .sort((a, b) => cmp(nfc(a.name), nfc(b.name)) || cmp(a.id, b.id));
+}
 
-  // Level 2: album children.
-  const albumKids = await many(albums.map((a) => a.id));
-  const recipeFolders: { album: string; recipe: Recipe; id: string }[] = [];
-  const issues = new Map<string, SyncIssue[]>();
-  const hasWm = new Map<string, boolean>();
+type RecipeFolder = { album: string; recipe: Recipe; id: string };
+type SetFolder = RecipeFolder & { set: string };
+
+/** What the walk learns per album id. */
+type ScanState = {
+  located: Map<string, Located[]>;
+  issues: Map<string, SyncIssue[]>;
+  hasWm: Map<string, boolean>;
+};
+
+/** Level 2: album children -> recipe folders; stray files and unknown folders become issues. */
+function classifyAlbumChildren(
+  albums: DriveFile[],
+  kids: Map<string, DriveFile[]>,
+  state: ScanState,
+): RecipeFolder[] {
+  const recipeFolders: RecipeFolder[] = [];
   for (const a of albums) {
     const list: SyncIssue[] = [];
-    issues.set(a.id, list);
-    for (const c of albumKids.get(a.id) ?? []) {
+    state.issues.set(a.id, list);
+    for (const c of kids.get(a.id) ?? []) {
       if (!isLive(c)) continue;
       if (isFolder(c)) {
         const r = recipeOf(c.name);
         if (r) {
           recipeFolders.push({ album: a.id, recipe: r, id: c.id });
-          if (r === "preview-wm") hasWm.set(a.id, true);
+          if (r === "preview-wm") state.hasWm.set(a.id, true);
         } else list.push({ type: "unknown_folder", set: null, name: c.name });
       } else list.push({ type: "stray_file", set: null, name: c.name });
     }
   }
+  return recipeFolders;
+}
 
-  // Level 3: recipe folders -> files + set subfolders.
-  const recipeKids = await many(recipeFolders.map((r) => r.id));
-  const located = new Map<string, Located[]>();
-  const setFolders: {
-    album: string;
-    recipe: Recipe;
-    set: string;
-    id: string;
-  }[] = [];
+/** Level 3: recipe folders -> files (default set) + set subfolders. */
+function collectRecipeFiles(
+  recipeFolders: RecipeFolder[],
+  kids: Map<string, DriveFile[]>,
+  state: ScanState,
+): SetFolder[] {
+  const setFolders: SetFolder[] = [];
   for (const rf of recipeFolders) {
-    const out = located.get(rf.album) ?? [];
-    located.set(rf.album, out);
-    for (const c of recipeKids.get(rf.id) ?? []) {
+    const out = state.located.get(rf.album) ?? [];
+    state.located.set(rf.album, out);
+    for (const c of kids.get(rf.id) ?? []) {
       if (!isLive(c)) continue;
       if (isFolder(c))
         setFolders.push({
@@ -114,28 +132,59 @@ export async function scan(
       else out.push({ recipe: rf.recipe, set: DEFAULT_SET, file: c });
     }
   }
+  return setFolders;
+}
 
-  // Level 4: set folders -> files.
-  const setKids = await many(setFolders.map((s) => s.id));
+/** Level 4: set folders -> files; deeper folders are issues. */
+function collectSetFiles(
+  setFolders: SetFolder[],
+  kids: Map<string, DriveFile[]>,
+  state: ScanState,
+): void {
   for (const sf of setFolders) {
-    const out = located.get(sf.album) ?? [];
-    located.set(sf.album, out);
-    for (const c of setKids.get(sf.id) ?? []) {
+    const out = state.located.get(sf.album) ?? [];
+    state.located.set(sf.album, out);
+    for (const c of kids.get(sf.id) ?? []) {
       if (!isLive(c)) continue;
       if (isFolder(c))
-        issues
+        state.issues
           .get(sf.album)!
           .push({ type: "unknown_folder", set: sf.set, name: c.name });
       else out.push({ recipe: sf.recipe, set: sf.set, file: c });
     }
   }
+}
+
+export async function scan(
+  rootId: string,
+  drive: DriveClient,
+  guard: Guard,
+): Promise<AlbumDraft[]> {
+  const many = listLevel(drive, guard);
+  const state: ScanState = {
+    located: new Map(),
+    issues: new Map(),
+    hasWm: new Map(),
+  };
+  const albums = await listAlbums(rootId, drive, guard, many);
+  const recipeFolders = classifyAlbumChildren(
+    albums,
+    await many(albums.map((a) => a.id)),
+    state,
+  );
+  const setFolders = collectRecipeFiles(
+    recipeFolders,
+    await many(recipeFolders.map((r) => r.id)),
+    state,
+  );
+  collectSetFiles(setFolders, await many(setFolders.map((s) => s.id)), state);
 
   return albums.map((a) =>
     buildAlbum(
       a,
-      located.get(a.id) ?? [],
-      issues.get(a.id) ?? [],
-      hasWm.get(a.id) === true,
+      state.located.get(a.id) ?? [],
+      state.issues.get(a.id) ?? [],
+      state.hasWm.get(a.id) === true,
     ),
   );
 }
