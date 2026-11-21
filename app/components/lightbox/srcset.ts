@@ -18,3 +18,11 @@ export const photoImgProps = (imgUrl: ImgUrlFn, p: GalleryPhoto) => ({
   srcSet: srcSetOf(imgUrl)(p.id, p.v),
   sizes: SIZES,
 });
+
+/**
+ * The grid thumbnail of a photo: already in the browser cache (the grid loaded
+ * it), so it stands in while the full photo loads. Proofing galleries get the
+ * watermarked one from the same URL (server) or `thumb-wm` (admin preview).
+ */
+export const thumbSrc = (imgUrl: ImgUrlFn, p: GalleryPhoto) =>
+  imgUrl(p.id, "thumb", p.v);
