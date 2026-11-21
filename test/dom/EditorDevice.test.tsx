@@ -242,7 +242,24 @@ describe("T6.35 preview bar: 'volver al editor' keeps device and tab", () => {
     expect(bar.className).toMatch(/\btext-base\b/);
     expect(bar.className).not.toMatch(/text-micro/);
     expect(link.className).toMatch(/\bmin-h-12\b/);
-    expect(bar.className).toMatch(/flex-wrap/);
+    expect(bar.className).toMatch(/\bflex-col\b/);
+    expect(bar.className).toMatch(/\btext-center\b/);
+    expect(bar.className).toMatch(/\bsm:flex-row\b/);
     expect(bar.className).not.toMatch(/\b(fixed|sticky)\b/);
+  });
+});
+
+describe("T6.42 preview bar copy", () => {
+  it("is short and has both languages", async () => {
+    const { esAdmin } = await import("../../app/i18n/es.admin");
+    const { enAdmin } = await import("../../app/i18n/en.admin");
+    expect(esAdmin["admin.preview.bar"]).toBe(
+      "Vista previa: lo que ve el cliente",
+    );
+    expect(enAdmin["admin.preview.bar"]).toBe("Preview: what a client sees");
+    for (const d of [esAdmin, enAdmin]) {
+      expect(d["admin.preview.bar"].length).toBeLessThanOrEqual(40);
+      expect(d["admin.preview.back"].length).toBeLessThanOrEqual(20);
+    }
   });
 });
