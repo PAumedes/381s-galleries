@@ -11,7 +11,13 @@ const list = photos(6).map((p) => ({ ...p, v: "1" }));
 function Harness({ url }: { url?: ImgUrlFn }) {
   const [i, setI] = useState(2);
   const lb = (
-    <Lightbox photos={list} index={i} t={t} onClose={() => {}} onIndexChange={setI} />
+    <Lightbox
+      photos={list}
+      index={i}
+      t={t}
+      onClose={() => {}}
+      onIndexChange={setI}
+    />
   );
   return url ? <ImgUrlProvider value={url}>{lb}</ImgUrlProvider> : lb;
 }
@@ -56,7 +62,8 @@ describe("T6.41 lightbox URLs", () => {
   it("admin Prueba preview: every rendered URL is a watermarked admin variant", async () => {
     render(<Harness url={adminImgUrl(true, {})} />);
     const all = await walk();
-    for (const u of all) expect(u).toMatch(/^\/admin\/img\/p\d+\/(thumb|view-sm)-wm$/);
+    for (const u of all)
+      expect(u).toMatch(/^\/admin\/img\/p\d+\/(thumb|view-sm)-wm$/);
   });
 
   it("a11y: placeholders are aria-hidden and only one image has alt text", async () => {
