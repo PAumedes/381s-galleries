@@ -4,14 +4,16 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase bg-ink text-paper border-ink">Publicada</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 bg-ink text-paper border-ink">Publicada</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -35,9 +37,9 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -272,14 +274,16 @@ exports[`gallery editor characterization: snapshots per state > renders comparti
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop&amp;tab=compartir" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=compartir" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -433,14 +437,16 @@ exports[`gallery editor characterization: snapshots per state > renders comparti
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galleries</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase bg-ink text-paper border-ink">Published</span>
-<a href="/admin/g/g1/preview?device=desktop&amp;tab=compartir" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galleries</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 bg-ink text-paper border-ink">Published</span>
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=compartir" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Preview</a>
+</div>
 </div>
 <nav aria-label="Gallery sections" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -594,14 +600,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Archivada</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Archivada</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -625,9 +633,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -857,14 +865,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -888,9 +898,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -1126,14 +1136,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -1157,9 +1169,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -1395,14 +1407,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -1426,9 +1440,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -1663,14 +1677,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galleries</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Draft</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galleries</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Draft</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Preview</a>
+</div>
 </div>
 <nav aria-label="Gallery sections" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -1931,14 +1947,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -1963,9 +1981,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <p id="ID1-err" role="alert" class="text-small text-ink font-medium">Título requerido</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-invalid="true" aria-describedby="ID2-err ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 <p id="ID2-err" role="alert" class="text-small text-ink font-medium">Slug ocupado</p>
 </div>
 <div class="flex flex-col gap-1">
@@ -2203,14 +2221,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -2234,9 +2254,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -2470,14 +2490,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -2501,9 +2523,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -2739,14 +2761,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -2770,9 +2794,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -3009,14 +3033,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -3040,9 +3066,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -3286,14 +3312,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -3317,9 +3345,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -3563,14 +3591,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -3594,9 +3624,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -3839,14 +3869,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -3870,9 +3902,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -4115,14 +4147,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase bg-ink text-paper border-ink">Publicada</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 bg-ink text-paper border-ink">Publicada</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -4146,9 +4180,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -4383,14 +4417,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase bg-ink text-paper border-ink">Publicada</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 bg-ink text-paper border-ink">Publicada</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -4414,9 +4450,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -4651,14 +4687,16 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase bg-ink text-paper border-ink">Publicada</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 bg-ink text-paper border-ink">Publicada</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -4682,9 +4720,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>
@@ -4924,14 +4962,16 @@ exports[`gallery editor characterization: snapshots per state > renders diseno e
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galleries</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Draft</span>
-<a href="/admin/g/g1/preview?device=desktop&amp;tab=diseno" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galleries</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Draft</span>
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=diseno" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Preview</a>
+</div>
 </div>
 <nav aria-label="Gallery sections" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -5311,14 +5351,16 @@ exports[`gallery editor characterization: snapshots per state > renders diseno e
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop&amp;tab=diseno" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=diseno" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -5698,14 +5740,16 @@ exports[`gallery editor characterization: snapshots per state > renders diseno f
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop&amp;tab=diseno" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=diseno" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -6087,14 +6131,16 @@ exports[`gallery editor characterization: snapshots per state > renders fotos em
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop&amp;tab=fotos" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=fotos" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -6125,14 +6171,16 @@ exports[`gallery editor characterization: snapshots per state > renders fotos en
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galleries</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Draft</span>
-<a href="/admin/g/g1/preview?device=desktop&amp;tab=fotos" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galleries</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Draft</span>
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=fotos" target="_blank" rel="noopener noreferrer" title="Opens the gallery as a client sees it (saved state), even if it is a draft or has a PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Preview</a>
+</div>
 </div>
 <nav aria-label="Gallery sections" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -6377,14 +6425,16 @@ exports[`gallery editor characterization: snapshots per state > renders fotos es
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop&amp;tab=fotos" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=fotos" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -6629,14 +6679,16 @@ exports[`gallery editor characterization: snapshots per state > renders portada 
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop&amp;tab=portada" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=portada" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -6812,14 +6864,16 @@ exports[`gallery editor characterization: snapshots per state > renders portada 
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop&amp;tab=portada" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop&amp;tab=portada" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -6995,14 +7049,16 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 "<div>
 <div class="flex flex-col gap-6 ">
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0" href="/admin" data-discover="true">← Galerías</a>
-<h1 class="text-title text-ink min-w-0 break-words">Boda Ana</h1>
-<span class="text-micro inline-block border px-2 py-0.5 uppercase border-grey-400 text-grey-700">Borrador</span>
-<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 ml-auto flex items-center gap-2">
+<a class="text-micro text-grey-700 hover:text-ink flex min-h-tap basis-full items-center uppercase md:min-h-0 md:basis-auto" href="/admin" data-discover="true">← Galerías</a>
+<h1 class="text-title text-ink min-w-0 basis-full break-words md:basis-auto">Boda Ana</h1>
+<div class="grid basis-full grid-cols-2 gap-2 md:ml-auto md:flex md:basis-auto md:items-center">
+<span class="text-micro border uppercase flex min-h-12 items-center justify-center gap-2 px-4 md:inline-block md:min-h-0 md:px-2 md:py-0.5 border-grey-400 text-grey-700">Borrador</span>
+<a href="/admin/g/g1/preview?device=desktop" target="_blank" rel="noopener noreferrer" title="Abre la galería tal como la ve un cliente (con lo guardado), aunque sea un borrador o tenga PIN." class="flex min-h-12 items-center justify-center gap-2 px-4 text-micro border-ink border uppercase md:min-h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="size-4">
 <path d="M14 4h6v6M20 4l-9 9M18 14v5.5H4.5V6H10">
 </path>
 </svg>Vista previa</a>
+</div>
 </div>
 <nav aria-label="Secciones de la galería" data-scroll-x="" class="border-grey-200 -mx-4 overflow-x-auto border-b px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&amp;::-webkit-scrollbar]:hidden">
 <div class="flex min-w-max gap-1 md:gap-6">
@@ -7026,9 +7082,9 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <input id="ID1" required="" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Boda Ana" name="title">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID2" class="text-small">Slug</label>
+<label for="ID2" class="text-small">Dirección web</label>
 <input id="ID2" aria-describedby="ID2-hint" required="" maxlength="60" autocomplete="off" spellcheck="false" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="boda-ana" name="slug">
-<p id="ID2-hint" class="text-small text-grey-600">Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
+<p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
 <label for="ID3" class="text-small">Cliente (solo para vos)</label>

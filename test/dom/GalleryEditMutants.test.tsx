@@ -219,7 +219,7 @@ describe("gallery editor mutants: sections", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     mount(view());
     await screen.findByRole("heading", { level: 1 });
-    const slug = screen.getByLabelText("Slug");
+    const slug = screen.getByLabelText("Dirección web");
     await user.clear(slug);
     await user.type(slug, "  BODA-Ana ");
     await user.click(screen.getByRole("button", { name: "Guardar datos" }));

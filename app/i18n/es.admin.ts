@@ -28,7 +28,7 @@ export const esAdmin = {
   "admin.filter.borradores": "Borradores",
   "admin.filter.archivadas": "Archivadas",
   "admin.filter.label": "Filtrar galerías",
-  "admin.list.search.placeholder": "Buscar por título, slug o cliente",
+  "admin.list.search.placeholder": "Buscar por título, dirección web o cliente",
   "admin.list.search.label": "Buscar galerías",
   "admin.list.search.submit": "Buscar",
   "admin.list.noExpiry": "Sin vencimiento",
@@ -70,11 +70,11 @@ export const esAdmin = {
   "admin.edit.section.photos": "Fotos",
   "admin.edit.section.issues": "Avisos de sincronización",
   "admin.edit.confirmSlug":
-    "Cambiar el slug rompe los enlaces y códigos QR ya compartidos. ¿Continuar?",
+    "Cambiar la dirección web rompe los enlaces y códigos QR ya compartidos. ¿Continuar?",
   "admin.edit.field.title": "Título",
-  "admin.edit.field.slug": "Slug",
+  "admin.edit.field.slug": "Dirección web",
   "admin.edit.hint.slug":
-    "Si cambiás el slug, los enlaces y códigos QR ya compartidos dejarán de funcionar.",
+    "Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.",
   "admin.edit.field.client": "Cliente (solo para vos)",
   "admin.edit.hint.client":
     "Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.",
@@ -339,10 +339,10 @@ export const esAdmin = {
   "admin.msg.titleLength": "El título debe tener entre 1 y {max} caracteres.",
   "admin.msg.clientLength":
     "El nombre del cliente no puede superar los {max} caracteres.",
-  "admin.msg.slugReserved": "Ese slug está reservado. Elegí otro.",
+  "admin.msg.slugReserved": "Esa dirección web está reservada. Elegí otra.",
   "admin.msg.slugFormat":
     "Usá solo letras minúsculas, números y guiones (1 a {max} caracteres, sin guiones al inicio, al final ni repetidos).",
-  "admin.msg.slugTaken": "Ese slug ya está en uso por otra galería.",
+  "admin.msg.slugTaken": "Esa dirección web ya está en uso por otra galería.",
   "admin.msg.eventDateInvalid": "La fecha del evento no es válida.",
   "admin.msg.expiryYear":
     "El año de vencimiento debe estar entre {min} y {max}.",

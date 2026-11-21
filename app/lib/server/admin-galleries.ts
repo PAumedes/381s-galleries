@@ -67,6 +67,8 @@ export interface GalleryListRow {
   clientName: string | null;
   eventDate: string | null;
   status: "draft" | "published" | "archived";
+  /** Prueba (watermarked, no downloads) or Entrega. */
+  mode: "proofing" | "delivery";
   expiresAt: string | null;
   expired: boolean;
   /** Chosen cover when visible, else the first visible photo, else null. */
@@ -95,6 +97,7 @@ export async function listGalleries(
       clientName: g.clientName,
       eventDate: g.eventDate,
       status: g.status,
+      mode: g.mode,
       expiresAt: g.expiresAt,
       syncIssuesJson: g.syncIssuesJson,
       coverPhotoId: listCoverIdSql(),

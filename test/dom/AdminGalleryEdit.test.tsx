@@ -80,9 +80,9 @@ describe("GalleryEditView", () => {
     const title = (await screen.findByLabelText("Título")) as HTMLInputElement;
     expect(title.value).toBe("Boda Ana");
     expect(title.maxLength).toBe(120);
-    expect((screen.getByLabelText("Slug") as HTMLInputElement).value).toBe(
-      "boda-ana",
-    );
+    expect(
+      (screen.getByLabelText("Dirección web") as HTMLInputElement).value,
+    ).toBe("boda-ana");
     expect(
       (screen.getByLabelText("Cliente (solo para vos)") as HTMLInputElement)
         .maxLength,

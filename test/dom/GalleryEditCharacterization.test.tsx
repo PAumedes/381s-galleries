@@ -353,7 +353,7 @@ describe("gallery editor characterization: details", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     show();
     await ready();
-    const slug = screen.getByLabelText("Slug");
+    const slug = screen.getByLabelText("Dirección web");
     await user.clear(slug);
     await user.type(slug, "Nueva-Boda");
     await user.click(screen.getByRole("button", { name: "Guardar datos" }));
@@ -367,7 +367,7 @@ describe("gallery editor characterization: details", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     show();
     await ready();
-    const slug = screen.getByLabelText("Slug");
+    const slug = screen.getByLabelText("Dirección web");
     await user.clear(slug);
     await user.type(slug, "nueva");
     await user.click(screen.getByRole("button", { name: "Guardar datos" }));
@@ -432,8 +432,12 @@ describe("gallery editor characterization: details", () => {
     expect(screen.getByLabelText("Título").getAttribute("maxlength")).toBe(
       "120",
     );
-    expect(screen.getByLabelText("Slug").getAttribute("maxlength")).toBe("60");
-    expect(screen.getByLabelText("Slug").hasAttribute("required")).toBe(true);
+    expect(
+      screen.getByLabelText("Dirección web").getAttribute("maxlength"),
+    ).toBe("60");
+    expect(
+      screen.getByLabelText("Dirección web").hasAttribute("required"),
+    ).toBe(true);
   });
 });
 
