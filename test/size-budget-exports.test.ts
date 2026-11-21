@@ -38,3 +38,23 @@ describe("T6.38 admin-activity.ts public runtime exports", () => {
     );
   });
 });
+
+import * as googleAuth from "../app/lib/server/google-auth";
+
+describe("T6.38 google-auth.ts public runtime exports", () => {
+  it("exports the same names", () => {
+    expect(Object.keys(googleAuth).sort()).toEqual(
+      [
+        "GoogleAuthError",
+        "GoogleExchangeError",
+        "buildAuthUrl",
+        "disconnectGoogle",
+        "exchangeCode",
+        "getAccessToken",
+        "handleCallback",
+        "handleConnect",
+        "isGoogleConnected",
+      ].sort(),
+    );
+  });
+});
