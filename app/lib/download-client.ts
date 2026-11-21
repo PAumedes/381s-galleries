@@ -1,8 +1,9 @@
+import type { DownloadSize } from "./constants";
 import { downloadZip } from "client-zip";
 
 import { EmailRequiredError } from "../components/use-visitor";
 
-export type DlVariant = "highres" | "web" | "ig";
+export type DlVariant = DownloadSize;
 export type BulkScope = "all" | "set" | "favorites";
 export type DownloadErrorCode =
   | "variant_disabled"

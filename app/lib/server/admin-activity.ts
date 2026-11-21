@@ -1,3 +1,4 @@
+import { DOWNLOAD_SIZES, type DownloadSize } from "../constants";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
 import {
@@ -29,8 +30,7 @@ const BREAKDOWN_COLUMNS = {
   browsers: "browser",
   referrers: "referrer_host",
 } as const;
-const VARIANTS = ["highres", "web", "ig"] as const;
-type Variant = (typeof VARIANTS)[number];
+type Variant = DownloadSize;
 
 export interface ActivityRow extends VisitorDisplay {
   id: string;
@@ -83,7 +83,7 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
   const db = getDb(env);
   const visitorParam = (q.get("visitor") ?? "").trim().slice(0, 254);
   const sizeParam = q.get("size") ?? "";
-  const variant = (VARIANTS as readonly string[]).includes(sizeParam)
+  const variant = (DOWNLOAD_SIZES as readonly string[]).includes(sizeParam)
     ? (sizeParam as Variant)
     : undefined;
   const before = parseCursor(q.get("cursor"));

@@ -28,6 +28,7 @@
  * PLAN 6; it is not swept (no list calls).
  * Drive is never touched (the app only reads it) and neither is the studio logo.
  */
+import { IMAGE_VARIANTS } from "../constants";
 import { eq, sql } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../db";
 import { safeEqual } from "./auth";
@@ -40,9 +41,10 @@ import {
 } from "./settings";
 
 /** The variants stored in R2 per photo (key `<photo id>/<variant>`). */
-const R2_VARIANTS = ["thumb", "view-sm", "view-lg"] as const;
 const R2_DELETE_MAX_KEYS = 1000;
-const PHOTOS_PER_R2_CALL = Math.floor(R2_DELETE_MAX_KEYS / R2_VARIANTS.length);
+const PHOTOS_PER_R2_CALL = Math.floor(
+  R2_DELETE_MAX_KEYS / IMAGE_VARIANTS.length,
+);
 /** R2 delete calls per request: D1 + R2 calls share the 50-subrequest Workers Free limit. */
 export const R2_CALLS_PER_REQUEST = 25;
 const LOCK_MS = 5 * 60_000;
@@ -106,7 +108,7 @@ const chunk = <T>(a: T[], n: number): T[][] =>
   );
 
 const r2Keys = (ids: string[]) =>
-  ids.flatMap((id) => R2_VARIANTS.map((v) => `${id}/${v}`));
+  ids.flatMap((id) => IMAGE_VARIANTS.map((v) => `${id}/${v}`));
 
 async function readPending(env: Env): Promise<string[]> {
   try {

@@ -1,3 +1,4 @@
+import type { GalleryStatus } from "../../lib/constants";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
 
@@ -15,7 +16,7 @@ import { isEditorTab } from "./GalleryTabs";
 
 export type AdminPreviewData = {
   id: string;
-  status: "draft" | "published" | "archived";
+  status: GalleryStatus;
   hasPin: boolean;
   expired: boolean;
   gallery: OpenGallery;

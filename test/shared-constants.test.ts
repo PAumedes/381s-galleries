@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { schema } from "../app/db";
-import { VARIANTS } from "../app/lib/server/images";
+import { IMAGE_VARIANTS as VARIANTS } from "../app/lib/constants";
 
 // T6.38 characterization: the literal lists the client, server and schema agree on.
 describe("T6.38 shared literal lists", () => {

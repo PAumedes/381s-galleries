@@ -1,3 +1,4 @@
+import type { GalleryMode, GalleryStatus } from "../constants";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { redirect } from "react-router";
 import { getDb, photoVisible, schema } from "../../db";
@@ -67,9 +68,9 @@ export interface GalleryListRow {
   slug: string;
   clientName: string | null;
   eventDate: string | null;
-  status: "draft" | "published" | "archived";
+  status: GalleryStatus;
   /** Prueba (watermarked, no downloads) or Entrega. */
-  mode: "proofing" | "delivery";
+  mode: GalleryMode;
   expiresAt: string | null;
   expired: boolean;
   /** Chosen cover when visible, else the first visible photo, else null. */
@@ -511,7 +512,7 @@ async function saveFlags(env: Env, g: GalleryRow, f: FormData, t: TFunction) {
     return fail(intent, t("admin.msg.checkFields"), {
       mode: t("admin.msg.modeInvalid"),
     });
-  const mode: "proofing" | "delivery" = modeRaw ?? g.mode;
+  const mode: GalleryMode = modeRaw ?? g.mode;
   await getDb(env)
     .update(schema.galleries)
     .set({

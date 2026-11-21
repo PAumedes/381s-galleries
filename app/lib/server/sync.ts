@@ -6,6 +6,7 @@
  * the desired state in memory, and only then writes (one D1 batch per
  * gallery). A budget overrun therefore aborts before any write.
  */
+import { IMAGE_VARIANTS } from "../constants";
 import { D1_BATCH_MAX, D1_IN_CHUNK, PHOTO_INSERT_ROWS } from "./d1-limits";
 import { and, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../db";
@@ -52,7 +53,6 @@ const LAST_ERROR_KEY = SETTINGS_KEYS.syncLastError;
 const PENDING_DELETES_CAP = 2000;
 /** Workers limit is 1000 subrequests to Cloudflare services (D1/R2/KV). */
 const CF_SUBREQUEST_CAP = 900;
-const R2_KEYS = ["thumb", "view-sm", "view-lg"] as const;
 const R2_DELETE_MAX = 1000;
 
 export interface SyncResult {
@@ -260,7 +260,7 @@ async function flushR2(
 ): Promise<string[]> {
   const ids = [...new Set(pending)];
   if (ids.length === 0) return [];
-  const perCall = Math.floor(R2_DELETE_MAX / R2_KEYS.length);
+  const perCall = Math.floor(R2_DELETE_MAX / IMAGE_VARIANTS.length);
   let done = 0;
   try {
     for (; done < ids.length; done += perCall) {
@@ -268,7 +268,7 @@ async function flushR2(
       await env.CACHE.delete(
         ids
           .slice(done, done + perCall)
-          .flatMap((id) => R2_KEYS.map((k) => `${id}/${k}`)),
+          .flatMap((id) => IMAGE_VARIANTS.map((k) => `${id}/${k}`)),
       );
     }
   } catch {

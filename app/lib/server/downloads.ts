@@ -1,3 +1,4 @@
+import { DOWNLOAD_SIZES, type DownloadSize } from "../constants";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { wellFormed } from "../text";
 import { getDb, photoVisible, schema } from "../../db";
@@ -53,8 +54,7 @@ const DL_TOKEN_RATE: RateRule = {
   max: DL_TOKEN_MAX_USES,
   windowMs: DL_TOKEN_TTL_SECONDS * 1000,
 };
-const VARIANTS = ["highres", "web", "ig"] as const;
-type DlVariant = (typeof VARIANTS)[number];
+type DlVariant = DownloadSize;
 type PhotoRow = typeof schema.photos.$inferSelect;
 type DlEnv = AccessEnv & Pick<Env, "DOWNLOAD_SECRET">;
 
@@ -70,7 +70,7 @@ interface DlToken {
 }
 
 const isVariant = (v: unknown): v is DlVariant =>
-  typeof v === "string" && (VARIANTS as readonly string[]).includes(v);
+  typeof v === "string" && (DOWNLOAD_SIZES as readonly string[]).includes(v);
 
 const reply = jsonReply;
 const notFound = () => reply({ error: "not_found" }, 404);

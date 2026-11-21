@@ -1,3 +1,4 @@
+import { GALLERY_MODES, GALLERY_STATUSES } from "../lib/constants";
 import { sql } from "drizzle-orm";
 
 import { COVER_LAYOUTS, GRID_GAPS, GRID_STYLES, PALETTES } from "../lib/design";
@@ -48,7 +49,7 @@ export const galleries = sqliteTable(
     eventDate: text("event_date"),
     pinHash: text("pin_hash"),
     expiresAt: text("expires_at"),
-    status: text("status", { enum: ["draft", "published", "archived"] })
+    status: text("status", { enum: GALLERY_STATUSES })
       .notNull()
       .default("draft"),
     coverPhotoId: text("cover_photo_id"),
@@ -79,9 +80,7 @@ export const galleries = sqliteTable(
       .default(false),
     // 'proofing' (Prueba): every public image watermarked, downloads refused.
     // 'delivery' (Entrega): clean images, downloads per allow_* flags.
-    mode: text("mode", { enum: ["proofing", "delivery"] })
-      .notNull()
-      .default("delivery"),
+    mode: text("mode", { enum: GALLERY_MODES }).notNull().default("delivery"),
     // Legacy (0010, replaced by `palette` in 0015): kept to avoid rebuilding
     // the table (its CHECK cannot be altered and FKs cascade from it); nothing
     // reads or writes it any more.

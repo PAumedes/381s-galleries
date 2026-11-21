@@ -1,3 +1,4 @@
+import type { GalleryMode } from "../../../lib/constants";
 import type { GalleryActionResult } from "../../../lib/server/admin-galleries";
 import { DangerSection } from "./DangerSection";
 import { DetailsSection } from "./DetailsSection";
@@ -24,7 +25,7 @@ export function DatosSections({
   g: EditGallery;
   data: GalleryEditData;
   proofing: boolean;
-  onMode: (m: "proofing" | "delivery") => void;
+  onMode: (m: GalleryMode) => void;
   title: string;
   onTitle: (v: string) => void;
   eventDate: string;

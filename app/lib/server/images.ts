@@ -1,3 +1,4 @@
+import { IMAGE_VARIANTS, type ImageVariant } from "../constants";
 import { and, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
 import { clientIpHash, openGallery } from "./access";
@@ -9,8 +10,7 @@ import { DriveError } from "./drive-types";
 import type { DriveClient } from "./drive-types";
 import { NO_STORE, NOSNIFF, textResponse } from "./http";
 
-export const VARIANTS = ["thumb", "view-sm", "view-lg"] as const;
-export type Variant = (typeof VARIANTS)[number];
+export type Variant = ImageVariant;
 
 const MOCK_KIND: Record<Variant, MockVariant> = {
   thumb: "thumb",
@@ -164,7 +164,7 @@ export async function imageVersionToken(
   proofing: boolean,
 ): Promise<string | null> {
   const parts: string[] = [];
-  for (const variant of VARIANTS) {
+  for (const variant of IMAGE_VARIANTS) {
     const s = resolveSource(photo, proofing, variant);
     if (!s) {
       parts.push("-");
@@ -240,7 +240,7 @@ async function copyFromSibling(
   variant: Variant,
   src: Source,
 ): Promise<boolean> {
-  for (const other of VARIANTS) {
+  for (const other of IMAGE_VARIANTS) {
     if (other === variant) continue;
     const head = await env.CACHE.head(`${photoId}/${other}`);
     if (!head || !isValidHit(head, src)) continue;
@@ -421,7 +421,7 @@ export async function serveImage(
     !photoId ||
     !variant ||
     (!adminWm &&
-      (!(VARIANTS as readonly string[]).includes(variant) ||
+      (!(IMAGE_VARIANTS as readonly string[]).includes(variant) ||
         (opts.admin && variant === "view-lg")))
   )
     return notFound();
