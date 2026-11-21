@@ -1,21 +1,16 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { Form, useNavigation } from "react-router";
+import { useNavigation } from "react-router";
 
 import { useT } from "../../i18n/use-t";
 import { movePhoto, moveTo, sortPhotos } from "../../lib/admin-gallery";
 import type { MoveDir } from "../../lib/admin-gallery";
 import type { GalleryActionResult } from "../../lib/server/admin-galleries";
-import { adminImgSrc } from "../img-url";
-import {
-  FRAME_BY_MODE,
-  GRID_BY_SIZE,
-  IMG_BY_MODE,
-  useFitPrefs,
-} from "./photo-fit";
-import { FitControls, TOOL_BTN as tool } from "./FitControls";
+import { GRID_BY_SIZE, useFitPrefs } from "./photo-fit";
+import { FitControls } from "./FitControls";
 import { PhotoViewer } from "./PhotoViewer";
 import { QuickLook, useQuickLook } from "./QuickLook";
-import { TileActions, TileBadges } from "./TileActions";
+import { ReorderTile } from "./ReorderTile";
+import { ReorderSaveBar, SetToolbar } from "./ReorderBars";
 
 export interface ReorderPhoto {
   id: string;
@@ -28,8 +23,6 @@ export interface ReorderPhoto {
 
 type Orders = Record<string, string[]>;
 
-const btn =
-  "text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10";
 function groupBySet(photos: ReorderPhoto[]): Orders {
   const out: Orders = {};
   for (const p of photos) (out[p.set] ??= []).push(p.id);
@@ -171,77 +164,49 @@ export function PhotoReorder({
         return (
           <fieldset key={set} className="flex min-w-0 flex-col gap-3">
             <legend className="sr-only">{set}</legend>
-            <div className="border-grey-200 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b pb-3">
-              <p aria-hidden="true" className="flex items-baseline gap-2">
-                <span className="text-micro text-ink uppercase">{set}</span>
-                <span className="text-small text-grey-600">{ids.length}</span>
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  className={tool}
-                  disabled={idx <= 0}
-                  onClick={() => selected && move(selected, "before", false)}
-                >
-                  {t("admin.reorder.before")}
-                </button>
-                <button
-                  type="button"
-                  className={tool}
-                  disabled={idx === -1 || idx === ids.length - 1}
-                  onClick={() => selected && move(selected, "after", false)}
-                >
-                  {t("admin.reorder.after")}
-                </button>
-                <button
-                  type="button"
-                  className={tool}
-                  onClick={() => sortSet(set, "date")}
-                >
-                  {t("admin.reorder.sortDate")}
-                </button>
-                <button
-                  type="button"
-                  className={tool}
-                  onClick={() => sortSet(set, "name")}
-                >
-                  {t("admin.reorder.sortName")}
-                </button>
-              </div>
-            </div>
+            <SetToolbar
+              set={set}
+              count={ids.length}
+              canBefore={idx > 0}
+              canAfter={idx !== -1 && idx !== ids.length - 1}
+              onBefore={() => selected && move(selected, "before", false)}
+              onAfter={() => selected && move(selected, "after", false)}
+              onSort={(mode) => sortSet(set, mode)}
+            />
             <ul
               data-set={set}
               className={`grid gap-1.5 ${GRID_BY_SIZE[prefs.size]}`}
             >
-              {ids.map((id, i) => {
-                const p = byId.get(id)!;
-                const isSel = selected === id;
-                const isCover = coverPhotoId === id;
-                const isMobile = mobileCoverId === id;
-                return (
-                  <li
-                    key={id}
-                    data-photo-id={id}
-                    draggable
-                    onPointerDownCapture={quick.pointerDown}
-                    onPointerLeave={quick.stop}
-                    onFocus={(ev) => quick.focus(id, ev.currentTarget)}
-                    onBlur={quick.stop}
-                    onDragStart={(ev) => {
+              {ids.map((id, i) => (
+                <ReorderTile
+                  key={id}
+                  id={id}
+                  index={i}
+                  photo={byId.get(id)!}
+                  selected={selected === id}
+                  isCover={coverPhotoId === id}
+                  isMobile={mobileCoverId === id}
+                  coverLabel={coverLabel}
+                  coverAuto={coverAuto}
+                  prefs={prefs}
+                  busy={busy}
+                  quick={quick}
+                  dnd={{
+                    onDragStart: (ev) => {
                       dragging.current = id;
                       ev.dataTransfer?.setData?.("text/plain", id);
                       if (ev.dataTransfer)
                         ev.dataTransfer.effectAllowed = "move";
-                    }}
-                    onDragOver={(ev) => {
+                    },
+                    onDragOver: (ev) => {
                       const d = dragging.current;
                       if (d && d !== id && setOf(d) === set) {
                         ev.preventDefault();
                         if (ev.dataTransfer)
                           ev.dataTransfer.dropEffect = "move";
                       }
-                    }}
-                    onDrop={(ev) => {
+                    },
+                    onDrop: (ev) => {
                       const d = dragging.current;
                       dragging.current = null;
                       if (!d || d === id || setOf(d) !== set) return;
@@ -251,119 +216,36 @@ export function PhotoReorder({
                         moveTo(ids, ids.indexOf(d), ids.indexOf(id)),
                         d,
                       );
-                    }}
-                    onDragEnd={() => {
+                    },
+                    onDragEnd: () => {
                       dragging.current = null;
-                    }}
-                    className="group @container flex min-w-0 list-none flex-col gap-1"
-                  >
-                    <div
-                      data-thumb-frame=""
-                      onPointerEnter={(ev) =>
-                        quick.hover(
-                          id,
-                          ev.currentTarget.parentElement!,
-                          ev.pointerType,
-                        )
-                      }
-                      className={`bg-grey-100 relative ${FRAME_BY_MODE[prefs.mode]} overflow-hidden ${isSel ? "outline-ink outline-2 outline-offset-2" : ""}`}
-                    >
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        aria-pressed={isSel}
-                        id={`photo-${id}`}
-                        aria-label={p.name}
-                        onClick={() =>
-                          setSelected((s) => (s === id ? null : id))
-                        }
-                        onKeyDown={(ev) => onKey(ev, id)}
-                        className="focus-visible:outline-ink absolute inset-0 cursor-grab outline-offset-2 focus-visible:outline-2"
-                      >
-                        <img
-                          src={adminImgSrc(id, "thumb", p.v)}
-                          alt={p.name}
-                          loading="lazy"
-                          decoding="async"
-                          draggable={false}
-                          className={`size-full ${IMG_BY_MODE[prefs.mode]} select-none`}
-                        />
-                      </div>
-                      <span
-                        aria-hidden="true"
-                        className="text-micro bg-paper/90 text-ink pointer-events-none absolute top-0 left-0 px-1.5 py-0.5"
-                      >
-                        {i + 1}
-                      </span>
-                      <TileBadges
-                        isCover={isCover}
-                        isMobile={isMobile}
-                        coverLabel={coverLabel}
-                      />
-                    </div>
-                    <span
-                      aria-hidden="true"
-                      className="text-grey-600 truncate text-[0.6875rem]"
-                    >
-                      {p.name}
-                    </span>
-                    <div
-                      onPointerEnter={quick.stop}
-                      onFocus={(ev) => ev.stopPropagation()}
-                    >
-                      <TileActions
-                        id={id}
-                        isCover={isCover}
-                        coverAuto={coverAuto}
-                        isMobile={isMobile}
-                        busy={busy}
-                        onView={() => {
-                          quick.stop();
-                          setViewing(id);
-                        }}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
+                    },
+                  }}
+                  onToggle={() => setSelected((s) => (s === id ? null : id))}
+                  onKey={(ev) => onKey(ev, id)}
+                  onView={() => {
+                    quick.stop();
+                    setViewing(id);
+                  }}
+                />
+              ))}
             </ul>
           </fieldset>
         );
       })}
 
       {/* The save bar stays in view while the order has unsaved changes. */}
-      <Form
-        method="post"
-        className={`bg-paper border-grey-200 z-10 flex flex-wrap items-center gap-2 border-t py-3 ${dirty ? "sticky bottom-0" : ""}`}
-      >
-        <input type="hidden" name="intent" value="reorder" />
-        <input type="hidden" name="version" value={version} />
-        <input type="hidden" name="order" value={JSON.stringify(orders)} />
-        <button
-          type="submit"
-          className={`${btn} bg-ink text-paper`}
-          disabled={!dirty || busy}
-        >
-          {t("admin.reorder.save")}
-        </button>
-        <button
-          type="button"
-          className={btn}
-          disabled={!dirty}
-          onClick={() => {
-            setOrders(initial);
-            setSelected(null);
-            setAnnounce(t("admin.reorder.wasReset"));
-          }}
-        >
-          {t("admin.reorder.reset")}
-        </button>
-        {dirty && (
-          <span className="text-small text-grey-700">
-            {t("admin.reorder.unsaved")}
-          </span>
-        )}
-      </Form>
+      <ReorderSaveBar
+        version={version}
+        orders={orders}
+        dirty={dirty}
+        busy={busy}
+        onReset={() => {
+          setOrders(initial);
+          setSelected(null);
+          setAnnounce(t("admin.reorder.wasReset"));
+        }}
+      />
       {feedback && !feedback.ok && (
         <p role="alert" className="border-ink border p-3 text-small">
           {feedback.error}{" "}
