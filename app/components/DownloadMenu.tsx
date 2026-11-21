@@ -11,6 +11,7 @@ import {
   type DlVariant,
 } from "../lib/download-client";
 import { EmailRequiredError } from "./use-visitor";
+import { FOCUSABLE, restoreFocus, trapTab, useLatest } from "./dialog-keys";
 import { useBulkFocus } from "./use-bulk-focus";
 import {
   BulkChooseView,
@@ -21,7 +22,6 @@ import {
 import { Close } from "./icons";
 import type { GalleryPhoto, OpenGallery } from "./types";
 
-const FOCUSABLE = "button:not([disabled]), input:not([disabled])";
 const SIZES: { variant: DlVariant; key: TKey }[] = [
   { variant: "highres", key: "download.highres" },
   { variant: "web", key: "download.web" },
@@ -69,10 +69,7 @@ export function DownloadMenu(props: DownloadMenuProps) {
     if (runningRef.current) setConfirming(true);
     else onClose();
   };
-  const closeRef = useRef(requestClose);
-  useEffect(() => {
-    closeRef.current = requestClose;
-  });
+  const closeRef = useLatest(requestClose);
   const title = t(
     props.mode.kind === "single" ? "download.photo" : "download.title",
   );
@@ -93,33 +90,16 @@ export function DownloadMenu(props: DownloadMenuProps) {
         e.stopImmediatePropagation();
         closeRef.current();
       } else if (e.key === "Tab") {
-        const nodes = Array.from(
-          dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [],
-        );
-        if (nodes.length === 0) return;
-        const first = nodes[0];
-        const last = nodes[nodes.length - 1];
-        const active = document.activeElement;
-        if (!dialogRef.current?.contains(active)) {
-          e.preventDefault();
-          first.focus();
-        } else if (e.shiftKey && active === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && active === last) {
-          e.preventDefault();
-          first.focus();
-        }
+        trapTab(e, dialogRef.current);
       }
     };
     // Capture phase so we run before (and can shield) listeners underneath.
     document.addEventListener("keydown", onKey, true);
     return () => {
       document.removeEventListener("keydown", onKey, true);
-      if (opener && opener !== document.body && opener.isConnected)
-        opener.focus();
+      restoreFocus(opener);
     };
-  }, []);
+  }, [closeRef]);
 
   return (
     <div
