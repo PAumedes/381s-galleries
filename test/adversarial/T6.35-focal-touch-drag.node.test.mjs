@@ -100,66 +100,76 @@ async function session(url, width = 412) {
 describe.skipIf(!HAS_CHROME)(
   "T6.35 focal point: drag with a finger at 412px",
   () => {
-    it("the marker follows the finger, the page does not scroll, release saves", async () => {
-      const { ch, send, ev } = await session(await buildPage());
-      try {
-        await until(
-          () => ev("!!document.querySelector('[data-testid=focus-picker]')"),
-          "the picker",
-        );
-        await ev(
-          "document.querySelector('[data-testid=focus-picker]').scrollIntoView({block:'center'})",
-        );
-        const rect = await until(async () => {
-          const r = await ev(
-            "(() => { const r = document.querySelector('[data-testid=focus-picker]').getBoundingClientRect(); return r.width > 50 ? {l:r.left,t:r.top,w:r.width,h:r.height} : null })()",
+    it.each([...Array(12).keys()])(
+      "DIAG run %i: the marker follows the finger, the page does not scroll, release saves",
+      async () => {
+        const { ch, send, ev } = await session(await buildPage());
+        try {
+          await until(
+            () => ev("!!document.querySelector('[data-testid=focus-picker]')"),
+            "the picker",
           );
-          return r;
-        }, "the picker box");
-        expect(rect.t).toBeGreaterThan(0);
-        expect(rect.t + rect.h).toBeLessThan(915);
-        const scrollBefore = await ev("window.scrollY");
-        const at = (fx, fy) => ({
-          x: rect.l + rect.w * fx,
-          y: rect.t + rect.h * fy,
-        });
-        const touch = (type, p) =>
-          send("Input.dispatchTouchEvent", {
-            type,
-            touchPoints: p ? [{ ...p, id: 1 }] : [],
+          await ev(
+            "document.querySelector('[data-testid=focus-picker]').scrollIntoView({block:'center'})",
+          );
+          const snap = () =>
+            ev(
+              "JSON.stringify({iw:innerWidth,ih:innerHeight,vis:document.visibilityState,ready:document.readyState,html:document.body.innerHTML.length,picker:(()=>{const e=document.querySelector('[data-testid=focus-picker]');if(!e)return null;const r=e.getBoundingClientRect();return {w:r.width,h:r.height,style:e.getAttribute('style'),cls:e.className.slice(0,60)}})(),box:(()=>{const e=document.querySelector('[data-testid=focus-box]');if(!e)return null;const r=e.getBoundingClientRect();return {w:r.width,h:r.height,cw:e.clientWidth,ch:e.clientHeight}})(),css:(()=>{const e=document.querySelector('[data-testid=focus-box]');return e?getComputedStyle(e).width+'/'+getComputedStyle(e).height:null})(),sheets:document.styleSheets.length})",
+            );
+          const rect = await until(async () => {
+            const r = await ev(
+              "(() => { const r = document.querySelector('[data-testid=focus-picker]').getBoundingClientRect(); return r.width > 50 ? {l:r.left,t:r.top,w:r.width,h:r.height} : null })()",
+            );
+            return r;
+          }, "the picker box").catch(async (e) => {
+            throw new Error(e.message + " " + (await snap()));
           });
-        const marker = () =>
-          ev(
-            "(() => { const m = document.querySelector('[data-testid=focus-marker]'); return m.style.left + ',' + m.style.top })()",
-          );
+          expect(rect.t).toBeGreaterThan(0);
+          expect(rect.t + rect.h).toBeLessThan(915);
+          const scrollBefore = await ev("window.scrollY");
+          const at = (fx, fy) => ({
+            x: rect.l + rect.w * fx,
+            y: rect.t + rect.h * fy,
+          });
+          const touch = (type, p) =>
+            send("Input.dispatchTouchEvent", {
+              type,
+              touchPoints: p ? [{ ...p, id: 1 }] : [],
+            });
+          const marker = () =>
+            ev(
+              "(() => { const m = document.querySelector('[data-testid=focus-marker]'); return m.style.left + ',' + m.style.top })()",
+            );
 
-        await touch("touchStart", at(0.25, 0.25));
-        await until(async () => (await marker()) === "25%,25%", "tap point");
-        // A mostly vertical drag: the browser would scroll the page.
-        for (let i = 1; i <= 8; i++)
-          await touch("touchMove", at(0.25 + 0.05 * i, 0.25 + 0.06 * i));
-        await until(
-          async () => (await marker()) === "65%,73%",
-          "marker following the finger",
-        );
-        expect(await ev("window.scrollY")).toBe(scrollBefore);
-        expect(await ev("window.__saved === undefined")).toBe(true);
-        await touch("touchEnd");
-        const saved = await until(
-          () => ev("window.__saved ?? null"),
-          "the focus save on release",
-        );
-        expect(saved).toMatchObject({
-          intent: "focus",
-          device: "desktop",
-          focusX: "65",
-          focusY: "73",
-        });
-        expect(await ev("window.scrollY")).toBe(scrollBefore);
-      } finally {
-        ch.kill();
-      }
-    }, 60000);
+          await touch("touchStart", at(0.25, 0.25));
+          await until(async () => (await marker()) === "25%,25%", "tap point");
+          // A mostly vertical drag: the browser would scroll the page.
+          for (let i = 1; i <= 8; i++)
+            await touch("touchMove", at(0.25 + 0.05 * i, 0.25 + 0.06 * i));
+          await until(
+            async () => (await marker()) === "65%,73%",
+            "marker following the finger",
+          );
+          expect(await ev("window.scrollY")).toBe(scrollBefore);
+          expect(await ev("window.__saved === undefined")).toBe(true);
+          await touch("touchEnd");
+          const saved = await until(
+            () => ev("window.__saved ?? null"),
+            "the focus save on release",
+          );
+          expect(saved).toMatchObject({
+            intent: "focus",
+            device: "desktop",
+            focusX: "65",
+            focusY: "73",
+          });
+          expect(await ev("window.scrollY")).toBe(scrollBefore);
+        } finally {
+          ch.kill();
+        }
+      },
+      60000,
+    );
   },
 );
 
