@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import type { TKey } from "../i18n/t";
 import { useLang, useT } from "../i18n/use-t";
 import { useStudioName } from "../lib/use-studio-name";
 import { AddToHomeHint } from "./AddToHomeHint";
@@ -20,6 +19,12 @@ import { Download, Heart, HeartFilled } from "./icons";
 import { SharePopover } from "./SharePopover";
 import { useFavorites } from "./use-favorites";
 import { useImgUrl } from "./img-url";
+import {
+  reducedMotion,
+  useHideOnScroll,
+  useTabEdges,
+  useToast,
+} from "./use-gallery-chrome";
 import type { GalleryPhoto, OpenGallery } from "./types";
 
 const ALL = "\u0000all";
@@ -27,11 +32,6 @@ const FAV = "\u0000fav";
 
 const aspectOf = (p: GalleryPhoto | undefined) =>
   p?.width && p.height ? p.width / p.height : null;
-
-const reducedMotion = () =>
-  typeof window !== "undefined" &&
-  typeof window.matchMedia === "function" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export function GalleryView({
   gallery,
@@ -59,19 +59,16 @@ export function GalleryView({
   );
   const [open, setOpen] = useState<number | null>(null);
   // One toast slot: a newer message replaces the current one.
-  const [toast, setToast] = useState<{ key: TKey; n: number } | null>(null);
-  const showToast = useCallback(
-    (key: TKey) => setToast((cur) => ({ key, n: (cur?.n ?? 0) + 1 })),
-    [],
-  );
+  const { toast, showToast } = useToast();
   const [sheet, setSheet] = useState<
     { kind: "single"; id: string } | { kind: "bulk" } | null
   >(null);
-  const [hidden, setHidden] = useState(false);
-  const [edges, setEdges] = useState({ start: false, end: false });
   const tabsRef = useRef<HTMLElement>(null);
   const gridRef = useRef<HTMLElement>(null);
   const coverRef = useRef<HTMLElement>(null);
+
+  const hidden = useHideOnScroll(coverRef);
+  const { edges, updateEdges } = useTabEdges(tabsRef, active);
 
   const favs = useFavorites(
     gallery.slug,
@@ -95,56 +92,6 @@ export function GalleryView({
           : photos.filter((p) => p.set === active),
     [photos, active, favs.ids],
   );
-
-  // Hide the top bar on scroll down, show it on scroll up.
-  useEffect(() => {
-    let last = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      const past = y > (coverRef.current?.offsetHeight ?? 0);
-      if (Math.abs(y - last) > 6) {
-        setHidden(past && y > last);
-        last = y;
-      }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Fade mask on whichever edge of the tab row has more tabs beyond it.
-  const updateEdges = useCallback(() => {
-    const el = tabsRef.current;
-    if (!el) return;
-    const start = el.scrollLeft > 1;
-    const end = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
-    setEdges((e) => (e.start === start && e.end === end ? e : { start, end }));
-  }, []);
-
-  // Keep the active tab in view (horizontal only: never scrolls the page).
-  useEffect(() => {
-    const list = tabsRef.current;
-    const tab = list?.querySelector<HTMLElement>('[aria-current="true"]');
-    if (list && tab && typeof list.scrollTo === "function")
-      list.scrollTo({
-        left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2,
-        behavior: reducedMotion() ? "auto" : "smooth",
-      });
-    updateEdges();
-  }, [active, updateEdges]);
-
-  useEffect(() => {
-    window.addEventListener("resize", updateEdges);
-    return () => window.removeEventListener("resize", updateEdges);
-  }, [updateEdges]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const id = setTimeout(
-      () => setToast(null),
-      toast.key === "gallery.linkCopied" ? 2000 : 3000,
-    );
-    return () => clearTimeout(id);
-  }, [toast]);
 
   const scrollToGrid = useCallback(() => {
     gridRef.current?.scrollIntoView?.({
