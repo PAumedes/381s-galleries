@@ -72,9 +72,8 @@ describe("T6.38 sync scan", () => {
     const r = await runSync(e, { drive, now: NOW, force: true });
     expect(r.galleries.created).toBe(1);
     const photos = await db.select().from(schema.photos);
-    expect(
-      photos.map((p) => `${p.setName}/${p.baseName}`).sort(),
-    ).toMatchInlineSnapshot(`
+    expect(photos.map((p) => `${p.setName}/${p.baseName}`).sort())
+      .toMatchInlineSnapshot(`
       [
         "Ceremony/P2",
         "Highlights/Gone",
