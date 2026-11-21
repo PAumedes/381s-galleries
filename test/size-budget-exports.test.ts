@@ -80,3 +80,27 @@ describe("T6.38 logo.ts public runtime exports", () => {
     );
   });
 });
+
+import * as warm from "../app/lib/server/warm";
+
+describe("T6.38 warm.ts public runtime exports", () => {
+  it("exports the same names", () => {
+    expect(Object.keys(warm).sort()).toEqual(
+      [
+        "COVER_WARM_BUDGET",
+        "COVER_WARM_VARIANTS",
+        "WARM_BACKOFF_MS",
+        "WARM_DRIVE_BUDGET",
+        "WARM_IDLE_MS",
+        "WARM_SELECT_LIMIT",
+        "WARM_VARIANTS",
+        "expectedWarmKey",
+        "markWarmed",
+        "runScheduledWarm",
+        "warmBatch",
+        "warmCoverPhoto",
+        "warmProgress",
+      ].sort(),
+    );
+  });
+});
