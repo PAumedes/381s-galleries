@@ -380,7 +380,7 @@ export const esAdmin = {
   "admin.msg.coverNotInGallery":
     "Esa foto no pertenece a la galería o no está visible.",
   "admin.preview.metaTitle": "Vista previa · Admin",
-  "admin.preview.bar": "Vista previa: así ve la galería un cliente",
+  "admin.preview.bar": "Vista previa: lo que ve el cliente",
   "admin.preview.back": "Volver al editor",
   "admin.preview.withPin": "Con PIN",
   "admin.tabs.photos": "Fotos",
