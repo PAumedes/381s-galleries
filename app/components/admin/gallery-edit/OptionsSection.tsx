@@ -1,3 +1,4 @@
+import type { GalleryMode } from "../../../lib/constants";
 import { Form } from "react-router";
 
 import { useT } from "../../../i18n/use-t";
@@ -20,7 +21,7 @@ export function OptionsSection({
     "photoCount" | "wmCount" | "hasWmFiles" | "hasThumbWmFiles"
   >;
   proofing: boolean;
-  onMode: (m: "proofing" | "delivery") => void;
+  onMode: (m: GalleryMode) => void;
   errors: FieldErrors;
   busy: boolean;
   actionData: GalleryActionResult | undefined;

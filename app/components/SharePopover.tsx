@@ -1,9 +1,10 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useRouteLoaderData } from "react-router";
 
 import { useT } from "../i18n/use-t";
 import { nativeShare, whatsappHref } from "../lib/share";
 import { Share } from "./icons";
+import { usePopoverDismiss, useSelectWhen } from "./use-popover";
 
 const item =
   "text-small text-ink hover:bg-grey-100 flex min-h-11 w-full items-center px-4 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink";
@@ -61,27 +62,7 @@ export function SharePopover({
     setOpen(true);
   }
 
-  useEffect(() => {
-    if (!open) return;
-    boxRef.current?.querySelector<HTMLElement>("a,button")?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        close();
-      }
-    };
-    const onDown = (e: PointerEvent) => {
-      const n = e.target as Node;
-      if (!boxRef.current?.contains(n) && !btnRef.current?.contains(n))
-        setOpen(false);
-    };
-    document.addEventListener("keydown", onKey, true);
-    document.addEventListener("pointerdown", onDown);
-    return () => {
-      document.removeEventListener("keydown", onKey, true);
-      document.removeEventListener("pointerdown", onDown);
-    };
-  }, [open]);
+  usePopoverDismiss(open, boxRef, btnRef, close, () => setOpen(false));
 
   async function copy() {
     try {
@@ -94,9 +75,7 @@ export function SharePopover({
     }
   }
 
-  useEffect(() => {
-    if (copyFailed) urlRef.current?.select();
-  }, [copyFailed]);
+  useSelectWhen(urlRef, copyFailed);
 
   return (
     <div className="relative">

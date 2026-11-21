@@ -13,7 +13,7 @@ import { and, asc, desc, eq, isNull, lte, ne, or, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { getDb, nowIso, photoVisible, schema } from "../../db";
 import type { DriveClient } from "./drive-types";
-import { fillCache, fillCacheShared, resolveSource } from "./images";
+import { fillCache, resolveSource } from "./images";
 import type { SourcePhoto, Variant } from "./images";
 import {
   SETTINGS_KEYS,
@@ -47,63 +47,11 @@ export interface WarmResult {
   stopped?: "budget" | "cf";
 }
 
-/**
- * Variants the editor shows right after a save. `view-lg` stays lazy: in
- * Prueba it is the very same preview-wm file as `view-sm` (one more Drive
- * fetch for the same bytes) and in Entrega it is the full original.
- */
-export const COVER_WARM_VARIANTS: readonly Variant[] = ["thumb", "view-sm"];
-/** External subrequests one cover save may spend (Workers Free allows 50). */
-export const COVER_WARM_BUDGET = 8;
-/**
- * Worst case of ONE Drive call: the file plus MAX_RETRIES (3) retries of 429/5xx,
- * plus one OAuth refresh. Reserved before every call so the budget really holds.
- */
-const COVER_CALL_RESERVE = 3 + 2;
-
-/**
- * After a successful cover save: puts that ONE photo's cover variants in R2
- * (same resolution, validation and metadata as /img, so Prueba stores only
- * watermarked files and a photo without preview-wm stores nothing). Stops
- * before the Drive subrequest budget would be exceeded; a failing variant
- * does not stop the others. Called from `ctx.waitUntil`.
- */
-export async function warmCoverPhoto(
-  env: Env,
-  drive: DriveClient,
-  galleryId: string,
-  photoId: string,
-): Promise<void> {
-  const [row] = await getDb(env)
-    .select({
-      photo: {
-        id: P.id,
-        driveHighresId: P.driveHighresId,
-        driveWebId: P.driveWebId,
-        driveIgId: P.driveIgId,
-        driveThumbId: P.driveThumbId,
-        driveWmId: P.driveWmId,
-        driveThumbWmId: P.driveThumbWmId,
-        variantVersions: P.variantVersions,
-      },
-      mode: G.mode,
-    })
-    .from(P)
-    .innerJoin(G, eq(G.id, P.galleryId))
-    .where(and(eq(P.id, photoId), eq(P.galleryId, galleryId), photoVisible));
-  if (!row) return;
-  const photo = { ...row.photo, proofing: row.mode === "proofing" };
-  const start = drive.subrequests();
-  for (const variant of COVER_WARM_VARIANTS) {
-    if (drive.subrequests() - start + COVER_CALL_RESERVE > COVER_WARM_BUDGET)
-      break;
-    try {
-      await fillCacheShared(env, photo, variant, drive);
-    } catch {
-      // Next variant; the first real view retries this one.
-    }
-  }
-}
+export {
+  COVER_WARM_BUDGET,
+  COVER_WARM_VARIANTS,
+  warmCoverPhoto,
+} from "./warm-cover";
 
 const empty = (): WarmResult => ({ stale: 0, warmed: 0, failed: 0 });
 
@@ -260,6 +208,43 @@ export async function warmProgress(
   return { warmed, total };
 }
 
+type Db = ReturnType<typeof getDb>;
+
+/** Moves (success) or backs off (failure) the photo's warm marker; a D1 error counts as failed. */
+async function recordOutcome(
+  db: Db,
+  photoId: string,
+  ok: boolean,
+  key: string,
+  fails: number,
+): Promise<"warmed" | "failed"> {
+  try {
+    if (ok) {
+      await db
+        .update(P)
+        .set({
+          cacheWarmKey: key,
+          cacheWarmFailCount: 0,
+          cacheWarmRetryAt: null,
+        })
+        .where(eq(P.id, photoId));
+      return "warmed";
+    }
+    await db
+      .update(P)
+      .set({
+        cacheWarmFailCount: fails + 1,
+        cacheWarmRetryAt: nowIso(
+          new Date(Date.now() + WARM_BACKOFF_MS[Math.min(fails, 3)]),
+        ),
+      })
+      .where(eq(P.id, photoId));
+    return "failed";
+  } catch {
+    return "failed";
+  }
+}
+
 export async function warmBatch(
   env: Env,
   opts: { drive: DriveClient; budget?: number },
@@ -315,33 +300,8 @@ export async function warmBatch(
         break;
       }
     }
-    try {
-      cf += 1;
-      if (ok) {
-        await db
-          .update(P)
-          .set({
-            cacheWarmKey: key,
-            cacheWarmFailCount: 0,
-            cacheWarmRetryAt: null,
-          })
-          .where(eq(P.id, photo.id));
-        result.warmed++;
-      } else {
-        await db
-          .update(P)
-          .set({
-            cacheWarmFailCount: fails + 1,
-            cacheWarmRetryAt: nowIso(
-              new Date(Date.now() + WARM_BACKOFF_MS[Math.min(fails, 3)]),
-            ),
-          })
-          .where(eq(P.id, photo.id));
-        result.failed++;
-      }
-    } catch {
-      result.failed++;
-    }
+    cf += 1;
+    result[await recordOutcome(db, photo.id, ok, key, fails)]++;
     if (used() > budget) {
       result.stopped = "budget";
       break;

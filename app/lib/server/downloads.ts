@@ -1,76 +1,34 @@
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
-import { wellFormed } from "../text";
 import { getDb, photoVisible, schema } from "../../db";
 import {
   clientIpHash,
   crossSite,
   findGallery,
-  isAvailable,
   openGallery,
   requireVisitor,
-  type AccessEnv,
   type GalleryRow,
   type VisitorRow,
 } from "./access";
 import { pinFingerprint } from "./auth";
-import { newId, signToken, verifyToken } from "./crypto";
-import { mockImageUrl } from "./drive-mock";
-import { DriveError } from "./drive-types";
-import type { DriveClient } from "./drive-types";
+import { newId, signToken } from "./crypto";
 import {
   ANON_RATE,
   createAnonVisitor,
   visibleFavoritesQuery,
 } from "./favorites";
-import { jsonReply, NOSNIFF, PRIVATE_NO_STORE, textResponse } from "./http";
+import { jsonReply } from "./http";
 import { hit, retryAfterFor, type RateRule } from "./rate-limit";
 import { rawUserAgent, visitorInfo } from "./visitor-info";
-
-export const DL_TOKEN_TTL_SECONDS = 10 * 60;
-export const DL_WINDOW_MS = 10 * 60 * 1000;
-/** Token/bulk requests per ip+gallery per window (a big bulk run needs one per 50 files plus refreshes). */
-export const DL_MAX_PER_WINDOW = 300;
-export const DL_MAX_IDS = 50;
-/** `/dl` hits per ip+gallery per window (zips with retries and refreshes). */
-export const DL_GET_MAX_PER_WINDOW = 3000;
-/** Uses of one download token (retries, ranges, resumes). */
-export const DL_TOKEN_MAX_USES = 20;
-/** Token/bulk requests per ip+gallery. */
-const DL_RATE: RateRule = {
-  scope: "dl",
-  max: DL_MAX_PER_WINDOW,
-  windowMs: DL_WINDOW_MS,
-};
-/** `/dl` hits per ip+gallery. */
-const DL_GET_RATE: RateRule = {
-  scope: "dlget",
-  max: DL_GET_MAX_PER_WINDOW,
-  windowMs: DL_WINDOW_MS,
-};
-/** Uses of one token (window = the token's remaining TTL, set per hit). */
-const DL_TOKEN_RATE: RateRule = {
-  scope: "dlj",
-  max: DL_TOKEN_MAX_USES,
-  windowMs: DL_TOKEN_TTL_SECONDS * 1000,
-};
-const VARIANTS = ["highres", "web", "ig"] as const;
-type DlVariant = (typeof VARIANTS)[number];
-type PhotoRow = typeof schema.photos.$inferSelect;
-type DlEnv = AccessEnv & Pick<Env, "DOWNLOAD_SECRET">;
-
-interface DlToken {
-  t: "dl";
-  jti: string;
-  g: string;
-  p: string;
-  v: DlVariant;
-  vid: string;
-  pf: string;
-  b?: string;
-}
-
-const isVariant = (v: unknown): v is DlVariant =>
-  typeof v === "string" && (VARIANTS as readonly string[]).includes(v);
+import {
+  DL_MAX_IDS,
+  DL_RATE,
+  DL_TOKEN_TTL_SECONDS,
+  downloadFilename,
+  fileIdFor,
+  isVariant,
+  variantAllowed,
+} from "./download-shared";
+import type { DlEnv, DlToken, DlVariant, PhotoRow } from "./download-shared";
 
 const reply = jsonReply;
 const notFound = () => reply({ error: "not_found" }, 404);
@@ -87,49 +45,6 @@ async function readJson(
   } catch {
     return null;
   }
-}
-
-function variantAllowed(g: GalleryRow, v: DlVariant): boolean {
-  // Proofing (Prueba): nothing is downloadable, whatever the allow_* flags say.
-  if (g.mode === "proofing") return false;
-  return v === "highres"
-    ? g.allowHighres
-    : v === "web"
-      ? g.allowWeb
-      : g.allowIg;
-}
-
-function fileIdFor(p: PhotoRow, v: DlVariant): string | null {
-  return (
-    (v === "highres"
-      ? p.driveHighresId
-      : v === "web"
-        ? p.driveWebId
-        : p.driveIgId) || null
-  );
-}
-
-/** Download file name: no path separators / control chars (unicode kept). */
-export function downloadFilename(baseName: string, v: DlVariant): string {
-  const base =
-    wellFormed(baseName)
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\u0000-\u001f\u007f-\u009f/\\]/g, "")
-      .trim()
-      // Truncate by code point so an astral character is never split.
-      .match(/[\s\S]/gu)
-      ?.slice(0, 200)
-      .join("") || "photo";
-  return `${base}${v === "highres" ? "" : `-${v}`}.jpg`;
-}
-
-function contentDisposition(filename: string): string {
-  const ascii = filename.replace(/[^\x20-\x7e]|["\\%]/g, "_");
-  const star = encodeURIComponent(wellFormed(filename)).replace(
-    /['()*]/g,
-    (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase(),
-  );
-  return `attachment; filename="${ascii}"; filename*=UTF-8''${star}`;
 }
 
 interface Gate {
@@ -216,6 +131,29 @@ function parseIds(ids: unknown): string[] | null {
   return ids as string[];
 }
 
+/** The caller's own bulk request named by `bulkId`, or null (also when the id is malformed). */
+async function ownBulkId(
+  env: DlEnv,
+  g: GalleryRow,
+  visitor: VisitorRow,
+  bulkId: unknown,
+): Promise<string | null> {
+  if (typeof bulkId !== "string" || bulkId.length > 64) return null;
+  const [row] = await getDb(env as Env)
+    .select({ id: schema.downloads.id })
+    .from(schema.downloads)
+    .where(
+      and(
+        eq(schema.downloads.id, bulkId),
+        eq(schema.downloads.galleryId, g.id),
+        eq(schema.downloads.kind, "bulk"),
+        isNull(schema.downloads.photoId),
+        eq(schema.downloads.visitorId, visitor.id),
+      ),
+    );
+  return row?.id ?? null;
+}
+
 export async function handleDownloadTokens(
   request: Request,
   slug: string,
@@ -232,31 +170,16 @@ export async function handleDownloadTokens(
 
   const photoIds = parseIds(body.photoIds) as string[];
 
-  const db = getDb(env as Env);
   let bulkId: string | undefined;
   if (body.bulkId !== undefined) {
-    if (typeof body.bulkId !== "string" || body.bulkId.length > 64)
-      return bad();
-    const [row] = await db
-      .select({ id: schema.downloads.id })
-      .from(schema.downloads)
-      .where(
-        and(
-          eq(schema.downloads.id, body.bulkId),
-          eq(schema.downloads.galleryId, g.id),
-          eq(schema.downloads.kind, "bulk"),
-          isNull(schema.downloads.photoId),
-          eq(schema.downloads.visitorId, visitor.id),
-        ),
-      );
-    if (!row) return bad();
-    bulkId = row.id;
+    const own = await ownBulkId(env, g, visitor, body.bulkId);
+    if (!own) return bad();
+    bulkId = own;
   }
-
   // Tokens issued under the allow_bulk gate remember it, so /dl can re-check.
   const bulkTag = bulkId ?? (photoIds.length > 1 ? "multi" : undefined);
 
-  const rows = await db
+  const rows = await getDb(env as Env)
     .select()
     .from(schema.photos)
     .where(
@@ -301,29 +224,26 @@ export async function handleDownloadTokens(
   return reply({ tokens: out, missing, unavailable }, 200, cookie);
 }
 
-export async function handleBulk(
-  request: Request,
-  slug: string,
-  env: DlEnv,
-): Promise<Response> {
-  const r = await gate(request, slug, env, {
-    bulk: () => true,
-    valid: (b) =>
-      b.scope === "all" ||
-      b.scope === "favorites" ||
-      (b.scope === "set" &&
-        typeof b.set === "string" &&
-        b.set.length > 0 &&
-        b.set.length <= 200),
-  });
-  if (r instanceof Response) return r;
-  const { g, visitor, cookie, variant, body } = r;
-  const scope = body.scope;
-  const set = body.set;
+const isBulkScope = (b: Record<string, unknown>) =>
+  b.scope === "all" ||
+  b.scope === "favorites" ||
+  (b.scope === "set" &&
+    typeof b.set === "string" &&
+    b.set.length > 0 &&
+    b.set.length <= 200);
 
+/** The visible photos of the requested scope that have a file for `variant`, in gallery order. */
+async function bulkPhotos(
+  env: DlEnv,
+  g: GalleryRow,
+  visitor: VisitorRow,
+  variant: DlVariant,
+  body: Record<string, unknown>,
+): Promise<PhotoRow[]> {
   const db = getDb(env as Env);
   const conds = [eq(schema.photos.galleryId, g.id), photoVisible];
-  if (scope === "set") conds.push(eq(schema.photos.setName, set as string));
+  if (body.scope === "set")
+    conds.push(eq(schema.photos.setName, body.set as string));
   let photos = await db
     .select()
     .from(schema.photos)
@@ -333,32 +253,50 @@ export async function handleBulk(
       asc(schema.photos.sort),
       asc(schema.photos.baseName),
     );
-  if (scope === "favorites") {
+  if (body.scope === "favorites") {
     const favs = new Set(
       (await visibleFavoritesQuery(db, visitor.id, g.id)).map((f) => f.id),
     );
     photos = photos.filter((p) => favs.has(p.id));
   }
-  photos = photos.filter((p) => fileIdFor(p, variant));
+  return photos.filter((p) => fileIdFor(p, variant));
+}
+
+export async function handleBulk(
+  request: Request,
+  slug: string,
+  env: DlEnv,
+): Promise<Response> {
+  const r = await gate(request, slug, env, {
+    bulk: () => true,
+    valid: isBulkScope,
+  });
+  if (r instanceof Response) return r;
+  const { g, visitor, cookie, variant, body } = r;
+  const scope = body.scope as string;
+
+  const photos = await bulkPhotos(env, g, visitor, variant, body);
   if (photos.length === 0) {
     return reply({ bulkId: null, photoIds: [] }, 200, cookie);
   }
 
   const bulkId = newId();
-  await db.insert(schema.downloads).values({
-    id: bulkId,
-    galleryId: g.id,
-    photoId: null,
-    visitorId: visitor.id,
-    variant,
-    kind: "bulk",
-    ...(await visitorInfo(request, env, g.id)),
-    ua: rawUserAgent(request),
-    bulkScope:
-      scope === "set"
-        ? `set:${photos[0].setName ?? (set as string)}`
-        : (scope as string),
-  });
+  await getDb(env as Env)
+    .insert(schema.downloads)
+    .values({
+      id: bulkId,
+      galleryId: g.id,
+      photoId: null,
+      visitorId: visitor.id,
+      variant,
+      kind: "bulk",
+      ...(await visitorInfo(request, env, g.id)),
+      ua: rawUserAgent(request),
+      bulkScope:
+        scope === "set"
+          ? `set:${photos[0].setName ?? (body.set as string)}`
+          : scope,
+    });
   const totalBytes =
     variant === "highres"
       ? photos.reduce((n, p) => n + (p.highresBytes ?? 0), 0)
@@ -374,158 +312,6 @@ export async function handleBulk(
   );
 }
 
-// ------------------------------------------------------------------ /dl/:token
-
-const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const BASE_HEADERS = {
-  ...NOSNIFF,
-  "Referrer-Policy": "no-referrer",
-  "Cache-Control": PRIVATE_NO_STORE,
-};
-const gone = () => textResponse("Gone", 410, BASE_HEADERS);
-const badGateway = () => textResponse("Bad gateway", 502, BASE_HEADERS);
-
-export interface DownloadDeps {
-  drive: DriveClient;
-}
-
-export async function serveDownload(
-  request: Request,
-  token: string,
-  env: DlEnv,
-  deps: DownloadDeps,
-): Promise<Response> {
-  const claims = await verifyToken<DlToken>(token, env.DOWNLOAD_SECRET);
-  if (
-    !claims ||
-    claims.t !== "dl" ||
-    typeof claims.jti !== "string" ||
-    typeof claims.g !== "string" ||
-    typeof claims.p !== "string" ||
-    typeof claims.pf !== "string" ||
-    !isVariant(claims.v)
-  ) {
-    return gone();
-  }
-  const variant = claims.v;
-
-  const limited = async (rule: RateRule, key: string, windowMs?: number) =>
-    textResponse("Too Many Requests", 429, {
-      ...BASE_HEADERS,
-      "Retry-After": String(await retryAfterFor(env, rule, key, windowMs)),
-    });
-  const ipHash = await clientIpHash(request, env, { prefix64: true });
-  if (ipHash && !(await hit(env, DL_GET_RATE, `${ipHash}:${claims.g}`)))
-    return limited(DL_GET_RATE, `${ipHash}:${claims.g}`);
-  const exp = (claims as { exp?: number }).exp;
-  const ttlMs = Math.max(
-    1000,
-    typeof exp === "number"
-      ? exp * 1000 - Date.now()
-      : DL_TOKEN_TTL_SECONDS * 1000,
-  );
-  if (!(await hit(env, DL_TOKEN_RATE, claims.jti, ttlMs)))
-    return limited(DL_TOKEN_RATE, claims.jti, ttlMs);
-
-  const db = getDb(env as Env);
-  const [row] = await db
-    .select({ photo: schema.photos, gallery: schema.galleries })
-    .from(schema.photos)
-    .innerJoin(
-      schema.galleries,
-      eq(schema.galleries.id, schema.photos.galleryId),
-    )
-    .where(
-      and(
-        eq(schema.photos.id, claims.p),
-        eq(schema.photos.galleryId, claims.g),
-        photoVisible,
-      ),
-    );
-  if (!row) return gone();
-  const { photo, gallery } = row;
-  if (!isAvailable(gallery)) return gone();
-  if (claims.pf !== (await pinFingerprint(gallery.pinHash, env))) return gone();
-  if (!variantAllowed(gallery, variant)) return gone();
-  if (claims.b && !gallery.allowBulk) return gone();
-  const fileId = fileIdFor(photo, variant);
-  if (!fileId) return gone();
-
-  const isHead = request.method === "HEAD";
-  const log = async () => {
-    if (isHead) return;
-    const info = await visitorInfo(request, env, gallery.id);
-    await db
-      .insert(schema.downloads)
-      .values({
-        galleryId: gallery.id,
-        photoId: photo.id,
-        visitorId: typeof claims.vid === "string" ? claims.vid : null,
-        variant,
-        kind: claims.b ? "bulk" : "single",
-        tokenId: claims.jti,
-        bulkId: claims.b && claims.b !== "multi" ? claims.b : null,
-        ...info,
-        ua: rawUserAgent(request),
-      })
-      .onConflictDoNothing();
-  };
-
-  if (env.DRIVE_MODE === "mock") {
-    await log();
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...BASE_HEADERS,
-        Location: mockImageUrl(
-          photo.id,
-          variant,
-          photo.width ?? 0,
-          photo.height ?? 0,
-        ),
-      },
-    });
-  }
-
-  let upstream: Response;
-  try {
-    upstream = await deps.drive.streamFile(fileId, {
-      range: request.headers.get("Range") ?? undefined,
-    });
-  } catch (err) {
-    if (err instanceof DriveError && err.status === 404) return gone();
-    if (err instanceof DriveError && err.status === 416) {
-      return new Response(null, {
-        status: 416,
-        headers: { "Cache-Control": PRIVATE_NO_STORE },
-      });
-    }
-    console.error(
-      "dl: drive error",
-      err instanceof DriveError ? err.status : "error",
-    );
-    return badGateway();
-  }
-  await log();
-
-  const type = (upstream.headers.get("Content-Type") ?? "")
-    .split(";")[0]
-    .trim()
-    .toLowerCase();
-  const headers = new Headers({
-    ...BASE_HEADERS,
-    "Content-Type": IMAGE_TYPES.includes(type) ? type : "image/jpeg",
-    "Content-Disposition": contentDisposition(
-      downloadFilename(photo.baseName, variant),
-    ),
-  });
-  for (const h of ["Content-Length", "Content-Range", "Accept-Ranges"]) {
-    const v = upstream.headers.get(h);
-    if (v) headers.set(h, v);
-  }
-  if (isHead) {
-    await upstream.body?.cancel();
-    return new Response(null, { status: upstream.status, headers });
-  }
-  return new Response(upstream.body, { status: upstream.status, headers });
-}
+export { serveDownload } from "./download-serve";
+export type { DownloadDeps } from "./download-serve";
+export * from "./download-shared";

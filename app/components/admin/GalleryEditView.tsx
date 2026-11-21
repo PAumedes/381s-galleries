@@ -1,3 +1,4 @@
+import type { GalleryMode } from "../../lib/constants";
 import { useId, useMemo, useState } from "react";
 import { useNavigation, useSearchParams } from "react-router";
 
@@ -68,7 +69,7 @@ function GalleryEditViewInner({
   const pendingCover = usePendingCover(photoIds, actionData, noWmIds);
   const g = withPendingCover(data.gallery, pendingCover);
   const versions = useMemo(() => versionsOf(data.photos), [data.photos]);
-  const [mode, setMode] = useState<"proofing" | "delivery">(g.mode);
+  const [mode, setMode] = useState<GalleryMode>(g.mode);
   const proofing = mode === "proofing";
   useCoverPrefetch(pendingCover, { proofing, versions });
   const [title, setTitle] = useState(g.title);

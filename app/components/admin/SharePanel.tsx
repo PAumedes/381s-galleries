@@ -1,3 +1,4 @@
+import type { GalleryStatus } from "../../lib/constants";
 import { useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { useT } from "../../i18n/use-t";
@@ -19,7 +20,7 @@ export function SharePanel({
   url: string;
   slug: string;
   title?: string;
-  status: "draft" | "published" | "archived";
+  status: GalleryStatus;
   hasPin: boolean;
   cardHref?: string;
 }) {
