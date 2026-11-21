@@ -6,6 +6,7 @@ exports[`Lightbox characterization: DOM snapshots > Spanish 1`] = `
 <div data-lb-backdrop="true" aria-hidden="true" class="absolute inset-0 bg-night">
 </div>
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center overflow-hidden select-none">
+<img data-testid="lightbox-placeholder" data-lb-photo="true" alt="" aria-hidden="true" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] pointer-events-none" src="/img/p1/thumb">
 <img data-lb-photo="true" data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Foto 2" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-0" srcset="/img/p1/view-sm 1200w, /img/p1/view-lg 2048w" src="/img/p1/view-sm">
 </div>
 <div class="absolute inset-x-0 top-0 isolate flex items-center justify-between px-4 py-2 transition-opacity duration-slow ease-out-soft opacity-100">
@@ -55,6 +56,8 @@ exports[`Lightbox characterization: DOM snapshots > controls hidden, mid-drag 1`
 <div data-lb-backdrop="true" aria-hidden="true" class="absolute inset-0 bg-night">
 </div>
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center overflow-hidden select-none">
+<img data-testid="lightbox-neighbour" sizes="(min-width: 768px) 92vw, 100vw" alt="" aria-hidden="true" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] pointer-events-none" style="transform: translateX(-974px);" src="/img/p1/thumb">
+<img data-testid="lightbox-placeholder" data-lb-photo="true" alt="" aria-hidden="true" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] pointer-events-none" src="/img/p2/thumb" style="transform: translateX(50px);">
 <img data-lb-photo="true" data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 3" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-opacity duration-slow motion-reduce:transition-none opacity-0" srcset="/img/p2/view-sm 1200w, /img/p2/view-lg 2048w" src="/img/p2/view-sm" style="transform: translateX(50px);">
 </div>
 <div class="absolute inset-x-0 top-0 isolate flex items-center justify-between px-4 py-2 transition-opacity duration-slow ease-out-soft pointer-events-none opacity-0">
@@ -92,6 +95,7 @@ exports[`Lightbox characterization: DOM snapshots > default, first photo, no cal
 <div data-lb-backdrop="true" aria-hidden="true" class="absolute inset-0 bg-night">
 </div>
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center overflow-hidden select-none">
+<img data-testid="lightbox-placeholder" data-lb-photo="true" alt="" aria-hidden="true" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] pointer-events-none" src="/img/p0/thumb">
 <img data-lb-photo="true" data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 1" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-0" srcset="/img/p0/view-sm 1200w, /img/p0/view-lg 2048w" src="/img/p0/view-sm">
 </div>
 <div class="absolute inset-x-0 top-0 isolate flex items-center justify-between px-4 py-2 transition-opacity duration-slow ease-out-soft opacity-100">
@@ -173,6 +177,7 @@ exports[`Lightbox characterization: DOM snapshots > proofing (protect) at the la
 <div data-lb-backdrop="true" aria-hidden="true" class="absolute inset-0 bg-night">
 </div>
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center overflow-hidden select-none">
+<img data-testid="lightbox-placeholder" data-lb-photo="true" alt="" aria-hidden="true" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] pointer-events-none" src="/img/p9/thumb">
 <img data-lb-photo="true" data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 10" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-0" srcset="/img/p9/view-sm 1200w, /img/p9/view-lg 2048w" src="/img/p9/view-sm">
 <span data-testid="lightbox-shield" data-lb-photo="true" aria-hidden="true" class="col-start-1 row-start-1 block h-full w-full">
 </span>
@@ -212,6 +217,7 @@ exports[`Lightbox characterization: DOM snapshots > with favourite + download, m
 <div data-lb-backdrop="true" aria-hidden="true" class="absolute inset-0 bg-night">
 </div>
 <div data-testid="lightbox-stage" class="absolute inset-0 grid place-items-center overflow-hidden select-none">
+<img data-testid="lightbox-placeholder" data-lb-photo="true" alt="" aria-hidden="true" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] pointer-events-none" src="/img/p4/thumb">
 <img data-lb-photo="true" data-testid="lightbox-img" sizes="(min-width: 768px) 92vw, 100vw" alt="Photo 5" draggable="false" class="col-start-1 row-start-1 block h-[80vh] w-screen object-contain md:h-[86vh] md:w-[92vw] transition-[opacity,transform] duration-slow ease-out-soft motion-reduce:transition-none opacity-100" srcset="/img/p4/view-sm 1200w, /img/p4/view-lg 2048w" src="/img/p4/view-sm">
 </div>
 <div class="absolute inset-x-0 top-0 isolate flex items-center justify-between px-4 py-2 transition-opacity duration-slow ease-out-soft opacity-100">
