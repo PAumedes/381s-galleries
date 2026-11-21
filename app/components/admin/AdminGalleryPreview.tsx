@@ -49,7 +49,7 @@ export function AdminGalleryPreview({ data }: { data: AdminPreviewData }) {
     <ImgUrlProvider value={url}>
       <div
         data-admin-preview-bar=""
-        className="bg-ink text-paper flex flex-col items-center gap-3 px-4 py-3 text-center text-base sm:flex-row sm:justify-between sm:text-left"
+        className="bg-ink text-paper flex flex-col items-center gap-3 px-4 py-3 text-center text-base sm:flex-row sm:justify-between sm:text-start"
       >
         <p className="min-w-0 sm:flex-1">
           {t("admin.preview.bar")}
