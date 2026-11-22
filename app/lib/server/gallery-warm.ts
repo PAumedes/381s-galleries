@@ -25,6 +25,7 @@ import type { Variant } from "./images";
 import { hit, type RateRule } from "./rate-limit";
 import { SETTINGS_KEYS, getSetting } from "./settings";
 import { markWarmed } from "./warm";
+import { GalleryGone, gated, stillAvailable } from "./warm-gate";
 
 /** External (Drive + OAuth) subrequests one open may spend; Workers Free allows 50 per invocation. */
 export const OPEN_WARM_BUDGET = 36;
@@ -83,9 +84,6 @@ export function d1Exhausted(
     !!span.d1 && span.d1.used() + extra + FINISH_D1_RESERVE > span.d1.budget
   );
 }
-
-/** Thrown by the gated Drive client when the gallery stopped being warmable. */
-class GalleryGone extends Error {}
 
 /** Galleries being warmed in this isolate (one run at a time each). */
 const running = new Set<string>();
@@ -148,42 +146,6 @@ const ROW_COLUMNS = {
 };
 type WarmRow = Pick<typeof P.$inferSelect, keyof typeof ROW_COLUMNS>;
 type GalleryRow = typeof G.$inferSelect;
-
-/**
- * One cheap select: is the gallery still published, unexpired and in the mode
- * the walk started in (it may have been unpublished or switched Entrega <->
- * Prueba mid-warm; a switched gallery must not get files of the old mode)?
- */
-async function stillAvailable(
-  env: Env,
-  galleryId: string,
-  proofing: boolean,
-): Promise<boolean> {
-  const [g] = await getDb(env).select().from(G).where(eq(G.id, galleryId));
-  return isAvailable(g) && (g.mode === "proofing") === proofing;
-}
-
-/**
- * The Drive client a warm fills with: every fetch re-checks the gallery first
- * (one D1 select per real Drive call, none for files R2 already holds), so no
- * file of a stale mode is ever fetched and the D1 cost is bounded by the
- * Drive budget.
- */
-function gated(
-  env: Env,
-  drive: DriveClient,
-  galleryId: string,
-  proofing: boolean,
-): DriveClient {
-  return {
-    subrequests: () => drive.subrequests(),
-    async streamFile(id, opts) {
-      if (!(await stillAvailable(env, galleryId, proofing)))
-        throw new GalleryGone();
-      return drive.streamFile(id, opts);
-    },
-  } as DriveClient;
-}
 
 /**
  * Fills `variants` of one photo while the run's Drive budget lasts. "failed":

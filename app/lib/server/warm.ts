@@ -15,6 +15,7 @@ import { getDb, nowIso, photoVisible, schema } from "../../db";
 import type { D1Allowance } from "./d1-meter";
 import type { DriveClient } from "./drive-types";
 import { fillCache, resolveSource } from "./images";
+import { GalleryGone, gated } from "./warm-gate";
 import type { SourcePhoto, Variant } from "./images";
 import {
   SETTINGS_KEYS,
@@ -257,8 +258,8 @@ async function recordOutcome(
   }
 }
 
-/** D1 queries per stale photo: expected-key write, visibility re-check, outcome write. */
-const PHOTO_D1_COST = 3;
+/** D1 queries per stale photo: expected-key write, visibility re-check, one gate select per variant fetch (2), outcome write. */
+const PHOTO_D1_COST = 5;
 /** D1 queries kept for what follows the batch (idle marker, lock release). */
 const BATCH_D1_RESERVE = 4;
 
@@ -297,7 +298,7 @@ export async function warmBatch(
     // Visibility / watermark flag may have changed since the selection.
     cf += 1;
     const [now] = await db
-      .select({ mode: G.mode })
+      .select({ mode: G.mode, galleryId: G.id })
       .from(P)
       .innerJoin(G, eq(G.id, P.galleryId))
       .where(and(eq(P.id, photo.id), eligible))
@@ -305,22 +306,25 @@ export async function warmBatch(
     if (!now || (now.mode === "proofing") !== wm) continue;
 
     let ok = true;
+    // Every Drive fetch re-checks gallery status and mode (Entrega -> Prueba mid-photo).
+    const gate = gated(env, drive, now.galleryId, wm);
     for (const variant of WARM_VARIANTS) {
       if (used() + 1 > budget) {
         result.stopped = "budget";
         break outer;
       }
       try {
-        cf += 2;
+        cf += 3;
         // "skipped" (nothing cacheable) is a failure: the marker must not move.
         if (
-          (await fillCache(env, { ...photo, proofing: wm }, variant, drive)) ===
+          (await fillCache(env, { ...photo, proofing: wm }, variant, gate)) ===
           "skipped"
         ) {
           ok = false;
           break;
         }
       } catch (err) {
+        if (err instanceof GalleryGone) continue outer;
         // Name only: messages may hold Drive ids.
         console.error(
           "warm: fill failed",
