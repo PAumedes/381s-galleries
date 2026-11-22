@@ -206,6 +206,9 @@ async function deleteLocked(
     env.DB.prepare("DELETE FROM settings WHERE key = ?1").bind(
       SETTINGS_KEYS.warmCursorPrefix + galleryId,
     ),
+    env.DB.prepare("DELETE FROM settings WHERE key = ?1").bind(
+      SETTINGS_KEYS.warmPendingPrefix + galleryId,
+    ),
   ]);
   return "deleted";
 }

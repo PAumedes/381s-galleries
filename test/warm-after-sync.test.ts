@@ -1,0 +1,459 @@
+import { clearCache } from "./support/cache";
+import { migrateDb, resetTables } from "./support/d1";
+import {
+  countingEnv,
+  fakeWarmDrive,
+  photoId,
+  seedGallery,
+  seedPhotos,
+  variantVersions,
+  warmGalleryId,
+} from "./support/warm";
+import { env } from "cloudflare:workers";
+import { eq } from "drizzle-orm";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { getDb, nowIso, schema } from "../app/db";
+import { createMockDrive } from "../app/lib/server/drive-mock";
+import type { MockDrive } from "../app/lib/server/drive-mock";
+import { buildFixtures } from "../app/lib/server/fixtures";
+import type { MockEntry, MockFixtures } from "../app/lib/server/fixtures";
+import { FOLDER_MIME } from "../app/lib/server/drive-types";
+import {
+  D1_FREE_QUERIES_PER_INVOCATION,
+  FREE_SUBREQUESTS_PER_INVOCATION,
+} from "../app/lib/server/d1-limits";
+import { OPEN_WARM_BUDGET } from "../app/lib/server/gallery-warm";
+import { putSetting, SETTINGS_KEYS } from "../app/lib/server/settings";
+import { runSync } from "../app/lib/server/sync";
+import {
+  runWarmCron,
+  scheduleWarmAfterSync,
+  warmPendingGalleries,
+} from "../app/lib/server/warm-after-sync";
+import type { SyncResult } from "../app/lib/server/sync";
+
+const db = getDb(env);
+const gallery = (over: Record<string, unknown> = {}, id = G) =>
+  seedGallery(id, over);
+const photos = (n: number, galleryId = G) => seedPhotos(galleryId, n);
+const fakeDrive = (fail = new Set<string>()) =>
+  fakeWarmDrive({ fail: (id) => fail.has(id) });
+const e = { ...env, DRIVE_MODE: "google" } as Env;
+const G = warmGalleryId(1);
+const PENDING = SETTINGS_KEYS.warmPendingPrefix;
+
+beforeAll(async () => {
+  await migrateDb();
+});
+
+const mark = (id = G) => putSetting(e, PENDING + id, nowIso());
+const marker = async (id = G) =>
+  (
+    await db
+      .select()
+      .from(schema.settings)
+      .where(eq(schema.settings.key, PENDING + id))
+  )[0];
+const cached = async (id: string, v: string) =>
+  (await env.CACHE.head(`${id}/${v}`)) !== null;
+const allCached = async (id: string, vs: string[]) => {
+  for (const v of vs) if (!(await cached(id, v))) return false;
+  return true;
+};
+
+beforeEach(async () => {
+  await db.delete(schema.galleries);
+  await resetTables("settings", "rate_limits");
+  await clearCache();
+});
+
+describe("T6.39 sync marks the galleries it changed", () => {
+  const mockEnv = { ...env, DRIVE_MODE: "mock" } as Env;
+  let drive: MockDrive;
+  const root = buildFixtures().rootId;
+  beforeEach(async () => {
+    drive = createMockDrive();
+    await db
+      .insert(schema.settings)
+      .values({ key: "drive_root_id", value: root });
+    await runSync(mockEnv, { drive });
+  });
+  const markers = () =>
+    db
+      .select()
+      .from(schema.settings)
+      .then((r) => r.filter((s) => s.key.startsWith(PENDING)));
+
+  it("marks every gallery that received photos in the first sync", async () => {
+    const gs = await db.select().from(schema.galleries);
+    const ms = (await markers()).map((m) => m.key);
+    expect(gs.length).toBeGreaterThan(0);
+    for (const g of gs) expect(ms).toContain(PENDING + g.id);
+  });
+
+  it("a forced no-change sync marks nothing new", async () => {
+    for (const m of await markers())
+      await db.delete(schema.settings).where(eq(schema.settings.key, m.key));
+    await runSync(mockEnv, { drive, force: true });
+    expect(await markers()).toHaveLength(0);
+  });
+
+  it("an added photo marks only its gallery; a changed variant too", async () => {
+    for (const m of await markers())
+      await db.delete(schema.settings).where(eq(schema.settings.key, m.key));
+    const [g] = await db.select().from(schema.galleries);
+    const [p] = await db
+      .select()
+      .from(schema.photos)
+      .where(eq(schema.photos.galleryId, g.id));
+    const meta = await drive.getMeta(p.driveThumbId!);
+    drive.renameFile(meta.id, meta.name.replace(/\.jpg$/i, ".jpeg"));
+    const r = await runSync(mockEnv, { drive });
+    expect(r.photos.updated).toBe(1);
+    expect((await markers()).map((m) => m.key)).toEqual([PENDING + g.id]);
+  });
+});
+
+describe("T6.39 warmPendingGalleries", () => {
+  it("a gallery larger than one invocation continues on the next runs, then the marker clears", async () => {
+    await gallery();
+    await photos(30);
+    await mark();
+    const first = fakeDrive();
+    const r = await warmPendingGalleries(e, first.drive);
+    expect(first.calls.length).toBeGreaterThan(0);
+    expect(first.drive.subrequests()).toBeLessThanOrEqual(OPEN_WARM_BUDGET);
+    expect(r.stopped).toBe("budget");
+    expect(await marker()).toBeDefined(); // not finished: stays pending
+    const all = [...first.calls];
+    for (let i = 0; i < 10 && (await marker()); i++) {
+      await resetTables("rate_limits");
+      const n = fakeDrive();
+      await warmPendingGalleries(e, n.drive);
+      all.push(...n.calls);
+    }
+    expect(await marker()).toBeUndefined();
+    expect(new Set(all).size).toBe(all.length); // nothing fetched twice
+    for (let i = 0; i < 30; i++)
+      expect(
+        await allCached(photoId(G, i), ["thumb", "view-sm", "view-lg"]),
+      ).toBe(true);
+  });
+
+  it("honours an explicit smaller budget", async () => {
+    await gallery();
+    await photos(10);
+    await mark();
+    const { drive } = fakeDrive();
+    await warmPendingGalleries(e, drive, { budget: 10 });
+    expect(drive.subrequests()).toBeLessThanOrEqual(10);
+  });
+
+  it("Prueba: only watermarked files are fetched and stored", async () => {
+    await gallery({ mode: "proofing" });
+    await photos(6);
+    await mark();
+    const { drive, calls } = fakeDrive();
+    await warmPendingGalleries(e, drive, { d1Budget: 1000 });
+    expect(calls.length).toBeGreaterThan(0);
+    for (const c of calls) expect(c).toMatch(/^(WM|TWM)-/);
+    expect(await marker()).toBeUndefined();
+  });
+
+  it("never warms while the sync lock is held; the marker stays", async () => {
+    await gallery();
+    await photos(3);
+    await mark();
+    await putSetting(
+      e,
+      SETTINGS_KEYS.syncLock,
+      `${new Date(Date.now() + 60_000).toISOString()}|x`,
+    );
+    const { drive, calls } = fakeDrive();
+    await warmPendingGalleries(e, drive);
+    expect(calls).toHaveLength(0);
+    expect(await marker()).toBeDefined();
+  });
+
+  it.each([
+    ["draft", { status: "draft" }],
+    ["archived", { status: "archived" }],
+    ["expired", { expiresAt: "2020-01-01T00:00:00.000Z" }],
+  ])("%s galleries are skipped and unmarked", async (_n, over) => {
+    await gallery(over);
+    await photos(3);
+    await mark();
+    const { drive, calls } = fakeDrive();
+    await warmPendingGalleries(e, drive);
+    expect(calls).toHaveLength(0);
+    expect(await marker()).toBeUndefined();
+  });
+
+  it("a marker of a gallery that no longer exists is dropped", async () => {
+    await mark("gone-gallery");
+    const { drive, calls } = fakeDrive();
+    await warmPendingGalleries(e, drive);
+    expect(calls).toHaveLength(0);
+    expect(await marker("gone-gallery")).toBeUndefined();
+  });
+
+  it("a gallery whose photos were all deleted fetches nothing and clears", async () => {
+    await gallery();
+    await photos(3);
+    await db.delete(schema.photos).where(eq(schema.photos.galleryId, G));
+    await mark();
+    const { drive, calls } = fakeDrive();
+    await warmPendingGalleries(e, drive);
+    expect(calls).toHaveLength(0);
+    expect(await marker()).toBeUndefined();
+  });
+
+  it("a changed photo is re-warmed (version bump) and only that one", async () => {
+    await gallery();
+    await photos(4);
+    await mark();
+    await warmPendingGalleries(e, fakeDrive().drive, { d1Budget: 1000 });
+    expect(await marker()).toBeUndefined();
+    const id = photoId(G, 1);
+    await db
+      .update(schema.photos)
+      .set({ variantVersions: variantVersions("9") })
+      .where(eq(schema.photos.id, id));
+    await mark();
+    const { drive, calls } = fakeDrive();
+    await warmPendingGalleries(e, drive, { d1Budget: 1000 });
+    expect(calls.length).toBeGreaterThan(0);
+    for (const c of calls) expect(c).toContain(id);
+    expect(await marker()).toBeUndefined();
+  });
+
+  it("a failing Drive keeps the marker so the next run retries", async () => {
+    await gallery();
+    await photos(3);
+    await mark();
+    const { drive } = fakeDrive(new Set(["TH-" + photoId(G, 0)]));
+    await warmPendingGalleries(e, drive);
+    expect(await marker()).toBeDefined();
+  });
+
+  it("does nothing in mock mode", async () => {
+    await gallery();
+    await photos(2);
+    await mark();
+    const { drive, calls } = fakeDrive();
+    await warmPendingGalleries({ ...e, DRIVE_MODE: "mock" } as Env, drive);
+    expect(calls).toHaveLength(0);
+  });
+});
+
+describe("T6.39 scheduleWarmAfterSync (waitUntil guard)", () => {
+  const result = (over: Partial<SyncResult> = {}): SyncResult => ({
+    galleries: { created: 0, updated: 0, archived: 0 },
+    photos: { added: 2, updated: 0, removed: 0 },
+    issues: 0,
+    subrequests: 8,
+    ...over,
+  });
+  const run = (r: SyncResult, mode = "google") => {
+    const queued: Promise<unknown>[] = [];
+    const { drive, calls } = fakeDrive();
+    scheduleWarmAfterSync(
+      { ...e, DRIVE_MODE: mode } as Env,
+      { ctx: { waitUntil: (p) => void queued.push(p) }, drive },
+      r,
+    );
+    return { queued, calls, drive };
+  };
+  it("schedules a bounded warm when the sync left budget", async () => {
+    await gallery();
+    await photos(20);
+    await mark();
+    const { queued, calls, drive } = run(result());
+    expect(queued).toHaveLength(1);
+    await queued[0];
+    expect(calls.length).toBeGreaterThan(0);
+    // the sync already spent 8 of the 50: the warm may use only what is left
+    expect(drive.subrequests() + 8).toBeLessThanOrEqual(50 - 5);
+  });
+  it.each([
+    ["skipped", result({ skipped: "unchanged" })],
+    [
+      "no photo change",
+      result({ photos: { added: 0, updated: 0, removed: 3 } }),
+    ],
+    ["sync used the budget", result({ subrequests: 44 })],
+  ])("does not schedule: %s", (_n, r) => {
+    expect(run(r).queued).toHaveLength(0);
+  });
+  it("does not schedule without ctx/drive or in mock mode", () => {
+    expect(run(result(), "mock").queued).toHaveLength(0);
+    expect(() => scheduleWarmAfterSync(e, undefined, result())).not.toThrow();
+  });
+});
+
+describe("T6.39 runWarmCron", () => {
+  it("continues pending galleries when the cron has nothing stale (idle)", async () => {
+    await gallery();
+    await photos(3);
+    await mark();
+    await putSetting(
+      e,
+      SETTINGS_KEYS.warmIdle,
+      new Date(Date.now() + 60_000).toISOString(),
+    );
+    const { drive, calls } = fakeDrive();
+    await runWarmCron(e, drive);
+    expect(calls.some((c) => c.startsWith("HI-"))).toBe(true);
+  });
+  it("does not add a pending warm on top of a cron run that found stale photos", async () => {
+    await gallery();
+    await photos(3);
+    await mark();
+    const { drive, calls } = fakeDrive();
+    await runWarmCron(e, drive);
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls.some((c) => c.startsWith("HI-"))).toBe(false);
+    expect(await marker()).toBeDefined();
+  });
+  it("pending galleries keep the idle back-off from hiding them", async () => {
+    await gallery();
+    await photos(2);
+    await mark();
+    await runWarmCron(e, fakeDrive().drive); // warms thumb/view-sm via the stale scan
+    const { drive, calls } = fakeDrive();
+    await runWarmCron(e, drive); // nothing stale now: pending continues
+    expect(calls.some((c) => c.startsWith("HI-"))).toBe(true);
+  });
+});
+
+/** `albums` galleries of `photos` photos each, in the three folders a sync needs. */
+function smallLibrary(albums: number, photos: number): MockFixtures {
+  const T = "2026-01-01T00:00:00.000Z";
+  const entry = (
+    id: string,
+    name: string,
+    parentId: string | null,
+    folder = true,
+  ): MockEntry => ({
+    id,
+    name,
+    mimeType: folder ? FOLDER_MIME : "image/jpeg",
+    modifiedTime: T,
+    parentId,
+    ...(folder ? {} : { width: 2000, height: 1000 }),
+  });
+  const entries = [entry("root", "root", null)];
+  for (let a = 0; a < albums; a++) {
+    entries.push(entry(`al${a}`, `Album ${a}`, "root"));
+    for (const kind of ["high-res", "web", "thumb"]) {
+      entries.push(entry(`al${a}-${kind}`, kind, `al${a}`));
+      for (let i = 0; i < photos; i++)
+        entries.push(
+          entry(`al${a}-${kind}-${i}`, `P${i}.jpg`, `al${a}-${kind}`, false),
+        );
+    }
+  }
+  return { rootId: "root", entries };
+}
+
+describe("T6.39 findings: Prueba switch, D1 budget, real totals", () => {
+  it("Entrega->Prueba switch: the unwatermarked object stored before the switch is not served", async () => {
+    await gallery();
+    await photos(1);
+    await mark();
+    const id = photoId(G, 0);
+    await warmPendingGalleries(e, fakeDrive().drive);
+    expect(await cached(id, "thumb")).toBe(true);
+    await db
+      .update(schema.galleries)
+      .set({ mode: "proofing" })
+      .where(eq(schema.galleries.id, G));
+    const { serveImage } = await import("../app/lib/server/images");
+    const { drive, calls } = fakeDrive();
+    await serveImage(
+      new Request("http://localhost/img/" + id + "/thumb"),
+      { photoId: id, variant: "thumb" },
+      e,
+      { waitUntil: () => undefined },
+      { drive },
+    );
+    expect(calls).toEqual(["TWM-" + id]); // R2's clean object ignored: watermarked file fetched
+  });
+
+  it("an exhausted D1 budget stops the run cleanly: cursor saved, marker kept", async () => {
+    await gallery();
+    await photos(30);
+    await mark();
+    const m = countingEnv(e);
+    const { drive } = fakeDrive();
+    const r = await warmPendingGalleries(m.e, drive, {
+      budget: 36,
+      d1Budget: 14,
+    });
+    expect(r.stopped).toBe("budget");
+    expect(m.count()).toBeLessThanOrEqual(14);
+    expect(await marker()).toBeDefined();
+    const cursor = await db
+      .select()
+      .from(schema.settings)
+      .where(eq(schema.settings.key, SETTINGS_KEYS.warmCursorPrefix + G));
+    expect(cursor).toHaveLength(1);
+  });
+
+  it("sync + its waitUntil warm (POST /api/admin/sync) stay within 50 D1 queries and 50 subrequests together", async () => {
+    const { syncThenWarm } = await import("../app/lib/server/sync-and-warm");
+    await db
+      .insert(schema.settings)
+      .values({ key: "drive_root_id", value: "root" });
+    // Published already (a new gallery is a draft and is not warmed).
+    for (const a of [0, 1])
+      await gallery(
+        { driveFolderId: `al${a}`, slug: `lib-${a}` },
+        warmGalleryId(a, "c"),
+      );
+    const m = countingEnv({ ...env, DRIVE_MODE: "google" } as Env);
+    const drive = createMockDrive(smallLibrary(2, 6));
+    const queued: Promise<unknown>[] = [];
+    const r = await syncThenWarm({ env: m.e, used: m.count }, drive, {
+      waitUntil: (p) => void queued.push(p),
+    });
+    console.log(
+      "SYNC d1",
+      m.count(),
+      "subs",
+      r.subrequests,
+      JSON.stringify(r.photos),
+    );
+    const syncD1 = m.count();
+    expect(r.photos.added).toBeGreaterThan(0);
+    expect(queued).toHaveLength(1);
+    await Promise.all(queued);
+    expect(m.count()).toBeGreaterThan(syncD1); // the warm ran and was counted
+    expect(drive.subrequests()).toBeGreaterThan(r.subrequests);
+    expect(m.count()).toBeLessThanOrEqual(D1_FREE_QUERIES_PER_INVOCATION);
+    expect(drive.subrequests()).toBeLessThanOrEqual(
+      FREE_SUBREQUESTS_PER_INVOCATION,
+    );
+  });
+
+  it("the minute cron over a large pending library stays within 50 D1 queries and 50 subrequests", async () => {
+    for (const n of [1, 2, 3]) {
+      const g = warmGalleryId(n, "b");
+      await gallery({}, g);
+      await photos(40, g);
+      await mark(g);
+    }
+    const m = countingEnv(e);
+    const { drive } = fakeDrive();
+    await putSetting(
+      e,
+      SETTINGS_KEYS.warmIdle,
+      new Date(Date.now() + 60_000).toISOString(),
+    );
+    await runWarmCron(m.e, drive);
+    expect(m.count()).toBeLessThanOrEqual(D1_FREE_QUERIES_PER_INVOCATION);
+    expect(drive.subrequests()).toBeLessThanOrEqual(
+      FREE_SUBREQUESTS_PER_INVOCATION,
+    );
+  });
+});

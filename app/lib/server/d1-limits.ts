@@ -22,3 +22,35 @@ export const D1_IN_CHUNK = 90;
 export const PHOTO_INSERT_ROWS = 5;
 /** Statements per db.batch() call (one D1 round trip). */
 export const D1_BATCH_MAX = 100;
+
+/** Workers Free: external subrequests (Drive/OAuth fetches) per invocation. */
+export const FREE_SUBREQUESTS_PER_INVOCATION = 50;
+/** Left unspent in an invocation that runs a warm (host-side reads, OAuth refresh, retries). */
+export const INVOCATION_SAFETY = 5;
+/**
+ * D1 queries a warm-after-sync run may spend at most (T6.39). Every query of
+ * the run is counted (d1-meter.ts), not only Drive-backed steps. In the admin
+ * sync's waitUntil it shares the Free 50 with the sync itself, whose queries
+ * the route measures: budget = min(30, 50 - INVOCATION_SAFETY - sync's own),
+ * not started below 16. A 2-album/12-photo sync uses about 21, so the warm gets
+ * 24; a sync that used 30+ gets no background warm and the minute cron
+ * continues (its own invocation: 45 for the stale scan plus pending marks).
+ */
+export const AFTER_SYNC_WARM_D1_BUDGET = 30;
+
+/**
+ * D1 queries the `$slug` loader makes itself before it hands the warm-on-open
+ * to `waitUntil` (loadGallery: gallery lookup, grid data, view log; 3 measured, padded for
+ * the other paths; the bound is asserted by test/warm-d1-budget.test.ts).
+ */
+export const SLUG_LOADER_D1_QUERIES = 8;
+/** D1 queries the admin `status` action makes itself (gallery, deleting check, compare-and-set; 3 measured, padded; asserted by the same test). */
+export const PUBLISH_ACTION_D1_QUERIES = 6;
+/** D1 queries warm-on-open may spend: the Free 50 minus safety minus the loader's own. */
+export const OPEN_WARM_D1_BUDGET =
+  D1_FREE_QUERIES_PER_INVOCATION - INVOCATION_SAFETY - SLUG_LOADER_D1_QUERIES;
+/** D1 queries warm-at-publish may spend: the Free 50 minus safety minus the action's own. */
+export const PUBLISH_WARM_D1_BUDGET =
+  D1_FREE_QUERIES_PER_INVOCATION -
+  INVOCATION_SAFETY -
+  PUBLISH_ACTION_D1_QUERIES;

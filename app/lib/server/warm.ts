@@ -12,8 +12,10 @@
 import { and, asc, desc, eq, isNull, lte, ne, or, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { getDb, nowIso, photoVisible, schema } from "../../db";
+import type { D1Allowance } from "./d1-meter";
 import type { DriveClient } from "./drive-types";
 import { fillCache, resolveSource } from "./images";
+import { GalleryGone, gated } from "./warm-gate";
 import type { SourcePhoto, Variant } from "./images";
 import {
   SETTINGS_KEYS,
@@ -113,9 +115,14 @@ const eligible = and(ne(G.status, "archived"), photoVisible);
  * expected key is unknown (NULL) get it computed here and written back; those
  * that turn out current are dropped.
  */
-async function staleRows(env: Env): Promise<{
+async function staleRows(
+  env: Env,
+  maxRows = Infinity,
+): Promise<{
   rows: { photo: Photo; wm: boolean; key: string; fails: number }[];
   writes: number;
+  /** Stopped at `maxRows` with rows left unexamined (the next run continues). */
+  more: boolean;
 }> {
   const db = getDb(env);
   const found = await db
@@ -158,7 +165,13 @@ async function staleRows(env: Env): Promise<{
     .limit(WARM_SELECT_LIMIT);
   const rows: { photo: Photo; wm: boolean; key: string; fails: number }[] = [];
   let writes = 0;
+  let more = false;
   for (const r of found) {
+    // Each row costs a key write and an outcome write: `maxRows` bounds D1.
+    if (rows.length >= maxRows || writes >= maxRows) {
+      more = true;
+      break;
+    }
     let key = r.expected;
     if (key === null) {
       key = await expectedWarmKey(r.photo, r.mode === "proofing");
@@ -176,7 +189,7 @@ async function staleRows(env: Env): Promise<{
       fails: r.fails,
     });
   }
-  return { rows, writes };
+  return { rows, writes, more };
 }
 
 /**
@@ -245,18 +258,36 @@ async function recordOutcome(
   }
 }
 
+/** D1 queries per stale photo: expected-key write, visibility re-check, one gate select per variant fetch (2), outcome write. */
+const PHOTO_D1_COST = 5;
+/** D1 queries kept for what follows the batch (idle marker, lock release). */
+const BATCH_D1_RESERVE = 4;
+
 export async function warmBatch(
   env: Env,
-  opts: { drive: DriveClient; budget?: number },
+  opts: { drive: DriveClient; budget?: number; d1?: D1Allowance },
 ): Promise<WarmResult> {
-  const { drive, budget = WARM_DRIVE_BUDGET } = opts;
+  const { drive, budget = WARM_DRIVE_BUDGET, d1 } = opts;
   const start = drive.subrequests();
   const used = () => drive.subrequests() - start;
   let cf = 0;
 
-  const { rows: stale, writes } = await staleRows(env);
+  // The select itself is one query; the rest of the allowance buys photos.
+  const maxRows = d1
+    ? Math.max(
+        0,
+        Math.floor(
+          (d1.budget - d1.used() - 1 - BATCH_D1_RESERVE) / PHOTO_D1_COST,
+        ),
+      )
+    : Infinity;
+  const { rows: stale, writes, more } = await staleRows(env, maxRows);
   cf += 1 + writes;
-  const result: WarmResult = { ...empty(), stale: stale.length };
+  // `more`: photos were left unexamined, so the library is not idle yet.
+  const result: WarmResult = {
+    ...empty(),
+    stale: stale.length || (more ? 1 : 0),
+  };
   const db = getDb(env);
 
   outer: for (const { photo, wm, key, fails } of stale) {
@@ -267,7 +298,7 @@ export async function warmBatch(
     // Visibility / watermark flag may have changed since the selection.
     cf += 1;
     const [now] = await db
-      .select({ mode: G.mode })
+      .select({ mode: G.mode, galleryId: G.id })
       .from(P)
       .innerJoin(G, eq(G.id, P.galleryId))
       .where(and(eq(P.id, photo.id), eligible))
@@ -275,22 +306,25 @@ export async function warmBatch(
     if (!now || (now.mode === "proofing") !== wm) continue;
 
     let ok = true;
+    // Every Drive fetch re-checks gallery status and mode (Entrega -> Prueba mid-photo).
+    const gate = gated(env, drive, now.galleryId, wm);
     for (const variant of WARM_VARIANTS) {
       if (used() + 1 > budget) {
         result.stopped = "budget";
         break outer;
       }
       try {
-        cf += 2;
+        cf += 3;
         // "skipped" (nothing cacheable) is a failure: the marker must not move.
         if (
-          (await fillCache(env, { ...photo, proofing: wm }, variant, drive)) ===
+          (await fillCache(env, { ...photo, proofing: wm }, variant, gate)) ===
           "skipped"
         ) {
           ok = false;
           break;
         }
       } catch (err) {
+        if (err instanceof GalleryGone) continue outer;
         // Name only: messages may hold Drive ids.
         console.error(
           "warm: fill failed",
@@ -323,6 +357,7 @@ const lockHeld = (value: string | undefined) =>
 export async function runScheduledWarm(
   env: Env,
   drive: DriveClient,
+  opts: { d1?: D1Allowance } = {},
 ): Promise<WarmResult> {
   if (env.DRIVE_MODE === "mock") return { ...empty(), skipped: "mock" };
   if (lockHeld(await getSetting(env, SETTINGS_KEYS.syncLock)))
@@ -342,7 +377,7 @@ export async function runScheduledWarm(
     if (lockHeld(await getSetting(env, SETTINGS_KEYS.syncLock)))
       return { ...empty(), skipped: "sync_running" };
     const stamp = await getSetting(env, SETTINGS_KEYS.warmStamp);
-    const r = await warmBatch(env, { drive });
+    const r = await warmBatch(env, { drive, d1: opts.d1 });
     // Idle only if nothing (sync, watermark toggle) touched photos meanwhile.
     if (r.stale === 0) {
       if ((await getSetting(env, SETTINGS_KEYS.warmStamp)) === stamp)
