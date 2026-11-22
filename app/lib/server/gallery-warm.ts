@@ -51,6 +51,14 @@ export interface OpenWarmResult {
   warmed: number;
   failed: number;
   stopped?: "budget" | "scan" | "error";
+  /** The whole grid is in R2 (the cursor is `done`): a pending marker may clear. */
+  finished?: true;
+}
+
+/** Where a run's Drive allowance starts and how many subrequests it may spend. */
+export interface Allowance {
+  start: number;
+  budget: number;
 }
 
 /** Galleries being warmed in this isolate (one run at a time each). */
@@ -134,13 +142,13 @@ async function fillRow(
   photo: WarmRow & { proofing: boolean },
   galleryId: string,
   variants: readonly Variant[],
-  start: number,
+  span: Allowance,
   result: OpenWarmResult,
 ): Promise<"ok" | "budget" | "failed" | "gone"> {
   const done = new Set<Variant>();
   for (const variant of variants) {
     if (!(await stillAvailable(env, galleryId))) return "gone";
-    if (drive.subrequests() - start + CALL_RESERVE > OPEN_WARM_BUDGET) {
+    if (drive.subrequests() - span.start + CALL_RESERVE > span.budget) {
       result.stopped = "budget";
       return "budget";
     }
@@ -214,14 +222,14 @@ async function walkGrid(
   env: Env,
   drive: DriveClient,
   g: GalleryRow,
-  start = drive.subrequests(),
+  span: Allowance = { start: drive.subrequests(), budget: OPEN_WARM_BUDGET },
 ): Promise<OpenWarmResult> {
   const result: OpenWarmResult = { warmed: 0, failed: 0 };
   const db = getDb(env);
   const cursorKey = SETTINGS_KEYS.warmCursorPrefix + g.id;
   const stamp = (await getSetting(env, SETTINGS_KEYS.warmStamp)) ?? "";
   const cursor = parseCursor(await getSetting(env, cursorKey), stamp);
-  if (cursor === "done") return { ...result, skipped: "done" };
+  if (cursor === "done") return { ...result, skipped: "done", finished: true };
 
   {
     let { phase, after, failed: sawFailure } = cursor;
@@ -263,7 +271,7 @@ async function walkGrid(
           { ...row, proofing },
           g.id,
           PHASES[phase],
-          start,
+          span,
           result,
         );
         if (step === "budget") break walk;
@@ -283,6 +291,7 @@ async function walkGrid(
     // cost a head) so the file is retried; the rate rule bounds how often.
     let next: Cursor | "done" = { phase, after, failed: sawFailure };
     if (phase >= PHASES.length) next = sawFailure ? START : "done";
+    if (next === "done") result.finished = true;
     // Only while the gallery still exists: a delete that ran meanwhile must
     // not be followed by a stray cursor row.
     await env.DB.prepare(
@@ -293,6 +302,20 @@ async function walkGrid(
       .run();
     return result;
   }
+}
+
+/**
+ * Continues the grid walk of a gallery a sync marked as needing warm
+ * (warm-after-sync.ts): same guards (sync lock, one run, rate rule) and the
+ * same cursor as the open warm, with the caller's Drive allowance.
+ */
+export function warmGalleryPending(
+  env: Env,
+  drive: DriveClient,
+  g: GalleryRow,
+  span: Allowance,
+): Promise<OpenWarmResult> {
+  return guarded(env, g, () => walkGrid(env, drive, g, span));
 }
 
 /**
@@ -323,7 +346,7 @@ export async function warmGalleryAtPublish(
     if (!isAvailable(g))
       return { warmed: 0, failed: 0, skipped: "unavailable" };
     return await guarded(env, g, async () => {
-      const start = drive.subrequests();
+      const span = { start: drive.subrequests(), budget: OPEN_WARM_BUDGET };
       const proofing = g.mode === "proofing";
       const [first] = await db
         .select(ROW_COLUMNS)
@@ -346,13 +369,13 @@ export async function warmGalleryAtPublish(
           { ...row, proofing },
           g.id,
           coverVariants(proofing),
-          start,
+          span,
           result,
         );
         if (step !== "ok") return result;
       }
       if (!(await stillAvailable(env, g.id))) return result;
-      const rest = await walkGrid(env, drive, g, start);
+      const rest = await walkGrid(env, drive, g, span);
       return {
         ...rest,
         warmed: rest.warmed + result.warmed,

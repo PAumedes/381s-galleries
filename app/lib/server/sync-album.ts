@@ -2,6 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import { schema } from "../../db";
 import { D1_IN_CHUNK, PHOTO_INSERT_ROWS } from "./d1-limits";
 import { uniqueSlug } from "./slug";
+import { SETTINGS_KEYS } from "./settings";
 import { graceElapsed } from "./sync-archive";
 import {
   PENDING_DELETES_CAP,
@@ -20,6 +21,7 @@ import {
 import type { AlbumDraft, PhotoDraft } from "./sync-helpers";
 import type {
   BatchItem,
+  Db,
   GalleryRow,
   Row,
   SyncResult,
@@ -160,6 +162,7 @@ function diffPhotos(
   const wanted = new Set<string>();
   const fresh: PhotoDraft[] = [];
   const updates: BatchItem[] = [];
+  let changed = 0;
   for (const p of a.photos) {
     const k = keyOf(p.setName, p.baseName);
     wanted.add(k);
@@ -172,7 +175,10 @@ function diffPhotos(
     const differs = (Object.keys(f) as (keyof typeof f)[]).some(
       (c) => row[c] !== f[c],
     );
-    if (differs) result.photos.updated++;
+    if (differs) {
+      result.photos.updated++;
+      changed++;
+    }
     if (differs || row.missingSince !== null)
       updates.push(
         db
@@ -185,10 +191,23 @@ function diffPhotos(
   return {
     fresh,
     updates,
+    changed,
     toDelete: gone.filter((r) => graceElapsed(now, r.missingSince)),
     toMark: gone.filter((r) => r.missingSince === null),
   };
 }
+
+/** Marks the gallery as needing a cache warm (warm-after-sync.ts); renewed by every sync that changes photos. */
+const warmMarker = (db: Db, galleryId: string, syncedAt: string) => {
+  const key = SETTINGS_KEYS.warmPendingPrefix + galleryId;
+  return db
+    .insert(schema.settings)
+    .values({ key, value: syncedAt })
+    .onConflictDoUpdate({
+      target: schema.settings.key,
+      set: { value: syncedAt },
+    });
+};
 
 /**
  * The photo statements for one album, in the order that keeps every committed
@@ -203,7 +222,12 @@ function photoStatements(
 ): BatchItem[] {
   const { db } = run;
   const { result, syncedAt } = pass;
-  const { fresh, updates, toDelete, toMark } = diffPhotos(run, pass, a, rows);
+  const { fresh, updates, changed, toDelete, toMark } = diffPhotos(
+    run,
+    pass,
+    a,
+    rows,
+  );
   const goneIds = toDelete.map((r) => r.id);
   result.photos.removed += goneIds.length;
   result.photos.added += fresh.length;
@@ -235,6 +259,7 @@ function photoStatements(
         .where(inArray(schema.photos.id, ids)),
     );
   stmts.push(...updates);
+  if (fresh.length || changed) stmts.push(warmMarker(db, galleryId, syncedAt));
   fresh.sort(freshOrder);
   let sort = rows.reduce((m, r) => Math.max(m, r.sort), -1) + 1;
   // D1 allows 100 bound parameters per statement (d1-limits.ts); a photo row binds ~18.

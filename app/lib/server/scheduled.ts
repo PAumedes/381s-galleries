@@ -1,7 +1,7 @@
 import type { DriveClient } from "./drive-types";
 import { getDrive } from "./drive-factory";
 import { runScheduledSync } from "./sync";
-import { runScheduledWarm } from "./warm";
+import { runWarmCron } from "./warm-after-sync";
 
 /** Cron expression of the cache-warming trigger (wrangler.jsonc `triggers.crons`). */
 export const WARM_CRON = "* * * * *";
@@ -24,7 +24,7 @@ export async function dispatchScheduled(
   const d = () => (drive ??= getDrive(env));
   const h: ScheduledHandlers = handlers ?? {
     sync: () => runScheduledSync(env, d()),
-    warm: () => runScheduledWarm(env, d()),
+    warm: () => runWarmCron(env, d()),
   };
   if (cron.trim() === WARM_CRON) await h.warm();
   else await h.sync();

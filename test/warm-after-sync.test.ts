@@ -110,7 +110,9 @@ describe("T6.39 sync marks the galleries it changed", () => {
   const root = buildFixtures().rootId;
   beforeEach(async () => {
     drive = createMockDrive();
-    await db.insert(schema.settings).values({ key: "drive_root_id", value: root });
+    await db
+      .insert(schema.settings)
+      .values({ key: "drive_root_id", value: root });
     await runSync(mockEnv, { drive });
   });
   const markers = () =>
@@ -312,7 +314,10 @@ describe("T6.39 scheduleWarmAfterSync (waitUntil guard)", () => {
   });
   it.each([
     ["skipped", result({ skipped: "unchanged" })],
-    ["no photo change", result({ photos: { added: 0, updated: 0, removed: 3 } })],
+    [
+      "no photo change",
+      result({ photos: { added: 0, updated: 0, removed: 3 } }),
+    ],
     ["sync used the budget", result({ subrequests: 44 })],
   ])("does not schedule: %s", (_n, r) => {
     expect(run(r).queued).toHaveLength(0);
