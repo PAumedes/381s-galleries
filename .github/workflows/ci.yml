@@ -27,8 +27,30 @@ jobs:
       - run: pnpm build
       - run: pnpm check:bundles
   test:
+    name: test (${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
-      - run: pnpm test
+      - run: pnpm exec vitest run --shard=${{ matrix.shard }}/3
+  # Single required status check (branch protection names `check`). Fails unless
+  # every job succeeded: a failed, cancelled or skipped job can never be hidden.
+  check:
+    needs: [lint, typecheck, build, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "needed job results: $RESULTS"
+          for r in $RESULTS; do
+            if [ "$r" != "success" ]; then
+              echo "::error::A required job did not succeed ($r)."
+              exit 1
+            fi
+          done
