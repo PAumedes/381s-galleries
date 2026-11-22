@@ -80,6 +80,10 @@ async function renderHint(
   ]);
   const r = render(<Stub initialEntries={["/"]} />);
   await screen.findByText("ready");
+  // findByText resolves on the commit; the hint's passive effects (the
+  // beforeinstallprompt listener) may not have run yet. Flush them, or an
+  // event fired right after would be missed (flaked on a loaded CI runner).
+  await act(async () => {});
   return r;
 }
 
