@@ -29,6 +29,8 @@ export const SETTINGS_KEYS = {
   warmStamp: "warm_stamp",
   /** Prefix: one row per gallery, `<phase>:<offset>:<warm_stamp>` or `done:<warm_stamp>` (gallery-warm.ts). */
   warmCursorPrefix: "warm_cursor:",
+  /** Prefix: one row per gallery a sync added/changed photos in; value = ISO time. Cleared when its warm walk finishes (warm-after-sync.ts). */
+  warmPendingPrefix: "warm_pending:",
 } as const;
 
 type SettingsEnv = Pick<Env, "DB">;
