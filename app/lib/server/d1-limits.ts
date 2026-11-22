@@ -22,3 +22,18 @@ export const D1_IN_CHUNK = 90;
 export const PHOTO_INSERT_ROWS = 5;
 /** Statements per db.batch() call (one D1 round trip). */
 export const D1_BATCH_MAX = 100;
+
+/** Workers Free: external subrequests (Drive/OAuth fetches) per invocation. */
+export const FREE_SUBREQUESTS_PER_INVOCATION = 50;
+/** Left unspent in an invocation that runs a warm (host-side reads, OAuth refresh, retries). */
+export const INVOCATION_SAFETY = 5;
+/**
+ * D1 queries a warm-after-sync run may spend at most (T6.39). Every query of
+ * the run is counted (d1-meter.ts), not only Drive-backed steps. In the admin
+ * sync's waitUntil it shares the Free 50 with the sync itself, whose queries
+ * the route measures: budget = min(30, 50 - INVOCATION_SAFETY - sync's own),
+ * not started below 16. A 2-album/12-photo sync uses about 21, so the warm gets
+ * 24; a sync that used 30+ gets no background warm and the minute cron
+ * continues (its own invocation: 45 for the stale scan plus pending marks).
+ */
+export const AFTER_SYNC_WARM_D1_BUDGET = 30;

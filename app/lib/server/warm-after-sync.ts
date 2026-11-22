@@ -22,22 +22,36 @@ import { and, asc, eq, like } from "drizzle-orm";
 import { getDb, schema } from "../../db";
 import { isAvailable } from "./access";
 import type { DriveClient } from "./drive-types";
-import { OPEN_WARM_BUDGET, warmGalleryPending } from "./gallery-warm";
-import type { OpenWarmResult } from "./gallery-warm";
+import { meterD1 } from "./d1-meter";
+import {
+  AFTER_SYNC_WARM_D1_BUDGET,
+  D1_FREE_QUERIES_PER_INVOCATION,
+  FREE_SUBREQUESTS_PER_INVOCATION,
+  INVOCATION_SAFETY,
+} from "./d1-limits";
+import {
+  OPEN_WARM_BUDGET,
+  d1Exhausted,
+  warmGalleryPending,
+} from "./gallery-warm";
+import type { Allowance, OpenWarmResult } from "./gallery-warm";
 import { SETTINGS_KEYS } from "./settings";
 import type { SyncResult } from "./sync-types";
 import { runScheduledWarm } from "./warm";
 
-/** Workers Free: subrequests per invocation. */
-const SUBREQUESTS_PER_INVOCATION = 50;
-/** Left unspent in the invocation that ran the sync (OAuth refresh, D1/R2 calls). */
-const AFTER_SYNC_SAFETY = 5;
 /** Drive subrequests the after-sync warm may spend (also bounds its D1 queries). */
 export const AFTER_SYNC_WARM_BUDGET = 16;
 /** Below this the after-sync warm is not worth starting (one photo's worst case is 5). */
 const MIN_USEFUL_BUDGET = 10;
+/** Below this many D1 queries the after-sync warm is not worth starting (one gallery's fixed cost + one photo). */
+const MIN_USEFUL_D1_BUDGET = 16;
 /** Marked galleries looked at per run. */
 const PENDING_PER_RUN = 3;
+/**
+ * D1 queries a gallery costs before its walk: marker clear (1), gallery select
+ * (1), sync-lock read, rate-limit hit (about 2), stamp and cursor reads, cursor save.
+ */
+const GALLERY_D1_RESERVE = 10;
 
 const S = schema.settings;
 
@@ -50,18 +64,27 @@ async function clearMarker(env: Env, key: string, value: string) {
 
 /**
  * Continues the warm of galleries a sync marked, oldest mark first, within
- * `budget` Drive subrequests in total. Never throws on Drive/R2 errors.
+ * `budget` Drive subrequests and `d1Budget` D1 queries (every query of the run
+ * is counted, including settings and rate-limit reads) in total. A spent D1
+ * budget stops the run cleanly: cursors are saved and markers kept. Never
+ * throws on Drive/R2 errors.
  */
 export async function warmPendingGalleries(
-  env: Env,
+  baseEnv: Env,
   drive: DriveClient,
-  opts: { budget?: number } = {},
+  opts: { budget?: number; d1Budget?: number } = {},
 ): Promise<OpenWarmResult> {
   const total: OpenWarmResult = { warmed: 0, failed: 0 };
-  if (env.DRIVE_MODE === "mock") return { ...total, skipped: "mock" };
-  const span = {
+  if (baseEnv.DRIVE_MODE === "mock") return { ...total, skipped: "mock" };
+  const meter = meterD1(baseEnv);
+  const env = meter.env;
+  const span: Allowance = {
     start: drive.subrequests(),
     budget: opts.budget ?? OPEN_WARM_BUDGET,
+    d1: {
+      used: meter.used,
+      budget: opts.d1Budget ?? AFTER_SYNC_WARM_D1_BUDGET,
+    },
   };
   const db = getDb(env);
   const marks = await db
@@ -71,6 +94,8 @@ export async function warmPendingGalleries(
     .orderBy(asc(S.value))
     .limit(PENDING_PER_RUN);
   for (const m of marks) {
+    if (d1Exhausted(span, GALLERY_D1_RESERVE))
+      return { ...total, stopped: "budget" };
     const id = m.key.slice(SETTINGS_KEYS.warmPendingPrefix.length);
     const [g] = await db
       .select()
@@ -102,17 +127,24 @@ export function scheduleWarmAfterSync(
     | { ctx?: Pick<ExecutionContext, "waitUntil">; drive?: DriveClient }
     | undefined,
   result: SyncResult,
+  /** D1 queries the invocation already made (the sync's own, the admin check). */
+  d1Used = 0,
 ): void {
   if (!deps?.ctx || !deps.drive || env.DRIVE_MODE === "mock") return;
   if (result.skipped || result.photos.added + result.photos.updated === 0)
     return;
-  const left =
-    SUBREQUESTS_PER_INVOCATION - AFTER_SYNC_SAFETY - result.subrequests;
-  const budget = Math.min(AFTER_SYNC_WARM_BUDGET, left);
-  if (budget < MIN_USEFUL_BUDGET) return;
+  const budget = Math.min(
+    AFTER_SYNC_WARM_BUDGET,
+    FREE_SUBREQUESTS_PER_INVOCATION - INVOCATION_SAFETY - result.subrequests,
+  );
+  const d1Budget = Math.min(
+    AFTER_SYNC_WARM_D1_BUDGET,
+    D1_FREE_QUERIES_PER_INVOCATION - INVOCATION_SAFETY - d1Used,
+  );
+  if (budget < MIN_USEFUL_BUDGET || d1Budget < MIN_USEFUL_D1_BUDGET) return;
   const drive = deps.drive;
   deps.ctx.waitUntil(
-    warmPendingGalleries(env, drive, { budget }).catch((err) => {
+    warmPendingGalleries(env, drive, { budget, d1Budget }).catch((err) => {
       console.error(
         "warm-after-sync: failed",
         err instanceof Error ? err.name : "error",
@@ -126,8 +158,18 @@ export function scheduleWarmAfterSync(
  * or nothing stale) its Drive budget is free, so marked galleries continue
  * (view-lg and any rest of a big gallery).
  */
-export async function runWarmCron(env: Env, drive: DriveClient): Promise<void> {
-  const r = await runScheduledWarm(env, drive);
+export async function runWarmCron(
+  baseEnv: Env,
+  drive: DriveClient,
+): Promise<void> {
+  const meter = meterD1(baseEnv);
+  const cronD1Budget = D1_FREE_QUERIES_PER_INVOCATION - INVOCATION_SAFETY;
+  const r = await runScheduledWarm(meter.env, drive, {
+    d1: { used: meter.used, budget: cronD1Budget },
+  });
   const free = r.skipped === "idle" || (!r.skipped && r.stale === 0);
-  if (free) await warmPendingGalleries(env, drive);
+  if (free)
+    await warmPendingGalleries(meter.env, drive, {
+      d1Budget: cronD1Budget - meter.used(),
+    });
 }

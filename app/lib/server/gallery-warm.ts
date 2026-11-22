@@ -15,6 +15,7 @@
  */
 import { and, asc, eq, ne, sql } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
+import type { D1Allowance } from "./d1-meter";
 import { isAvailable } from "./access";
 import type { DriveClient } from "./drive-types";
 import { fillCacheShared } from "./images";
@@ -55,11 +56,34 @@ export interface OpenWarmResult {
   finished?: true;
 }
 
-/** Where a run's Drive allowance starts and how many subrequests it may spend. */
+/**
+ * What one run may spend: Drive subrequests from `start` (`budget`), and
+ * optionally D1 queries (`d1.used()` counts them all, `d1.budget` is the cap).
+ * Without `d1` the run is bounded by the Drive budget alone.
+ */
 export interface Allowance {
   start: number;
   budget: number;
+  d1?: D1Allowance;
 }
+
+/** Worst case of D1 queries for one photo: a gate check per Drive call (2) + the marker (1) + the next page select (1). */
+const PHOTO_D1_RESERVE = 4;
+/** D1 queries kept for ending the run: the cursor save and the marker clear. */
+const FINISH_D1_RESERVE = 2;
+
+/** True when the D1 budget cannot cover one more step plus ending the run cleanly. */
+export function d1Exhausted(
+  span: Allowance,
+  extra = PHOTO_D1_RESERVE,
+): boolean {
+  return (
+    !!span.d1 && span.d1.used() + extra + FINISH_D1_RESERVE > span.d1.budget
+  );
+}
+
+/** Thrown by the gated Drive client when the gallery stopped being warmable. */
+class GalleryGone extends Error {}
 
 /** Galleries being warmed in this isolate (one run at a time each). */
 const running = new Set<string>();
@@ -123,10 +147,40 @@ const ROW_COLUMNS = {
 type WarmRow = Pick<typeof P.$inferSelect, keyof typeof ROW_COLUMNS>;
 type GalleryRow = typeof G.$inferSelect;
 
-/** One cheap select: is the gallery still published and unexpired (it may have been unpublished mid-warm)? */
-async function stillAvailable(env: Env, galleryId: string): Promise<boolean> {
+/**
+ * One cheap select: is the gallery still published, unexpired and in the mode
+ * the walk started in (it may have been unpublished or switched Entrega <->
+ * Prueba mid-warm; a switched gallery must not get files of the old mode)?
+ */
+async function stillAvailable(
+  env: Env,
+  galleryId: string,
+  proofing: boolean,
+): Promise<boolean> {
   const [g] = await getDb(env).select().from(G).where(eq(G.id, galleryId));
-  return isAvailable(g);
+  return isAvailable(g) && (g.mode === "proofing") === proofing;
+}
+
+/**
+ * The Drive client a warm fills with: every fetch re-checks the gallery first
+ * (one D1 select per real Drive call, none for files R2 already holds), so no
+ * file of a stale mode is ever fetched and the D1 cost is bounded by the
+ * Drive budget.
+ */
+function gated(
+  env: Env,
+  drive: DriveClient,
+  galleryId: string,
+  proofing: boolean,
+): DriveClient {
+  return {
+    subrequests: () => drive.subrequests(),
+    async streamFile(id, opts) {
+      if (!(await stillAvailable(env, galleryId, proofing)))
+        throw new GalleryGone();
+      return drive.streamFile(id, opts);
+    },
+  } as DriveClient;
 }
 
 /**
@@ -146,17 +200,18 @@ async function fillRow(
   result: OpenWarmResult,
 ): Promise<"ok" | "budget" | "failed" | "gone"> {
   const done = new Set<Variant>();
+  const gate = gated(env, drive, galleryId, photo.proofing);
   for (const variant of variants) {
-    if (!(await stillAvailable(env, galleryId))) return "gone";
     if (drive.subrequests() - span.start + CALL_RESERVE > span.budget) {
       result.stopped = "budget";
       return "budget";
     }
     try {
-      const filled = await fillCacheShared(env, photo, variant, drive);
+      const filled = await fillCacheShared(env, photo, variant, gate);
       if (filled === "filled") result.warmed++;
       if (filled !== "skipped") done.add(variant);
     } catch (err) {
+      if (err instanceof GalleryGone) return "gone";
       // Name only: messages may hold Drive ids.
       console.error(
         "warm-open: fill failed",
@@ -236,7 +291,11 @@ async function walkGrid(
     const proofing = g.mode === "proofing";
     let scanned = 0;
     walk: while (phase < PHASES.length) {
-      if (!(await stillAvailable(env, g.id))) {
+      if (d1Exhausted(span, 1)) {
+        result.stopped = "budget";
+        break;
+      }
+      if (!(await stillAvailable(env, g.id, proofing))) {
         result.stopped = "error";
         return result;
       }
@@ -263,6 +322,10 @@ async function walkGrid(
       for (const row of rows) {
         if (scanned >= OPEN_WARM_SCAN) {
           result.stopped = "scan";
+          break walk;
+        }
+        if (d1Exhausted(span)) {
+          result.stopped = "budget";
           break walk;
         }
         const step = await fillRow(
@@ -374,7 +437,7 @@ export async function warmGalleryAtPublish(
         );
         if (step !== "ok") return result;
       }
-      if (!(await stillAvailable(env, g.id))) return result;
+      if (!(await stillAvailable(env, g.id, proofing))) return result;
       const rest = await walkGrid(env, drive, g, span);
       return {
         ...rest,
