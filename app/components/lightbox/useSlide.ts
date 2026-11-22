@@ -7,17 +7,16 @@ type Slide = { from: GalleryPhoto; dir: 1 | -1; carry: number; n: number };
 
 /**
  * Slide transition between neighbouring photos. When the index moves by one
- * and the new photo is already preloaded, the old one is kept as `leaving`
- * and both slide (WAAPI) from where the finger let go (`carry`); an
- * unloaded photo swaps in place so there is never a black frame. No-op
- * without Web Animations or with reduced motion.
+ * the old photo is kept as `leaving` and both slide (WAAPI) from where the
+ * finger let go (`carry`), whether or not the new full photo has loaded: the
+ * stage draws its cached thumbnail as a placeholder, so there is never a
+ * black frame. No-op without Web Animations or with reduced motion.
  */
 export function useSlide(
   stage: React.RefObject<HTMLElement | null>,
   photos: readonly GalleryPhoto[],
   index: number,
   dragX: number,
-  isReady: (photo: GalleryPhoto) => boolean,
 ) {
   const [seen, setSeen] = useState(index);
   const [slide, setSlide] = useState<Slide | null>(null);
@@ -33,7 +32,7 @@ export function useSlide(
     const from = photos[seen];
     const to = photos[index];
     setSlide(
-      from && to && Math.abs(index - seen) === 1 && canAnimate() && isReady(to)
+      from && to && Math.abs(index - seen) === 1 && canAnimate()
         ? {
             from,
             dir: index > seen ? 1 : -1,

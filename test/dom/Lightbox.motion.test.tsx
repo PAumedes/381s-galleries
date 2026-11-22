@@ -167,12 +167,19 @@ describe("T6.34 slide between photos", () => {
     expect(p.style.transform).toBe(`translateX(${100 - window.innerWidth}px)`);
   });
 
-  it("no neighbour is drawn before it is preloaded or at the ends", async () => {
+  it("T6.41: an unloaded neighbour is drawn as its thumbnail under the finger; none at the ends", async () => {
     render(<Harness start={0} />);
     down(300, 300);
     move(200, 300); // next not decoded yet (no microtask flush)
-    expect(screen.queryByTestId("lightbox-neighbour")).toBeNull();
+    const early = screen.getByTestId("lightbox-neighbour");
+    expect(early.getAttribute("src")).toContain("/thumb");
+    expect(early.getAttribute("srcset")).toBeNull();
     await settle();
+    // Preloaded now: the full photo replaces the thumbnail.
+    move(190, 300);
+    expect(
+      screen.getByTestId("lightbox-neighbour").getAttribute("src"),
+    ).toContain("view-sm");
     move(400, 300); // towards the missing previous
     expect(screen.queryByTestId("lightbox-neighbour")).toBeNull();
   });
@@ -210,12 +217,15 @@ describe("T6.34 slide between photos", () => {
     expect(JSON.stringify(out.frames[0])).toContain("translateX(-100px)");
   });
 
-  it("not preloaded: swaps without a slide (no black frame)", () => {
+  it("T6.41: not preloaded: still slides, with the thumbnail as placeholder", () => {
     stubAnimate();
     render(<Harness />);
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(screen.queryByTestId("lightbox-leaving")).toBeNull();
-    expect(animations).toHaveLength(0);
+    expect(screen.getByTestId("lightbox-leaving")).toBeTruthy();
+    const ph = screen.getByTestId("lightbox-placeholder");
+    expect(ph.getAttribute("src")).toContain("/thumb");
+    expect(animations.some((a) => a.el === ph)).toBe(true);
+    expect(animations.some((a) => a.el === img())).toBe(true);
   });
 
   it("reduced motion: instant swap", async () => {

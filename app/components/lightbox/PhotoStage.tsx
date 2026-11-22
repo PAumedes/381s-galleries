@@ -5,7 +5,7 @@ import { Retry } from "../icons";
 import { useImgUrl } from "../img-url";
 import type { GalleryPhoto } from "../types";
 import { dragTransform } from "./motion";
-import { photoImgProps } from "./srcset";
+import { photoImgProps, thumbSrc } from "./srcset";
 import { useSlide } from "./useSlide";
 import { usePhotoImage, withRetry } from "./usePhotoImage";
 
@@ -43,10 +43,16 @@ export function PhotoStage({
   const { loaded, failed, behind, retry } = image;
   const behindProps = behind && photoImgProps(imgUrl, behind);
   const own = photoImgProps(imgUrl, photo);
-  const leaving = useSlide(stageRef, photos, index, dragX, isReady);
+  const leaving = useSlide(stageRef, photos, index, dragX);
   const neighbour = dragX ? photos[index + (dragX < 0 ? 1 : -1)] : undefined;
-  const neighbourProps =
-    neighbour && isReady(neighbour) && photoImgProps(imgUrl, neighbour);
+  // Under the finger: the full photo when preloaded, else its thumbnail.
+  const neighbourProps = neighbour && {
+    ...photoImgProps(imgUrl, neighbour),
+    ...(!isReady(neighbour) && {
+      src: thumbSrc(imgUrl, neighbour),
+      srcSet: undefined,
+    }),
+  };
   const leavingProps = leaving && photoImgProps(imgUrl, leaving);
   const transform = dragTransform(dragX, dragY);
   return (
@@ -101,6 +107,17 @@ export function PhotoStage({
               }}
             />
           )}
+          {leaving && (
+            <img
+              data-lb-photo
+              data-lb-leaving
+              src={thumbSrc(imgUrl, leaving)}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className={`${PHOTO_BOX} pointer-events-none`}
+            />
+          )}
           {leavingProps && (
             <img
               data-testid="lightbox-leaving"
@@ -115,6 +132,17 @@ export function PhotoStage({
               className={`${PHOTO_BOX} pointer-events-none`}
             />
           )}
+          {/* Under the full photo: the crossfade has something to fade over. */}
+          <img
+            data-testid="lightbox-placeholder"
+            data-lb-photo
+            src={thumbSrc(imgUrl, photo)}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className={`${PHOTO_BOX} pointer-events-none`}
+            style={{ transform }}
+          />
           <img
             key={`${photo.id}:${retry}`}
             data-lb-photo
