@@ -63,7 +63,20 @@ async function clearMarker(env: Env, key: string, value: string) {
 }
 
 /**
- * Continues the warm of galleries a sync marked, oldest mark first, within
+ * Moves a marker that got its turn but is not done to the back of the queue
+ * (value = last attempt time), unless a later sync renewed it meanwhile. A
+ * gallery whose file keeps failing therefore cannot starve newer marks.
+ */
+async function rotateMarker(env: Env, key: string, value: string) {
+  await getDb(env)
+    .update(S)
+    .set({ value: new Date().toISOString() })
+    .where(and(eq(S.key, key), eq(S.value, value)));
+}
+
+/**
+ * Continues the warm of galleries a sync marked, least recently attempted
+ * first (a mark's value is the sync time, then the last attempt), within
  * `budget` Drive subrequests and `d1Budget` D1 queries (every query of the run
  * is counted, including settings and rate-limit reads) in total. A spent D1
  * budget stops the run cleanly: cursors are saved and markers kept. Never
@@ -91,7 +104,7 @@ export async function warmPendingGalleries(
     .select()
     .from(S)
     .where(like(S.key, SETTINGS_KEYS.warmPendingPrefix + "%"))
-    .orderBy(asc(S.value))
+    .orderBy(asc(S.value), asc(S.key))
     .limit(PENDING_PER_RUN);
   for (const m of marks) {
     if (d1Exhausted(span, GALLERY_D1_RESERVE))
@@ -108,9 +121,10 @@ export async function warmPendingGalleries(
     const r = await warmGalleryPending(env, drive, g, span);
     total.warmed += r.warmed;
     total.failed += r.failed;
-    if (r.finished) await clearMarker(env, m.key, m.value);
     if (r.skipped === "sync_running")
       return { ...total, skipped: "sync_running" };
+    if (r.finished) await clearMarker(env, m.key, m.value);
+    else await rotateMarker(env, m.key, m.value);
     if (r.stopped === "budget") return { ...total, stopped: "budget" };
   }
   return total;

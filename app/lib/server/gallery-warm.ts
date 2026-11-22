@@ -15,6 +15,8 @@
  */
 import { and, asc, eq, ne, sql } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
+import { OPEN_WARM_D1_BUDGET, PUBLISH_WARM_D1_BUDGET } from "./d1-limits";
+import { meterD1 } from "./d1-meter";
 import type { D1Allowance } from "./d1-meter";
 import { isAvailable } from "./access";
 import type { DriveClient } from "./drive-types";
@@ -261,15 +263,35 @@ async function guarded(
  * photos of the grid. Never throws on Drive/R2 errors.
  */
 export async function warmGalleryOnOpen(
-  env: Env,
+  baseEnv: Env,
   drive: DriveClient,
   slug: string,
+  d1Budget = OPEN_WARM_D1_BUDGET,
 ): Promise<OpenWarmResult> {
-  if (env.DRIVE_MODE === "mock")
+  if (baseEnv.DRIVE_MODE === "mock")
     return { warmed: 0, failed: 0, skipped: "mock" };
+  const { env, span } = metered(baseEnv, drive, OPEN_WARM_BUDGET, d1Budget);
   const [g] = await getDb(env).select().from(G).where(eq(G.slug, slug));
   if (!isAvailable(g)) return { warmed: 0, failed: 0, skipped: "unavailable" };
-  return guarded(env, g, () => walkGrid(env, drive, g));
+  return guarded(env, g, () => walkGrid(env, drive, g, span));
+}
+
+/** `baseEnv` with every D1 query counted, and the allowance that caps the run. */
+function metered(
+  baseEnv: Env,
+  drive: DriveClient,
+  budget: number,
+  d1Budget: number,
+): { env: Env; span: Allowance } {
+  const meter = meterD1(baseEnv);
+  return {
+    env: meter.env,
+    span: {
+      start: drive.subrequests(),
+      budget,
+      d1: { used: meter.used, budget: d1Budget },
+    },
+  };
 }
 
 /** The cursor-driven walk of the grid; the caller holds the guards. */
@@ -398,18 +420,19 @@ const coverVariants = (proofing: boolean): readonly Variant[] =>
  * caller passes a `drive` only outside mock mode.
  */
 export async function warmGalleryAtPublish(
-  env: Env,
+  baseEnv: Env,
   drive: DriveClient,
   galleryId: string,
+  d1Budget = PUBLISH_WARM_D1_BUDGET,
 ): Promise<OpenWarmResult> {
   const result: OpenWarmResult = { warmed: 0, failed: 0 };
+  const { env, span } = metered(baseEnv, drive, OPEN_WARM_BUDGET, d1Budget);
   try {
     const db = getDb(env);
     const [g] = await db.select().from(G).where(eq(G.id, galleryId));
     if (!isAvailable(g))
       return { warmed: 0, failed: 0, skipped: "unavailable" };
     return await guarded(env, g, async () => {
-      const span = { start: drive.subrequests(), budget: OPEN_WARM_BUDGET };
       const proofing = g.mode === "proofing";
       const [first] = await db
         .select(ROW_COLUMNS)
@@ -421,6 +444,10 @@ export async function warmGalleryAtPublish(
         (id): id is string => !!id,
       );
       for (const id of new Set(ids)) {
+        if (d1Exhausted(span)) {
+          result.stopped = "budget";
+          return result;
+        }
         const [row] = await db
           .select(ROW_COLUMNS)
           .from(P)
@@ -437,7 +464,7 @@ export async function warmGalleryAtPublish(
         );
         if (step !== "ok") return result;
       }
-      if (!(await stillAvailable(env, g.id, proofing))) return result;
+      // walkGrid opens with its own availability check.
       const rest = await walkGrid(env, drive, g, span);
       return {
         ...rest,

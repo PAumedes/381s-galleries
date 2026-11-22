@@ -37,3 +37,20 @@ export const INVOCATION_SAFETY = 5;
  * continues (its own invocation: 45 for the stale scan plus pending marks).
  */
 export const AFTER_SYNC_WARM_D1_BUDGET = 30;
+
+/**
+ * D1 queries the `$slug` loader makes itself before it hands the warm-on-open
+ * to `waitUntil` (loadGallery: gallery lookup, grid data, view log; 3 measured, padded for
+ * the other paths; the bound is asserted by test/warm-d1-budget.test.ts).
+ */
+export const SLUG_LOADER_D1_QUERIES = 8;
+/** D1 queries the admin `status` action makes itself (gallery, deleting check, compare-and-set; 3 measured, padded; asserted by the same test). */
+export const PUBLISH_ACTION_D1_QUERIES = 6;
+/** D1 queries warm-on-open may spend: the Free 50 minus safety minus the loader's own. */
+export const OPEN_WARM_D1_BUDGET =
+  D1_FREE_QUERIES_PER_INVOCATION - INVOCATION_SAFETY - SLUG_LOADER_D1_QUERIES;
+/** D1 queries warm-at-publish may spend: the Free 50 minus safety minus the action's own. */
+export const PUBLISH_WARM_D1_BUDGET =
+  D1_FREE_QUERIES_PER_INVOCATION -
+  INVOCATION_SAFETY -
+  PUBLISH_ACTION_D1_QUERIES;

@@ -104,7 +104,7 @@ beforeEach(async () => {
 });
 
 describe("T6.37 open warm throughput", () => {
-  it("one open on a cold gallery warms at least 12 photos (thumb + view-sm)", async () => {
+  it("one open on a cold gallery warms at least 9 photos (thumb + view-sm)", async () => {
     await gallery();
     await photos(40);
     const { drive } = fakeDrive();
@@ -113,7 +113,8 @@ describe("T6.37 open warm throughput", () => {
     for (let i = 0; i < 40; i++)
       if ((await cached(pid(i), "thumb")) && (await cached(pid(i), "view-sm")))
         warmed++;
-    expect(warmed).toBeGreaterThanOrEqual(12);
+    // Bounded by the D1 allowance (OPEN_WARM_D1_BUDGET, 3 queries per photo), not by Drive.
+    expect(warmed).toBeGreaterThanOrEqual(9);
     // Workers Free: 50 subrequests per invocation; the page itself needs room.
     expect(OPEN_WARM_BUDGET).toBeLessThanOrEqual(40);
   });
