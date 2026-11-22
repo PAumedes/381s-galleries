@@ -1,9 +1,10 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getDb, schema } from "../../../../db";
 import type { TFunction } from "../../../../i18n/t";
 import { resolveExpiry, validTimezone } from "../../../studio-time";
 import { isValidDate } from "../../../admin-gallery";
-import { RESERVED_SLUGS } from "../../slug";
+import { RESERVED_SLUGS, SLUG_MAX, SLUG_RE } from "../../slug";
+import { slugInUse } from "../../slug-namespace";
 import { isExpired } from "../../time";
 import { CONTROL_RE, done, fail, str } from "./shared";
 import type { GalleryRow } from "./shared";
@@ -12,8 +13,7 @@ const EXPIRY_YEAR_MIN = 2000;
 const EXPIRY_YEAR_MAX = 2100;
 export const TITLE_MAX = 120;
 export const CLIENT_MAX = 120;
-export const SLUG_MAX = 60;
-const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export { SLUG_MAX };
 
 export async function saveDetails(
   env: Env,
@@ -111,10 +111,7 @@ export function isConstraintError(err: unknown): boolean {
   return false;
 }
 
-async function slugTaken(env: Env, slug: string, selfId: string) {
-  const rows = await getDb(env)
-    .select({ id: schema.galleries.id })
-    .from(schema.galleries)
-    .where(sql`${schema.galleries.slug} = ${slug} COLLATE NOCASE`);
-  return rows.some((r) => r.id !== selfId);
+/** True when another gallery or any client already uses `slug` (one namespace). */
+export function slugTaken(env: Env, slug: string, selfId: string) {
+  return slugInUse(env, slug, { galleryId: selfId });
 }
