@@ -1,11 +1,17 @@
 import { clearCache } from "../support/cache";
+import {
+  countingEnv,
+  fakeWarmDrive,
+  photoId,
+  seedGallery,
+  seedPhotos,
+  warmGalleryId,
+} from "../support/warm";
 import { migrateDb, resetTables } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../app/db";
-import { DriveError } from "../../app/lib/server/drive-types";
-import type { DriveClient } from "../../app/lib/server/drive-types";
 import { putSetting, SETTINGS_KEYS } from "../../app/lib/server/settings";
 import {
   runWarmCron,
@@ -13,11 +19,15 @@ import {
 } from "../../app/lib/server/warm-after-sync";
 
 const db = getDb(env);
-const JPEG = new Uint8Array([0xff, 0xd8, 1, 2, 3, 4, 5, 0xff, 0xd9]);
 const PENDING = SETTINGS_KEYS.warmPendingPrefix;
-const gid = (n: number) => `gggggggg-0000-0000-0000-0000000000a${n}`;
-const pid = (g: string, i: number) =>
-  `${g.slice(-2)}p${String(i).padStart(3, "0")}`;
+const gid = (n: number) => warmGalleryId(n);
+const gallery = seedGallery;
+const photos = seedPhotos;
+const fakeDrive = (
+  hook?: (id: string) => Promise<void> | void,
+  fail?: (id: string) => boolean,
+) => fakeWarmDrive({ hook, fail });
+const counting = () => countingEnv({ ...env, DRIVE_MODE: "google" } as Env);
 
 beforeAll(async () => {
   await migrateDb();
@@ -28,79 +38,6 @@ beforeEach(async () => {
   await clearCache();
 });
 
-const versions = () =>
-  JSON.stringify(
-    Object.fromEntries(
-      ["highres", "web", "thumb", "wm", "thumbWm"].map((k) => [
-        k,
-        "2026-01-01T00:00:01Z",
-      ]),
-    ),
-  );
-
-async function gallery(id: string, over: Record<string, unknown> = {}) {
-  await db.insert(schema.galleries).values({
-    id,
-    driveFolderId: "f-" + id,
-    slug: "s-" + id.slice(-2),
-    title: "T",
-    status: "published",
-    ...over,
-  });
-}
-async function photos(g: string, n: number, withWm = true) {
-  for (let i = 0; i < n; i++) {
-    const id = pid(g, i);
-    await db.insert(schema.photos).values({
-      id,
-      galleryId: g,
-      baseName: id,
-      driveHighresId: `HI-${id}`,
-      driveWebId: `WEB-${id}`,
-      driveThumbId: `TH-${id}`,
-      driveWmId: withWm ? `WM-${id}` : null,
-      driveThumbWmId: withWm ? `TWM-${id}` : null,
-      variantVersions: versions(),
-      width: 300,
-      height: 200,
-    });
-  }
-}
-function fakeDrive(
-  hook?: (id: string) => Promise<void> | void,
-  fail: (id: string) => boolean = () => false,
-) {
-  let subs = 0;
-  const calls: string[] = [];
-  const drive = {
-    subrequests: () => subs,
-    async streamFile(id: string) {
-      calls.push(id);
-      subs++;
-      await hook?.(id);
-      if (fail(id)) throw new DriveError(404, "x", "d " + id);
-      return new Response(JPEG.slice(), {
-        headers: { "Content-Length": String(JPEG.length) },
-      });
-    },
-  } as unknown as DriveClient;
-  return { drive, calls };
-}
-function counting() {
-  let n = 0;
-  const DB = new Proxy(env.DB, {
-    get(t, p) {
-      const v = (t as never)[p];
-      if (p === "prepare")
-        return (s: string) => {
-          n++;
-          return (v as (s: string) => unknown).call(t, s);
-        };
-      return typeof v === "function" ? v.bind(t) : v;
-    },
-  });
-  return { e: { ...env, DB, DRIVE_MODE: "google" } as Env, count: () => n };
-}
 const e = { ...env, DRIVE_MODE: "google" } as Env;
 const mark = (id: string, at = nowIso()) => putSetting(e, PENDING + id, at);
 const marker = async (id: string) =>
@@ -182,7 +119,7 @@ describe("T6.39 adversarial", () => {
       await resetTables("rate_limits");
       await warmPendingGalleries(e, fakeDrive(undefined, bad).drive);
     }
-    expect(await env.CACHE.head(`${pid(gid(4), 0)}/thumb`)).not.toBeNull();
+    expect(await env.CACHE.head(`${photoId(gid(4), 0)}/thumb`)).not.toBeNull();
   });
 
   it("a deleted gallery leaves no warm_pending row even if it was marked after a cursor-less delete", async () => {

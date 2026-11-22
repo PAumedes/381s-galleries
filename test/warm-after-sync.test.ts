@@ -1,5 +1,14 @@
 import { clearCache } from "./support/cache";
 import { migrateDb, resetTables } from "./support/d1";
+import {
+  countingEnv,
+  fakeWarmDrive,
+  photoId,
+  seedGallery,
+  seedPhotos,
+  variantVersions,
+  warmGalleryId,
+} from "./support/warm";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -8,8 +17,7 @@ import { createMockDrive } from "../app/lib/server/drive-mock";
 import type { MockDrive } from "../app/lib/server/drive-mock";
 import { buildFixtures } from "../app/lib/server/fixtures";
 import type { MockEntry, MockFixtures } from "../app/lib/server/fixtures";
-import { DriveError, FOLDER_MIME } from "../app/lib/server/drive-types";
-import type { DriveClient } from "../app/lib/server/drive-types";
+import { FOLDER_MIME } from "../app/lib/server/drive-types";
 import {
   D1_FREE_QUERIES_PER_INVOCATION,
   FREE_SUBREQUESTS_PER_INVOCATION,
@@ -25,69 +33,19 @@ import {
 import type { SyncResult } from "../app/lib/server/sync";
 
 const db = getDb(env);
+const gallery = (over: Record<string, unknown> = {}, id = G) =>
+  seedGallery(id, over);
+const photos = (n: number, galleryId = G) => seedPhotos(galleryId, n);
+const fakeDrive = (fail = new Set<string>()) =>
+  fakeWarmDrive({ fail: (id) => fail.has(id) });
 const e = { ...env, DRIVE_MODE: "google" } as Env;
-const JPEG = new Uint8Array([0xff, 0xd8, 1, 2, 3, 4, 5, 0xff, 0xd9]);
-const G = "gggggggg-0000-0000-0000-0000000000a1";
+const G = warmGalleryId(1);
 const PENDING = SETTINGS_KEYS.warmPendingPrefix;
 
 beforeAll(async () => {
   await migrateDb();
 });
 
-function fakeDrive(fail = new Set<string>()) {
-  let subs = 0;
-  const calls: string[] = [];
-  const drive = {
-    subrequests: () => subs,
-    async streamFile(id: string) {
-      calls.push(id);
-      subs += 1;
-      if (fail.has(id)) throw new DriveError(500, "x", "detail " + id);
-      return new Response(JPEG.slice(), {
-        headers: { "Content-Length": String(JPEG.length) },
-      });
-    },
-  } as unknown as DriveClient;
-  return { drive, calls };
-}
-
-async function gallery(over: Record<string, unknown> = {}, id = G) {
-  await db.insert(schema.galleries).values({
-    id,
-    driveFolderId: "folder-" + id,
-    slug: "s-" + id.slice(-3),
-    title: "T",
-    status: "published",
-    ...over,
-  });
-}
-const pid = (i: number) => `p${String(i).padStart(3, "0")}`;
-const versions = (n = "1") =>
-  JSON.stringify({
-    highres: `2026-01-01T00:00:0${n}Z`,
-    web: `2026-01-01T00:00:0${n}Z`,
-    thumb: `2026-01-01T00:00:0${n}Z`,
-    wm: `2026-01-01T00:00:0${n}Z`,
-    thumbWm: `2026-01-01T00:00:0${n}Z`,
-  });
-async function photos(n: number, galleryId = G) {
-  for (let i = 0; i < n; i++) {
-    const id = galleryId.slice(-3) + pid(i);
-    await db.insert(schema.photos).values({
-      id,
-      galleryId,
-      baseName: id,
-      driveHighresId: `HI-${id}`,
-      driveWebId: `WEB-${id}`,
-      driveThumbId: `TH-${id}`,
-      driveWmId: `WM-${id}`,
-      driveThumbWmId: `TWM-${id}`,
-      variantVersions: versions(),
-      width: 300,
-      height: 200,
-    });
-  }
-}
 const mark = (id = G) => putSetting(e, PENDING + id, nowIso());
 const marker = async (id = G) =>
   (
@@ -178,7 +136,7 @@ describe("T6.39 warmPendingGalleries", () => {
     expect(new Set(all).size).toBe(all.length); // nothing fetched twice
     for (let i = 0; i < 30; i++)
       expect(
-        await allCached(G.slice(-3) + pid(i), ["thumb", "view-sm", "view-lg"]),
+        await allCached(photoId(G, i), ["thumb", "view-sm", "view-lg"]),
       ).toBe(true);
   });
 
@@ -256,10 +214,10 @@ describe("T6.39 warmPendingGalleries", () => {
     await mark();
     await warmPendingGalleries(e, fakeDrive().drive, { d1Budget: 1000 });
     expect(await marker()).toBeUndefined();
-    const id = G.slice(-3) + pid(1);
+    const id = photoId(G, 1);
     await db
       .update(schema.photos)
-      .set({ variantVersions: versions("9") })
+      .set({ variantVersions: variantVersions("9") })
       .where(eq(schema.photos.id, id));
     await mark();
     const { drive, calls } = fakeDrive();
@@ -273,7 +231,7 @@ describe("T6.39 warmPendingGalleries", () => {
     await gallery();
     await photos(3);
     await mark();
-    const { drive } = fakeDrive(new Set(["TH-" + G.slice(-3) + pid(0)]));
+    const { drive } = fakeDrive(new Set(["TH-" + photoId(G, 0)]));
     await warmPendingGalleries(e, drive);
     expect(await marker()).toBeDefined();
   });
@@ -398,29 +356,12 @@ function smallLibrary(albums: number, photos: number): MockFixtures {
   return { rootId: "root", entries };
 }
 
-/** Counts every D1 statement prepared through the returned env (one D1 query each). */
-function meteredEnv(base: Env) {
-  let n = 0;
-  const DB = new Proxy(base.DB, {
-    get(t, p) {
-      const v = (t as never)[p];
-      if (p === "prepare")
-        return (s: string) => {
-          n++;
-          return (v as (s: string) => unknown).call(t, s);
-        };
-      return typeof v === "function" ? v.bind(t) : v;
-    },
-  });
-  return { e: { ...base, DB } as Env, count: () => n };
-}
-
 describe("T6.39 findings: Prueba switch, D1 budget, real totals", () => {
   it("Entrega->Prueba switch: the unwatermarked object stored before the switch is not served", async () => {
     await gallery();
     await photos(1);
     await mark();
-    const id = G.slice(-3) + pid(0);
+    const id = photoId(G, 0);
     await warmPendingGalleries(e, fakeDrive().drive);
     expect(await cached(id, "thumb")).toBe(true);
     await db
@@ -443,7 +384,7 @@ describe("T6.39 findings: Prueba switch, D1 budget, real totals", () => {
     await gallery();
     await photos(30);
     await mark();
-    const m = meteredEnv(e);
+    const m = countingEnv(e);
     const { drive } = fakeDrive();
     const r = await warmPendingGalleries(m.e, drive, {
       budget: 36,
@@ -468,9 +409,9 @@ describe("T6.39 findings: Prueba switch, D1 budget, real totals", () => {
     for (const a of [0, 1])
       await gallery(
         { driveFolderId: `al${a}`, slug: `lib-${a}` },
-        `gggggggg-0000-0000-0000-0000000000c${a}`,
+        warmGalleryId(a, "c"),
       );
-    const m = meteredEnv({ ...env, DRIVE_MODE: "google" } as Env);
+    const m = countingEnv({ ...env, DRIVE_MODE: "google" } as Env);
     const drive = createMockDrive(smallLibrary(2, 6));
     const queued: Promise<unknown>[] = [];
     const r = await syncThenWarm({ env: m.e, used: m.count }, drive, {
@@ -497,12 +438,12 @@ describe("T6.39 findings: Prueba switch, D1 budget, real totals", () => {
 
   it("the minute cron over a large pending library stays within 50 D1 queries and 50 subrequests", async () => {
     for (const n of [1, 2, 3]) {
-      const g = `gggggggg-0000-0000-0000-0000000000b${n}`;
+      const g = warmGalleryId(n, "b");
       await gallery({}, g);
       await photos(40, g);
       await mark(g);
     }
-    const m = meteredEnv(e);
+    const m = countingEnv(e);
     const { drive } = fakeDrive();
     await putSetting(
       e,
