@@ -13,7 +13,19 @@ export const RESERVED_SLUGS: readonly string[] = [
   "privacy",
 ];
 
-const SLUG_MAX = 60;
+export const SLUG_MAX = 60;
+/** Lower-case words joined by single hyphens (gallery and client slugs). */
+export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** Format + length + not reserved. `slug` must already be trimmed/lower-cased. */
+export function isAllowedSlug(slug: string): boolean {
+  return (
+    slug.length > 0 &&
+    slug.length <= SLUG_MAX &&
+    SLUG_RE.test(slug) &&
+    !RESERVED_SLUGS.includes(slug)
+  );
+}
 
 export function slugify(name: string): string {
   const s = name

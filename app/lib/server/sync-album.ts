@@ -2,6 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import { schema } from "../../db";
 import { D1_IN_CHUNK, PHOTO_INSERT_ROWS } from "./d1-limits";
 import { uniqueSlug } from "./slug";
+import { SLUG_TAKEN_TRIGGER_MESSAGE, allSlugs } from "./slug-namespace";
 import { SETTINGS_KEYS } from "./settings";
 import { graceElapsed } from "./sync-archive";
 import {
@@ -277,8 +278,42 @@ function photoStatements(
   return stmts;
 }
 
+/** True when D1 aborted with the namespace trigger (a client took the slug after our snapshot). */
+export function isSlugTakenError(err: unknown): boolean {
+  const msg = (e: unknown) => String(e instanceof Error ? e.message : e);
+  return (
+    msg(err).includes(SLUG_TAKEN_TRIGGER_MESSAGE) ||
+    msg(err instanceof Error ? err.cause : "").includes(
+      SLUG_TAKEN_TRIGGER_MESSAGE,
+    )
+  );
+}
+
 /** Writes one album: gallery row first, then (unless high-res is empty) its photo diff. */
 export async function syncAlbum(
+  run: SyncRun,
+  pass: AlbumPass,
+  a: AlbumDraft,
+  ex: GalleryRow | undefined,
+  rows: Row[],
+): Promise<void> {
+  const before = structuredClone(pass.result);
+  const pendingBefore = pass.pendingIds;
+  try {
+    await writeAlbum(run, pass, a, ex, rows);
+  } catch (err) {
+    if (ex || !isSlugTakenError(err)) throw err;
+    // The create batch is atomic, so nothing was written: re-read the slugs
+    // (a client appeared after the snapshot), undo the counters, retry once.
+    run.op(2);
+    for (const s of await allSlugs(run.env as Env)) pass.takenSlugs.add(s);
+    Object.assign(pass.result, before);
+    pass.pendingIds = pendingBefore;
+    await writeAlbum(run, pass, a, ex, rows);
+  }
+}
+
+async function writeAlbum(
   run: SyncRun,
   pass: AlbumPass,
   a: AlbumDraft,

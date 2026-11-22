@@ -38,6 +38,7 @@ import type {
   SyncResult,
   SyncRun,
 } from "./sync-types";
+import { clientSlugs } from "./slug-namespace";
 import { ignoredFolderIds } from "./gallery-delete";
 import { getRootFolderId } from "./drive-factory";
 import { DriveError } from "./drive-types";
@@ -182,10 +183,15 @@ async function applyLibrary(
 ): Promise<string[]> {
   const byFolder = new Map(existing.map((g) => [g.driveFolderId, g]));
   const syncedAt = nowIso(run.now);
+  const { op } = run;
   const pass: AlbumPass = {
     result,
     syncedAt,
-    takenSlugs: new Set(allRows.map((g) => g.slug.toLowerCase())),
+    // Client slugs share the namespace (T6.40a): a new album must not take one.
+    takenSlugs: new Set([
+      ...allRows.map((g) => g.slug.toLowerCase()),
+      ...(await (op(), clientSlugs(run.env as Env))),
+    ]),
     pendingIds: pending,
   };
   const rowsByGallery = await loadPhotoRows(run, albums, byFolder);

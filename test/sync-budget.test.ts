@@ -157,8 +157,8 @@ async function expectCapExceeded(
 }
 
 describe("T-refactor-runSync: 900-subrequest cap, exact operation counting", () => {
-  // fresh run: lock 1 + pending 1 + token 1 + ignored 1 + select 1 + N batches + token write 1
-  const FRESH_FIXED = 6;
+  // fresh run: lock 1 + pending 1 + token 1 + ignored 1 + select 1 + client slugs 1 + N batches + token write 1
+  const FRESH_FIXED = 7;
   const freshMax = CAP - FRESH_FIXED;
 
   it("fresh library: the last operation at exactly 900 succeeds", async () => {
@@ -183,9 +183,9 @@ describe("T-refactor-runSync: 900-subrequest cap, exact operation counting", () 
   }, 120_000);
 
   // second run with a stored token and a Drive change, every album changed:
-  // lock 1 + pending 1 + token 1 +2 (Drive asked) + ignored 1 + select 1
+  // lock 1 + pending 1 + token 1 +2 (Drive asked) + ignored 1 + select 1 + client slugs 1
   // + ceil(M/90) photo-row chunks + M batches + token write 1
-  const changedOps = (m: number) => 8 + Math.ceil(m / D1_IN_CHUNK) + m;
+  const changedOps = (m: number) => 9 + Math.ceil(m / D1_IN_CHUNK) + m;
   const changedMax = (() => {
     let m = 1;
     while (changedOps(m + 1) <= CAP) m++;
@@ -217,7 +217,7 @@ describe("T-refactor-runSync: 900-subrequest cap, exact operation counting", () 
   }, 180_000);
 
   // pending ids from a previous run: + 1 R2 delete call + 1 pending-setting drop
-  const pendingMax = CAP - 8;
+  const pendingMax = CAP - 9;
 
   it("pending R2 flush at start counts its delete call and the setting drop: 900 passes", async () => {
     await putSetting("r2_pending_deletes", JSON.stringify(["p1"]));

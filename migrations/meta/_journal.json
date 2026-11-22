@@ -141,6 +141,13 @@
       "when": 1795049978869,
       "tag": "0019_ignored_folders",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1795319301383,
+      "tag": "0020_clients",
+      "breakpoints": true
     }
   ]
 }

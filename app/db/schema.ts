@@ -18,6 +18,8 @@ import {
 // NOTE: drizzle-kit does not manage triggers. The cover_photo_id same-gallery
 // triggers live in migrations/0000_init.sql (appended after generation).
 // Re-append them whenever the migration is regenerated.
+// Same for the slug-namespace triggers (migration 0020): a client slug and a
+// gallery slug may never be equal (case-insensitive); see slug-namespace.ts.
 
 // Timestamp convention: every timestamp column is an ISO 8601 UTC string
 // `YYYY-MM-DDTHH:MM:SSZ`. DB defaults use strftime('%Y-%m-%dT%H:%M:%SZ','now');
@@ -37,6 +39,45 @@ export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
 });
+
+// Client folders (T6.40, migration 0020). Slug shares the gallery URL namespace
+// (SQL triggers in 0020, not modelled here). default_mode/default_show_on_home
+// are copied onto an album when it is assigned (not live-inherited).
+export const clients = sqliteTable(
+  "clients",
+  {
+    id: id(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    defaultMode: text("default_mode", { enum: GALLERY_MODES })
+      .notNull()
+      .default("proofing"),
+    defaultShowOnHome: integer("default_show_on_home", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    pageEnabled: integer("page_enabled", { mode: "boolean" })
+      .notNull()
+      .default(true),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("clients_slug_nocase_unique").on(sql`${t.slug} COLLATE NOCASE`),
+    check(
+      "clients_slug_check",
+      sql`length(${t.slug}) BETWEEN 1 AND 60 AND ${t.slug} NOT GLOB '*[^a-z0-9-]*' AND ${t.slug} NOT GLOB '-*' AND ${t.slug} NOT GLOB '*-' AND ${t.slug} NOT GLOB '*--*'`,
+    ),
+    check("clients_name_check", sql`length(${t.name}) BETWEEN 1 AND 120`),
+    check(
+      "clients_default_mode_check",
+      sql`${t.defaultMode} IN ('proofing','delivery')`,
+    ),
+    check(
+      "clients_default_show_on_home_check",
+      sql`${t.defaultShowOnHome} IN (0,1)`,
+    ),
+    check("clients_page_enabled_check", sql`${t.pageEnabled} IN (0,1)`),
+  ],
+);
 
 export const galleries = sqliteTable(
   "galleries",
@@ -117,9 +158,15 @@ export const galleries = sqliteTable(
     showOnHome: integer("show_on_home", { mode: "boolean" })
       .notNull()
       .default(false),
+    // Client folder (T6.40): the album's client, or null. Deleting the client
+    // unassigns its albums; albums are never deleted with a client.
+    clientId: text("client_id").references(() => clients.id, {
+      onDelete: "set null",
+    }),
     createdAt: createdAt(),
   },
   (t) => [
+    index("galleries_client_id_idx").on(t.clientId),
     // Case-insensitive: "Boda-Ana" and "boda-ana" are the same URL.
     uniqueIndex("galleries_slug_nocase_unique").on(
       sql`${t.slug} COLLATE NOCASE`,
