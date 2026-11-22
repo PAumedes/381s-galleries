@@ -182,8 +182,13 @@ export async function assignAlbum(
   galleryId: string,
   clientId: string,
 ): Promise<void> {
-  if (!(await getClient(env, clientId))) throw new ClientError("notFound");
-  await setClientId(env, galleryId, clientId);
+  // One statement: a client deleted between a check and the UPDATE is notFound, not an FK error.
+  const res = await env.DB.prepare(
+    "UPDATE galleries SET client_id = ?1 WHERE id = ?2 AND EXISTS (SELECT 1 FROM clients WHERE id = ?1)",
+  )
+    .bind(clientId, galleryId)
+    .run();
+  if (!res.meta.changes) throw new ClientError("notFound");
 }
 
 export async function unassignAlbum(

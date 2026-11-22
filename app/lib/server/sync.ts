@@ -183,13 +183,14 @@ async function applyLibrary(
 ): Promise<string[]> {
   const byFolder = new Map(existing.map((g) => [g.driveFolderId, g]));
   const syncedAt = nowIso(run.now);
+  const { op } = run;
   const pass: AlbumPass = {
     result,
     syncedAt,
     // Client slugs share the namespace (T6.40a): a new album must not take one.
     takenSlugs: new Set([
       ...allRows.map((g) => g.slug.toLowerCase()),
-      ...(await clientSlugs(run.env as Env)),
+      ...(await (op(), clientSlugs(run.env as Env))),
     ]),
     pendingIds: pending,
   };

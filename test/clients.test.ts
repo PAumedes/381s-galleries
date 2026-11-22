@@ -181,6 +181,30 @@ describe("T6.40a clients lib", () => {
     expect(list[0]!.id).toBe(b.id);
   });
 
+  it("assignAlbum: a client deleted right before the UPDATE is notFound, not an FK error", async () => {
+    const c = await createClient(e, { name: "Gone" });
+    await addGallery("g9", "s9");
+    const DB = new Proxy(env.DB, {
+      get(t, k) {
+        const v = (t as never)[k];
+        if (k === "prepare")
+          return (sql: string) => {
+            if (/^UPDATE galleries SET client_id/.test(sql))
+              void env.DB.prepare("DELETE FROM clients WHERE id = ?1")
+                .bind(c.id)
+                .run();
+            return (v as (s: string) => unknown).call(t, sql);
+          };
+        return typeof v === "function" ? v.bind(t) : v;
+      },
+    });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(await code(assignAlbum({ ...env, DB } as Env, "g9", c.id))).toBe(
+      "notFound",
+    );
+    expect(await clientIdOf("g9")).toBeNull();
+  });
+
   it("assign / unassign only set client_id; unknown ids rejected", async () => {
     const c = await createClient(e, { name: "A" });
     await addGallery("g1", "s1");
