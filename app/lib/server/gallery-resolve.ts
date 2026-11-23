@@ -22,6 +22,9 @@ export async function findGalleryWithClient(
   return row;
 }
 
+/** SQLite NOCASE folds ASCII only; String#toLowerCase also folds e.g. the Kelvin sign. */
+const asciiLower = (s: string) => s.replace(/[A-Z]/g, (c) => c.toLowerCase());
+
 /** True when the URL's client segment names this album's client (NOCASE). */
 export function sameClient(
   wanted: string | undefined,
@@ -29,7 +32,7 @@ export function sameClient(
 ): boolean {
   return wanted === undefined
     ? actual === null
-    : actual !== null && actual.toLowerCase() === wanted.toLowerCase();
+    : actual !== null && asciiLower(actual) === asciiLower(wanted);
 }
 
 export type Resolution =
