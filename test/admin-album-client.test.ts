@@ -17,6 +17,7 @@ import { adminIndexData } from "../app/routes/admin._index";
 import { cardData } from "../app/routes/admin.g.$id.card";
 import { editData } from "../app/routes/admin.g.$id";
 
+import { CLIENT_CHOICES_MAX } from "../app/lib/server/admin-galleries/client-choices";
 const e = { ...env, DRIVE_MODE: "mock", ALLOW_DEV_ADMIN: "1" } as Env;
 const BASE = "http://localhost";
 
@@ -225,9 +226,9 @@ describe("T6.40c assign an album to a client (details save)", () => {
 });
 
 describe("T6.40c loaders and canonical URLs", () => {
-  it("edit loader: clientId, clientSlug, client choices (<=100, assigned always included), no drive ids, +1 query", async () => {
+  it("edit loader: clientId, clientSlug, client choices (<=cap, assigned always included), no drive ids, +1 query", async () => {
     const c = await createClient(e, { name: "Zeta" });
-    for (let i = 0; i < 101; i++)
+    for (let i = 0; i < CLIENT_CHOICES_MAX + 1; i++)
       await run(
         "INSERT INTO clients (id, slug, name) VALUES (?1, ?1, ?2)",
         `c${String(i).padStart(3, "0")}`,
@@ -239,7 +240,7 @@ describe("T6.40c loaders and canonical URLs", () => {
     const d = await loadGalleryEdit(m.env, "g1");
     expect(d!.gallery.clientId).toBe(c.id);
     expect(d!.gallery.clientSlug).toBe(c.slug);
-    expect(d!.clients.length).toBe(100);
+    expect(d!.clients.length).toBe(CLIENT_CHOICES_MAX);
     expect(d!.clients.some((x) => x.id === c.id)).toBe(true);
     const names = d!.clients.map((x) => x.name);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "en")));

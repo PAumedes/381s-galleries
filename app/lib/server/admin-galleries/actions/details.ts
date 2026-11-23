@@ -6,7 +6,7 @@ import { isValidDate } from "../../../admin-gallery";
 import { RESERVED_SLUGS, SLUG_MAX, SLUG_RE } from "../../slug";
 import { slugInUse } from "../../slug-namespace";
 import { isExpired } from "../../time";
-import { planClientChange } from "./client-assignment";
+import { isAssignedTo, planClientChange } from "./client-assignment";
 import { CONTROL_RE, done, fail, str } from "./shared";
 import type { GalleryRow } from "./shared";
 
@@ -103,9 +103,16 @@ export async function saveDetails(
       });
     throw err;
   }
+  const vanished =
+    client.assignId && !(await isAssignedTo(env, g.id, client.assignId));
   return done(
     intent,
-    [t("admin.msg.detailsSaved"), client.note].filter(Boolean).join(" "),
+    [
+      t("admin.msg.detailsSaved"),
+      vanished ? t("admin.msg.clientUnknown") : client.note,
+    ]
+      .filter(Boolean)
+      .join(" "),
   );
 }
 

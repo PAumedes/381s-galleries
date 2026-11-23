@@ -53,7 +53,7 @@ export async function adminIndexData(request: Request, env: Env) {
     filter,
     q: search,
     clientFilter,
-    clients: await listClientChoices(env),
+    clients: await listClientChoices(env, clientFilter || null),
     galleries: await listGalleries(env, filter, search, clientFilter),
     total: await countGalleries(env),
     rootName: (await getSetting(env, SETTINGS_KEYS.driveRootName)) ?? null,

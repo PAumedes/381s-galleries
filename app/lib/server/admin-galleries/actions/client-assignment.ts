@@ -16,6 +16,8 @@ export interface ClientChange {
   set: GallerySet;
   /** Sentences for the save message (assigned, copied fields, Prueba warning). */
   note: string;
+  /** Client id the UPDATE tries to assign (verify it stuck, see `assignedClientId`). */
+  assignId?: string;
 }
 
 const UNCHANGED: ClientChange = { set: {}, note: "" };
@@ -49,18 +51,23 @@ export async function planClientChange(
     .where(eq(schema.clients.id, id));
   if (!client)
     return { set: {}, note: "", error: t("admin.msg.clientUnknown") };
+  // Every client-derived column is guarded by the client still existing, so a
+  // client deleted since the select above changes nothing (not even the copies).
+  const exists = sql`EXISTS (SELECT 1 FROM clients WHERE id = ${id})`;
+  const guard = (column: string, value: string | number) =>
+    sql`CASE WHEN ${exists} THEN ${value} ELSE ${sql.raw(column)} END` as never;
   const set: GallerySet = {
     clientId: sql`(SELECT id FROM clients WHERE id = ${id})` as never,
   };
   let note = t("admin.msg.clientAssigned", { client: client.name });
-  if (g.clientId) return { set, note };
+  if (g.clientId) return { set, note, assignId: id };
 
   const eligible =
     g.status === "published" && !g.pinHash && !isExpired(expiresAt, Date.now());
   const showOnHome = client.defaultShowOnHome && eligible;
   const copied: string[] = [];
   if (client.defaultMode !== g.mode) {
-    set.mode = client.defaultMode;
+    set.mode = guard("mode", client.defaultMode);
     copied.push(
       t("admin.msg.clientCopiedMode", {
         mode: t(`admin.mode.${client.defaultMode}`),
@@ -68,7 +75,7 @@ export async function planClientChange(
     );
   }
   if (showOnHome !== g.showOnHome) {
-    set.showOnHome = showOnHome;
+    set.showOnHome = guard("show_on_home", showOnHome ? 1 : 0);
     copied.push(
       t(
         showOnHome
@@ -79,8 +86,18 @@ export async function planClientChange(
   }
   if (copied.length)
     note += ` ${t("admin.msg.clientCopied", { fields: copied.join(", ") })}`;
-  if (set.mode === "proofing") note += await noWmWarning(env, g.id, t);
-  return { set, note };
+  if (client.defaultMode === "proofing" && set.mode)
+    note += await noWmWarning(env, g.id, t);
+  return { set, note, assignId: id };
+}
+
+/** True when the album ended up in client `id` (false: the client vanished). */
+export async function isAssignedTo(env: Env, galleryId: string, id: string) {
+  const [r] = await getDb(env)
+    .select({ clientId: schema.galleries.clientId })
+    .from(schema.galleries)
+    .where(eq(schema.galleries.id, galleryId));
+  return r?.clientId === id;
 }
 
 /** Prueba only warns (T6.19): visible photos without preview-wm show as unavailable. */

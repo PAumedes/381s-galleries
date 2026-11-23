@@ -2,7 +2,7 @@ import { asc, sql } from "drizzle-orm";
 import { getDb, schema } from "../../../db";
 
 /** Clients offered in the album select and the list filter (one query). */
-export const CLIENT_CHOICES_MAX = 100;
+export const CLIENT_CHOICES_MAX = 500;
 
 export interface ClientChoice {
   id: string;
