@@ -23,6 +23,9 @@ export default [
     route("g/:id", "routes/admin.g.$id.tsx"),
     route("g/:id/activity", "routes/admin.g.$id.activity.tsx"),
     route("g/:id/favorites", "routes/admin.g.$id.favorites.tsx"),
+    // T6.40b clients admin
+    route("clients", "routes/admin.clients.tsx"),
+    route("clients/:id", "routes/admin.clients.$id.tsx"),
   ]),
   route("img/:photoId/:variant", "routes/img.$photoId.$variant.tsx"),
   route("brand/logo/:variant", "routes/brand.logo.$variant.tsx"),

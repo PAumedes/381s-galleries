@@ -15,6 +15,8 @@ export const enAdmin = {
   "admin.status.neverSynced": "Not synced yet",
   "admin.status.syncError": "Sync error ({time}): {message}",
   "admin.meta.admin": "Administration",
+  "admin.meta.clients": "Clients",
+  "admin.meta.clientEdit": "Edit client",
   "admin.meta.edit": "Edit gallery",
   "admin.meta.activity": "Activity",
   "admin.meta.favorites": "Favorites",
@@ -540,4 +542,63 @@ export const enAdmin = {
   "admin.msg.deleteFailed":
     "Could not finish deleting the gallery (a service failed). It is already hidden; submit again to continue.",
   "admin.list.deleting": "Continue deletion",
+  "admin.nav.clients": "Clients",
+  "admin.clients.title": "Clients",
+  "admin.clients.empty":
+    "No clients yet. Create one to group their albums under one address.",
+  "admin.clients.col.name": "Client",
+  "admin.clients.col.slug": "Address",
+  "admin.clients.col.albums": "Albums",
+  "admin.clients.col.page": "Public page",
+  "admin.clients.page.on": "On",
+  "admin.clients.page.off": "Off",
+  "admin.clients.count.one": "{count} album",
+  "admin.clients.count.other": "{count} albums",
+  "admin.clients.create.title": "New client",
+  "admin.clients.create.button": "Create client",
+  "admin.clients.field.name": "Name",
+  "admin.clients.field.slug": "Web address",
+  "admin.clients.field.slugHintAuto":
+    "Leave it empty to generate it from the name. You can edit it later.",
+  "admin.clients.field.slugHint":
+    "Part of the client's address. If you change it, the client's previous addresses stop working.",
+  "admin.clients.field.pageEnabled": "Show the client's public page",
+  "admin.clients.field.defaultMode": "Default mode for their albums",
+  "admin.clients.field.defaultShowOnHome":
+    "Show their albums on the home page by default",
+  "admin.clients.back": "← Clients",
+  "admin.clients.save": "Save client",
+  "admin.clients.section.details": "Client details",
+  "admin.clients.section.albums": "Client albums",
+  "admin.clients.section.apply": "Apply defaults",
+  "admin.clients.section.danger": "Delete client",
+  "admin.clients.albumsEmpty": "This client has no albums yet.",
+  "admin.clients.apply.note":
+    'Copies the saved mode and "show on home" above to every album of this client. Save your changes first. Downloads and PIN are not touched.',
+  "admin.clients.apply.button": "Apply to all albums",
+  "admin.clients.apply.confirm":
+    'This changes the mode and "show on home" of every album of this client. Continue?',
+  "admin.clients.delete.warning":
+    "Deletes the client. Its albums are NOT deleted: they become unassigned. The client's addresses (its page and /client/album) stop working; the albums stay at their own address. This cannot be undone.",
+  "admin.clients.delete.label":
+    "To confirm, type the client's address ({slug})",
+  "admin.clients.delete.button": "Delete client",
+  "admin.clients.delete.confirm":
+    "The client will be deleted. Its albums become unassigned and the client's addresses stop working. Continue?",
+  "admin.clients.msg.saved": "Client saved.",
+  "admin.clients.msg.deleted":
+    "Client deleted. Its albums still exist, without a client.",
+  "admin.clients.msg.slugTaken":
+    "That web address is already in use by another gallery or client.",
+  "admin.clients.msg.slugInvalid":
+    "Use only lowercase letters, numbers and hyphens (1 to {max} characters, no leading, trailing or repeated hyphens) and a non-reserved address.",
+  "admin.clients.msg.nameInvalid":
+    "The name must be 1 to {max} characters, without control characters.",
+  "admin.clients.msg.applyConfirm": "Confirm to apply the defaults.",
+  "admin.clients.msg.applied.one": "Defaults applied to {count} album.",
+  "admin.clients.msg.applied.other": "Defaults applied to {count} albums.",
+  "admin.clients.msg.applyNoWm.one":
+    "Heads up: {count} album has no preview-wm. In Proofing its photos show as unavailable until that recipe is exported.",
+  "admin.clients.msg.applyNoWm.other":
+    "Heads up: {count} albums have no preview-wm. In Proofing their photos show as unavailable until that recipe is exported.",
 } as const satisfies Record<keyof typeof esAdmin, string>;

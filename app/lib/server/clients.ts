@@ -34,9 +34,24 @@ export interface ClientInput {
   pageEnabled?: boolean;
 }
 
+// Invisible format characters (\p{Cf}) are dropped, except ZWJ/ZWNJ (emoji
+// sequences, Persian/Indic shaping) and the RTL/LTR marks that RTL names need.
+const KEEP_INVISIBLE = new Set([0x200c, 0x200d, 0x200e, 0x200f]);
+const INVISIBLE_RE = /[\p{Cf}\u2800\u3164\uFFA0]/gu;
+const stripInvisible = (s: string) =>
+  s.replace(INVISIBLE_RE, (c) =>
+    KEEP_INVISIBLE.has(c.codePointAt(0)!) ? c : "",
+  );
+const VISIBLE_RE = /[\p{L}\p{N}\p{P}\p{S}]/u;
+
 function cleanName(raw: string): string {
-  const name = raw.trim();
-  if (!name || name.length > CLIENT_NAME_MAX || CONTROL_RE.test(name))
+  const name = stripInvisible(raw).trim();
+  if (
+    !name ||
+    name.length > CLIENT_NAME_MAX ||
+    CONTROL_RE.test(name) ||
+    !VISIBLE_RE.test(name)
+  )
     throw new ClientError("invalidName");
   return name;
 }
