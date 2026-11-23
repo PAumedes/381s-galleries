@@ -1,4 +1,5 @@
 import { DEFAULT_STUDIO_NAME } from "./default-studio-name";
+import { galleryPath } from "./gallery-path";
 import { PALETTE_COLORS, isDarkPalette, type Palette } from "./design";
 import type { GalleryData } from "./server/gallery";
 
@@ -48,11 +49,17 @@ export function shortName(
 export function buildManifest(o: {
   studio: string;
   /** `title` omitted (PIN gallery): generic name, slug-specific scope. */
-  gallery?: { slug: string; title?: string; palette: Palette };
+  gallery?: {
+    slug: string;
+    /** Owning client's slug: the app scopes to `/<client>/<album>/`. */
+    clientSlug?: string | null;
+    title?: string;
+    palette: Palette;
+  };
 }) {
   const g = o.gallery;
   const color = THEME_COLORS[g?.palette ?? "claro"];
-  const path = g ? `/${encodeURIComponent(g.slug)}` : "/";
+  const path = g ? galleryPath(g.slug, g.clientSlug) : "/";
   return {
     ...(g ? { id: path } : {}),
     name: g?.title || o.studio,

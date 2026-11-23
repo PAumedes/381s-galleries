@@ -1,6 +1,7 @@
 import { buildManifest } from "../pwa";
 import { getStudioName } from "./admin";
-import { findGallery, isAvailable, type AccessEnv } from "./access";
+import { isAvailable, type AccessEnv } from "./access";
+import { findGalleryWithClient } from "./gallery-resolve";
 import { NOSNIFF } from "./http";
 
 const HEADERS = {
@@ -22,10 +23,14 @@ export async function handleManifest(
   env: AccessEnv & { STUDIO_NAME: string },
 ): Promise<Response> {
   const studio = await getStudioName(env, request);
-  const g = slug.includes(".") ? undefined : await findGallery(env, slug);
+  const hit = slug.includes(".")
+    ? undefined
+    : await findGalleryWithClient(env, slug);
+  const g = hit?.gallery;
   const gallery = isAvailable(g)
     ? {
         slug: g.slug,
+        clientSlug: hit!.clientSlug,
         title: g.pinHash ? undefined : g.title,
         palette: g.palette,
       }
