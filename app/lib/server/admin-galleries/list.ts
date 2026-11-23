@@ -1,7 +1,11 @@
 import type { GalleryMode, GalleryStatus } from "../../constants";
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { getDb, schema } from "../../../db";
-import { groupIssues, normalizeSearch } from "../../admin-gallery";
+import {
+  CLIENT_FILTER_NONE,
+  groupIssues,
+  normalizeSearch,
+} from "../../admin-gallery";
 import type { Filter } from "../../admin-gallery";
 import { listCoverIdSql } from "../cover";
 import { isExpired } from "../time";
@@ -22,6 +26,8 @@ export interface GalleryListRow {
   title: string;
   slug: string;
   clientName: string | null;
+  /** Client folder (T6.40c): its public slug builds the canonical address. */
+  client: { id: string; name: string; slug: string } | null;
   eventDate: string | null;
   status: GalleryStatus;
   /** Prueba (watermarked, no downloads) or Entrega. */
@@ -39,10 +45,19 @@ export interface GalleryListRow {
   deleting: boolean;
 }
 
+/** `?cliente=`: "" = every album, "none" = no client, else one client id. */
+function clientFilterSql(v: string): SQL | undefined {
+  if (!v) return undefined;
+  return v === CLIENT_FILTER_NONE
+    ? isNull(schema.galleries.clientId)
+    : eq(schema.galleries.clientId, v);
+}
+
 export async function listGalleries(
   env: Env,
   filter: Filter,
   q = "",
+  clientFilter = "",
 ): Promise<GalleryListRow[]> {
   const g = schema.galleries;
   const status = FILTER_STATUS[filter];
@@ -52,6 +67,9 @@ export async function listGalleries(
       title: g.title,
       slug: g.slug,
       clientName: g.clientName,
+      clientId: g.clientId,
+      clientRowName: schema.clients.name,
+      clientSlug: schema.clients.slug,
       eventDate: g.eventDate,
       status: g.status,
       mode: g.mode,
@@ -64,7 +82,13 @@ export async function listGalleries(
       downloads: sql<number>`(SELECT count(*) FROM downloads d WHERE d.gallery_id = galleries.id AND d.photo_id IS NOT NULL)`,
     })
     .from(g)
-    .where(status ? eq(g.status, status) : undefined)
+    .leftJoin(schema.clients, eq(g.clientId, schema.clients.id))
+    .where(
+      and(
+        status ? eq(g.status, status) : undefined,
+        clientFilterSql(clientFilter),
+      ),
+    )
     .orderBy(
       sql`${g.status} = 'archived'`,
       sql`${g.createdAt} DESC`,
@@ -82,12 +106,18 @@ export async function listGalleries(
         ),
       )
     : rows;
-  return matched.map(({ syncIssuesJson, ...r }) => ({
-    ...r,
-    deleting: !!r.deleting,
-    expired: isExpired(r.expiresAt, now),
-    issueCount: groupIssues(syncIssuesJson).total,
-  }));
+  return matched.map(
+    ({ syncIssuesJson, clientId, clientRowName, clientSlug, ...r }) => ({
+      ...r,
+      client:
+        clientId && clientRowName !== null && clientSlug !== null
+          ? { id: clientId, name: clientRowName, slug: clientSlug }
+          : null,
+      deleting: !!r.deleting,
+      expired: isExpired(r.expiresAt, now),
+      issueCount: groupIssues(syncIssuesJson).total,
+    }),
+  );
 }
 
 /** Number of galleries per status (for the empty-state decision). */

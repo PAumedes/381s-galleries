@@ -37,6 +37,7 @@ export function DatosSections({
     <>
       <DetailsSection
         g={g}
+        clients={data.clients}
         errors={fieldErrorsOf(actionData, "details")}
         title={title}
         onTitle={onTitle}

@@ -1,5 +1,6 @@
 import { coverObjectPosition } from "../lib/cover-focus";
 import { formatEventDate } from "../lib/event-date";
+import { galleryPath } from "../lib/gallery-path";
 import type { HomeItem } from "../lib/server/home";
 import { useLang, useT } from "../i18n/use-t";
 import { useStudioName } from "../lib/use-studio-name";
@@ -54,7 +55,7 @@ export function HomePage({ items }: { items: HomeItem[] }) {
             return (
               <li key={it.slug}>
                 <a
-                  href={`/${encodeURIComponent(it.slug)}`}
+                  href={galleryPath(it.slug, it.clientSlug)}
                   className="group focus-visible:outline-ink flex flex-col gap-3 focus-visible:outline-2 focus-visible:outline-offset-4"
                 >
                   <span className="bg-grey-100 block aspect-[4/3] w-full overflow-hidden">

@@ -25,6 +25,15 @@ export function parseFilter(v: string | null | undefined): Filter {
     : "todas";
 }
 
+/** `?cliente=` value for "albums with no client". */
+export const CLIENT_FILTER_NONE = "none";
+const CLIENT_FILTER_MAX = 64;
+
+/** `?cliente=`: "" (all), "none", or a client id (any string up to 64 chars; unknown ids list nothing). */
+export function parseClientFilter(v: string | null | undefined): string {
+  return (v ?? "").slice(0, CLIENT_FILTER_MAX);
+}
+
 // ----------------------------------------------------- Buenos Aires time
 export { localToUtcIso, isValidDate, utcIsoToLocal } from "./studio-time";
 

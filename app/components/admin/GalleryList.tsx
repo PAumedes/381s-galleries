@@ -8,6 +8,8 @@ import { useStudioTimezone } from "../../lib/use-studio-timezone";
 import { FILTERS, FILTER_KEYS, utcIsoToLocal } from "../../lib/admin-gallery";
 import type { Filter } from "../../lib/admin-gallery";
 import type { GalleryListRow } from "../../lib/server/admin-galleries";
+import { ClientFilter } from "./ClientFilter";
+import type { ClientChoice } from "../../lib/server/admin-galleries/client-choices";
 import {
   GalleryListHead,
   GalleryRow,
@@ -25,10 +27,11 @@ export const FILTER_NAV_CLS =
 export const FILTER_CHIP_CLS =
   "text-micro flex min-h-tap shrink-0 items-center whitespace-nowrap px-1.5 uppercase max-md:tracking-wide md:min-h-0 md:px-3 md:py-2";
 
-function filterHref(f: Filter, q: string): string {
+function filterHref(f: Filter, q: string, client = ""): string {
   const p = new URLSearchParams();
   if (f !== "todas") p.set("estado", f);
   if (q) p.set("q", q);
+  if (client) p.set("cliente", client);
   const qs = p.toString();
   return qs ? `/admin?${qs}` : "/admin";
 }
@@ -80,6 +83,8 @@ export function GalleryList({
   total,
   q = "",
   rootName,
+  clientFilter = "",
+  clients = [],
 }: {
   galleries: GalleryListItem[];
   filter: Filter;
@@ -88,6 +93,10 @@ export function GalleryList({
   q?: string;
   /** Saved Drive root folder name (settings); a neutral sample when unset. */
   rootName?: string | null;
+  /** Current `?cliente=` value: "" (all), "none" or a client id. */
+  clientFilter?: string;
+  /** Clients for the filter select (at most 100). */
+  clients?: ClientChoice[];
 }) {
   const navigate = useNavigate();
   const t = useT();
@@ -102,12 +111,19 @@ export function GalleryList({
     return <EmptyLibrary rootName={rootName} />;
   return (
     <div className="flex flex-col gap-4">
-      <SearchForm filter={filter} q={q} />
+      <SearchForm filter={filter} q={q} clientFilter={clientFilter} />
+      {(clients.length > 0 || clientFilter) && (
+        <ClientFilter
+          clients={clients}
+          value={clientFilter}
+          hrefFor={(c) => filterHref(filter, q, c)}
+        />
+      )}
       <nav aria-label={t("admin.filter.label")} className={FILTER_NAV_CLS}>
         {FILTERS.map((f) => (
           <Link
             key={f}
-            to={filterHref(f, q)}
+            to={filterHref(f, q, clientFilter)}
             aria-current={f === filter ? "page" : undefined}
             className={`${FILTER_CHIP_CLS} ${f === filter ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`}
           >

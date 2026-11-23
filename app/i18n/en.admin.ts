@@ -601,4 +601,22 @@ export const enAdmin = {
     "Heads up: {count} album has no preview-wm. In Proofing its photos show as unavailable until that recipe is exported.",
   "admin.clients.msg.applyNoWm.other":
     "Heads up: {count} albums have no preview-wm. In Proofing their photos show as unavailable until that recipe is exported.",
+  "admin.edit.field.clientFolder": "Client folder",
+  "admin.edit.hint.clientFolder":
+    'Groups the album under a client and its address becomes /client/album. The first time, the client\'s mode and "show on home" are copied.',
+  "admin.edit.clientFolder.none": "No client",
+  "admin.msg.clientUnknown": "That client no longer exists.",
+  "admin.msg.clientAssigned": "Album assigned to {client}.",
+  "admin.msg.clientUnassigned": "Album has no client.",
+  "admin.msg.clientCopied": "Copied from the client: {fields}.",
+  "admin.msg.clientCopiedMode": "mode {mode}",
+  "admin.msg.clientCopiedHomeOn": "show on home: yes",
+  "admin.msg.clientCopiedHomeOff": "show on home: no",
+  "admin.msg.clientNoWm.one":
+    "Heads up: {count} photo has no preview-wm. In Proofing it shows as unavailable until that recipe is exported.",
+  "admin.msg.clientNoWm.other":
+    "Heads up: {count} photos have no preview-wm. In Proofing they show as unavailable until that recipe is exported.",
+  "admin.list.clientFilter.label": "Client",
+  "admin.list.clientFilter.all": "All clients",
+  "admin.list.clientFilter.none": "No client",
 } as const satisfies Record<keyof typeof esAdmin, string>;

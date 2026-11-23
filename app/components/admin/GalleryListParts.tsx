@@ -4,6 +4,7 @@ import { useFormat } from "../../i18n/use-format";
 import { useT } from "../../i18n/use-t";
 import type { MessageKey } from "../../i18n/t";
 import type { Filter } from "../../lib/admin-gallery";
+import { galleryPath } from "../../lib/gallery-path";
 import type { GalleryListRow } from "../../lib/server/admin-galleries";
 
 const STATUS_KEY = {
@@ -79,7 +80,15 @@ export function GalleryListHead() {
 }
 
 /** Server-side `?q=` search box (keeps the status filter). */
-export function SearchForm({ filter, q }: { filter: Filter; q: string }) {
+export function SearchForm({
+  filter,
+  q,
+  clientFilter = "",
+}: {
+  filter: Filter;
+  q: string;
+  clientFilter?: string;
+}) {
   const t = useT();
   return (
     <Form
@@ -90,6 +99,9 @@ export function SearchForm({ filter, q }: { filter: Filter; q: string }) {
     >
       {filter !== "todas" && (
         <input type="hidden" name="estado" value={filter} />
+      )}
+      {clientFilter && (
+        <input type="hidden" name="cliente" value={clientFilter} />
       )}
       <input
         type="search"
@@ -155,10 +167,20 @@ export function GalleryRow({
         >
           {g.title}
         </Link>
+        {g.client && (
+          <div
+            data-client-folder
+            className="text-ink min-w-0 truncate max-xl:text-sm"
+          >
+            {g.client.name}
+          </div>
+        )}
         {g.clientName && (
           <div className="text-grey-600 max-xl:text-sm">{g.clientName}</div>
         )}
-        <div className="text-grey-600 max-xl:hidden">/{g.slug}</div>
+        <div className="text-grey-600 max-xl:hidden">
+          {galleryPath(g.slug, g.client?.slug)}
+        </div>
       </td>
       <td
         role="cell"

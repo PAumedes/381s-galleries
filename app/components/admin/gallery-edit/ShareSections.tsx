@@ -1,3 +1,4 @@
+import { galleryPath } from "../../../lib/gallery-path";
 import { previewHref, type PreviewDevice } from "../../../lib/preview-device";
 import { useT } from "../../../i18n/use-t";
 import { External } from "../../icons";
@@ -20,7 +21,7 @@ export function ShareSections({
     <>
       <Section title={t("admin.edit.section.share")}>
         <SharePanel
-          url={`${origin ?? window.location.origin}/${g.slug}`}
+          url={`${origin ?? window.location.origin}${galleryPath(g.slug, g.clientSlug)}`}
           slug={g.slug}
           title={g.title}
           status={g.status}
