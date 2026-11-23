@@ -53,7 +53,7 @@ beforeAll(async () => {
     } else {
       res.writeHead(200, { "content-type": "text/html" });
       res.end(
-        '<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=/app.css><body><p id=t class="phone:hidden">x</p>',
+        `<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><style>${style}</style><body><p id=t class="phone:hidden">x</p>`,
       );
     }
   });
