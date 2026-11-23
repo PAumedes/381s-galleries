@@ -1,5 +1,5 @@
 import { loadClientTiles, type ClientTile } from "./home";
-import { RESERVED_SLUGS } from "./slug";
+import { isAllowedSlug } from "./slug";
 
 /** Public payload of a client's homepage `/:client` (T6.40e). */
 export type ClientPageData = {
@@ -13,14 +13,14 @@ export type ClientPageData = {
 /**
  * The client homepage for a `/:slug` that matched no album, or null (the normal
  * 404, so a missing client, `page_enabled = 0` and "nothing visible" look the
- * same). Files and reserved names are never looked up (no query).
+ * same). Anything that can never be a client slug (bad format, too long, dotted
+ * file names, reserved names) is never looked up (no query).
  */
 export async function loadClientPage(
   env: Env,
   slug: string,
 ): Promise<ClientPageData | null> {
-  if (slug.includes(".") || RESERVED_SLUGS.includes(slug.toLowerCase()))
-    return null;
+  if (!isAllowedSlug(slug.toLowerCase())) return null;
   const page = await loadClientTiles(env, slug);
   if (!page || !page.tiles.length) return null;
   return {
