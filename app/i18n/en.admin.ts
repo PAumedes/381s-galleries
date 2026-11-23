@@ -603,7 +603,7 @@ export const enAdmin = {
     "Heads up: {count} albums have no preview-wm. In Proofing their photos show as unavailable until that recipe is exported.",
   "admin.edit.field.clientFolder": "Client folder",
   "admin.edit.hint.clientFolder":
-    'Groups the album under a client and its address becomes /client/album. The first time, the client\'s mode and "show on home" are copied.',
+    "Groups the album under a client and its address becomes /client/album. The first time, the client’s mode and «show on home» are copied.",
   "admin.edit.clientFolder.none": "No client",
   "admin.msg.clientUnknown": "That client no longer exists.",
   "admin.msg.clientAssigned": "Album assigned to {client}.",

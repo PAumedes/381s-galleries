@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, sql } from "drizzle-orm";
 import { getDb, schema } from "../../../db";
 
 /** Clients offered in the album select and the list filter (one query). */

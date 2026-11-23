@@ -607,7 +607,7 @@ export const esAdmin = {
     "Atención: {count} álbumes sin preview-wm. En Prueba sus fotos se verán como no disponibles hasta exportar esa receta.",
   "admin.edit.field.clientFolder": "Carpeta de cliente",
   "admin.edit.hint.clientFolder":
-    'Agrupa el álbum bajo un cliente y su dirección pasa a ser /cliente/álbum. La primera vez se copian el modo y "mostrar en inicio" del cliente.',
+    "Agrupa el álbum bajo un cliente y su dirección pasa a ser /cliente/álbum. La primera vez se copian el modo y «mostrar en inicio» del cliente.",
   "admin.edit.clientFolder.none": "Sin cliente",
   "admin.msg.clientUnknown": "Ese cliente ya no existe.",
   "admin.msg.clientAssigned": "Álbum asignado a {client}.",

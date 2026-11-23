@@ -92,7 +92,9 @@ export function DetailsSection({
             />
           )}
         </Field>
-        <ClientFolderField g={g} clients={clients} error={de.clientId} />
+        {(clients.length > 0 || g.clientId) && (
+          <ClientFolderField g={g} clients={clients} error={de.clientId} />
+        )}
         <Field label={t("admin.edit.field.eventDate")} error={de.eventDate}>
           {(p) => (
             <input

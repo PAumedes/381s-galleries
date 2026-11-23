@@ -21,6 +21,7 @@ export function ClientFolderField({
     >
       {(p) => (
         <select
+          data-compact
           {...p}
           name="clientId"
           defaultValue={g.clientId ?? ""}

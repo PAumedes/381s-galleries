@@ -27,6 +27,7 @@ export function ClientFilter({
         {t("admin.list.clientFilter.label")}
       </span>
       <select
+        data-compact
         value={value}
         onChange={(ev) => void navigate(hrefFor(ev.target.value))}
         className="border-grey-300 bg-white min-h-12 w-full min-w-0 border px-3 text-base"
