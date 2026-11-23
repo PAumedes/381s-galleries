@@ -3,7 +3,11 @@
 
 /* A phone in any mode: touch pointer or a narrow viewport (some phone
    browsers report a fine pointer). Desktop: neither. */
-@custom-variant phone (@media (pointer: coarse), (max-width: 767px));
+@custom-variant phone {
+  @media (pointer: coarse), (max-width: 767px) {
+    @slot;
+  }
+}
 
 @theme {
   --font-sans:
