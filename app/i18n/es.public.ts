@@ -95,6 +95,8 @@ export const esPublic = {
   "footer.copyright": "© {year} {studio}",
 
   "home.galleries": "Galerías",
+  "client.albums": "Álbumes",
+  "client.locked": "Con PIN",
   "footer.privacy": "Privacidad",
   "privacy.title": "Privacidad",
   "privacy.back": "Volver al inicio",

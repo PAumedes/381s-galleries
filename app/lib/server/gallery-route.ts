@@ -9,11 +9,12 @@ import { getDrive } from "./drive-factory";
 import { loadGallery, unlockGallery, type GalleryData } from "./gallery";
 import { warmGalleryOnOpen } from "./gallery-warm";
 import { resolveGallery, type GalleryTarget } from "./gallery-resolve";
+import { loadClientPage, type ClientPageData } from "./client-page";
 import { NOSNIFF, PRIVATE_NO_STORE } from "./http";
 import { publicOrigin } from "./public-url";
 
 /** What `/:slug` and `/:client/:album` loaders return (the page's data). */
-export type GalleryRouteData = GalleryData & {
+export type GalleryRouteData = (GalleryData | ClientPageData) & {
   origin: string;
   /** Owning client's slug; never on an unavailable page (no leak). */
   clientSlug?: string;
@@ -42,8 +43,8 @@ function baseHeaders(request: Request): Headers {
 /**
  * Loader shared by `/:slug` and `/:client/:album`. The URL decides first
  * (`resolveGallery`: 302 to the canonical address, or render), then the page
- * loads from the row that lookup already fetched. T6.40e adds the client
- * homepage here: a `serve` with no album hit may look the segment up as a client.
+ * loads from the row that lookup already fetched. A `/:slug` with no album hit
+ * is looked up as a client homepage (T6.40e) before it becomes the 404.
  */
 export async function galleryLoader(
   { request, context }: Args,
@@ -57,6 +58,11 @@ export async function galleryLoader(
       status: 302,
       headers,
     });
+  if (!res.hit && target.client === undefined) {
+    const page = await loadClientPage(env, target.album);
+    if (page)
+      return data({ ...page, origin: publicOrigin(env, request) }, { headers });
+  }
   const result = await loadGallery(request, target.album, env, {
     gallery: res.hit?.gallery,
   });

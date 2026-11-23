@@ -1,5 +1,5 @@
 import { DEFAULT_STUDIO_NAME } from "./default-studio-name";
-import { galleryMeta } from "./og";
+import { clientPageMeta, galleryMeta } from "./og";
 import { pwaMeta } from "./pwa";
 import type { GalleryRouteData } from "./server/gallery-route";
 
@@ -14,6 +14,11 @@ export function galleryRouteMeta({
   const root = matches.find((m) => m?.id === "root")?.loaderData as
     { studioName?: string; lang?: string } | undefined;
   const studio = root?.studioName ?? DEFAULT_STUDIO_NAME;
+  if (d?.state === "client")
+    return [
+      ...clientPageMeta(d, { studio, origin: d.origin }),
+      ...pwaMeta(undefined, { studio }),
+    ];
   return [
     ...galleryMeta(d, {
       studio,

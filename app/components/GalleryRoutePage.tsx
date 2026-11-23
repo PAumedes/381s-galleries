@@ -1,4 +1,5 @@
 import type { GalleryRouteData } from "../lib/server/gallery-route";
+import { ClientPage } from "./ClientPage";
 import { GalleryView } from "./GalleryView";
 import { PinScreen } from "./PinScreen";
 import { UnavailableScreen } from "./UnavailableScreen";
@@ -16,6 +17,8 @@ export function GalleryRoutePage({
       return (
         <GalleryView gallery={loaderData.gallery} photos={loaderData.photos} />
       );
+    case "client":
+      return <ClientPage page={loaderData} />;
     case "locked":
       return (
         <PinScreen

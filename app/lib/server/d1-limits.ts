@@ -44,6 +44,8 @@ export const AFTER_SYNC_WARM_D1_BUDGET = 30;
  * the other paths; the bound is asserted by test/warm-d1-budget.test.ts).
  */
 export const SLUG_LOADER_D1_QUERIES = 8;
+/** D1 queries a client homepage `/:client` makes (T6.40e): album lookup that finds nothing, albums + client in one join, covers; asserted by test/client-page.test.ts. */
+export const CLIENT_PAGE_D1_QUERIES = 3;
 /** D1 queries the admin `status` action makes itself (gallery, deleting check, compare-and-set; 3 measured, padded; asserted by the same test). */
 export const PUBLISH_ACTION_D1_QUERIES = 6;
 /** D1 queries warm-on-open may spend: the Free 50 minus safety minus the loader's own. */

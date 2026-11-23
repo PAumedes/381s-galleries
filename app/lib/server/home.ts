@@ -29,16 +29,59 @@ export interface HomeItem {
   };
 }
 
+/** Which albums a listing covers: the studio home, or one client's page. */
+type Scope = { kind: "home" } | { kind: "client"; slug: string };
+
 /**
- * Galleries on the public home (PLAN 5.8 "Public home"). The rules live in this
+ * Albums for the public home (PLAN 5.8 "Public home"). The rules live in this
  * query, not in the admin UI: `show_on_home`, published, not expired, no PIN,
  * and a cover image that the public can actually be served (in Prueba only a
  * photo with preview-wm, so the cover is never a clean file). Evaluated on
  * every request, so a PIN or an unpublish hides a gallery at once.
  */
 export async function loadHome(env: Env): Promise<{ items: HomeItem[] }> {
+  const { tiles } = await loadTiles(env, { kind: "home" });
+  return {
+    items: tiles.flatMap(({ cover, ...rest }) =>
+      cover ? [{ ...rest, cover }] : [],
+    ),
+  };
+}
+
+/** A tile of the client page: PIN albums have no cover (it would bypass the PIN). */
+export type ClientTile = Omit<HomeItem, "cover"> & {
+  cover: HomeItem["cover"] | null;
+  locked?: true;
+};
+
+/**
+ * Tiles of one client's page (T6.40e): the home rules, except that PIN albums
+ * are listed too (owner decision), without a cover. `null` when the client does
+ * not exist or has `page_enabled = 0`; the caller adds the "no tiles" 404.
+ */
+export async function loadClientTiles(
+  env: Env,
+  slug: string,
+): Promise<{
+  clientName: string;
+  clientSlug: string;
+  tiles: ClientTile[];
+} | null> {
+  const r = await loadTiles(env, { kind: "client", slug });
+  return r.client ? { ...r.client, tiles: r.tiles } : null;
+}
+
+async function loadTiles(
+  env: Env,
+  scope: Scope,
+): Promise<{
+  tiles: ClientTile[];
+  client?: { clientName: string; clientSlug: string };
+}> {
   const g = schema.galleries;
   const db = getDb(env);
+  const c = schema.clients;
+  const home = scope.kind === "home";
   // Cover: chosen photo when visible (and servable), else the first one, in the
   // same order as the gallery page.
   const cover = homeCoverIdSql();
@@ -52,12 +95,16 @@ export async function loadHome(env: Env): Promise<{ items: HomeItem[] }> {
       focusX: g.coverFocusX,
       focusY: g.coverFocusY,
       coverId: cover,
-      clientSlug: schema.clients.slug,
+      pinned: sql<number>`${g.pinHash} IS NOT NULL`,
+      clientSlug: c.slug,
+      clientName: c.name,
     })
     .from(g)
-    .leftJoin(schema.clients, eq(g.clientId, schema.clients.id))
+    .leftJoin(c, eq(g.clientId, c.id))
     .where(
-      sql`${g.showOnHome} = 1 AND ${g.status} = 'published' AND ${g.pinHash} IS NULL`,
+      home
+        ? sql`${g.showOnHome} = 1 AND ${g.status} = 'published' AND ${g.pinHash} IS NULL`
+        : sql`${g.showOnHome} = 1 AND ${g.status} = 'published' AND ${c.pageEnabled} = 1 AND ${c.slug} = ${scope.slug} COLLATE NOCASE`,
     )
     .orderBy(
       sql`COALESCE(NULLIF(${g.eventDate}, ''), ${g.createdAt}) DESC`,
@@ -66,37 +113,48 @@ export async function loadHome(env: Env): Promise<{ items: HomeItem[] }> {
     );
   const now = Date.now();
   const shown = rows
-    .filter((r) => r.coverId !== null && !isExpired(r.expiresAt, now))
+    .filter(
+      (r) =>
+        (r.coverId !== null || (!home && r.pinned)) &&
+        !isExpired(r.expiresAt, now),
+    )
     .slice(0, HOME_CAP);
-  if (!shown.length) return { items: [] };
-
-  const photos = await db
-    .select()
-    .from(schema.photos)
-    .where(
-      inArray(
-        schema.photos.id,
-        shown.map((r) => r.coverId as string),
-      ),
-    );
+  const client = shown[0]
+    ? { clientName: shown[0].clientName!, clientSlug: shown[0].clientSlug! }
+    : undefined;
+  const covered = shown.filter((r) => !r.pinned);
+  const photos = covered.length
+    ? await db
+        .select()
+        .from(schema.photos)
+        .where(
+          inArray(
+            schema.photos.id,
+            covered.map((r) => r.coverId as string),
+          ),
+        )
+    : [];
   const byId = new Map(photos.map((p) => [p.id, p]));
-  const items: HomeItem[] = [];
+  const tiles: ClientTile[] = [];
   for (const r of shown) {
-    const p = byId.get(r.coverId as string);
-    if (!p) continue;
-    const v = await imageVersionToken(env, p, r.mode === "proofing");
-    items.push({
+    const p = r.pinned ? undefined : byId.get(r.coverId as string);
+    if (!r.pinned && !p) continue;
+    const v = p && (await imageVersionToken(env, p, r.mode === "proofing"));
+    tiles.push({
       slug: r.slug,
       ...(r.clientSlug ? { clientSlug: r.clientSlug } : {}),
       title: r.title,
       eventDate: r.eventDate,
-      cover: {
-        id: p.id,
-        ...(v ? { v } : {}),
-        focus: focusOf(r.focusX, r.focusY),
-        aspect: p.width && p.height ? p.width / p.height : null,
-      },
+      cover: p
+        ? {
+            id: p.id,
+            ...(v ? { v } : {}),
+            focus: focusOf(r.focusX, r.focusY),
+            aspect: p.width && p.height ? p.width / p.height : null,
+          }
+        : null,
+      ...(r.pinned ? { locked: true as const } : {}),
     });
   }
-  return { items };
+  return { tiles, client };
 }
