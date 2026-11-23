@@ -18,7 +18,11 @@ describe("T6.40b delete", () => {
   it("cross-site delete is refused and the client survives", async () => {
     const c = await createClient(e, { name: "Acme", slug: "acme" });
     await clientAction(
-      post(c.id, { intent: "delete", slug: "acme" }, { "sec-fetch-site": "cross-site", origin: "https://evil.example" }),
+      post(
+        c.id,
+        { intent: "delete", slug: "acme" },
+        { "sec-fetch-site": "cross-site", origin: "https://evil.example" },
+      ),
       e,
       c.id,
     ).catch(() => {});
@@ -31,11 +35,19 @@ describe("T6.40b delete", () => {
     for (let i = 0; i < 250; i++)
       await env.DB.prepare(
         "INSERT INTO galleries (id, drive_folder_id, slug, title, client_id) VALUES (?1,?2,?3,'T',?4)",
-      ).bind(`g${i}`, `f${i}`, `s${i}`, i === 0 ? o.id : c.id).run();
-    await clientAction(post(c.id, { intent: "delete", slug: " ACME " }), e, c.id).catch(() => {});
+      )
+        .bind(`g${i}`, `f${i}`, `s${i}`, i === 0 ? o.id : c.id)
+        .run();
+    await clientAction(
+      post(c.id, { intent: "delete", slug: " ACME " }),
+      e,
+      c.id,
+    ).catch(() => {});
     const r = await env.DB.prepare(
       "SELECT COUNT(*) AS n, SUM(client_id IS NULL) AS u, SUM(client_id = ?1) AS o FROM galleries",
-    ).bind(o.id).first<{ n: number; u: number; o: number }>();
+    )
+      .bind(o.id)
+      .first<{ n: number; u: number; o: number }>();
     expect(r).toEqual({ n: 250, u: 249, o: 1 });
   });
 });

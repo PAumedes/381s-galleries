@@ -36,11 +36,16 @@ export interface ClientInput {
 
 // Invisible format characters (\p{Cf}) are dropped, except ZWJ/ZWNJ (emoji
 // sequences, Persian/Indic shaping) and the RTL/LTR marks that RTL names need.
-const STRIP_INVISIBLE_RE = /(?![\u200C\u200D\u200E\u200F])[\p{Cf}\u2800\u3164\uFFA0]/gu;
+const KEEP_INVISIBLE = new Set([0x200c, 0x200d, 0x200e, 0x200f]);
+const INVISIBLE_RE = /[\p{Cf}\u2800\u3164\uFFA0]/gu;
+const stripInvisible = (s: string) =>
+  s.replace(INVISIBLE_RE, (c) =>
+    KEEP_INVISIBLE.has(c.codePointAt(0)!) ? c : "",
+  );
 const VISIBLE_RE = /[\p{L}\p{N}\p{P}\p{S}]/u;
 
 function cleanName(raw: string): string {
-  const name = raw.replace(STRIP_INVISIBLE_RE, "").trim();
+  const name = stripInvisible(raw).trim();
   if (
     !name ||
     name.length > CLIENT_NAME_MAX ||
