@@ -97,6 +97,8 @@ export const enPublic = {
   "footer.copyright": "© {year} {studio}",
 
   "home.galleries": "Galleries",
+  "client.albums": "Albums",
+  "client.locked": "PIN protected",
   "footer.privacy": "Privacy",
   "privacy.title": "Privacy",
   "privacy.back": "Back to home",

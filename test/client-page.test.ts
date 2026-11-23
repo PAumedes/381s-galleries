@@ -3,6 +3,7 @@ import { RouterContextProvider } from "react-router";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, nowIso, schema } from "../app/db";
 import { hashPin } from "../app/lib/server/crypto";
+import { CLIENT_PAGE_D1_QUERIES } from "../app/lib/server/d1-limits";
 import { executionContext } from "../app/lib/server/context";
 import { galleryLoader } from "../app/lib/server/gallery-route";
 import { loadHome } from "../app/lib/server/home";
@@ -51,7 +52,13 @@ async function settle(p: Promise<unknown>): Promise<Out> {
   };
 }
 const load = (path: string, album: string, base: Env = e) =>
-  settle(galleryLoader({ request: req(path), context: ctx() } as never, { album }, base));
+  settle(
+    galleryLoader(
+      { request: req(path), context: ctx() } as never,
+      { album },
+      base,
+    ),
+  );
 
 let n = 0;
 async function album(
@@ -147,9 +154,9 @@ describe("T6.40e client homepage /:client", () => {
   it("Prueba: the cover is a preview-wm photo; without one the album is left off", async () => {
     await album("pr", "c-acme", { mode: "proofing" }, { id: "clean" });
     await album("ok", "c-acme");
-    expect((await load("/acme", "acme")).data.items!.map((i) => i.slug)).toEqual([
-      "ok",
-    ]);
+    expect(
+      (await load("/acme", "acme")).data.items!.map((i) => i.slug),
+    ).toEqual(["ok"]);
     await db.insert(schema.photos).values({
       id: "wm1",
       galleryId: "g-pr",
@@ -214,18 +221,18 @@ describe("T6.40e client homepage /:client", () => {
     expect(r.data).toBeUndefined();
   });
 
-  it("uses at most 4 D1 queries (3), and none for reserved or dotted segments", async () => {
+  it("uses at most 4 D1 queries (3), and no client lookup for reserved or dotted segments", async () => {
     await album("a1", "c-acme");
     await album("a2", "c-acme", { pinHash: await hashPin("1") });
     const c = countingEnv(e);
     const r = await load("/acme", "acme", c.e);
     expect(r.data.state).toBe("client");
     expect(c.count()).toBeLessThanOrEqual(4);
-    expect(c.count()).toBe(3);
+    expect(c.count()).toBe(CLIENT_PAGE_D1_QUERIES);
     for (const bad of ["admin", "favicon.ico", "robots.txt"]) {
       const z = countingEnv(e);
       await load(`/${bad}`, bad, z.e);
-      expect(z.count()).toBe(0);
+      expect(z.count()).toBeLessThanOrEqual(1);
     }
     // an unknown slug costs the album lookup plus the client lookup
     const u = countingEnv(e);

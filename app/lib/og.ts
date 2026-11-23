@@ -1,5 +1,6 @@
 import { formatEventDate } from "./event-date";
 import { galleryPath } from "./gallery-path";
+import type { ClientPageData } from "./server/client-page";
 import type { GalleryData } from "./server/gallery";
 
 type MetaTag = Record<string, string>;
@@ -69,6 +70,26 @@ export function galleryMeta(
  * Head tags for the public home: studio name and the first cover only. The
  * caller passes a cover id taken from `loadHome` (so only qualifying galleries).
  */
+/** Client homepage: its name in the title, never indexed, no cover (PIN albums). */
+export function clientPageMeta(
+  page: Pick<ClientPageData, "clientName" | "clientSlug">,
+  o: { studio: string; origin: string },
+): MetaTag[] {
+  return [
+    { title: `${page.clientName} · ${o.studio}` },
+    { name: "robots", content: "noindex,nofollow" },
+    { property: "og:type", content: "website" },
+    { property: "og:site_name", content: o.studio },
+    { property: "og:title", content: page.clientName },
+    { property: "og:description", content: o.studio },
+    {
+      property: "og:url",
+      content: `${o.origin}/${encodeURIComponent(page.clientSlug)}`,
+    },
+    { name: "twitter:card", content: "summary" },
+  ];
+}
+
 export function homeMeta(
   first: { coverId: string } | null,
   o: { studio: string; origin: string },
