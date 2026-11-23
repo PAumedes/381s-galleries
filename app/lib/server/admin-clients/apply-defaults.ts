@@ -9,7 +9,7 @@ const ALBUM_COUNT_SQL =
 const UPDATE_SQL = `UPDATE galleries SET mode = c.default_mode,
   show_on_home = CASE WHEN c.default_show_on_home = 1
     AND galleries.status = 'published' AND galleries.pin_hash IS NULL
-    AND (galleries.expires_at IS NULL OR galleries.expires_at = '' OR galleries.expires_at > ?2)
+    AND (galleries.expires_at IS NULL OR galleries.expires_at = '' OR unixepoch(galleries.expires_at, 'subsec') * 1000 > ?2)
     THEN 1 ELSE 0 END
   FROM clients AS c WHERE c.id = ?1 AND galleries.client_id = c.id`;
 
@@ -38,7 +38,7 @@ export async function applyDefaultsIntent(
   if (!client) throw new Response("Not found", { status: 404 });
   // `meta.changes` also counts trigger writes, so the album count is a SELECT in the same batch.
   const [, albums, noWm] = await env.DB.batch([
-    env.DB.prepare(UPDATE_SQL).bind(id, new Date().toISOString()),
+    env.DB.prepare(UPDATE_SQL).bind(id, Date.now()),
     env.DB.prepare(ALBUM_COUNT_SQL).bind(id),
     env.DB.prepare(NO_WM_COUNT_SQL).bind(id),
   ]);
