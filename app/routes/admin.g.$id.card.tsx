@@ -29,8 +29,10 @@ export async function cardData(request: Request, e: Env, id: string) {
       title: schema.galleries.title,
       eventDate: schema.galleries.eventDate,
       pinHash: schema.galleries.pinHash,
+      clientSlug: schema.clients.slug,
     })
     .from(schema.galleries)
+    .leftJoin(schema.clients, eq(schema.galleries.clientId, schema.clients.id))
     .where(eq(schema.galleries.id, id));
   if (!g) throw new Response("Not found", { status: 404 });
   // An explicit ?lang= (es|en) wins; otherwise the admin language.
@@ -39,7 +41,7 @@ export async function cardData(request: Request, e: Env, id: string) {
   return {
     title: g.title,
     eventDate: g.eventDate,
-    url: publicGalleryUrl(e, request, g.slug),
+    url: publicGalleryUrl(e, request, g.slug, g.clientSlug),
     hasPin: g.pinHash !== null,
     studioName: await getStudioName(e, request),
     lang,

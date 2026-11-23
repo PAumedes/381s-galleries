@@ -1,4 +1,4 @@
-import { inArray, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "../../db";
 import { focusOf, homeCoverIdSql } from "./cover";
 import { imageVersionToken } from "./images";
@@ -14,6 +14,8 @@ export const HOME_CAP = 60;
  */
 export interface HomeItem {
   slug: string;
+  /** Public slug of the album's client folder (T6.40): link is /<client>/<slug>. */
+  clientSlug?: string;
   title: string;
   eventDate: string | null;
   cover: {
@@ -50,8 +52,10 @@ export async function loadHome(env: Env): Promise<{ items: HomeItem[] }> {
       focusX: g.coverFocusX,
       focusY: g.coverFocusY,
       coverId: cover,
+      clientSlug: schema.clients.slug,
     })
     .from(g)
+    .leftJoin(schema.clients, eq(g.clientId, schema.clients.id))
     .where(
       sql`${g.showOnHome} = 1 AND ${g.status} = 'published' AND ${g.pinHash} IS NULL`,
     )
@@ -83,6 +87,7 @@ export async function loadHome(env: Env): Promise<{ items: HomeItem[] }> {
     const v = await imageVersionToken(env, p, r.mode === "proofing");
     items.push({
       slug: r.slug,
+      ...(r.clientSlug ? { clientSlug: r.clientSlug } : {}),
       title: r.title,
       eventDate: r.eventDate,
       cover: {

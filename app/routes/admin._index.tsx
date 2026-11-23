@@ -1,12 +1,13 @@
 import { env } from "cloudflare:workers";
 
 import { GalleryList } from "../components/admin/GalleryList";
-import { parseFilter } from "../lib/admin-gallery";
+import { parseClientFilter, parseFilter } from "../lib/admin-gallery";
 import { requestT } from "../i18n/dictionaries";
 import { useT } from "../i18n/use-t";
 import type { MessageKey } from "../i18n/t";
 import { adminHeaders } from "../lib/server/admin";
 import { countGalleries, listGalleries } from "../lib/server/admin-galleries";
+import { listClientChoices } from "../lib/server/admin-galleries/client-choices";
 import { requireAdmin } from "../lib/server/auth";
 import { isGoogleConnected } from "../lib/server/google-auth";
 import { getSetting, SETTINGS_KEYS } from "../lib/server/settings";
@@ -45,12 +46,15 @@ export async function adminIndexData(request: Request, env: Env) {
           : null;
   const filter = parseFilter(q.get("estado"));
   const search = (q.get("q") ?? "").trim().slice(0, 100);
+  const clientFilter = parseClientFilter(q.get("cliente"));
   return {
     connected: await isGoogleConnected(env),
     message,
     filter,
     q: search,
-    galleries: await listGalleries(env, filter, search),
+    clientFilter,
+    clients: await listClientChoices(env, clientFilter || null),
+    galleries: await listGalleries(env, filter, search, clientFilter),
     total: await countGalleries(env),
     rootName: (await getSetting(env, SETTINGS_KEYS.driveRootName)) ?? null,
   };
@@ -72,6 +76,8 @@ export default function AdminIndex({ loaderData }: Route.ComponentProps) {
         galleries={loaderData.galleries}
         filter={loaderData.filter}
         q={loaderData.q}
+        clientFilter={loaderData.clientFilter}
+        clients={loaderData.clients}
         total={loaderData.total}
         rootName={loaderData.rootName}
       />

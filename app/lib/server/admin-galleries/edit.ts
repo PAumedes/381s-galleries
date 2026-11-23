@@ -6,6 +6,7 @@ import { adminImageToken } from "../images";
 import { warmProgress } from "../warm";
 import { hasWmSql, focusOf, resolveCover } from "../cover";
 import { isDeleting } from "../gallery-delete";
+import { listClientChoices } from "./client-choices";
 
 /** Hash of the visible photo ids (order independent): changes when the photo set changes. */
 export async function photoSetVersion(ids: readonly string[]): Promise<string> {
@@ -39,6 +40,7 @@ export async function loadGalleryEdit(env: Env, id: string) {
     .from(schema.galleries)
     .where(eq(schema.galleries.id, id));
   if (!g) return null;
+  const clients = await listClientChoices(env, g.clientId);
   const ps = await db
     .select({
       id: schema.photos.id,
@@ -97,6 +99,8 @@ export async function loadGalleryEdit(env: Env, id: string) {
       title: g.title,
       slug: g.slug,
       clientName: g.clientName,
+      clientId: g.clientId,
+      clientSlug: clients.find((c) => c.id === g.clientId)?.slug ?? null,
       eventDate: g.eventDate,
       expires: utcIsoToLocal(g.expiresAt, validTimezone(env.TIMEZONE)),
       status: g.status,
@@ -121,6 +125,8 @@ export async function loadGalleryEdit(env: Env, id: string) {
         ? focusOf(g.coverFocusMobileX, g.coverFocusMobileY)
         : null,
     },
+    /** Client folders for the album select (T6.40c): id, name, public slug. */
+    clients,
     /** Deletion started but not finished: the editor only offers to continue it. */
     deleting: await isDeleting(env, g.driveFolderId),
     /** Photos ready (R2 warm marker current) / visible; null in mock mode (nothing to warm). */

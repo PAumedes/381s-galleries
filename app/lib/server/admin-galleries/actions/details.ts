@@ -6,6 +6,7 @@ import { isValidDate } from "../../../admin-gallery";
 import { RESERVED_SLUGS, SLUG_MAX, SLUG_RE } from "../../slug";
 import { slugInUse } from "../../slug-namespace";
 import { isExpired } from "../../time";
+import { isAssignedTo, planClientChange } from "./client-assignment";
 import { CONTROL_RE, done, fail, str } from "./shared";
 import type { GalleryRow } from "./shared";
 
@@ -75,6 +76,9 @@ export async function saveDetails(
   )
     errors.slug = t("admin.msg.slugTaken");
 
+  const client = await planClientChange(env, g, f, t, expiresAt);
+  if (client.error) errors.clientId = client.error;
+
   if (Object.keys(errors).length)
     return fail(intent, t("admin.msg.checkFields"), errors);
 
@@ -88,6 +92,7 @@ export async function saveDetails(
         eventDate: eventDate || null,
         expiresAt,
         // An expired gallery stops qualifying: the opt-in does not survive.
+        ...client.set,
         ...(isExpired(expiresAt, Date.now()) ? { showOnHome: false } : {}),
       })
       .where(eq(schema.galleries.id, g.id));
@@ -98,7 +103,17 @@ export async function saveDetails(
       });
     throw err;
   }
-  return done(intent, t("admin.msg.detailsSaved"));
+  const vanished =
+    client.assignId && !(await isAssignedTo(env, g.id, client.assignId));
+  return done(
+    intent,
+    [
+      t("admin.msg.detailsSaved"),
+      vanished ? t("admin.msg.clientUnknown") : client.note,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  );
 }
 
 /** drizzle wraps driver errors ("Failed query"); the SQLite text is in err.cause. */

@@ -2,11 +2,13 @@ import { Form } from "react-router";
 
 import { useT } from "../../../i18n/use-t";
 import type { GalleryActionResult } from "../../../lib/server/admin-galleries";
-import type { EditGallery, FieldErrors } from "./types";
+import type { EditGallery, FieldErrors, GalleryEditData } from "./types";
+import { ClientFolderField } from "./ClientFolderField";
 import { btnPrimary, Feedback, Field, inputCls, Section } from "./ui";
 
 export function DetailsSection({
   g,
+  clients = [],
   errors: de,
   title,
   onTitle,
@@ -16,6 +18,8 @@ export function DetailsSection({
   actionData,
 }: {
   g: EditGallery;
+  /** Client folders for the select (none + clients). */
+  clients?: GalleryEditData["clients"];
   errors: FieldErrors;
   title: string;
   onTitle: (v: string) => void;
@@ -88,6 +92,9 @@ export function DetailsSection({
             />
           )}
         </Field>
+        {(clients.length > 0 || g.clientId) && (
+          <ClientFolderField g={g} clients={clients} error={de.clientId} />
+        )}
         <Field label={t("admin.edit.field.eventDate")} error={de.eventDate}>
           {(p) => (
             <input

@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { useT } from "../../../i18n/use-t";
 import type { GalleryMode } from "../../../lib/constants";
 import type { ClientActionResult } from "../../../lib/server/admin-clients";
+import { galleryPath } from "../../../lib/gallery-path";
 import { StatusPill } from "../GalleryListParts";
 import { Section } from "../gallery-edit/ui";
 import { ApplyDefaultsForm, DeleteClientForm } from "./ClientActions";
@@ -26,7 +27,13 @@ export interface ClientAlbumItem {
   mode: GalleryMode;
 }
 
-function Albums({ albums }: { albums: ClientAlbumItem[] }) {
+function Albums({
+  albums,
+  clientSlug,
+}: {
+  albums: ClientAlbumItem[];
+  clientSlug: string;
+}) {
   const t = useT();
   if (albums.length === 0)
     return (
@@ -44,7 +51,9 @@ function Albums({ albums }: { albums: ClientAlbumItem[] }) {
           >
             <span className={`${WRAP} flex flex-col`}>
               <span className="font-medium">{a.title}</span>
-              <span className="text-small text-grey-600">/{a.slug}</span>
+              <span className="text-small text-grey-600">
+                {galleryPath(a.slug, clientSlug)}
+              </span>
             </span>
             <StatusPill status={a.status} proofing={a.mode === "proofing"} />
           </Link>
@@ -80,7 +89,7 @@ export function ClientEditView({
         <ApplyDefaultsForm data={actionData} />
       </Section>
       <Section title={t("admin.clients.section.albums")}>
-        <Albums albums={albums} />
+        <Albums albums={albums} clientSlug={client.slug} />
       </Section>
       <Section title={t("admin.clients.section.danger")}>
         <DeleteClientForm slug={client.slug} data={actionData} />

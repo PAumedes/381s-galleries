@@ -605,4 +605,22 @@ export const esAdmin = {
     "Atención: {count} álbum sin preview-wm. En Prueba sus fotos se verán como no disponibles hasta exportar esa receta.",
   "admin.clients.msg.applyNoWm.other":
     "Atención: {count} álbumes sin preview-wm. En Prueba sus fotos se verán como no disponibles hasta exportar esa receta.",
+  "admin.edit.field.clientFolder": "Carpeta de cliente",
+  "admin.edit.hint.clientFolder":
+    "Agrupa el álbum bajo un cliente y su dirección pasa a ser /cliente/álbum. La primera vez se copian el modo y «mostrar en inicio» del cliente.",
+  "admin.edit.clientFolder.none": "Sin cliente",
+  "admin.msg.clientUnknown": "Ese cliente ya no existe.",
+  "admin.msg.clientAssigned": "Álbum asignado a {client}.",
+  "admin.msg.clientUnassigned": "Álbum sin cliente.",
+  "admin.msg.clientCopied": "Se copió del cliente: {fields}.",
+  "admin.msg.clientCopiedMode": "modo {mode}",
+  "admin.msg.clientCopiedHomeOn": "mostrar en inicio: sí",
+  "admin.msg.clientCopiedHomeOff": "mostrar en inicio: no",
+  "admin.msg.clientNoWm.one":
+    "Atención: {count} foto sin preview-wm. En Prueba se verá como no disponible hasta exportar esa receta.",
+  "admin.msg.clientNoWm.other":
+    "Atención: {count} fotos sin preview-wm. En Prueba se verán como no disponibles hasta exportar esa receta.",
+  "admin.list.clientFilter.label": "Cliente",
+  "admin.list.clientFilter.all": "Todos los clientes",
+  "admin.list.clientFilter.none": "Sin cliente",
 } as const;
