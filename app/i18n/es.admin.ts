@@ -13,6 +13,8 @@ export const esAdmin = {
   "admin.status.neverSynced": "Sin sincronizar aún",
   "admin.status.syncError": "Error de sincronización ({time}): {message}",
   "admin.meta.admin": "Administración",
+  "admin.meta.clients": "Clientes",
+  "admin.meta.clientEdit": "Editar cliente",
   "admin.meta.edit": "Editar galería",
   "admin.meta.activity": "Actividad",
   "admin.meta.favorites": "Favoritos",
@@ -544,4 +546,63 @@ export const esAdmin = {
   "admin.msg.deleteFailed":
     "No se pudo terminar de eliminar la galería (falló un servicio). Ya está oculta; volvé a enviar para continuar.",
   "admin.list.deleting": "Continuar eliminación",
+  "admin.nav.clients": "Clientes",
+  "admin.clients.title": "Clientes",
+  "admin.clients.empty":
+    "Todavía no hay clientes. Creá uno para agrupar sus álbumes bajo una misma dirección.",
+  "admin.clients.col.name": "Cliente",
+  "admin.clients.col.slug": "Dirección",
+  "admin.clients.col.albums": "Álbumes",
+  "admin.clients.col.page": "Página pública",
+  "admin.clients.page.on": "Activa",
+  "admin.clients.page.off": "Desactivada",
+  "admin.clients.count.one": "{count} álbum",
+  "admin.clients.count.other": "{count} álbumes",
+  "admin.clients.create.title": "Nuevo cliente",
+  "admin.clients.create.button": "Crear cliente",
+  "admin.clients.field.name": "Nombre",
+  "admin.clients.field.slug": "Dirección web",
+  "admin.clients.field.slugHintAuto":
+    "Si la dejás vacía se genera a partir del nombre. Después la podés editar.",
+  "admin.clients.field.slugHint":
+    "Parte de la dirección del cliente. Si la cambiás, las direcciones anteriores del cliente dejan de funcionar.",
+  "admin.clients.field.pageEnabled": "Mostrar la página pública del cliente",
+  "admin.clients.field.defaultMode": "Modo por defecto de sus álbumes",
+  "admin.clients.field.defaultShowOnHome":
+    "Mostrar sus álbumes en la portada por defecto",
+  "admin.clients.back": "← Clientes",
+  "admin.clients.save": "Guardar cliente",
+  "admin.clients.section.details": "Datos del cliente",
+  "admin.clients.section.albums": "Álbumes del cliente",
+  "admin.clients.section.apply": "Aplicar valores por defecto",
+  "admin.clients.section.danger": "Eliminar cliente",
+  "admin.clients.albumsEmpty": "Este cliente todavía no tiene álbumes.",
+  "admin.clients.apply.note":
+    "Copia el modo y “mostrar en la portada” guardados arriba a todos los álbumes de este cliente. Guardá los cambios antes. Las descargas y el PIN no se tocan.",
+  "admin.clients.apply.button": "Aplicar a todos los álbumes",
+  "admin.clients.apply.confirm":
+    "Se cambiarán el modo y “mostrar en la portada” de todos los álbumes de este cliente. ¿Continuar?",
+  "admin.clients.delete.warning":
+    "Elimina el cliente. Sus álbumes NO se eliminan: quedan sin cliente. Las direcciones del cliente (su página y /cliente/álbum) dejan de funcionar; los álbumes siguen en su dirección propia. No se puede deshacer.",
+  "admin.clients.delete.label":
+    "Para confirmar, escribí la dirección del cliente ({slug})",
+  "admin.clients.delete.button": "Eliminar cliente",
+  "admin.clients.delete.confirm":
+    "Se eliminará el cliente. Sus álbumes quedarán sin cliente y las direcciones del cliente dejarán de funcionar. ¿Continuar?",
+  "admin.clients.msg.saved": "Cliente guardado.",
+  "admin.clients.msg.deleted":
+    "Cliente eliminado. Sus álbumes siguen existiendo sin cliente.",
+  "admin.clients.msg.slugTaken":
+    "Esa dirección web ya está en uso por otra galería o cliente.",
+  "admin.clients.msg.slugInvalid":
+    "Usá solo letras minúsculas, números y guiones (1 a {max} caracteres, sin guiones al inicio, al final ni repetidos) y una dirección no reservada.",
+  "admin.clients.msg.nameInvalid":
+    "El nombre debe tener entre 1 y {max} caracteres, sin caracteres de control.",
+  "admin.clients.msg.applyConfirm": "Confirmá para aplicar los valores.",
+  "admin.clients.msg.applied.one": "Valores aplicados a {count} álbum.",
+  "admin.clients.msg.applied.other": "Valores aplicados a {count} álbumes.",
+  "admin.clients.msg.applyNoWm.one":
+    "Atención: {count} álbum sin preview-wm. En Prueba sus fotos se verán como no disponibles hasta exportar esa receta.",
+  "admin.clients.msg.applyNoWm.other":
+    "Atención: {count} álbumes sin preview-wm. En Prueba sus fotos se verán como no disponibles hasta exportar esa receta.",
 } as const;
