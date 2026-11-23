@@ -17,6 +17,8 @@ import { verifyPin } from "./crypto";
 import { focusOf, resolveCover } from "./cover";
 import { imageVersionToken } from "./images";
 import { asLang } from "../../i18n/lang";
+import { galleryPath } from "../gallery-path";
+import { findGalleryWithClient, sameClient } from "./gallery-resolve";
 import {
   hit,
   refundRateLimit,
@@ -231,10 +233,12 @@ export async function loadGallery(
   request: Request,
   slug: string,
   env: GalleryEnv,
+  /** The row the caller already fetched (T6.40d: one joined lookup). */
+  preloaded?: { gallery: GalleryRow | undefined },
 ): Promise<LoadResult> {
   // Slugs with a dot are files (favicon.ico, robots.txt, ...), never galleries.
   if (slug.includes(".")) return unavailable();
-  const g = await findGallery(env, slug);
+  const g = preloaded ? preloaded.gallery : await findGallery(env, slug);
   if (!isAvailable(g)) return unavailable();
 
   const open = await openGallery(request, g, env);
@@ -319,6 +323,8 @@ export async function unlockGallery(
   request: Request,
   slug: string,
   env: GalleryEnv,
+  /** `/:client/:album` POST: the client segment must be the album's client. */
+  client?: string,
 ): Promise<UnlockResult> {
   if (crossSite(request)) return { status: 403 };
 
@@ -330,11 +336,16 @@ export async function unlockGallery(
     /* treated as empty */
   }
 
-  const g = await findGallery(env, slug);
+  const found = await findGalleryWithClient(env, slug);
+  const g = found?.gallery;
   const ipHash = await clientIpHash(request, env, { prefix64: true });
   const pinLimit = (galleryId: string, ip: string) =>
     hit(env, PIN_RATE, `${ip}:${galleryId}`);
-  if (!isAvailable(g)) {
+  // A wrong client segment is as unavailable as an unknown album (no redirect).
+  if (
+    !isAvailable(g) ||
+    !(client === undefined || sameClient(client, found!.clientSlug))
+  ) {
     if (!ipHash) return { status: 429 };
     if (!(await pinLimit(UNKNOWN_GALLERY, ipHash))) return { status: 429 };
     await verifyPin(pin, DUMMY_HASH);
@@ -342,7 +353,7 @@ export async function unlockGallery(
   }
   const lang = asLang(new URL(request.url).searchParams.get("lang"));
   const location =
-    "/" + encodeURIComponent(g.slug) + (lang ? `?lang=${lang}` : "");
+    galleryPath(g.slug, found!.clientSlug) + (lang ? `?lang=${lang}` : "");
   if (!g.pinHash) return { status: 303, location };
 
   // Already unlocked: nothing to verify and never throttled.

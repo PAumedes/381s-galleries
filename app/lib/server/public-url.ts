@@ -1,3 +1,5 @@
+import { galleryPath } from "../gallery-path";
+
 /**
  * Canonical public origin for links shown to the photographer (share panel,
  * QR, print card). Never derived from the Host header when `PUBLIC_ORIGIN` is
@@ -34,6 +36,7 @@ export function publicGalleryUrl(
   env: { PUBLIC_ORIGIN?: string },
   request: Request,
   slug: string,
+  clientSlug?: string | null,
 ): string {
-  return `${publicOrigin(env, request)}/${slug}`;
+  return `${publicOrigin(env, request)}${galleryPath(slug, clientSlug)}`;
 }

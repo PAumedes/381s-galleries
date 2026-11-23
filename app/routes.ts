@@ -37,6 +37,8 @@ export default [
     "routes/api.g.$slug.download-tokens.tsx",
   ),
   route("api/g/:slug/bulk", "routes/api.g.$slug.bulk.tsx"),
-  // Last: static routes above always outrank this dynamic segment.
+  // Dynamic routes last: every static route above outranks them, and the
+  // two-segment one (T6.40d) outranks nothing static; `:slug` is the last resort.
+  route(":client/:album", "routes/$client.$album.tsx"),
   route(":slug", "routes/$slug.tsx"),
 ] satisfies RouteConfig;

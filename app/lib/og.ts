@@ -1,4 +1,5 @@
 import { formatEventDate } from "./event-date";
+import { galleryPath } from "./gallery-path";
 import type { GalleryData } from "./server/gallery";
 
 type MetaTag = Record<string, string>;
@@ -11,7 +12,7 @@ type MetaTag = Record<string, string>;
  */
 export function galleryMeta(
   data: GalleryData | undefined,
-  o: { studio: string; lang: string; origin: string },
+  o: { studio: string; lang: string; origin: string; clientSlug?: string },
 ): MetaTag[] {
   const robots = { name: "robots", content: "noindex,nofollow" };
   const generic = (title: string): MetaTag[] => [
@@ -40,7 +41,7 @@ export function galleryMeta(
     },
     {
       property: "og:url",
-      content: `${o.origin}/${encodeURIComponent(data.gallery.slug)}`,
+      content: `${o.origin}${galleryPath(data.gallery.slug, o.clientSlug)}`,
     },
   ];
   const { coverId, width, height } = data.og;
