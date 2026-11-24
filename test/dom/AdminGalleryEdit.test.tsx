@@ -83,10 +83,9 @@ describe("GalleryEditView", () => {
     expect(
       (screen.getByLabelText("Dirección web") as HTMLInputElement).value,
     ).toBe("boda-ana");
-    expect(
-      (screen.getByLabelText("Cliente (solo para vos)") as HTMLInputElement)
-        .maxLength,
-    ).toBe(120);
+    // T6.46: the free-text client field is gone (client folders replace it)
+    expect(screen.queryByLabelText("Cliente (solo para vos)")).toBeNull();
+    expect(document.querySelector('input[name="clientName"]')).toBeNull();
     expect(
       (screen.getByLabelText("Fecha del evento") as HTMLInputElement).type,
     ).toBe("date");
@@ -125,11 +124,6 @@ describe("GalleryEditView", () => {
     expect(
       screen.getByText("La fecha de vencimiento no es válida."),
     ).toBeTruthy();
-    expect(
-      (
-        screen.getByLabelText("Cliente (solo para vos)") as HTMLInputElement
-      ).getAttribute("aria-invalid"),
-    ).toBeNull();
   });
 
   it("status buttons depend on the current status", async () => {

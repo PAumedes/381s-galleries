@@ -42,23 +42,18 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -92,9 +87,9 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper" disabled="">Guardar PIN</button>
@@ -140,24 +135,24 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -179,9 +174,9 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -638,23 +633,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -683,9 +673,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -731,24 +721,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -770,9 +760,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -903,23 +893,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -953,9 +938,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -1001,24 +986,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -1041,9 +1026,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -1174,23 +1159,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -1224,9 +1204,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -1272,24 +1252,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -1312,9 +1292,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -1445,23 +1425,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -1495,9 +1470,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -1543,24 +1518,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -1582,9 +1557,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -1715,23 +1690,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <p id="ID2-hint" class="text-small text-grey-600">If you change the slug, links and QR codes that were already shared will stop working.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Client (only visible to you)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Only you see this in the panel: it isn't shown to clients or to anyone who opens the gallery.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Event date</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Event date</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Expires (date)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Expires (date)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Expires (time)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Expires (time)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Studio time. Empty = never expires. Without a time, it expires at the end of the day.</p>
@@ -1765,9 +1735,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">New PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">6 to 32 characters.</p>
+<label for="ID6" class="text-small">New PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">6 to 32 characters.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Save PIN</button>
@@ -1813,24 +1783,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">High resolution (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">High resolution (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Allow downloading everything / by set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Allow downloading everything / by set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Ask for an email to download and mark favorites</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Ask for an email to download and mark favorites</label>
 </div>
 <p class="text-small text-grey-600">Turning off a size, or switching to Proof mode, immediately voids download links that were already issued.</p>
 <div>
@@ -1852,9 +1822,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">How it looks</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">How it looks</h2>
 <p class="text-small text-grey-600">Changes show instantly; they apply when saved.</p>
 </div>
 <div role="group" aria-label="View as" class="flex flex-wrap gap-2">
@@ -1987,23 +1957,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <p id="ID2-err" role="alert" class="text-small text-ink font-medium">Slug ocupado</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-invalid="true" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-invalid="true" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-invalid="true" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-invalid="true" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -2039,9 +2004,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -2087,24 +2052,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -2126,9 +2091,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -2259,23 +2224,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -2309,9 +2269,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -2357,24 +2317,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -2396,9 +2356,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -2528,23 +2488,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -2579,9 +2534,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -2627,24 +2582,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -2666,9 +2621,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -2799,23 +2754,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -2849,10 +2799,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-invalid="true" aria-describedby="ID7-err ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
-<p id="ID7-err" role="alert" class="text-small text-ink font-medium">PIN corto</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-invalid="true" aria-describedby="ID6-err ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<p id="ID6-err" role="alert" class="text-small text-ink font-medium">PIN corto</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -2899,24 +2849,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -2938,9 +2888,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -3071,23 +3021,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -3121,9 +3066,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -3171,25 +3116,25 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <p role="status" class="text-small text-ink font-medium">La galería está guardada para mostrarse en la página de inicio y sigue en modo Prueba (con marca de agua).</p>
 <p role="status" class="text-small text-grey-700">No hay miniaturas thumb-wm: la grilla usará la vista de 2048 px, más pesada.</p>
 <div class="flex items-center gap-2">
-<input id="ID8" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" disabled="" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" disabled="" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <p class="text-small text-grey-600">En modo Prueba no hay descargas: las opciones de tamaño quedan desactivadas (se conservan para el modo Entrega).</p>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -3211,9 +3156,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -3350,23 +3295,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -3400,9 +3340,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -3450,25 +3390,25 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <p role="status" class="text-small text-ink font-medium">Esta galería no tiene archivos preview-wm (ninguna de las 3 fotos): en modo Prueba los clientes no verán ninguna foto. Exportá esa receta desde Capture One.</p>
 <p role="status" class="text-small text-ink font-medium">La galería está guardada para mostrarse en la página de inicio y sigue en modo Prueba (con marca de agua). En la página de inicio aparece solo si tiene una portada con marca de agua (preview-wm).</p>
 <div class="flex items-center gap-2">
-<input id="ID8" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" disabled="" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" disabled="" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <p class="text-small text-grey-600">En modo Prueba no hay descargas: las opciones de tamaño quedan desactivadas (se conservan para el modo Entrega).</p>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -3490,9 +3430,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -3629,23 +3569,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -3679,9 +3614,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -3728,25 +3663,25 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </fieldset>
 <p role="status" class="text-small text-ink font-medium">Esta galería no tiene archivos preview-wm (ninguna de las 3 fotos): en modo Prueba los clientes no verán ninguna foto. Exportá esa receta desde Capture One.</p>
 <div class="flex items-center gap-2">
-<input id="ID8" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" disabled="" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" disabled="" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <p class="text-small text-grey-600">En modo Prueba no hay descargas: las opciones de tamaño quedan desactivadas (se conservan para el modo Entrega).</p>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -3768,9 +3703,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -3907,23 +3842,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -3957,9 +3887,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -4006,25 +3936,25 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </fieldset>
 <p role="status" class="text-small text-ink font-medium">2 de 3 fotos no tienen preview-wm: en modo Prueba los clientes las verán como no disponibles (en blanco).</p>
 <div class="flex items-center gap-2">
-<input id="ID8" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" disabled="" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" disabled="" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" disabled="" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <p class="text-small text-grey-600">En modo Prueba no hay descargas: las opciones de tamaño quedan desactivadas (se conservan para el modo Entrega).</p>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -4046,9 +3976,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -4185,23 +4115,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -4235,9 +4160,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -4283,24 +4208,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -4322,9 +4247,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -4455,23 +4380,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -4505,9 +4425,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -4553,24 +4473,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -4592,9 +4512,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -4725,23 +4645,18 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -4775,9 +4690,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Cambiar PIN</button>
@@ -4828,24 +4743,24 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -4867,9 +4782,9 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">
@@ -7087,23 +7002,18 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <p id="ID2-hint" class="text-small text-grey-600">Es la última parte del enlace de la galería (por ejemplo, boda-ana). Si la cambiás, los enlaces y códigos QR ya compartidos dejarán de funcionar.</p>
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID3" class="text-small">Cliente (solo para vos)</label>
-<input id="ID3" aria-describedby="ID3-hint" maxlength="120" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" value="Ana" name="clientName">
-<p id="ID3-hint" class="text-small text-grey-600">Solo lo ves vos en el panel: no se muestra a los clientes ni a quien abra la galería.</p>
-</div>
-<div class="flex flex-col gap-1">
-<label for="ID4" class="text-small">Fecha del evento</label>
-<input id="ID4" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
+<label for="ID3" class="text-small">Fecha del evento</label>
+<input id="ID3" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-11-01" name="eventDate">
 </div>
 <div class="flex flex-col gap-1">
 <div class="grid grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label for="ID5" class="text-small">Vence (fecha)</label>
-<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
+<label for="ID4" class="text-small">Vence (fecha)</label>
+<input id="ID4" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="date" value="2026-12-24" name="expiresDate">
 </div>
 <div class="flex flex-col gap-1">
-<label for="ID6" class="text-small">Vence (hora)</label>
-<input id="ID6" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
+<label for="ID5" class="text-small">Vence (hora)</label>
+<input id="ID5" aria-describedby="expires-note" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="time" value="18:30" name="expiresTime">
 </div>
 </div>
 <p id="expires-note" class="text-small text-grey-600">Hora local del estudio. Vacío = nunca vence. Sin hora, vence al final del día.</p>
@@ -7137,9 +7047,9 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
-<label for="ID7" class="text-small">Nuevo PIN</label>
-<input id="ID7" aria-describedby="ID7-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
-<p id="ID7-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
+<label for="ID6" class="text-small">Nuevo PIN</label>
+<input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
+<p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
@@ -7185,24 +7095,24 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 </div>
 </fieldset>
 <div class="flex items-center gap-2">
-<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
-<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
+<input id="ID7" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowHighres">
+<label for="ID7" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Alta resolución (2048 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
-<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
+<input id="ID8" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowWeb">
+<label for="ID8" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Web (1200 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
-<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
+<input id="ID9" class="size-6 md:size-4" type="checkbox" value="1" name="allowIg">
+<label for="ID9" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Instagram (1080 px)</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
-<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
+<input id="ID10" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="allowBulk">
+<label for="ID10" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Permitir descargar todo / por set</label>
 </div>
 <div class="flex items-center gap-2">
-<input id="ID12" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
-<label for="ID12" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
+<input id="ID11" class="size-6 md:size-4" type="checkbox" value="1" checked="" name="requireEmail">
+<label for="ID11" class="text-small flex min-h-tap flex-1 items-center md:min-h-0">Pedir email para descargar y marcar favoritas</label>
 </div>
 <p class="text-small text-grey-600">Desactivar un tamaño, o pasar a modo Prueba, anula de inmediato los enlaces de descarga ya emitidos.</p>
 <div>
@@ -7224,9 +7134,9 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 </section>
 </div>
 <aside data-preview-column="" class="min-w-0 lg:sticky lg:top-6 ">
-<section data-testid="live-preview" aria-labelledby="ID13" class="flex min-w-0 flex-col gap-3">
+<section data-testid="live-preview" aria-labelledby="ID12" class="flex min-w-0 flex-col gap-3">
 <div class="flex flex-col gap-1">
-<h2 id="ID13" class="text-micro text-ink uppercase">Así se ve</h2>
+<h2 id="ID12" class="text-micro text-ink uppercase">Así se ve</h2>
 <p class="text-small text-grey-600">Los cambios se ven al instante; se aplican al guardar.</p>
 </div>
 <div role="group" aria-label="Ver como" class="flex flex-wrap gap-2">

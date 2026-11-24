@@ -167,16 +167,18 @@ export function GalleryRow({
         >
           {g.title}
         </Link>
-        {g.client && (
+        {g.client ? (
           <div
             data-client-folder
             className="text-ink min-w-0 truncate max-xl:text-sm"
           >
             {g.client.name}
           </div>
-        )}
-        {g.clientName && (
-          <div className="text-grey-600 max-xl:text-sm">{g.clientName}</div>
+        ) : (
+          g.clientName && (
+            // legacy free text, shown only while no client folder is assigned
+            <div className="text-grey-600 max-xl:text-sm">{g.clientName}</div>
+          )
         )}
         <div className="text-grey-600 max-xl:hidden">
           {galleryPath(g.slug, g.client?.slug)}

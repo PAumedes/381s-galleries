@@ -6,7 +6,6 @@ describe("T6.38 admin-galleries.ts public runtime exports", () => {
   it("exports the same names", () => {
     expect(Object.keys(galleries).sort()).toEqual(
       [
-        "CLIENT_MAX",
         "PIN_MAX",
         "PIN_MIN",
         "REORDER_CHUNK",

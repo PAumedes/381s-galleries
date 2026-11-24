@@ -185,6 +185,24 @@ describe("T6.40c GalleryList client column and filter", () => {
     expect(other.querySelector("[data-client-folder]")).toBeNull();
   });
 
+  it("T6.46: the client label is the folder name; the legacy text only when no folder is assigned", async () => {
+    list([
+      item({
+        clientName: "Legacy Ana",
+        client: { id: "c1", name: "Acme", slug: "acme" },
+      }),
+      item({ id: "g2", title: "Sola", slug: "sola", clientName: "Legacy Bea" }),
+    ]);
+    const a = (await screen.findByRole("link", { name: "Boda Ana" })).closest(
+      "tr",
+    )!;
+    expect(within(a).getByText("Acme")).toBeTruthy();
+    expect(within(a).queryByText("Legacy Ana")).toBeNull();
+    const b = screen.getByRole("link", { name: "Sola" }).closest("tr")!;
+    expect(within(b).getByText("Legacy Bea")).toBeTruthy();
+    expect(b.querySelector("[data-client-folder]")).toBeNull();
+  });
+
   it("filter select lists all / none / each client and navigates with ?cliente=", async () => {
     list([item()], { filter: "publicadas", q: "ana" });
     const sel = (await screen.findByLabelText("Cliente")) as HTMLSelectElement;
