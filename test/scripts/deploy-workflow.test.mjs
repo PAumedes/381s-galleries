@@ -20,6 +20,34 @@ function jobs() {
   return out;
 }
 
+const ciSrc = readFileSync(".github/workflows/ci.yml", "utf8");
+function ciJobs() {
+  const body = ciSrc.slice(ciSrc.indexOf("\njobs:\n") + 6);
+  const out = {};
+  let id = null;
+  for (const line of body.split("\n")) {
+    const m = /^ {2}([a-z][\w-]*):\s*$/.exec(line);
+    if (m) {
+      id = m[1];
+      out[id] = "";
+    } else if (id) out[id] += line + "\n";
+  }
+  return out;
+}
+
+/** Parsed shard plan of a `test` job: matrix list and the N in flag and name. */
+function shardPlan(text) {
+  const list = /shard:\s*\[([^\]]*)\]/
+    .exec(text)[1]
+    .split(",")
+    .map((x) => Number(x.trim()));
+  const flagTotal = Number(
+    /--shard=\$\{\{ matrix\.shard \}\}\/(\d+)/.exec(text)[1],
+  );
+  const nameTotal = Number(/\$\{\{ matrix\.shard \}\}\/(\d+)\)/.exec(text)[1]);
+  return { list, total: list.length, flagTotal, nameTotal };
+}
+
 const GUARD = "if: github.ref == 'refs/heads/main'";
 /** Non-comment lines only (comments may mention commands and keywords). */
 const codeLines = (text) => text.split("\n").filter((l) => !/^\s*#/.test(l));
@@ -51,10 +79,23 @@ describe("T6.45 deploy workflow", () => {
     }
   });
 
-  it("tests run in 3 shards without fail-fast", () => {
-    expect(j.test).toContain("shard: [1, 2, 3]");
+  it("tests run in >=3 shards without fail-fast", () => {
     expect(j.test).toContain("fail-fast: false");
-    expect(j.test).toContain("--shard=${{ matrix.shard }}/3");
+    expect(shardPlan(j.test).total).toBeGreaterThanOrEqual(3);
+  });
+
+  // Every test file lands in exactly one shard (vitest partitions the file
+  // list by --shard=i/N) only if the matrix is exactly 1..N and N matches the
+  // flag. Both workflows must use the same plan.
+  it.each([
+    ["deploy.yml", () => j.test],
+    ["ci.yml", () => ciJobs().test],
+  ])("%s shard matrix is exactly 1..N and matches --shard=i/N", (_n, get) => {
+    const { list, total, flagTotal, nameTotal } = shardPlan(get());
+    expect(list).toEqual(Array.from({ length: total }, (_, i) => i + 1));
+    expect(flagTotal).toBe(total);
+    expect(nameTotal).toBe(total);
+    expect(total).toBe(shardPlan(j.test).total);
   });
 
   it("uses the shared setup action and keeps no serial Checks step", () => {
