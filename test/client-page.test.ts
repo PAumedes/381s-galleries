@@ -185,6 +185,23 @@ describe("T6.40e client homepage /:client", () => {
       expect(json).not.toContain(bad);
   });
 
+  it("a PIN album is listed even though the admin can never turn show-on-home on for it (T6.40f)", async () => {
+    // Setting a PIN clears show_on_home and the admin refuses to set it again,
+    // so owner decision 1 only holds if the client page ignores the flag for PIN albums.
+    await album("secret", "c-acme", {
+      pinHash: await hashPin("4321"),
+      showOnHome: false,
+    });
+    await album("hidden", "c-acme", { showOnHome: false });
+    const r = await load("/acme", "acme");
+    expect(r.data.items!.map((i) => i.slug)).toEqual(["secret"]);
+    expect(r.data.items![0]).toMatchObject({ locked: true, cover: null });
+    // the studio home still never lists it
+    expect((await loadHome(e)).items.map((i) => i.slug)).not.toContain(
+      "secret",
+    );
+  });
+
   it("a client with only PIN albums still has a page", async () => {
     await album("secret", "c-acme", { pinHash: await hashPin("1") }, null);
     const r = await load("/acme", "acme");

@@ -143,7 +143,7 @@ describe("T6.40d /:album redirects to /<client>/<album>", () => {
     }
   });
 
-  it.each(["dra", "arc", "exp", "freedraft", "nope", "acme", "a.png"])(
+  it.each(["dra", "arc", "exp", "freedraft", "nope", "beta", "a.png"])(
     "/%s never redirects: identical 404 without the client slug",
     async (slug) => {
       const r = await viaSlug("/" + slug, slug);

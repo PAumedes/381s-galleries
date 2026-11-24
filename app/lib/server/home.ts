@@ -104,7 +104,8 @@ async function loadTiles(
     .where(
       home
         ? sql`${g.showOnHome} = 1 AND ${g.status} = 'published' AND ${g.pinHash} IS NULL`
-        : sql`${g.showOnHome} = 1 AND ${g.status} = 'published' AND ${c.pageEnabled} = 1 AND ${c.slug} = ${scope.slug} COLLATE NOCASE`,
+        : // PIN albums are always listed (locked): the admin clears and refuses show_on_home for them.
+          sql`(${g.showOnHome} = 1 OR ${g.pinHash} IS NOT NULL) AND ${g.status} = 'published' AND ${c.pageEnabled} = 1 AND ${c.slug} = ${scope.slug} COLLATE NOCASE`,
     )
     .orderBy(
       sql`COALESCE(NULLIF(${g.eventDate}, ''), ${g.createdAt}) DESC`,
