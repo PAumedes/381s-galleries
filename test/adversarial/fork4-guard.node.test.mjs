@@ -62,6 +62,12 @@ describe("fork4: owner never blocked", () => {
     writeFileSync(path.join(bin, "pnpm"), "#!/bin/sh\necho PNPM-RAN\n", {
       mode: 0o755,
     });
+    // the stale-run guard asks origin for main's head: stub git so main == this sha
+    writeFileSync(
+      path.join(bin, "git"),
+      '#!/bin/sh\nprintf "%s\\trefs/heads/main\\n" "$GITHUB_SHA"\n',
+      { mode: 0o755 },
+    );
     const go = (repo) =>
       spawnSync("bash", ["-e", "-c", run], {
         cwd: d,
@@ -69,6 +75,7 @@ describe("fork4: owner never blocked", () => {
         env: {
           PATH: `${bin}:${process.env.PATH}`,
           GITHUB_REPOSITORY: repo,
+          GITHUB_SHA: "abc123",
           CLOUDFLARE_API_TOKEN: "t",
           CLOUDFLARE_ACCOUNT_ID: "a",
         },

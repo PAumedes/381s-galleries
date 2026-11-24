@@ -20,6 +20,11 @@ function jobs() {
   return out;
 }
 
+const GUARD = "if: github.ref == 'refs/heads/main'";
+/** Non-comment lines only (comments may mention commands and keywords). */
+const codeLines = (text) => text.split("\n").filter((l) => !/^\s*#/.test(l));
+const code = codeLines(src).join("\n");
+
 const needsOf = (text) => {
   const m = /^ {4}needs:\s*\[([^\]]*)\]/m.exec(text);
   return m ? m[1].split(",").map((s) => s.trim()) : [];
@@ -72,8 +77,9 @@ describe("T6.45 deploy workflow", () => {
     expect(src).toMatch(
       /concurrency:\n {2}group: cloudflare\n {2}cancel-in-progress: false/,
     );
-    expect(src).toMatch(/permissions:\n {2}contents: read\n/);
-    expect(src).not.toMatch(/(write|id-token)/);
+    expect(code).toMatch(/^permissions:\n {2}contents: read\n/m);
+    expect(code.match(/^\s*permissions:/gm)?.length).toBe(1);
+    expect(code).not.toMatch(/(write|id-token)/);
   });
 
   it("build uploads the artifact deploy downloads (same name, hidden files)", () => {
@@ -113,8 +119,11 @@ describe("T6.45 deploy workflow", () => {
     expect(d).toContain("Run the Setup workflow first");
     expect(d).toContain("Faltan CLOUDFLARE_API_TOKEN");
     expect(d).not.toMatch(/pnpm run deploy|pnpm build|react-router build/);
-    const mig = d.indexOf("wrangler d1 migrations apply DB --remote");
-    const dep = d.indexOf("wrangler deploy");
+    const cmds = codeLines(d).map((l) => l.trim());
+    const mig = cmds.indexOf(
+      "pnpm exec wrangler d1 migrations apply DB --remote",
+    );
+    const dep = cmds.indexOf("pnpm exec wrangler deploy");
     expect(mig).toBeGreaterThan(-1);
     expect(dep).toBeGreaterThan(mig);
   });
@@ -124,6 +133,49 @@ describe("T6.45 deploy workflow", () => {
       if (m[1].startsWith("./")) continue;
       expect(m[1]).toMatch(/@[0-9a-f]{40}$/);
     }
+  });
+
+  it("every job runs only on main (workflow_dispatch from another branch does nothing)", () => {
+    for (const id of Object.keys(j)) {
+      const ifs = j[id].match(/^ {4}if:.*$/gm) ?? [];
+      expect(
+        ifs.map((l) => l.trim()),
+        id,
+      ).toEqual([GUARD]);
+    }
+  });
+
+  it("nothing can fail open: no continue-on-error, no `|| true`", () => {
+    expect(code).not.toMatch(/continue-on-error/);
+    expect(code).not.toMatch(/\|\|\s*true/);
+  });
+
+  it("deploy checks out the triggering sha (no `ref:` override)", () => {
+    expect(j.deploy ?? "").not.toMatch(/^\s*ref:/m);
+  });
+
+  it("deploy skips (exit 0, notice) when main has moved past this sha, before migrations", () => {
+    const cmds = codeLines(j.deploy ?? "").map((l) => l.trim());
+    const ls = cmds.findIndex((l) =>
+      l.includes("git ls-remote origin refs/heads/main"),
+    );
+    const cmp = cmds.findIndex(
+      (l) => /\$GITHUB_SHA|github\.sha/.test(l) && l.includes("!="),
+    );
+    const mig = cmds.indexOf(
+      "pnpm exec wrangler d1 migrations apply DB --remote",
+    );
+    expect(ls).toBeGreaterThan(-1);
+    expect(cmp).toBeGreaterThan(ls);
+    expect(cmds.slice(cmp, cmp + 4).join("\n")).toMatch(
+      /::notice::[\s\S]*exit 0/,
+    );
+    expect(mig).toBeGreaterThan(cmp);
+  });
+
+  it("on: is exactly push to main plus workflow_dispatch", () => {
+    const on = /^on:\n((?: {2}.*\n)+)/m.exec(src)?.[1];
+    expect(on).toBe("  push:\n    branches: [main]\n  workflow_dispatch:\n");
   });
 
   it("still runs on push to main and manually", () => {
