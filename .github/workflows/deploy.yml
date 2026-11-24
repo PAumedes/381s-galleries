@@ -46,16 +46,16 @@ jobs:
           retention-days: 7
   test:
     if: github.ref == 'refs/heads/main'
-    name: test (${{ matrix.shard }}/3)
+    name: test (${{ matrix.shard }}/5)
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
-      - run: pnpm exec vitest run --shard=${{ matrix.shard }}/3
+      - run: pnpm exec vitest run --shard=${{ matrix.shard }}/5
   deploy:
     if: github.ref == 'refs/heads/main'
     needs: [lint, typecheck, build, test]

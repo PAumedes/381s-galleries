@@ -23,6 +23,7 @@ function guardsPass(mutate) {
   mkdirSync(path.join(dir, "t"), { recursive: true });
   const files = {
     ".github/workflows/deploy.yml": read(".github/workflows/deploy.yml"),
+    ".github/workflows/ci.yml": read(".github/workflows/ci.yml"),
     ".github/workflows/setup.yml": read(".github/workflows/setup.yml"),
     ".github/actions/setup/action.yml": read(
       ".github/actions/setup/action.yml",
