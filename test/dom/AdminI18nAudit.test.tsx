@@ -24,6 +24,9 @@ const files = [
     .map((f) => join(APP, "routes", f)),
   // Server-side messages returned to the admin UI.
   join(APP, "lib/server/admin-galleries.ts"),
+  join(APP, "lib/server/admin-clients.ts"),
+  ...walk(join(APP, "lib/server/admin-clients")),
+  ...walk(join(APP, "lib/server/admin-galleries")),
 ].filter((f) => /\.tsx?$/.test(f));
 
 /**
@@ -186,6 +189,11 @@ describe("admin i18n audit: no hard-coded user-visible text", () => {
     expect(names).toContain("routes/admin.setup.tsx");
     expect(names).toContain("routes/admin._index.tsx");
     expect(names).toContain("lib/server/admin-galleries.ts");
+    expect(names).toContain("lib/server/admin-clients.ts");
+    expect(names).toContain("lib/server/admin-clients/errors.ts");
+    expect(names).toContain(
+      "lib/server/admin-galleries/actions/client-assignment.ts",
+    );
   });
 
   it.each(files.map((f) => [relative(APP, f), f]))("%s", (_n, f) => {

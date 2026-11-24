@@ -35,6 +35,7 @@ beforeEach(async () => {
   await db.insert(schema.clients).values([
     { id: "c-acme", slug: "acme", name: "ACME Corp" },
     { id: "c-beta", slug: "beta", name: "Beta" },
+    { id: "c-hid", slug: "hidden-only", name: "Hidden only" },
   ]);
   const past = nowIso(new Date(Date.now() - 1000));
   const pin = await hashPin("1234");
@@ -58,6 +59,7 @@ beforeEach(async () => {
     g("exp", "c-acme", { expiresAt: past }),
     g("pin", "c-acme", { pinHash: pin }),
     g("bpub", "c-beta"),
+    g("hid", "c-hid", { showOnHome: false }),
     g("free", null),
     g("freedraft", null, { status: "draft" }),
   ];
@@ -143,7 +145,16 @@ describe("T6.40d /:album redirects to /<client>/<album>", () => {
     }
   });
 
-  it.each(["dra", "arc", "exp", "freedraft", "nope", "acme", "a.png"])(
+  it.each([
+    "dra",
+    "arc",
+    "exp",
+    "freedraft",
+    "nope",
+    "beta",
+    "hidden-only",
+    "a.png",
+  ])(
     "/%s never redirects: identical 404 without the client slug",
     async (slug) => {
       const r = await viaSlug("/" + slug, slug);
