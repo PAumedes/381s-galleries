@@ -246,7 +246,6 @@ describe("loadGalleryEdit / editData", () => {
     );
     expect(d.gallery.hasPin).toBe(true);
     expect(d.gallery.expires).toEqual({ date: "2026-12-31", time: "23:30" });
-    expect(d.gallery.clientName).toBe("Ana");
     expect(d.hasWmFiles).toBe(true);
     expect(d.photos).toHaveLength(2);
     const s = JSON.stringify(d);
@@ -343,34 +342,38 @@ describe("details action", () => {
 
   it("saves trimmed values", async () => {
     const g = await gallery();
-    const r = await act(
-      g,
-      ok({ title: "  Nueva boda  ", clientName: " Ana " }),
-    );
+    const r = await act(g, ok({ title: "  Nueva boda  " }));
     expect(r.ok).toBe(true);
     const x = (await row(g))!;
-    expect([x.title, x.slug, x.clientName, x.eventDate]).toEqual([
+    expect([x.title, x.slug, x.eventDate]).toEqual([
       "Nueva boda",
       "nueva",
-      "Ana",
       "2026-11-01",
     ]);
   });
 
+  it("T6.46: the legacy free-text client is never written or validated by the details form", async () => {
+    const g = await gallery({ clientName: "Legacy Ana" });
+    const r = await act(
+      g,
+      ok({ clientName: "Hacked\u202E" + "x".repeat(300) }),
+    );
+    expect(r.ok).toBe(true);
+    expect((await row(g))!.clientName).toBe("Legacy Ana");
+    const r2 = await act(g, ok({ clientName: "" }));
+    expect(r2.ok).toBe(true);
+    expect((await row(g))!.clientName).toBe("Legacy Ana");
+  });
+
   it("empty client/date/expiry become null", async () => {
     const g = await gallery({
-      clientName: "A",
       eventDate: "2026-01-01",
       expiresAt: "2030-01-01T00:00:00Z",
     });
-    const r = await act(g, ok({ clientName: "", eventDate: "" }));
+    const r = await act(g, ok({ eventDate: "" }));
     expect(r.ok).toBe(true);
     const x = (await row(g))!;
-    expect([x.clientName, x.eventDate, x.expiresAt]).toEqual([
-      null,
-      null,
-      null,
-    ]);
+    expect([x.eventDate, x.expiresAt]).toEqual([null, null]);
   });
 
   it("title 1-120", async () => {
@@ -393,9 +396,8 @@ describe("details action", () => {
     );
     expect(zwj.ok).toBe(true);
     for (const c of ["\u202A", "\u202E", "\u2066", "\u2069", "\u0007"]) {
-      const r = await act(g, ok({ title: `a${c}b`, clientName: `x${c}` }));
+      const r = await act(g, ok({ title: `a${c}b` }));
       expect(r.fieldErrors?.title, c).toBeTruthy();
-      expect(r.fieldErrors?.clientName, c).toBeTruthy();
     }
     const pin = await act(g, {
       intent: "pin",
@@ -462,12 +464,6 @@ describe("details action", () => {
     expect(r.ok).toBe(false);
     expect(r.fieldErrors?.slug).toMatch(/en uso/);
     expect((await row(g))!.slug).toBe("mine");
-  });
-
-  it("client name <= 120", async () => {
-    const g = await gallery();
-    const r = await act(g, ok({ clientName: "c".repeat(121) }));
-    expect(r.fieldErrors?.clientName).toMatch(/120/);
   });
 
   it("event date must be a real date", async () => {

@@ -145,16 +145,7 @@ describe("T6.40d /:album redirects to /<client>/<album>", () => {
     }
   });
 
-  it.each([
-    "dra",
-    "arc",
-    "exp",
-    "freedraft",
-    "nope",
-    "beta",
-    "hidden-only",
-    "a.png",
-  ])(
+  it.each(["dra", "arc", "exp", "freedraft", "nope", "beta", "a.png"])(
     "/%s never redirects: identical 404 without the client slug",
     async (slug) => {
       const r = await viaSlug("/" + slug, slug);
@@ -163,6 +154,21 @@ describe("T6.40d /:album redirects to /<client>/<album>", () => {
       expect(r.data).toEqual({ state: "unavailable", origin: ORIGIN });
     },
   );
+
+  it("a client whose only album is off the studio home has a client page (no 404)", async () => {
+    // without a cover the client still 404s
+    expect((await viaSlug("/hidden-only", "hidden-only")).status).toBe(404);
+    await db.insert(schema.photos).values({
+      id: "p-hid",
+      galleryId: "g-hid",
+      baseName: "H",
+      driveHighresId: "hr-h",
+      sort: 1,
+    });
+    const r = await viaSlug("/hidden-only", "hidden-only");
+    expect(r.status).toBe(200);
+    expect(r.data?.state).toBe("client");
+  });
 
   it("an unassigned available album is served in place", async () => {
     const r = await viaSlug("/free", "free");

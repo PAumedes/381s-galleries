@@ -77,21 +77,6 @@ export function DetailsSection({
             />
           )}
         </Field>
-        <Field
-          label={t("admin.edit.field.client")}
-          error={de.clientName}
-          hint={t("admin.edit.hint.client")}
-        >
-          {(p) => (
-            <input
-              {...p}
-              name="clientName"
-              maxLength={120}
-              defaultValue={g.clientName ?? ""}
-              className={inputCls}
-            />
-          )}
-        </Field>
         {(clients.length > 0 || g.clientId) && (
           <ClientFolderField g={g} clients={clients} error={de.clientId} />
         )}

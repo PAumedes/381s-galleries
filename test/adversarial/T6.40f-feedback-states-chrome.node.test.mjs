@@ -58,7 +58,12 @@ async function page(which, data, dir) {
   const Component = () =>
     which === "list"
       ? h(ClientList, { clients, message: long, actionData: data })
-      : h(ClientEditView, { client, albums, actionData: data });
+      : h(ClientEditView, {
+          client,
+          albums,
+          publicPage: { visible: 1, reason: null },
+          actionData: data,
+        });
   const routes = [
     {
       id: "root",

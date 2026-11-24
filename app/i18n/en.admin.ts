@@ -79,9 +79,6 @@ export const enAdmin = {
   "admin.edit.field.slug": "Slug",
   "admin.edit.hint.slug":
     "If you change the slug, links and QR codes that were already shared will stop working.",
-  "admin.edit.field.client": "Client (only visible to you)",
-  "admin.edit.hint.client":
-    "Only you see this in the panel: it isn't shown to clients or to anyone who opens the gallery.",
   "admin.edit.field.eventDate": "Event date",
   "admin.edit.field.expiresDate": "Expires (date)",
   "admin.edit.field.expiresTime": "Expires (time)",
@@ -342,8 +339,6 @@ export const enAdmin = {
   "admin.msg.unknownAction": "Unknown action.",
   "admin.msg.checkFields": "Check the highlighted fields.",
   "admin.msg.titleLength": "Title must be 1 to {max} characters.",
-  "admin.msg.clientLength":
-    "The client name can't be longer than {max} characters.",
   "admin.msg.slugReserved": "That slug is reserved. Pick another.",
   "admin.msg.slugFormat":
     "Use only lowercase letters, numbers and hyphens (1 to {max} characters, no leading, trailing or repeated hyphens).",
@@ -556,6 +551,17 @@ export const enAdmin = {
   "admin.clients.count.other": "{count} albums",
   "admin.clients.create.title": "New client",
   "admin.clients.create.button": "Create client",
+  "admin.clients.create.pending": "Creating…",
+  "admin.clients.save.pending": "Saving…",
+  "admin.clients.apply.pending": "Applying…",
+  "admin.clients.delete.pending": "Deleting…",
+  "admin.clients.status.address": "Public page: {path}",
+  "admin.clients.status.visible.one": "Visible: {count} album",
+  "admin.clients.status.visible.other": "Visible: {count} albums",
+  "admin.clients.status.disabled":
+    "Page turned off: visitors get a 404. Turn on “Show the client’s public page” to publish it.",
+  "admin.clients.status.none":
+    "Not live yet (404): this client has no published album with a cover.",
   "admin.clients.field.name": "Name",
   "admin.clients.field.slug": "Web address",
   "admin.clients.field.slugHintAuto":

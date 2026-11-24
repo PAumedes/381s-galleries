@@ -139,6 +139,35 @@ describe("T6.40b admin clients: loaders", () => {
     expect(JSON.stringify(d)).not.toContain("drive-secret");
   });
 
+  it("edit: publicPage status = what /<client> will show (same rule as the public page), no extra query", async () => {
+    const c = await createClient(e, { name: "Acme", slug: "acme" });
+    const past = "'2000-01-01T00:00:00.000Z'";
+    const status = async () =>
+      (await clientEditData(new Request(BASE + "/x"), e, c.id)).publicPage;
+    expect(await status()).toEqual({ visible: 0, reason: "none" });
+    await addGallery("g-draft", "draft", c.id, { status: "'draft'" });
+    await addGallery("g-nocover", "nocover", c.id, { status: "'published'" });
+    await addGallery("g-exp", "exp", c.id, {
+      status: "'published'",
+      expires_at: past,
+    });
+    await addPhoto("px", "g-exp", null);
+    await addPhoto("pd", "g-draft", null);
+    expect(await status()).toEqual({ visible: 0, reason: "none" });
+    await addGallery("g-ok", "ok", c.id, {
+      status: "'published'",
+      show_on_home: "0",
+    });
+    await addPhoto("p1", "g-ok", null);
+    await addGallery("g-pin", "pin", c.id, {
+      status: "'published'",
+      pin_hash: "'x'",
+    });
+    expect(await status()).toEqual({ visible: 2, reason: null });
+    await run("UPDATE clients SET page_enabled = 0 WHERE id = ?1", c.id);
+    expect(await status()).toEqual({ visible: 2, reason: "disabled" });
+  });
+
   it("edit: 404 for an unknown client, 401 for non-admins", async () => {
     expect(
       (await thrown(clientEditData(new Request(BASE + "/x"), e, "nope")))

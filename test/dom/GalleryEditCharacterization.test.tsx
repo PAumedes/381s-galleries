@@ -331,7 +331,6 @@ describe("gallery editor characterization: details", () => {
       ["intent", "details"],
       ["title", "Boda Ana"],
       ["slug", "boda-ana"],
-      ["clientName", "Ana"],
       ["eventDate", "2026-11-01"],
       ["expiresDate", "2026-12-24"],
       ["expiresTime", "18:30"],

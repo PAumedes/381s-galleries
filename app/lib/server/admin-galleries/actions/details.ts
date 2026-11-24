@@ -13,7 +13,6 @@ import type { GalleryRow } from "./shared";
 const EXPIRY_YEAR_MIN = 2000;
 const EXPIRY_YEAR_MAX = 2100;
 export const TITLE_MAX = 120;
-export const CLIENT_MAX = 120;
 export { SLUG_MAX };
 
 export async function saveDetails(
@@ -28,10 +27,6 @@ export async function saveDetails(
   const title = str(f, "title").trim();
   if (title.length < 1 || title.length > TITLE_MAX || CONTROL_RE.test(title))
     errors.title = t("admin.msg.titleLength", { max: TITLE_MAX });
-
-  const clientRaw = str(f, "clientName").trim();
-  if (clientRaw.length > CLIENT_MAX || CONTROL_RE.test(clientRaw))
-    errors.clientName = t("admin.msg.clientLength", { max: CLIENT_MAX });
 
   const slug = str(f, "slug").trim().toLowerCase();
   if (RESERVED_SLUGS.includes(slug)) errors.slug = t("admin.msg.slugReserved");
@@ -88,7 +83,6 @@ export async function saveDetails(
       .set({
         title,
         slug,
-        clientName: clientRaw || null,
         eventDate: eventDate || null,
         expiresAt,
         // An expired gallery stops qualifying: the opt-in does not survive.

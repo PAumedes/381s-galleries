@@ -29,7 +29,6 @@ export type {
   GalleryActionResult,
 } from "./admin-galleries/actions/shared";
 export {
-  CLIENT_MAX,
   isConstraintError,
   SLUG_MAX,
   TITLE_MAX,

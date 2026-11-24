@@ -138,7 +138,7 @@ describe("T6.40e client homepage /:client", () => {
     expect(r.data.clientSlug).toBe("acme");
   });
 
-  it("applies the home rules: published, show_on_home, not expired, servable cover", async () => {
+  it("lists every published album of the client, regardless of show_on_home; not draft/archived/expired/coverless", async () => {
     const past = nowIso(new Date(Date.now() - 1000));
     await album("ok", "c-acme");
     await album("draft", "c-acme", { status: "draft" });
@@ -148,7 +148,18 @@ describe("T6.40e client homepage /:client", () => {
     await album("nophotos", "c-acme", {}, null);
     await album("missing", "c-acme", {}, { missingSince: nowIso() });
     const r = await load("/acme", "acme");
-    expect(r.data.items!.map((i) => i.slug)).toEqual(["ok"]);
+    expect(r.data.items!.map((i) => i.slug).sort()).toEqual(["hidden", "ok"]);
+    // the studio home is unchanged: the hidden album is not there
+    expect((await loadHome(e)).items.map((i) => i.slug)).not.toContain(
+      "hidden",
+    );
+  });
+
+  it("a client whose albums are all off the studio home still has a page (not-models regression)", async () => {
+    await album("private", "c-acme", { showOnHome: false });
+    const r = await load("/acme", "acme");
+    expect(r.status).toBe(200);
+    expect(r.data.items!.map((i) => i.slug)).toEqual(["private"]);
   });
 
   it("Prueba: the cover is a preview-wm photo; without one the album is left off", async () => {
@@ -185,7 +196,7 @@ describe("T6.40e client homepage /:client", () => {
       expect(json).not.toContain(bad);
   });
 
-  it("a PIN album is listed even though the admin can never turn show-on-home on for it (T6.40f)", async () => {
+  it("a PIN album is listed next to a hidden-from-home one (T6.40f)", async () => {
     // Setting a PIN clears show_on_home and the admin refuses to set it again,
     // so owner decision 1 only holds if the client page ignores the flag for PIN albums.
     await album("secret", "c-acme", {
@@ -194,8 +205,14 @@ describe("T6.40e client homepage /:client", () => {
     });
     await album("hidden", "c-acme", { showOnHome: false });
     const r = await load("/acme", "acme");
-    expect(r.data.items!.map((i) => i.slug)).toEqual(["secret"]);
-    expect(r.data.items![0]).toMatchObject({ locked: true, cover: null });
+    expect(r.data.items!.map((i) => i.slug).sort()).toEqual([
+      "hidden",
+      "secret",
+    ]);
+    expect(r.data.items!.find((i) => i.slug === "secret")).toMatchObject({
+      locked: true,
+      cover: null,
+    });
     // the studio home still never lists it
     expect((await loadHome(e)).items.map((i) => i.slug)).not.toContain(
       "secret",

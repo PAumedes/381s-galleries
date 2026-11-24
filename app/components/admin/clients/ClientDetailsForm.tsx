@@ -4,7 +4,8 @@ import { GALLERY_MODES } from "../../../lib/constants";
 import { useT } from "../../../i18n/use-t";
 import type { ClientActionResult } from "../../../lib/server/admin-clients";
 import { Feedback, Field } from "../gallery-edit/ui";
-import { CLIENT_BTN_PRIMARY, CLIENT_INPUT } from "./ui";
+import { SubmitButton } from "./SubmitButton";
+import { CLIENT_INPUT } from "./ui";
 import type { ClientEditItem } from "./ClientEditView";
 
 function CheckRow({
@@ -118,9 +119,11 @@ export function ClientDetailsForm({
         checked={client.defaultShowOnHome}
       />
       <div>
-        <button type="submit" data-compact className={CLIENT_BTN_PRIMARY}>
-          {t("admin.clients.save")}
-        </button>
+        <SubmitButton
+          intent="save"
+          label={t("admin.clients.save")}
+          pendingLabel={t("admin.clients.save.pending")}
+        />
       </div>
       <Feedback data={mine} intent="save" />
     </Form>

@@ -98,7 +98,6 @@ export async function loadGalleryEdit(env: Env, id: string) {
       id: g.id,
       title: g.title,
       slug: g.slug,
-      clientName: g.clientName,
       clientId: g.clientId,
       clientSlug: clients.find((c) => c.id === g.clientId)?.slug ?? null,
       eventDate: g.eventDate,

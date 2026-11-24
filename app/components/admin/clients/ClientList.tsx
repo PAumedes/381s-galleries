@@ -3,7 +3,8 @@ import { Form, Link } from "react-router";
 import { useT } from "../../../i18n/use-t";
 import type { ClientActionResult } from "../../../lib/server/admin-clients";
 import { Feedback, Field } from "../gallery-edit/ui";
-import { CLIENT_BTN_PRIMARY, CLIENT_INPUT, WRAP } from "./ui";
+import { SubmitButton } from "./SubmitButton";
+import { CLIENT_INPUT, WRAP } from "./ui";
 
 export interface ClientListItem {
   id: string;
@@ -62,9 +63,11 @@ function CreateForm({ data }: { data: ClientActionResult | undefined }) {
         </Field>
       </div>
       <div>
-        <button type="submit" data-compact className={CLIENT_BTN_PRIMARY}>
-          {t("admin.clients.create.button")}
-        </button>
+        <SubmitButton
+          intent="create"
+          label={t("admin.clients.create.button")}
+          pendingLabel={t("admin.clients.create.pending")}
+        />
       </div>
       <Feedback data={errs ? data : undefined} intent="create" />
     </Form>
