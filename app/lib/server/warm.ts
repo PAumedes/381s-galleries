@@ -9,14 +9,15 @@
  * thumb and view-sm) differs. Failures never move the marker, so they are
  * retried on the next run.
  */
-import { and, asc, desc, eq, isNull, lte, ne, or, sql } from "drizzle-orm";
-import type { SQL } from "drizzle-orm";
-import { getDb, nowIso, photoVisible, schema } from "../../db";
+import { and, eq } from "drizzle-orm";
+import { getDb, nowIso, schema } from "../../db";
 import type { D1Allowance } from "./d1-meter";
 import type { DriveClient } from "./drive-types";
-import { fillCache, resolveSource } from "./images";
+import { fillCache } from "./images";
+import type { SourcePhoto } from "./images";
 import { GalleryGone, gated } from "./warm-gate";
-import type { SourcePhoto, Variant } from "./images";
+import { WARM_VARIANTS } from "./warm-key";
+import { eligible, staleRows } from "./warm-stale";
 import {
   SETTINGS_KEYS,
   deleteSetting,
@@ -24,7 +25,6 @@ import {
   putSetting,
 } from "./settings";
 
-export const WARM_VARIANTS: readonly Variant[] = ["thumb", "view-sm"];
 /** External (Drive + OAuth) subrequests per run; Workers Free allows 50. */
 export const WARM_DRIVE_BUDGET = 40;
 /** Cloudflare-service (D1/R2) operations per run; the limit is 1000. */
@@ -33,10 +33,9 @@ const LOCK_MS = 3 * 60_000;
 /** After a run that found nothing stale, skip the full scan for this long. */
 export const WARM_IDLE_MS = 5 * 60_000;
 
-type Photo = SourcePhoto;
+const P = schema.photos;
+const G = schema.galleries;
 
-/** Stale photos looked at per run (bounds D1 rows read). */
-export const WARM_SELECT_LIMIT = 200;
 /** Back-off after the n-th consecutive failure of a photo, indexed by min(n, 3). */
 export const WARM_BACKOFF_MS = [60_000, 5 * 60_000, 3_600_000, 86_400_000];
 
@@ -55,171 +54,10 @@ export {
   warmCoverPhoto,
 } from "./warm-cover";
 
+export { WARM_VARIANTS, expectedWarmKey, markWarmed } from "./warm-key";
+export { WARM_SELECT_LIMIT, warmProgress } from "./warm-stale";
+
 const empty = (): WarmResult => ({ stale: 0, warmed: 0, failed: 0 });
-
-/** Hash of what a fully warmed `photo` looks like (16 hex chars). */
-export async function expectedWarmKey(
-  photo: Photo,
-  proofing: boolean,
-): Promise<string> {
-  const parts = WARM_VARIANTS.map((v) => {
-    const s = resolveSource(photo, proofing, v);
-    return s
-      ? `${v}|${s.fileId}|${s.watermark ? 1 : 0}|${s.version}`
-      : v + "|-";
-  });
-  const buf = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(parts.join("\n")),
-  );
-  return Array.from(new Uint8Array(buf).slice(0, 8), (b) =>
-    b.toString(16).padStart(2, "0"),
-  ).join("");
-}
-
-const P = schema.photos;
-const G = schema.galleries;
-
-/**
- * Sets the cron's marker for a photo whose thumb and view-sm were just
- * verified in R2 (same key semantics). A row whose stored expected key
- * differs (a re-export or mode switch raced us) is left for the cron.
- */
-export async function markWarmed(
-  env: Env,
-  photo: Photo,
-  proofing: boolean,
-): Promise<void> {
-  const key = await expectedWarmKey(photo, proofing);
-  await getDb(env)
-    .update(P)
-    .set({
-      cacheExpectedKey: key,
-      cacheWarmKey: key,
-      cacheWarmFailCount: 0,
-      cacheWarmRetryAt: null,
-    })
-    .where(
-      and(
-        eq(P.id, photo.id),
-        or(isNull(P.cacheExpectedKey), eq(P.cacheExpectedKey, key)),
-      ),
-    );
-}
-
-const eligible = and(ne(G.status, "archived"), photoVisible);
-
-/**
- * Stale, retry-eligible photos (newest gallery first, never-failed first),
- * at most WARM_SELECT_LIMIT, with only the columns warming needs. Rows whose
- * expected key is unknown (NULL) get it computed here and written back; those
- * that turn out current are dropped.
- */
-async function staleRows(
-  env: Env,
-  maxRows = Infinity,
-): Promise<{
-  rows: { photo: Photo; wm: boolean; key: string; fails: number }[];
-  writes: number;
-  /** Stopped at `maxRows` with rows left unexamined (the next run continues). */
-  more: boolean;
-}> {
-  const db = getDb(env);
-  const found = await db
-    .select({
-      photo: {
-        id: P.id,
-        driveHighresId: P.driveHighresId,
-        driveWebId: P.driveWebId,
-        driveIgId: P.driveIgId,
-        driveThumbId: P.driveThumbId,
-        driveWmId: P.driveWmId,
-        driveThumbWmId: P.driveThumbWmId,
-        variantVersions: P.variantVersions,
-      },
-      warmKey: P.cacheWarmKey,
-      expected: P.cacheExpectedKey,
-      fails: P.cacheWarmFailCount,
-      mode: G.mode,
-    })
-    .from(P)
-    .innerJoin(G, eq(G.id, P.galleryId))
-    .where(
-      and(
-        eligible,
-        or(
-          isNull(P.cacheExpectedKey),
-          sql`${P.cacheWarmKey} IS NOT ${P.cacheExpectedKey}`,
-        ),
-        or(isNull(P.cacheWarmRetryAt), lte(P.cacheWarmRetryAt, nowIso())),
-      ),
-    )
-    .orderBy(
-      sql`${P.cacheWarmFailCount} > 0`,
-      desc(G.createdAt),
-      asc(G.id),
-      asc(P.setName),
-      asc(P.sort),
-      asc(P.baseName),
-    )
-    .limit(WARM_SELECT_LIMIT);
-  const rows: { photo: Photo; wm: boolean; key: string; fails: number }[] = [];
-  let writes = 0;
-  let more = false;
-  for (const r of found) {
-    // Each row costs a key write and an outcome write: `maxRows` bounds D1.
-    if (rows.length >= maxRows || writes >= maxRows) {
-      more = true;
-      break;
-    }
-    let key = r.expected;
-    if (key === null) {
-      key = await expectedWarmKey(r.photo, r.mode === "proofing");
-      writes++;
-      await db
-        .update(P)
-        .set({ cacheExpectedKey: key })
-        .where(and(eq(P.id, r.photo.id), isNull(P.cacheExpectedKey)));
-      if (r.warmKey === key) continue;
-    }
-    rows.push({
-      photo: r.photo,
-      wm: r.mode === "proofing",
-      key,
-      fails: r.fails,
-    });
-  }
-  return { rows, writes, more };
-}
-
-/**
- * "Fotos en caché: N / M": photos whose marker is current vs visible photos
- * (of one gallery when `galleryId` is given). Two COUNT queries, no per-photo work.
- */
-export async function warmProgress(
-  env: Env,
-  galleryId?: string,
-): Promise<{ warmed: number; total: number }> {
-  const db = getDb(env);
-  const count = (extra?: SQL) =>
-    db
-      .select({ n: sql<number>`count(*)` })
-      .from(P)
-      .innerJoin(G, eq(G.id, P.galleryId))
-      .where(
-        and(
-          eligible,
-          galleryId ? eq(P.galleryId, galleryId) : undefined,
-          extra,
-        ),
-      )
-      .then((r) => r[0]?.n ?? 0);
-  const [total, warmed] = await Promise.all([
-    count(),
-    count(sql`${P.cacheWarmKey} = ${P.cacheExpectedKey}`),
-  ]);
-  return { warmed, total };
-}
 
 type Db = ReturnType<typeof getDb>;
 
@@ -258,6 +96,43 @@ async function recordOutcome(
   }
 }
 
+/**
+ * Fetches thumb and view-sm of one photo into R2. "ok": both cached;
+ * "failed": Drive/R2 refused or nothing cacheable (the marker must not move);
+ * "budget": the Drive allowance cannot cover the next call; "gone": the gallery
+ * was unpublished meanwhile. `left` is the remaining Drive budget, `spent`
+ * records one Cloudflare-service fill.
+ */
+async function fillVariants(
+  env: Env,
+  drive: DriveClient,
+  photo: SourcePhoto & { proofing: boolean },
+  galleryId: string,
+  left: () => number,
+  spent: () => void,
+): Promise<"ok" | "failed" | "budget" | "gone"> {
+  // Every Drive fetch re-checks gallery status and mode (Entrega -> Prueba mid-photo).
+  const gate = gated(env, drive, galleryId, photo.proofing);
+  for (const variant of WARM_VARIANTS) {
+    if (left() < 1) return "budget";
+    try {
+      spent();
+      // "skipped" (nothing cacheable) is a failure: the marker must not move.
+      if ((await fillCache(env, photo, variant, gate)) === "skipped")
+        return "failed";
+    } catch (err) {
+      if (err instanceof GalleryGone) return "gone";
+      // Name only: messages may hold Drive ids.
+      console.error(
+        "warm: fill failed",
+        err instanceof Error ? err.name : "error",
+      );
+      return "failed";
+    }
+  }
+  return "ok";
+}
+
 /** D1 queries per stale photo: expected-key write, visibility re-check, one gate select per variant fetch (2), outcome write. */
 const PHOTO_D1_COST = 5;
 /** D1 queries kept for what follows the batch (idle marker, lock release). */
@@ -290,7 +165,7 @@ export async function warmBatch(
   };
   const db = getDb(env);
 
-  outer: for (const { photo, wm, key, fails } of stale) {
+  for (const { photo, wm, key, fails } of stale) {
     if (cf + 8 > CF_CAP) {
       result.stopped = "cf";
       break;
@@ -305,35 +180,20 @@ export async function warmBatch(
       .limit(1);
     if (!now || (now.mode === "proofing") !== wm) continue;
 
-    let ok = true;
-    // Every Drive fetch re-checks gallery status and mode (Entrega -> Prueba mid-photo).
-    const gate = gated(env, drive, now.galleryId, wm);
-    for (const variant of WARM_VARIANTS) {
-      if (used() + 1 > budget) {
-        result.stopped = "budget";
-        break outer;
-      }
-      try {
-        cf += 3;
-        // "skipped" (nothing cacheable) is a failure: the marker must not move.
-        if (
-          (await fillCache(env, { ...photo, proofing: wm }, variant, gate)) ===
-          "skipped"
-        ) {
-          ok = false;
-          break;
-        }
-      } catch (err) {
-        if (err instanceof GalleryGone) continue outer;
-        // Name only: messages may hold Drive ids.
-        console.error(
-          "warm: fill failed",
-          err instanceof Error ? err.name : "error",
-        );
-        ok = false;
-        break;
-      }
+    const filled = await fillVariants(
+      env,
+      drive,
+      { ...photo, proofing: wm },
+      now.galleryId,
+      () => budget - used(),
+      () => (cf += 3),
+    );
+    if (filled === "budget") {
+      result.stopped = "budget";
+      break;
     }
+    if (filled === "gone") continue;
+    const ok = filled === "ok";
     cf += 1;
     result[await recordOutcome(db, photo.id, ok, key, fails)]++;
     if (used() > budget) {
