@@ -121,7 +121,7 @@ Creá hasta seis recetas de proceso (las dos con marca de agua son opcionales) (
 
 ## 8. Actualizar la app
 
-- **Cambios de código:** al hacer merge a `main`, el workflow **Deploy** despliega solo (corre lint, tipos y tests; aplica migraciones nuevas; publica). Si todavía no corriste Setup, Deploy avisa "Run the Setup workflow first" y no hace nada.
+- **Cambios de código:** al hacer merge a `main`, el workflow **Deploy** despliega solo (corre lint, tipos, build y tests en paralelo; si todo pasa, aplica migraciones nuevas y publica el mismo build que se probó, sin recompilar; para revertir este comportamiento, revertí el commit del workflow). Si todavía no corriste Setup, Deploy avisa "Run the Setup workflow first" y no hace nada.
 - **Cambiar un secret** (por ej. rotar el secreto de Google): actualizalo en GitHub y volvé a ejecutar **Setup**.
 
 ## 9. Problemas comunes

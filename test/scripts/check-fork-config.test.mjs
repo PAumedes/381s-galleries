@@ -70,7 +70,7 @@ describe("T6.23 check-fork-config", () => {
     const y = readFileSync(".github/workflows/deploy.yml", "utf8");
     expect(y).toContain("node scripts/check-fork-config.mjs");
     expect(y.indexOf("check-fork-config")).toBeLessThan(
-      y.indexOf("pnpm run deploy"),
+      y.indexOf("wrangler deploy"),
     );
   });
 });

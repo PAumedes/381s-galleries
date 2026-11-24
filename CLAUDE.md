@@ -7,6 +7,6 @@ Spec and tasks: PLAN.md — read only the sections you need.
 - Every task is attacked by the `adversary` agent; its tests live in test/adversarial/.
 - Never commit secrets. Never expose Drive IDs, R2 keys or tokens to clients.
 - Before saying a PR is ready: verify in a clean checkout (`pnpm install --frozen-lockfile`, then lint, typecheck, test, build, `pnpm check:bundles`), because a shared or symlinked `node_modules` hides missing dependencies (e.g. the esbuild binary). Browser tests bundle with vite's `build()` API, never an `esbuild` binary.
-- A PR is ready only when its CI run for the pushed commit is green (`gh run list`). After each merge, rebase the other open PRs and re-check CI; check the Deploy run on main.
+- A PR is ready only when its CI run for the pushed commit is green (`gh run list`). After each merge, rebase the other open PRs and re-check CI; check the Deploy run on main. Deploy runs lint/typecheck/build/test in parallel, then the `deploy` job (`needs` all) ships the build artifact (T6.45); roll back by reverting the workflow commit.
 - Browser tests (real Chrome): use `test/support/chrome.mjs` (`launchChrome`, `until`) and `test/support/tailwind-css.mjs`; poll for conditions, never fixed sleeps; never raise a timeout to hide a failure, find the cause.
 - Commits and PRs carry no tool or session attribution lines.

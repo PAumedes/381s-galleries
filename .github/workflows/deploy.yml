@@ -8,26 +8,80 @@ permissions:
 concurrency:
   group: cloudflare
   cancel-in-progress: false
+# Checks run in parallel (same jobs as ci.yml); `deploy` runs only if all of them
+# succeed and ships the exact build the `build` job produced and checked.
 jobs:
-  deploy:
+  lint:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: ./.github/actions/setup
+      - run: pnpm lint
+  typecheck:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm typecheck
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      - run: pnpm check:bundles
+      # The Vite plugin leaves build/ plus .wrangler/deploy/config.json (a hidden
+      # file that wrangler follows to build/server/wrangler.json).
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          version: 10
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+          name: worker-build
+          path: |
+            build/
+            .wrangler/deploy/config.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+  test:
+    if: github.ref == 'refs/heads/main'
+    name: test (${{ matrix.shard }}/3)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm exec vitest run --shard=${{ matrix.shard }}/3
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: [lint, typecheck, build, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Checks
-        run: pnpm lint && pnpm typecheck && pnpm test
+          name: worker-build
+          path: .
       - name: Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
+          # A re-run of an older run must never roll production back to an older build.
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ -z "$head" ]; then
+            echo "::error::No se pudo leer main en origin."
+            exit 1
+          fi
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::notice::main moved past $GITHUB_SHA ($head). Deploy skipped; the newer run deploys it."
+            exit 0
+          fi
           node scripts/check-fork-config.mjs
           if grep -q '"database_id": *"00000000-0000-0000-0000-000000000000"' wrangler.jsonc; then
             echo "::notice::Run the Setup workflow first (Actions > Setup > Run workflow). Deploy skipped."
@@ -37,4 +91,7 @@ jobs:
             echo "::error::Faltan CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID (ver DEPLOY.md, paso 3)."
             exit 1
           fi
-          pnpm run deploy
+          # Same order as the deploy script in package.json: migrations, then the Worker. The
+          # build and check:bundles already ran (and passed) in the build job.
+          pnpm exec wrangler d1 migrations apply DB --remote
+          pnpm exec wrangler deploy
