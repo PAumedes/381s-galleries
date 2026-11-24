@@ -15,7 +15,9 @@ describe("T6 workflow hardening", () => {
     });
     it(`${n}.yml: third-party actions pinned to a commit SHA`, () => {
       const uses = [...y.matchAll(/uses:\s*(\S+)/g)].map((m) => m[1]);
-      for (const u of uses) expect(u).toMatch(/@[0-9a-f]{40}$/);
+      // local actions (./...) are in-repo code, not third-party
+      for (const u of uses.filter((x) => !x.startsWith("./")))
+        expect(u).toMatch(/@[0-9a-f]{40}$/);
     });
   }
 });
