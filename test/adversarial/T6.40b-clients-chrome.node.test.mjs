@@ -64,7 +64,12 @@ async function page(which) {
           message: "Cliente eliminado.",
           actionData: undefined,
         })
-      : h(ClientEditView, { client, albums, publicPage: { visible: 1, reason: null }, actionData: undefined });
+      : h(ClientEditView, {
+          client,
+          albums,
+          publicPage: { visible: 1, reason: null },
+          actionData: undefined,
+        });
   const routes = [
     {
       id: "root",
