@@ -145,7 +145,8 @@ async function loadTiles(
       slug: r.slug,
       ...(r.clientSlug ? { clientSlug: r.clientSlug } : {}),
       title: r.title,
-      eventDate: r.eventDate,
+      // the PIN gate hides the event date; a locked tile must not reveal more
+      eventDate: r.pinned ? null : r.eventDate,
       cover: p
         ? {
             id: p.id,

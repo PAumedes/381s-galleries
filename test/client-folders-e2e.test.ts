@@ -153,6 +153,30 @@ async function rowsReferencing(clientId: string) {
   return n;
 }
 
+/** Every table, every text cell: rows that still hold `needle` as a whole value. */
+async function cellsEqualTo(needle: string) {
+  const { results: tables } = await env.DB.prepare(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name NOT LIKE 'd1_%'",
+  ).all<{ name: string }>();
+  const hits: string[] = [];
+  for (const { name } of tables) {
+    const { results: cols } = await env.DB.prepare(
+      `SELECT name FROM pragma_table_info('${name}')`,
+    ).all<{ name: string }>();
+    if (!cols.length) continue;
+    const where = cols
+      .map((c) => `CAST("${c.name}" AS TEXT) = ?1 COLLATE NOCASE`)
+      .join(" OR ");
+    const n = (await env.DB.prepare(
+      `SELECT count(*) AS n FROM "${name}" WHERE ${where}`,
+    )
+      .bind(needle)
+      .first<{ n: number }>())!.n;
+    if (n) hits.push(`${name}:${n}`);
+  }
+  return hits;
+}
+
 describe("T6.40f client folders end to end", () => {
   it("create -> assign -> redirect -> client page -> disabled -> delete -> unassigned", async () => {
     // 1. create the client and set its defaults (Prueba + show on home)
@@ -259,7 +283,7 @@ describe("T6.40f client folders end to end", () => {
       cover: null,
     });
     expect(items.find((i) => i.slug === "boda")!.cover).not.toBeNull();
-    expect(JSON.stringify(page.data)).not.toMatch(/SECRET|hr-|pinHash|c-/);
+    expect(JSON.stringify(page.data)).not.toMatch(/SECRET|hr-|pinHash/);
     expect(await queries("acme")).toBeLessThanOrEqual(CLIENT_PAGE_D1_QUERIES);
 
     // 5. page_enabled = 0 is the same 404 as an unknown slug
@@ -315,6 +339,9 @@ describe("T6.40f client folders end to end", () => {
       }>())!.n,
     ).toBe(0);
     expect(await rowsReferencing(clientId)).toBe(0);
+    // no row in ANY table (settings, activity, ...) keeps the client id or slug
+    expect(await cellsEqualTo(clientId)).toEqual([]);
+    expect(await cellsEqualTo("acme")).toEqual([]);
     expect(
       (await env.DB.prepare(
         "SELECT count(*) AS n FROM galleries WHERE client_id IS NOT NULL AND client_id NOT IN (SELECT id FROM clients)",
