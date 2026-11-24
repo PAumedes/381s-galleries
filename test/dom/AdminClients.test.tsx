@@ -122,7 +122,12 @@ describe("T6.40b ClientEditView", () => {
     a = albums,
   ) =>
     stub(
-      <ClientEditView client={client} albums={a} actionData={actionData} />,
+      <ClientEditView
+        client={client}
+        albums={a}
+        publicPage={{ visible: 2, reason: null }}
+        actionData={actionData}
+      />,
       "/admin/clients/c1",
     );
 
@@ -283,5 +288,94 @@ describe("T6.40b i18n parity", () => {
       expect(e, k).toBeTruthy();
       expect(ph(e!), k).toEqual(ph((esAdmin as Record<string, string>)[k]!));
     }
+  });
+});
+
+describe("T6.46 public page status line", () => {
+  const render46 = (
+    publicPage: { visible: number; reason: "disabled" | "none" | null },
+    lang: "es" | "en" = "es",
+  ) =>
+    stub(
+      <ClientEditView
+        client={client}
+        albums={albums}
+        publicPage={publicPage}
+        actionData={undefined}
+      />,
+      "/admin/clients/c1",
+      lang,
+    );
+
+  it("live: shows the public address and the visible count", async () => {
+    render46({ visible: 2, reason: null });
+    const box = await screen.findByTestId("client-page-status");
+    expect(box.textContent).toContain("/acme");
+    expect(box.textContent).toContain("Visible: 2 álbumes");
+    expect(box.getAttribute("dir")).toBeNull();
+  });
+  it("singular and English", async () => {
+    render46({ visible: 1, reason: null }, "en");
+    expect(
+      (await screen.findByTestId("client-page-status")).textContent,
+    ).toContain("Visible: 1 album");
+  });
+  it("disabled: says the page is off (404)", async () => {
+    render46({ visible: 3, reason: "disabled" });
+    expect(
+      (await screen.findByTestId("client-page-status")).textContent,
+    ).toMatch(/desactivada/i);
+  });
+  it("none: says there is no published album with a cover", async () => {
+    render46({ visible: 0, reason: "none" }, "en");
+    expect(
+      (await screen.findByTestId("client-page-status")).textContent,
+    ).toMatch(/no published album with a cover/i);
+  });
+  it("the address wraps (no physical direction classes)", async () => {
+    render46({ visible: 2, reason: null });
+    const box = await screen.findByTestId("client-page-status");
+    expect(box.innerHTML).not.toMatch(/\b(ml|mr|pl|pr|text-left|text-right)-/);
+  });
+});
+
+describe("T6.46 pending feedback on the client forms", () => {
+  function pendingStub(el: React.ReactElement) {
+    let release!: () => void;
+    const gate = new Promise<null>((r) => (release = () => r(null)));
+    const Stub = createRoutesStub([
+      {
+        id: "root",
+        path: "/",
+        loader: () => ({ lang: "es", messages: es }),
+        Component: Outlet,
+        children: [
+          {
+            path: "admin/clients",
+            Component: () => el,
+            action: () => gate,
+          },
+        ],
+      },
+    ]);
+    render(<Stub initialEntries={["/admin/clients"]} />);
+    return release;
+  }
+
+  it("create: submit disables the button, shows Creando…, aria-busy, no double submit", async () => {
+    const release = pendingStub(
+      <ClientList clients={[]} message={null} actionData={undefined} />,
+    );
+    const name = await screen.findByLabelText("Nombre");
+    fireEvent.change(name, { target: { value: "Acme" } });
+    const btn = screen.getByRole("button", { name: "Crear cliente" });
+    expect(btn.getAttribute("aria-busy")).toBeNull();
+    fireEvent.click(btn);
+    const busy = await screen.findByRole("button", { name: /Creando/ });
+    expect((busy as HTMLButtonElement).disabled).toBe(true);
+    expect(busy.getAttribute("aria-busy")).toBe("true");
+    expect(busy.querySelector("[data-spinner]")).not.toBeNull();
+    expect(busy.hasAttribute("data-compact")).toBe(true);
+    release();
   });
 });

@@ -55,7 +55,8 @@ export type ClientTile = Omit<HomeItem, "cover"> & {
 };
 
 /**
- * Tiles of one client's page (T6.40e): the home rules, except that PIN albums
+ * Tiles of one client's page (T6.40e): every published, unexpired album of the
+ * client with a cover, regardless of show_on_home; PIN albums
  * are listed too (owner decision), without a cover. `null` when the client does
  * not exist or has `page_enabled = 0`; the caller adds the "no tiles" 404.
  */
@@ -69,6 +70,26 @@ export async function loadClientTiles(
 } | null> {
   const r = await loadTiles(env, { kind: "client", slug });
   return r.client ? { ...r.client, tiles: r.tiles } : null;
+}
+
+/**
+ * The client-page rule on one album (T6.46): published, not expired, and a
+ * cover or a PIN (locked tile). Used by the page and the admin status line.
+ */
+export function listedOnClientPage(
+  r: {
+    status: string;
+    expiresAt: string | null;
+    coverId: string | null;
+    pinned: boolean | number;
+  },
+  now: number,
+): boolean {
+  return (
+    r.status === "published" &&
+    (r.coverId !== null || !!r.pinned) &&
+    !isExpired(r.expiresAt, now)
+  );
 }
 
 async function loadTiles(
@@ -104,8 +125,9 @@ async function loadTiles(
     .where(
       home
         ? sql`${g.showOnHome} = 1 AND ${g.status} = 'published' AND ${g.pinHash} IS NULL`
-        : // PIN albums are always listed (locked): the admin clears and refuses show_on_home for them.
-          sql`(${g.showOnHome} = 1 OR ${g.pinHash} IS NOT NULL) AND ${g.status} = 'published' AND ${c.pageEnabled} = 1 AND ${c.slug} = ${scope.slug} COLLATE NOCASE`,
+        : // A client's page lists all its published albums, whatever show_on_home
+          // says (that flag is only for the studio home); PIN albums show locked.
+          sql`${g.status} = 'published' AND ${c.pageEnabled} = 1 AND ${c.slug} = ${scope.slug} COLLATE NOCASE`,
     )
     .orderBy(
       sql`COALESCE(NULLIF(${g.eventDate}, ''), ${g.createdAt}) DESC`,

@@ -63,13 +63,48 @@ function Albums({
   );
 }
 
+/** What `/<client>` shows right now (computed by the edit loader). */
+export interface ClientPageStatus {
+  visible: number;
+  reason: "disabled" | "none" | null;
+}
+
+function PublicPageStatus({
+  slug,
+  status,
+}: {
+  slug: string;
+  status: ClientPageStatus;
+}) {
+  const t = useT();
+  return (
+    <div
+      data-testid="client-page-status"
+      className={`${WRAP} text-small border-grey-200 flex flex-col gap-1 border p-3`}
+    >
+      <span className="font-medium">
+        {t("admin.clients.status.address", { path: `/${slug}` })}
+      </span>
+      <span className="text-grey-700">
+        {status.reason === "disabled"
+          ? t("admin.clients.status.disabled")
+          : status.reason === "none"
+            ? t("admin.clients.status.none")
+            : t("admin.clients.status.visible", { count: status.visible })}
+      </span>
+    </div>
+  );
+}
+
 export function ClientEditView({
   client,
   albums,
+  publicPage,
   actionData,
 }: {
   client: ClientEditItem;
   albums: ClientAlbumItem[];
+  publicPage: ClientPageStatus;
   actionData: ClientActionResult | undefined;
 }) {
   const t = useT();
@@ -82,6 +117,7 @@ export function ClientEditView({
         {t("admin.clients.back")}
       </Link>
       <h1 className={`${WRAP} text-title text-ink`}>{client.name}</h1>
+      <PublicPageStatus slug={client.slug} status={publicPage} />
       <Section title={t("admin.clients.section.details")}>
         <ClientDetailsForm client={client} data={actionData} />
       </Section>

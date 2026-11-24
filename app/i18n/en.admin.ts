@@ -556,6 +556,17 @@ export const enAdmin = {
   "admin.clients.count.other": "{count} albums",
   "admin.clients.create.title": "New client",
   "admin.clients.create.button": "Create client",
+  "admin.clients.create.pending": "Creating…",
+  "admin.clients.save.pending": "Saving…",
+  "admin.clients.apply.pending": "Applying…",
+  "admin.clients.delete.pending": "Deleting…",
+  "admin.clients.status.address": "Public page: {path}",
+  "admin.clients.status.visible.one": "Visible: {count} album",
+  "admin.clients.status.visible.other": "Visible: {count} albums",
+  "admin.clients.status.disabled":
+    "Page turned off: visitors get a 404. Turn on \"Show the client's public page\" to publish it.",
+  "admin.clients.status.none":
+    "Not live yet (404): this client has no published album with a cover.",
   "admin.clients.field.name": "Name",
   "admin.clients.field.slug": "Web address",
   "admin.clients.field.slugHintAuto":

@@ -29,6 +29,7 @@ describe("T6.40c canonical URL everywhere", () => {
                   defaultMode: "delivery",
                   defaultShowOnHome: false,
                 },
+                publicPage: { visible: 1, reason: null },
                 albums: [
                   {
                     id: "a",

@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "../../db";
 import { requestT } from "../../i18n/dictionaries";
 import { adminAction } from "./admin";
@@ -10,6 +10,8 @@ import type { ClientActionResult } from "./admin-clients/errors";
 import { saveIntent } from "./admin-clients/save";
 import { requireAdmin } from "./auth";
 import { getClient, listClients } from "./clients";
+import { homeCoverIdSql } from "./cover";
+import { HOME_CAP, listedOnClientPage } from "./home";
 
 export type { ClientActionResult } from "./admin-clients/errors";
 
@@ -39,18 +41,41 @@ export async function clientEditData(request: Request, env: Env, id: string) {
   const c = await getClient(env, id);
   if (!c) throw new Response("Not found", { status: 404 });
   const g = schema.galleries;
-  const albums = await getDb(env)
+  const rows = await getDb(env)
     .select({
       id: g.id,
       title: g.title,
       slug: g.slug,
       status: g.status,
       mode: g.mode,
+      expiresAt: g.expiresAt,
+      coverId: homeCoverIdSql(),
+      pinned: sql<number>`${g.pinHash} IS NOT NULL`,
     })
     .from(g)
     .where(eq(g.clientId, id))
     .orderBy(asc(g.title), asc(g.slug));
+  const now = Date.now();
+  const visible = Math.min(
+    rows.filter((r) => listedOnClientPage(r, now)).length,
+    HOME_CAP,
+  );
+  const albums = rows.map(({ id, title, slug, status, mode }) => ({
+    id,
+    title,
+    slug,
+    status,
+    mode,
+  }));
   return {
+    publicPage: {
+      visible,
+      reason: !c.pageEnabled
+        ? ("disabled" as const)
+        : visible === 0
+          ? ("none" as const)
+          : null,
+    },
     client: {
       id: c.id,
       name: c.name,

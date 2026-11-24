@@ -28,6 +28,7 @@ export default function AdminClientEdit({
     <ClientEditView
       client={loaderData.client}
       albums={loaderData.albums}
+      publicPage={loaderData.publicPage}
       actionData={actionData}
     />
   );

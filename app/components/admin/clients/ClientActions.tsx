@@ -3,7 +3,8 @@ import { Form } from "react-router";
 import { useT } from "../../../i18n/use-t";
 import type { ClientActionResult } from "../../../lib/server/admin-clients";
 import { Feedback, Field } from "../gallery-edit/ui";
-import { CLIENT_BTN, CLIENT_BTN_PRIMARY, CLIENT_INPUT } from "./ui";
+import { SubmitButton } from "./SubmitButton";
+import { CLIENT_INPUT } from "./ui";
 
 /** "Apply defaults to all albums": confirmed in the browser and again on the server. */
 export function ApplyDefaultsForm({
@@ -28,9 +29,12 @@ export function ApplyDefaultsForm({
         {t("admin.clients.apply.note")}
       </p>
       <div>
-        <button type="submit" data-compact className={CLIENT_BTN}>
-          {t("admin.clients.apply.button")}
-        </button>
+        <SubmitButton
+          intent="applyDefaults"
+          primary={false}
+          label={t("admin.clients.apply.button")}
+          pendingLabel={t("admin.clients.apply.pending")}
+        />
       </div>
       {mine?.ok && mine.message ? (
         <p role="status" className="border-ink border p-3 text-small">
@@ -81,9 +85,11 @@ export function DeleteClientForm({
         )}
       </Field>
       <div>
-        <button type="submit" data-compact className={CLIENT_BTN_PRIMARY}>
-          {t("admin.clients.delete.button")}
-        </button>
+        <SubmitButton
+          intent="delete"
+          label={t("admin.clients.delete.button")}
+          pendingLabel={t("admin.clients.delete.pending")}
+        />
       </div>
       <Feedback data={data} intent="delete" />
     </Form>

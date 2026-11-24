@@ -560,6 +560,17 @@ export const esAdmin = {
   "admin.clients.count.other": "{count} álbumes",
   "admin.clients.create.title": "Nuevo cliente",
   "admin.clients.create.button": "Crear cliente",
+  "admin.clients.create.pending": "Creando…",
+  "admin.clients.save.pending": "Guardando…",
+  "admin.clients.apply.pending": "Aplicando…",
+  "admin.clients.delete.pending": "Eliminando…",
+  "admin.clients.status.address": "Página pública: {path}",
+  "admin.clients.status.visible.one": "Visible: {count} álbum",
+  "admin.clients.status.visible.other": "Visible: {count} álbumes",
+  "admin.clients.status.disabled":
+    "Página desactivada: los visitantes ven un 404. Activá \"Mostrar la página pública del cliente\" para publicarla.",
+  "admin.clients.status.none":
+    "Todavía no está en línea (404): este cliente no tiene ningún álbum publicado con portada.",
   "admin.clients.field.name": "Nombre",
   "admin.clients.field.slug": "Dirección web",
   "admin.clients.field.slugHintAuto":
