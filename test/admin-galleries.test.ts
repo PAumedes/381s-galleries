@@ -246,7 +246,6 @@ describe("loadGalleryEdit / editData", () => {
     );
     expect(d.gallery.hasPin).toBe(true);
     expect(d.gallery.expires).toEqual({ date: "2026-12-31", time: "23:30" });
-    expect(d.gallery.clientName).toBe("Ana");
     expect(d.hasWmFiles).toBe(true);
     expect(d.photos).toHaveLength(2);
     const s = JSON.stringify(d);

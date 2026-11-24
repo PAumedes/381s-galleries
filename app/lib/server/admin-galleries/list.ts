@@ -97,11 +97,12 @@ export async function listGalleries(
     );
   const now = Date.now();
   // Search on the loaded rows (a studio has well under 1000 galleries):
-  // accent/case-insensitive substring over title, slug and client name.
+  // accent/case-insensitive substring over title, slug and the client name the
+  // row shows (the folder's, else the legacy text).
   const needle = normalizeSearch(q);
   const matched = needle
     ? rows.filter((r) =>
-        [r.title, r.slug, r.clientName ?? ""].some((v) =>
+        [r.title, r.slug, r.clientRowName ?? r.clientName ?? ""].some((v) =>
           normalizeSearch(v).includes(needle),
         ),
       )
