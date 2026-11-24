@@ -563,7 +563,7 @@ export const esAdmin = {
   "admin.clients.status.visible.one": "Visible: {count} álbum",
   "admin.clients.status.visible.other": "Visible: {count} álbumes",
   "admin.clients.status.disabled":
-    'Página desactivada: los visitantes ven un 404. Activá "Mostrar la página pública del cliente" para publicarla.',
+    "Página desactivada: los visitantes ven un 404. Activá “Mostrar la página pública del cliente” para publicarla.",
   "admin.clients.status.none":
     "Todavía no está en línea (404): este cliente no tiene ningún álbum publicado con portada.",
   "admin.clients.field.name": "Nombre",

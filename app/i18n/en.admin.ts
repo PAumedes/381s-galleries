@@ -559,7 +559,7 @@ export const enAdmin = {
   "admin.clients.status.visible.one": "Visible: {count} album",
   "admin.clients.status.visible.other": "Visible: {count} albums",
   "admin.clients.status.disabled":
-    'Page turned off: visitors get a 404. Turn on "Show the client\'s public page" to publish it.',
+    "Page turned off: visitors get a 404. Turn on “Show the client’s public page” to publish it.",
   "admin.clients.status.none":
     "Not live yet (404): this client has no published album with a cover.",
   "admin.clients.field.name": "Name",
