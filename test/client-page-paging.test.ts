@@ -13,6 +13,7 @@ import { galleryLoader } from "../app/lib/server/gallery-route";
 import { CLIENT_PAGE_SIZE, loadHome } from "../app/lib/server/home";
 import { parsePageParam } from "../app/lib/server/client-page";
 import { migrateDb, resetTables } from "./support/d1";
+import { capturingBindsEnv } from "./support/binds";
 import { countingEnv } from "./support/warm";
 
 const db = getDb(env);
@@ -251,36 +252,14 @@ describe("T6.49 client page paging", () => {
   it("costs at most CLIENT_PAGE_D1_QUERIES queries on every page, binds <= 100", async () => {
     for (const q of ["", "?pagina=2", "?pagina=3", "?pagina=9", "?pagina=x"]) {
       const c = countingEnv(e);
-      const binds: number[] = [];
-      const DB = new Proxy(c.e.DB, {
-        get(t, p) {
-          const v = (t as never)[p];
-          if (p !== "prepare")
-            return typeof v === "function"
-              ? (v as (...a: unknown[]) => unknown).bind(t)
-              : v;
-          return (s: string) => {
-            const st = (v as (s: string) => D1PreparedStatement).call(t, s);
-            return new Proxy(st, {
-              get(st2, p2) {
-                const f = (st2 as never)[p2];
-                if (p2 !== "bind")
-                  return typeof f === "function" ? f.bind(st2) : f;
-                return (...a: unknown[]) => {
-                  binds.push(a.length);
-                  return (f as (...x: unknown[]) => unknown).apply(st2, a);
-                };
-              },
-            });
-          };
-        },
-      });
-      await load(`/acme${q}`, { ...c.e, DB } as Env);
+      const spy = capturingBindsEnv(c.e);
+      await load(`/acme${q}`, spy.e);
       expect(c.count(), q).toBeLessThanOrEqual(CLIENT_PAGE_D1_QUERIES + 1);
       if (q !== "?pagina=9")
         expect(c.count(), q).toBeLessThanOrEqual(CLIENT_PAGE_D1_QUERIES);
-      expect(binds.length).toBeGreaterThan(0);
-      for (const b of binds) expect(b).toBeLessThanOrEqual(D1_MAX_BOUND_PARAMS);
+      expect(spy.binds.length).toBeGreaterThan(0);
+      for (const b of spy.binds)
+        expect(b.length).toBeLessThanOrEqual(D1_MAX_BOUND_PARAMS);
     }
   });
 
