@@ -45,11 +45,7 @@ beforeEach(async () => {
   });
   await db
     .insert(schema.photos)
-    .values([
-      photo("p1"),
-      photo("p2"),
-      photo("p3", { driveWebId: null }),
-    ]);
+    .values([photo("p1"), photo("p2"), photo("p3", { driveWebId: null })]);
 });
 
 type Reply = {
