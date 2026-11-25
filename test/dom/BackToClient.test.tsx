@@ -210,4 +210,53 @@ describe("T6.50 GalleryRoutePage", () => {
       await screen.findByRole("link", { name: "Back to ACME Corp" }),
     ).toBeTruthy();
   });
+
+  it("keeps it only while the same client returns (T6.50 keyed kept link)", async () => {
+    const Stub = stub(() => (
+      <Swap
+        first={open({ clientSlug: "acme", backToClient: link })}
+        second={open({ clientSlug: "acme" })}
+      />
+    ));
+    render(<Stub initialEntries={["/"]} />);
+    await screen.findByRole("link", { name: "Back to ACME Corp" });
+    fireEvent.click(screen.getByText("swap"));
+    expect(
+      screen.getByRole("link", { name: "Back to ACME Corp" }),
+    ).toBeTruthy();
+  });
+
+  it.each([
+    ["moved to another client", { clientSlug: "beta" }],
+    ["unassigned", {}],
+  ])("drops it when the same album is %s", async (_n, next) => {
+    const Stub = stub(() => (
+      <Swap
+        first={open({ clientSlug: "acme", backToClient: link })}
+        second={open(next)}
+      />
+    ));
+    render(<Stub initialEntries={["/"]} />);
+    await screen.findByRole("link", { name: "Back to ACME Corp" });
+    fireEvent.click(screen.getByText("swap"));
+    await screen.findByRole("heading", { name: "Boda Ana" });
+    expect(screen.queryByRole("link", { name: /ACME/ })).toBeNull();
+  });
+
+  it.each(["Ünïcode 😀 ".repeat(30), "ארגון שם ארוך מאוד ".repeat(20)])(
+    "a long emoji/RTL client name stays one truncated line",
+    async (name) => {
+      const Stub = stub(() => (
+        <GalleryRoutePage
+          loaderData={open({ backToClient: { name, href: "/a" } })}
+        />
+      ));
+      render(<Stub initialEntries={["/"]} />);
+      const a = (await screen.findByRole("link", {
+        name: /^Back to /,
+      })) as HTMLElement;
+      expect(a.textContent).toBe(name);
+      expect(a.querySelector("span")?.className).toContain("truncate");
+    },
+  );
 });

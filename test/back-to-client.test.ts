@@ -53,7 +53,25 @@ beforeEach(async () => {
     g("free", null),
   ])
     await db.insert(schema.galleries).values(row);
+  // A cover (any visible photo) makes an open album listed on the client page.
+  for (const id of ["g-pub", "g-other", "g-bpub", "g-offpub", "g-free"])
+    await seedPhotos(id, 1);
 });
+
+/** One visible photo (a cover) for an album; `wm: false` = no preview-wm. */
+async function seedPhotos(galleryId: string, n: number, wm = true) {
+  for (let i = 0; i < n; i++)
+    await db.insert(schema.photos).values({
+      id: `${galleryId}-p${i}`,
+      galleryId,
+      baseName: `IMG_${i}`,
+      driveHighresId: `hr-${galleryId}-${i}`,
+      driveWmId: wm ? `wm-${galleryId}-${i}` : null,
+      sort: i,
+      width: 300,
+      height: 200,
+    });
+}
 
 const ctx = () => {
   const c = new RouterContextProvider();
@@ -211,5 +229,83 @@ describe("T6.50 cost", () => {
     expect(withRef).toBe(without);
     expect(forged).toBe(without);
     expect(without).toBeLessThanOrEqual(SLUG_LOADER_D1_QUERIES);
+  });
+});
+
+describe("T6.50 only an album the client page lists can name its client", () => {
+  const fix = async (
+    slug: string,
+    over: Partial<typeof schema.galleries.$inferInsert>,
+    photos = 0,
+  ) => {
+    await db.insert(schema.galleries).values({
+      id: `g-${slug}`,
+      driveFolderId: `d-${slug}`,
+      slug,
+      title: slug,
+      status: "published",
+      clientId: "c-acme",
+      ...over,
+    });
+    if (photos) await seedPhotos(`g-${slug}`, photos);
+  };
+  const REF = `${ORIGIN}/acme`;
+
+  it("open album without a cover or PIN (client page would 404): no name, document and .data", async () => {
+    await fix("nocover", {});
+    for (const mode of ["navigate", "cors"]) {
+      const d = await load("acme", "nocover", REF, { "Sec-Fetch-Mode": mode });
+      expect(d.state).toBe("open");
+      expect(d).not.toHaveProperty("backToClient");
+      expect(JSON.stringify(d)).not.toContain("ACME Corp");
+    }
+  });
+
+  it("expired album is unavailable (plain 404 payload, no name)", async () => {
+    await fix("old", { expiresAt: "2000-01-01T00:00:00Z" }, 1);
+    const d = await load("acme", "old", REF);
+    expect(JSON.stringify(d)).not.toContain("ACME Corp");
+    expect(d).not.toHaveProperty("backToClient");
+  });
+
+  it("draft: no name", async () => {
+    await fix("dr", { status: "draft" }, 1);
+    expect(JSON.stringify(await load("acme", "dr", REF))).not.toContain("ACME");
+  });
+
+  it("PIN album with no cover is listed (locked tile): link carried", async () => {
+    const d = await load("acme", "pin", REF);
+    expect(d.backToClient).toEqual({ name: "ACME Corp", href: "/acme" });
+  });
+
+  it("proofing album whose photos have no preview-wm has no cover: no name", async () => {
+    await fix("proof", { mode: "proofing" });
+    await seedPhotos("g-proof", 1, false);
+    const d = await load("acme", "proof", REF);
+    expect(d).not.toHaveProperty("backToClient");
+  });
+
+  it("the unlisted album costs no extra D1 query", async () => {
+    await fix("nocover", {});
+    const c = countingEnv(e);
+    await load("acme", "nocover", REF, {}, c.e);
+    expect(c.count()).toBeLessThanOrEqual(SLUG_LOADER_D1_QUERIES);
+  });
+});
+
+describe("T6.50 locked path", () => {
+  it("a direct or forged-Referer open of a PIN album has no name and no key", async () => {
+    for (const ref of [undefined, "https://evil.com/acme", `${ORIGIN}/beta`]) {
+      const d = await load("acme", "pin", ref);
+      expect(d.state).toBe("locked");
+      const s = JSON.stringify(d);
+      expect(s).not.toContain("ACME Corp");
+      expect(s).not.toContain("backToClient");
+    }
+  });
+
+  it("with the client page as Referer the name travels in the payload only (PinScreen never renders it)", async () => {
+    const d = await load("acme", "pin", `${ORIGIN}/acme`);
+    expect(d.backToClient).toEqual({ name: "ACME Corp", href: "/acme" });
   });
 });

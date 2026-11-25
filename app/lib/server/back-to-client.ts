@@ -1,6 +1,10 @@
 import { PAGE_PARAM } from "../page-param";
 import { parsePageParam } from "./client-page";
-import { CLIENT_CANDIDATE_CAP, CLIENT_PAGE_SIZE } from "./home";
+import {
+  CLIENT_CANDIDATE_CAP,
+  CLIENT_PAGE_SIZE,
+  listedOnClientPage,
+} from "./home";
 import { sameClient, type GalleryHit } from "./gallery-resolve";
 
 /** "Back to the client page" link of an album (T6.50). */
@@ -28,14 +32,28 @@ function sameSiteReferer(request: Request): URL | null {
  * The link back to the client page the visitor came from, or undefined.
  * Shown only when the Referer is the same site's `/<client>` page (exact path,
  * NOCASE, optional `?pagina=N`) of the client that owns THIS album and that
- * page is enabled. The Referer is forgeable but the link only points at a page
- * that is public anyway; a direct open (no Referer) learns nothing.
+ * page is enabled AND lists this album (`listedOnClientPage`: cover or PIN, not
+ * expired), so a forged Referer can never name a client whose page is a 404.
+ * `coverId` is the album's resolved cover from the payload already loaded
+ * (null when it has none). A direct open (no Referer) learns nothing.
  */
 export function backToClient(
   request: Request,
   hit: GalleryHit | undefined,
+  coverId: string | null,
 ): BackToClient | undefined {
   if (!hit?.clientSlug || !hit.clientName || !hit.clientPageEnabled) return;
+  const g = hit.gallery;
+  const listed = listedOnClientPage(
+    {
+      status: g.status,
+      expiresAt: g.expiresAt,
+      coverId,
+      pinned: g.pinHash !== null,
+    },
+    Date.now(),
+  );
+  if (!listed) return;
   const ref = sameSiteReferer(request);
   const seg = ref && /^\/([^/]+)$/.exec(ref.pathname)?.[1];
   if (!seg || !sameClient(seg, hit.clientSlug)) return;

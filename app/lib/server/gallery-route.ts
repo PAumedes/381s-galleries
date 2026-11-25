@@ -91,7 +91,13 @@ export async function galleryLoader(
   const back =
     result.data.state === "unavailable"
       ? undefined
-      : backToClient(request, res.hit);
+      : backToClient(
+          request,
+          res.hit,
+          result.data.state === "open"
+            ? result.data.gallery.coverPhotoId
+            : null,
+        );
   return data(
     {
       ...result.data,

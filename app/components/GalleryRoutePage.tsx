@@ -11,7 +11,7 @@ import { UnavailableScreen } from "./UnavailableScreen";
  * The back link of the album shown. It arrives with the request whose Referer
  * was the client page; a later revalidation (or the PIN unlock) of the same
  * album has another Referer and would drop it, so it is kept while the page
- * stays on that album. Never carried to another album.
+ * stays on that album and client. Never carried to another album or client.
  */
 function useKeptBackLink(
   loaderData: GalleryRouteData,
@@ -20,13 +20,15 @@ function useKeptBackLink(
     key: string;
     link: BackToClientLink;
   } | null>(null);
-  const key =
+  const slug =
     loaderData.state === "open"
       ? loaderData.gallery.slug
       : loaderData.state === "locked"
         ? loaderData.slug
         : null;
-  if (key === null) return undefined;
+  if (slug === null) return undefined;
+  // Keyed on album AND client: moved/unassigned/deleted-client drops the link.
+  const key = `${slug}\n${loaderData.clientSlug ?? ""}`;
   const fresh = loaderData.backToClient;
   if (
     fresh &&
