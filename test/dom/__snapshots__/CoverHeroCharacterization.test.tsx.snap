@@ -1,0 +1,55 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > centrada embedded=false proofing=false 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > centrada embedded=false proofing=true 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > centrada embedded=true proofing=false 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > centrada embedded=true proofing=true 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > centrada mobile cover device=desktop 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > centrada mobile cover device=mobile 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > completa embedded=false proofing=false 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > completa embedded=false proofing=true 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > completa embedded=true proofing=false 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > completa embedded=true proofing=true 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > completa mobile cover device=desktop 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > completa mobile cover device=mobile 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > dividida embedded=false proofing=false 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > dividida embedded=false proofing=true 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > dividida embedded=true proofing=false 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > dividida embedded=true proofing=true 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > dividida mobile cover device=desktop 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > dividida mobile cover device=mobile 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > minima embedded=false proofing=false 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > minima embedded=false proofing=true 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > minima embedded=true proofing=false 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > minima embedded=true proofing=true 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > minima mobile cover device=desktop 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > minima mobile cover device=mobile 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > mobile-only cover and no cover at all 1`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > mobile-only cover and no cover at all 2`] = `""`;
+
+exports[`T6.48 CoverHero markup (golden, pre-refactor) > public page with mobile cover (picture sources) 1`] = `""`;
