@@ -14,24 +14,7 @@ export interface TileDnd {
   onDragEnd: DragEventHandler<HTMLLIElement>;
 }
 
-/** One draggable, keyboard-movable photo tile of the reorder grid. */
-export function ReorderTile({
-  id,
-  index,
-  photo,
-  selected,
-  isCover,
-  isMobile,
-  coverLabel,
-  coverAuto,
-  prefs,
-  busy,
-  quick,
-  dnd,
-  onToggle,
-  onKey,
-  onView,
-}: {
+interface ReorderTileProps {
   id: string;
   index: number;
   photo: ReorderPhoto;
@@ -47,7 +30,56 @@ export function ReorderTile({
   onToggle: () => void;
   onKey: KeyboardEventHandler<HTMLDivElement>;
   onView: () => void;
-}) {
+}
+
+/** The picture with its position number and cover badges: click / Enter selects it. */
+function TileFrame({ p }: { p: ReorderTileProps }) {
+  const { id, photo, selected, prefs, quick } = p;
+  return (
+    <div
+      data-thumb-frame=""
+      onPointerEnter={(ev) =>
+        quick.hover(id, ev.currentTarget.parentElement!, ev.pointerType)
+      }
+      className={`bg-grey-100 relative ${FRAME_BY_MODE[prefs.mode]} overflow-hidden ${selected ? "outline-ink outline-2 outline-offset-2" : ""}`}
+    >
+      <div
+        role="button"
+        tabIndex={0}
+        aria-pressed={selected}
+        id={`photo-${id}`}
+        aria-label={photo.name}
+        onClick={p.onToggle}
+        onKeyDown={p.onKey}
+        className="focus-visible:outline-ink absolute inset-0 cursor-grab outline-offset-2 focus-visible:outline-2"
+      >
+        <img
+          src={adminImgSrc(id, "thumb", photo.v)}
+          alt={photo.name}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className={`size-full ${IMG_BY_MODE[prefs.mode]} select-none`}
+        />
+      </div>
+      <span
+        aria-hidden="true"
+        className="text-micro bg-paper/90 text-ink pointer-events-none absolute top-0 left-0 px-1.5 py-0.5"
+      >
+        {p.index + 1}
+      </span>
+      <TileBadges
+        isCover={p.isCover}
+        isMobile={p.isMobile}
+        coverLabel={p.coverLabel}
+      />
+    </div>
+  );
+}
+
+/** One draggable, keyboard-movable photo tile of the reorder grid. */
+export function ReorderTile(p: ReorderTileProps) {
+  const { id, quick } = p;
   return (
     <li
       data-photo-id={id}
@@ -56,61 +88,24 @@ export function ReorderTile({
       onPointerLeave={quick.stop}
       onFocus={(ev) => quick.focus(id, ev.currentTarget)}
       onBlur={quick.stop}
-      {...dnd}
+      {...p.dnd}
       className="group @container flex min-w-0 list-none flex-col gap-1"
     >
-      <div
-        data-thumb-frame=""
-        onPointerEnter={(ev) =>
-          quick.hover(id, ev.currentTarget.parentElement!, ev.pointerType)
-        }
-        className={`bg-grey-100 relative ${FRAME_BY_MODE[prefs.mode]} overflow-hidden ${selected ? "outline-ink outline-2 outline-offset-2" : ""}`}
-      >
-        <div
-          role="button"
-          tabIndex={0}
-          aria-pressed={selected}
-          id={`photo-${id}`}
-          aria-label={photo.name}
-          onClick={onToggle}
-          onKeyDown={onKey}
-          className="focus-visible:outline-ink absolute inset-0 cursor-grab outline-offset-2 focus-visible:outline-2"
-        >
-          <img
-            src={adminImgSrc(id, "thumb", photo.v)}
-            alt={photo.name}
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-            className={`size-full ${IMG_BY_MODE[prefs.mode]} select-none`}
-          />
-        </div>
-        <span
-          aria-hidden="true"
-          className="text-micro bg-paper/90 text-ink pointer-events-none absolute top-0 left-0 px-1.5 py-0.5"
-        >
-          {index + 1}
-        </span>
-        <TileBadges
-          isCover={isCover}
-          isMobile={isMobile}
-          coverLabel={coverLabel}
-        />
-      </div>
+      <TileFrame p={p} />
       <span
         aria-hidden="true"
         className="text-grey-600 truncate text-[0.6875rem]"
       >
-        {photo.name}
+        {p.photo.name}
       </span>
       <div onPointerEnter={quick.stop} onFocus={(ev) => ev.stopPropagation()}>
         <TileActions
           id={id}
-          isCover={isCover}
-          coverAuto={coverAuto}
-          isMobile={isMobile}
-          busy={busy}
-          onView={onView}
+          isCover={p.isCover}
+          coverAuto={p.coverAuto}
+          isMobile={p.isMobile}
+          busy={p.busy}
+          onView={p.onView}
         />
       </div>
     </li>
