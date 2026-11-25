@@ -13,18 +13,7 @@ export interface CoverMarks {
   auto: boolean;
 }
 
-/** One set of the "Fotos" tab: toolbar (sort, move) and its grid of tiles. */
-export function ReorderSetGrid({
-  set,
-  ids,
-  order,
-  dndFor,
-  prefs,
-  busy,
-  quick,
-  cover,
-  onView,
-}: {
+interface ReorderSetGridProps {
   set: string;
   ids: string[];
   order: ReturnType<typeof usePhotoOrder>;
@@ -34,7 +23,11 @@ export function ReorderSetGrid({
   quick: ReturnType<typeof useQuickLook>;
   cover: CoverMarks;
   onView: (id: string) => void;
-}) {
+}
+
+/** One set of the "Fotos" tab: toolbar (sort, move) and its grid of tiles. */
+export function ReorderSetGrid(props: ReorderSetGridProps) {
+  const { set, ids, order, dndFor, prefs, busy, quick, cover, onView } = props;
   const t = useT();
   const { selected, byId } = order;
   const idx = selected ? ids.indexOf(selected) : -1;

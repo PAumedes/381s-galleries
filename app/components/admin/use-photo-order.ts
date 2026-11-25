@@ -65,6 +65,24 @@ function handleKey(
   }
 }
 
+const SORTED_KEYS = {
+  date: "admin.reorder.sortedDate",
+  name: "admin.reorder.sortedName",
+} as const;
+
+/** The live-region sentence for a move: the photo's new position in its set. */
+const movedMessage = (
+  t: TFunction,
+  name: string,
+  ids: string[],
+  moved: string,
+) =>
+  t("admin.reorder.moved", {
+    name,
+    pos: ids.indexOf(moved) + 1,
+    total: ids.length,
+  });
+
 /**
  * Order state of the "Fotos" grids: per-set orders, the selected photo, the
  * live-region message, keyboard handling and the focus that follows a moved
@@ -87,13 +105,7 @@ export function usePhotoOrder(
     setOrders((o) => ({ ...o, [set]: ids }));
     if (moved) {
       if (refocus) focusRef.current = moved;
-      setAnnounce(
-        t("admin.reorder.moved", {
-          name: byId.get(moved)?.name ?? "",
-          pos: ids.indexOf(moved) + 1,
-          total: ids.length,
-        }),
-      );
+      setAnnounce(movedMessage(t, byId.get(moved)?.name ?? "", ids, moved));
     }
   }
   function move(id: string, dir: MoveDir, refocus = true) {
@@ -107,14 +119,7 @@ export function usePhotoOrder(
       set,
       sortPhotos(list, mode).map((p) => p.id),
     );
-    setAnnounce(
-      t(
-        mode === "date"
-          ? "admin.reorder.sortedDate"
-          : "admin.reorder.sortedName",
-        { set },
-      ),
-    );
+    setAnnounce(t(SORTED_KEYS[mode], { set }));
   }
   function reset() {
     setOrders(initial);
