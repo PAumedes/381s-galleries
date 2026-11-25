@@ -560,6 +560,8 @@ export const esAdmin = {
   "admin.clients.apply.pending": "Aplicando…",
   "admin.clients.delete.pending": "Eliminando…",
   "admin.clients.status.address": "Página pública: {path}",
+  "admin.clients.status.cappedAt":
+    "Visible: {count}+ álbumes (la página lista los {count} más recientes)",
   "admin.clients.status.visible.one": "Visible: {count} álbum",
   "admin.clients.status.visible.other": "Visible: {count} álbumes",
   "admin.clients.status.disabled":

@@ -9,7 +9,12 @@ import { getDrive } from "./drive-factory";
 import { loadGallery, unlockGallery, type GalleryData } from "./gallery";
 import { warmGalleryOnOpen } from "./gallery-warm";
 import { resolveGallery, type GalleryTarget } from "./gallery-resolve";
-import { loadClientPage, type ClientPageData } from "./client-page";
+import {
+  loadClientPage,
+  parsePageParam,
+  type ClientPageData,
+} from "./client-page";
+import { PAGE_PARAM } from "../page-param";
 import { NOSNIFF, PRIVATE_NO_STORE } from "./http";
 import { publicOrigin } from "./public-url";
 
@@ -59,7 +64,11 @@ export async function galleryLoader(
       headers,
     });
   if (!res.hit && target.client === undefined) {
-    const page = await loadClientPage(env, target.album);
+    const page = await loadClientPage(
+      env,
+      target.album,
+      parsePageParam(new URL(request.url).searchParams.getAll(PAGE_PARAM)),
+    );
     if (page)
       return data({ ...page, origin: publicOrigin(env, request) }, { headers });
   }

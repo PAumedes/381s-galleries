@@ -11,6 +11,8 @@ const page: ClientPageData = {
   state: "client",
   clientName: "ACME Corp",
   clientSlug: "acme",
+  page: 1,
+  pageCount: 1,
   items: [
     {
       slug: "boda",
@@ -30,7 +32,7 @@ const page: ClientPageData = {
   ],
 };
 
-function stub(lang: "en" | "es" = "es") {
+function stub(lang: "en" | "es" = "es", p: ClientPageData = page) {
   const Stub = createRoutesStub([
     {
       id: "root",
@@ -40,7 +42,7 @@ function stub(lang: "en" | "es" = "es") {
         messages: lang === "en" ? en : es,
         studioName: "Estudio Test",
       }),
-      Component: () => <ClientPage page={page} />,
+      Component: () => <ClientPage page={p} />,
     },
   ]);
   return render(<Stub initialEntries={["/"]} />);
@@ -75,6 +77,63 @@ describe("T6.40e ClientPage", () => {
     const link = await screen.findByRole("link", { name: /Privado/ });
     expect(link.querySelector("svg title")?.textContent).toBe("PIN protected");
     expect(screen.getByRole("list", { name: "Albums" })).toBeTruthy();
+  });
+
+  describe("T6.49 pager", () => {
+    const at = (n: number, count = 3): ClientPageData => ({
+      ...page,
+      page: n,
+      pageCount: count,
+    });
+    const nav = (name: string) => screen.findByRole("navigation", { name });
+
+    it("no pager for a single page", async () => {
+      stub();
+      await screen.findByRole("heading", { level: 1 });
+      expect(screen.queryByRole("navigation", { name: "Páginas" })).toBeNull();
+    });
+
+    it("first page: only Siguiente, to ?pagina=2, with Página 1 de 3", async () => {
+      stub("es", at(1));
+      const n = await nav("Páginas");
+      expect(n.textContent).toContain("Página 1 de 3");
+      expect(screen.queryByRole("link", { name: "Anterior" })).toBeNull();
+      expect(
+        screen.getByRole("link", { name: "Siguiente" }).getAttribute("href"),
+      ).toBe("/acme?pagina=2");
+    });
+
+    it("middle page links both ways; page 2 back goes to the bare URL", async () => {
+      stub("es", at(2));
+      await nav("Páginas");
+      expect(
+        screen.getByRole("link", { name: "Anterior" }).getAttribute("href"),
+      ).toBe("/acme");
+      expect(
+        screen.getByRole("link", { name: "Siguiente" }).getAttribute("href"),
+      ).toBe("/acme?pagina=3");
+    });
+
+    it("last page: only Anterior, to the previous page; English text", async () => {
+      stub("en", at(3));
+      const n = await nav("Pages");
+      expect(n.textContent).toContain("Page 3 of 3");
+      expect(screen.queryByRole("link", { name: "Next" })).toBeNull();
+      expect(
+        screen.getByRole("link", { name: "Previous" }).getAttribute("href"),
+      ).toBe("/acme?pagina=2");
+    });
+
+    it("pager links are 48px tap targets and use logical classes only", async () => {
+      stub("es", at(2));
+      const n = await nav("Páginas");
+      for (const a of n.querySelectorAll("a")) {
+        expect(a.className).toContain("min-h-12");
+        expect(a.className).not.toMatch(
+          /\b(ml|mr|pl|pr|left|right|text-left|text-right)-/,
+        );
+      }
+    });
   });
 
   it("meta is noindex and carries no cover image", () => {

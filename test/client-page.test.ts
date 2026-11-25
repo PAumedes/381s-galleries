@@ -12,6 +12,7 @@ import { galleryLoader } from "../app/lib/server/gallery-route";
 import { loadHome } from "../app/lib/server/home";
 import * as slugRoute from "../app/routes/$slug";
 import { migrateDb, resetTables } from "./support/d1";
+import { capturingBindsEnv } from "./support/binds";
 import { countingEnv } from "./support/warm";
 
 const db = getDb(env);
@@ -281,34 +282,8 @@ describe("T6.40e client homepage /:client", () => {
     await album("pub1", "c-acme");
     for (let i = 0; i < 120; i++)
       await album(`pin${i}`, "c-acme", { pinHash: await hashPin("1") });
-    const binds: unknown[][] = [];
-    const DB = new Proxy(e.DB, {
-      get(target, prop) {
-        const v = (target as never)[prop];
-        if (prop !== "prepare")
-          return typeof v === "function"
-            ? (v as (...a: unknown[]) => unknown).bind(target)
-            : v;
-        return (sql: string) => {
-          const st = (v as (s: string) => D1PreparedStatement).call(
-            target,
-            sql,
-          );
-          return new Proxy(st, {
-            get(t, p) {
-              const f = (t as never)[p];
-              if (p !== "bind")
-                return (f as (...a: unknown[]) => unknown).bind(t);
-              return (...a: unknown[]) => {
-                binds.push(a);
-                return (f as (...x: unknown[]) => unknown).apply(t, a);
-              };
-            },
-          });
-        };
-      },
-    });
-    const r = await load("/acme", "acme", { ...e, DB } as Env);
+    const { e: spy, binds } = capturingBindsEnv(e);
+    const r = await load("/acme", "acme", spy);
     expect(r.data.items?.length).toBeGreaterThan(0);
     expect(binds.length).toBeGreaterThan(0);
     for (const b of binds)

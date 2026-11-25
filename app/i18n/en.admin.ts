@@ -556,6 +556,8 @@ export const enAdmin = {
   "admin.clients.apply.pending": "Applying…",
   "admin.clients.delete.pending": "Deleting…",
   "admin.clients.status.address": "Public page: {path}",
+  "admin.clients.status.cappedAt":
+    "Visible: {count}+ albums (the page lists the {count} newest)",
   "admin.clients.status.visible.one": "Visible: {count} album",
   "admin.clients.status.visible.other": "Visible: {count} albums",
   "admin.clients.status.disabled":

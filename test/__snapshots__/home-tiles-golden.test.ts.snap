@@ -69,6 +69,8 @@ exports[`T6.48 home / client tiles (golden, pre-refactor) > home and client page
 {
   "clientName": "Acme",
   "clientSlug": "acme",
+  "page": 1,
+  "pageCount": 1,
   "tiles": [
     {
       "clientSlug": "acme",
@@ -123,6 +125,8 @@ exports[`T6.48 home / client tiles (golden, pre-refactor) > home and client page
 {
   "clientName": "Acme",
   "clientSlug": "acme",
+  "page": 1,
+  "pageCount": 1,
   "tiles": [
     {
       "clientSlug": "acme",
