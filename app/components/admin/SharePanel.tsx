@@ -62,25 +62,9 @@ function ShareTargets({
   );
 }
 
-/** Link field, copy, native share (when available) and WhatsApp. */
-function LinkShare({
-  url,
-  slug,
-  title,
-  published,
-}: Pick<SharePanelProps, "url" | "slug" | "title"> & { published: boolean }) {
-  const t = useT();
-  const id = useId();
+/** Copies `url` to the clipboard; `copied` shows the result for 2.5 seconds. */
+function useCopyLink(url: string) {
   const [copied, setCopied] = useState<"ok" | "fail" | null>(null);
-  const sharing = useRef(false);
-  const native = useSyncExternalStore(
-    () => () => {},
-    canNativeShare,
-    () => false,
-  );
-  // Never include the PIN: it is shared separately.
-  const message = t("admin.share.message", { title: title ?? slug });
-
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
@@ -90,6 +74,28 @@ function LinkShare({
     }
     setTimeout(() => setCopied(null), 2500);
   }
+  return { copied, copy };
+}
+
+/** Link field, copy, native share (when available) and WhatsApp. */
+function LinkShare({
+  url,
+  slug,
+  title,
+  published,
+}: Pick<SharePanelProps, "url" | "slug" | "title"> & { published: boolean }) {
+  const t = useT();
+  const id = useId();
+  const { copied, copy } = useCopyLink(url);
+  const sharing = useRef(false);
+  const native = useSyncExternalStore(
+    () => () => {},
+    canNativeShare,
+    () => false,
+  );
+  // Never include the PIN: it is shared separately.
+  const message = t("admin.share.message", { title: title ?? slug });
+
   async function share() {
     if (sharing.current) return;
     sharing.current = true;
