@@ -165,22 +165,59 @@ function VisitorSection({
   );
 }
 
+function FavoritesHeader({ title }: { title: string }) {
+  const t = useT();
+  return (
+    <div className="flex flex-wrap items-center gap-4">
+      <Link
+        to="/admin"
+        className="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0"
+      >
+        {t("admin.backToGalleries")}
+      </Link>
+      <h1 className="text-title text-ink">{title}</h1>
+    </div>
+  );
+}
+
+/** Every picked photo across visitors, with how many people picked each. */
+function AllPicks({
+  data,
+  base,
+  comma,
+}: {
+  data: FavoritesViewData;
+  base: string;
+  comma: boolean;
+}) {
+  const t = useT();
+  const allId = useId();
+  return (
+    <section
+      aria-labelledby={allId}
+      className="border-ink flex flex-col gap-3 border p-4"
+    >
+      <h2 id={allId} className="text-micro text-ink uppercase">
+        {t("admin.favorites.all")}
+      </h2>
+      <p className="text-small text-grey-700">
+        {t("admin.favorites.total", {
+          photos: t("admin.count.photos", { count: data.all.length }),
+        })}
+      </p>
+      <Actions photos={data.all} comma={comma} href={`${base}/favorites.txt`} />
+      <Thumbs photos={data.all} picks />
+    </section>
+  );
+}
+
 export function FavoritesView({ data }: { data: FavoritesViewData }) {
   const base = `/admin/g/${data.gallery.id}`;
   const [comma, setComma] = useState(false);
-  const allId = useId();
   const t = useT();
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-center gap-4">
-        <Link
-          to="/admin"
-          className="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0"
-        >
-          {t("admin.backToGalleries")}
-        </Link>
-        <h1 className="text-title text-ink">{data.gallery.title}</h1>
-      </div>
+      <FavoritesHeader title={data.gallery.title} />
       <GalleryTabs id={data.gallery.id} current="favoritos" />
 
       {data.visitors.length === 0 ? (
@@ -199,25 +236,7 @@ export function FavoritesView({ data }: { data: FavoritesViewData }) {
             {t("admin.favorites.captureNote")}
           </p>
 
-          <section
-            aria-labelledby={allId}
-            className="border-ink flex flex-col gap-3 border p-4"
-          >
-            <h2 id={allId} className="text-micro text-ink uppercase">
-              {t("admin.favorites.all")}
-            </h2>
-            <p className="text-small text-grey-700">
-              {t("admin.favorites.total", {
-                photos: t("admin.count.photos", { count: data.all.length }),
-              })}
-            </p>
-            <Actions
-              photos={data.all}
-              comma={comma}
-              href={`${base}/favorites.txt`}
-            />
-            <Thumbs photos={data.all} picks />
-          </section>
+          <AllPicks data={data} base={base} comma={comma} />
 
           <div className="grid items-start gap-4 xl:grid-cols-2">
             {data.visitors.map((v) => (
