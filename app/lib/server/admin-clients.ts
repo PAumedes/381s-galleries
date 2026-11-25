@@ -11,7 +11,7 @@ import { saveIntent } from "./admin-clients/save";
 import { requireAdmin } from "./auth";
 import { getClient, listClients } from "./clients";
 import { homeCoverIdSql } from "./cover";
-import { CLIENT_CANDIDATE_CAP, listedOnClientPage } from "./home";
+import { listClientAlbums } from "./home";
 
 export type { ClientActionResult } from "./admin-clients/errors";
 
@@ -56,10 +56,8 @@ export async function clientEditData(request: Request, env: Env, id: string) {
     .where(eq(g.clientId, id))
     .orderBy(asc(g.title), asc(g.slug));
   const now = Date.now();
-  const visible = Math.min(
-    rows.filter((r) => listedOnClientPage(r, now)).length,
-    CLIENT_CANDIDATE_CAP,
-  );
+  const { listed, capped } = listClientAlbums(rows, now);
+  const visible = listed.length;
   const albums = rows.map(({ id, title, slug, status, mode }) => ({
     id,
     title,
@@ -70,6 +68,7 @@ export async function clientEditData(request: Request, env: Env, id: string) {
   return {
     publicPage: {
       visible,
+      ...(capped ? { capped: true as const } : {}),
       reason: !c.pageEnabled
         ? ("disabled" as const)
         : visible === 0

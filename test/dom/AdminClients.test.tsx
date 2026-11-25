@@ -293,7 +293,11 @@ describe("T6.40b i18n parity", () => {
 
 describe("T6.46 public page status line", () => {
   const render46 = (
-    publicPage: { visible: number; reason: "disabled" | "none" | null },
+    publicPage: {
+      visible: number;
+      capped?: true;
+      reason: "disabled" | "none" | null;
+    },
     lang: "es" | "en" = "es",
   ) =>
     stub(
@@ -313,6 +317,18 @@ describe("T6.46 public page status line", () => {
     expect(box.textContent).toContain("/acme");
     expect(box.textContent).toContain("Visible: 2 álbumes");
     expect(box.getAttribute("dir")).toBeNull();
+  });
+  it("capped: shows 1000+ in both languages", async () => {
+    render46({ visible: 1000, capped: true, reason: null });
+    expect(
+      (await screen.findByTestId("client-page-status")).textContent,
+    ).toContain("Visible: 1000+ álbumes");
+  });
+  it("capped, English", async () => {
+    render46({ visible: 1000, capped: true, reason: null }, "en");
+    expect(
+      (await screen.findByTestId("client-page-status")).textContent,
+    ).toContain("Visible: 1000+ albums");
   });
   it("singular and English", async () => {
     render46({ visible: 1, reason: null }, "en");

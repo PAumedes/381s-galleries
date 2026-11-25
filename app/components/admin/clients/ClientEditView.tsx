@@ -66,6 +66,8 @@ function Albums({
 /** What `/<client>` shows right now (computed by the edit loader). */
 export interface ClientPageStatus {
   visible: number;
+  /** More listable albums than the page cap: show "N+". */
+  capped?: true;
   reason: "disabled" | "none" | null;
 }
 
@@ -90,7 +92,9 @@ function PublicPageStatus({
           ? t("admin.clients.status.disabled")
           : status.reason === "none"
             ? t("admin.clients.status.none")
-            : t("admin.clients.status.visible", { count: status.visible })}
+            : status.capped
+              ? t("admin.clients.status.cappedAt", { count: status.visible })
+              : t("admin.clients.status.visible", { count: status.visible })}
       </span>
     </div>
   );

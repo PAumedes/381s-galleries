@@ -9,8 +9,10 @@ export const HOME_CAP = 60;
 /** Albums per page of a client's homepage (T6.49); also the covers query size (<= 100 binds). */
 export const CLIENT_PAGE_SIZE = 60;
 /**
- * Most candidate rows one client page reads (newest first), so the query and
- * the JS filter stay bounded; older albums beyond it are not listed.
+ * Most LISTABLE albums one client page lists (newest first). It counts only
+ * albums that pass `listedOnClientPage`, applied after the filter, so expired
+ * or cover-less albums never hide older valid ones. The SQL has no limit: the
+ * rows carry no cover bytes (a few hundred bytes each).
  */
 export const CLIENT_CANDIDATE_CAP = 1000;
 
@@ -108,13 +110,29 @@ export function listedOnClientPage(
 type Db = ReturnType<typeof getDb>;
 type TileRow = Awaited<ReturnType<typeof queryTileRows>>[number];
 
+/**
+ * The albums a client page lists: the `listedOnClientPage` rule, then the
+ * `CLIENT_CANDIDATE_CAP` newest (rows arrive newest first). `capped` is true
+ * when more listable albums exist than the cap. One rule for page and admin.
+ */
+export function listClientAlbums<
+  R extends Parameters<typeof listedOnClientPage>[0],
+>(rows: R[], now: number): { listed: R[]; capped: boolean } {
+  const all = rows.filter((r) => listedOnClientPage(r, now));
+  return {
+    listed: all.slice(0, CLIENT_CANDIDATE_CAP),
+    capped: all.length > CLIENT_CANDIDATE_CAP,
+  };
+}
+
 /** Candidate albums of a scope, newest event first (cover rule in `homeCoverIdSql`). */
 async function queryTileRows(db: Db, scope: Scope) {
   const g = schema.galleries;
   const c = schema.clients;
-  const q = db
+  return db
     .select({
       slug: g.slug,
+      status: g.status,
       title: g.title,
       eventDate: g.eventDate,
       expiresAt: g.expiresAt,
@@ -141,10 +159,7 @@ async function queryTileRows(db: Db, scope: Scope) {
       sql`COALESCE(NULLIF(${g.eventDate}, ''), ${g.createdAt}) DESC`,
       sql`${g.createdAt} DESC`,
       sql`${g.id}`,
-    )
-    .$dynamic();
-  // the home filters in JS down to HOME_CAP; a client page is bounded here
-  return scope.kind === "home" ? q : q.limit(CLIENT_CANDIDATE_CAP);
+    );
 }
 
 /** The cover photos of the unlocked tiles, by id (one query, none when nothing to fetch). */
@@ -201,11 +216,9 @@ async function loadTiles(
   const home = scope.kind === "home";
   const rows = await queryTileRows(db, scope);
   const now = Date.now();
-  const listed = rows.filter(
-    (r) =>
-      (r.coverId !== null || (!home && r.pinned)) &&
-      !isExpired(r.expiresAt, now),
-  );
+  const listed = home
+    ? rows.filter((r) => r.coverId !== null && !isExpired(r.expiresAt, now))
+    : listClientAlbums(rows, now).listed;
   const size = home ? HOME_CAP : CLIENT_PAGE_SIZE;
   const pageCount = home ? 1 : Math.ceil(listed.length / size);
   const shown = listed.slice((page - 1) * size, page * size);

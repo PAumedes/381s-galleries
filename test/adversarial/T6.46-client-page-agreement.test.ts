@@ -3,7 +3,11 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, schema } from "../../app/db";
 import { clientEditData } from "../../app/lib/server/admin-clients";
 import { hashPin } from "../../app/lib/server/crypto";
-import { loadClientTiles, loadHome } from "../../app/lib/server/home";
+import {
+  CLIENT_CANDIDATE_CAP,
+  loadClientTiles,
+  loadHome,
+} from "../../app/lib/server/home";
 import { migrateDb, resetTables } from "../support/d1";
 
 const e = { ...env, DRIVE_MODE: "mock", ALLOW_DEV_ADMIN: "1" } as Env;
@@ -137,4 +141,47 @@ describe("T6.46 listedOnClientPage vs real loader (all combos)", () => {
     );
     expect(admin.publicPage.visible).toBe(page!.tiles.length);
   });
+
+  it("T6.49: with more listable albums than the cap, admin and public agree (cap, 1000+)", async () => {
+    await db
+      .insert(schema.clients)
+      .values({ id: "c1", slug: "acme", name: "A" });
+    const N = Math.ceil(CLIENT_CANDIDATE_CAP * 1.6); // 2/3 listable > cap
+    for (let i = 0; i < N; i += 40) {
+      const stmts = [];
+      for (let j = i; j < Math.min(N, i + 40); j++)
+        stmts.push(
+          db.insert(schema.galleries).values({
+            id: `g${j}`,
+            driveFolderId: `d${j}`,
+            slug: `s${j}`,
+            title: `T${j}`,
+            status: "published",
+            clientId: "c1",
+            // every 3rd is expired and never counts toward the cap
+            expiresAt: j % 3 === 0 ? past : null,
+          }),
+          db.insert(schema.photos).values({
+            id: `p${j}`,
+            galleryId: `g${j}`,
+            baseName: `B${j}`,
+            driveHighresId: `hr${j}`,
+            sort: 0,
+          }),
+        );
+      await db.batch(stmts as never);
+    }
+    const page = await loadClientTiles(e, "acme");
+    let listed = 0;
+    for (let n = 1; n <= page!.pageCount; n++)
+      listed += (await loadClientTiles(e, "acme", n))!.tiles.length;
+    const admin = await clientEditData(
+      new Request("http://localhost/x"),
+      e,
+      "c1",
+    );
+    expect(listed).toBe(CLIENT_CANDIDATE_CAP);
+    expect(admin.publicPage.visible).toBe(listed);
+    expect(admin.publicPage.capped).toBe(true);
+  }, 60_000);
 });
