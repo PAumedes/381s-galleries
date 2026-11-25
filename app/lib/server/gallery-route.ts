@@ -11,7 +11,7 @@ import {
   parsePageParam,
   type ClientPageData,
 } from "./client-page";
-import { backToClient, type BackToClient } from "./back-to-client";
+import { backLink, type BackToClient } from "./back-to-client";
 import { PAGE_PARAM } from "../page-param";
 import { pinFeedback, postedAttempt } from "./pin-feedback";
 import { NOSNIFF, PRIVATE_NO_STORE } from "./http";
@@ -88,20 +88,22 @@ export async function galleryLoader(
     result.data.state === "unavailable" ? null : res.hit?.clientSlug;
   const back =
     result.data.state === "unavailable"
-      ? undefined
-      : backToClient(
+      ? {}
+      : await backLink(
           request,
           res.hit,
           result.data.state === "open"
             ? result.data.gallery.coverPhotoId
             : null,
+          env,
         );
+  if (back.setCookie) headers.append("Set-Cookie", back.setCookie);
   return data(
     {
       ...result.data,
       origin: publicOrigin(env, request),
       ...(clientSlug ? { clientSlug } : {}),
-      ...(back ? { backToClient: back } : {}),
+      ...(back.link ? { backToClient: back.link } : {}),
     },
     { status: result.status, headers },
   );
