@@ -36,24 +36,10 @@ export type GridProps = {
   protect?: boolean;
 };
 
-const ACTION =
-  "flex size-11 items-center justify-center text-white/90 hover:text-white";
-
-export function Grid({
-  photos,
-  t,
-  onOpen,
-  onFavorite,
-  onDownload,
-  isFavorite,
-  initialWidth = DEFAULT_GRID_WIDTH,
-  layout: style = "filas",
-  gap = GAP,
-  protect = false,
-}: GridProps) {
+/** Width of the element (floored, ignoring 0), `initial` until measured (SSR). */
+function useElementWidth(initial: number) {
   const ref = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(initialWidth);
-
+  const [width, setWidth] = useState(initial);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -70,17 +56,42 @@ export function Grid({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  return { ref, width };
+}
 
+function layoutFor(
+  style: GridStyle,
+  photos: readonly GalleryPhoto[],
+  opts: { containerWidth: number; gap: number },
+) {
+  return style === "cuadricula"
+    ? squareLayout(photos.length, opts)
+    : style === "columnas"
+      ? columnsLayout(photos, opts)
+      : justify(photos, opts);
+}
+
+const ACTION =
+  "flex size-11 items-center justify-center text-white/90 hover:text-white";
+
+export function Grid({
+  photos,
+  t,
+  onOpen,
+  onFavorite,
+  onDownload,
+  isFavorite,
+  initialWidth = DEFAULT_GRID_WIDTH,
+  layout: style = "filas",
+  gap = GAP,
+  protect = false,
+}: GridProps) {
+  const { ref, width } = useElementWidth(initialWidth);
   // Every layout lists tiles in photo order and places them so that
   // (top, left) reading order equals that order: the lightbox (which walks
   // `photos`) always matches what the visitor sees.
   const layout = useMemo(
-    () =>
-      style === "cuadricula"
-        ? squareLayout(photos.length, { containerWidth: width, gap })
-        : style === "columnas"
-          ? columnsLayout(photos, { containerWidth: width, gap })
-          : justify(photos, { containerWidth: width, gap }),
+    () => layoutFor(style, photos, { containerWidth: width, gap }),
     [photos, width, style, gap],
   );
 
@@ -164,80 +175,162 @@ function Tile({
         height: `${box.height}px`,
       }}
     >
-      <button
-        type="button"
-        data-testid={`open-${index}`}
-        aria-label={label}
-        onClick={open}
-        className="absolute inset-0 block size-full cursor-zoom-in"
-      >
-        <img
-          ref={imgRef}
-          key={retry}
-          src={`${thumb}${retry ? `${thumb.includes("?") ? "&" : "?"}r=${retry}` : ""}`}
-          alt={label}
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-          onLoad={() => setLoaded(true)}
-          onError={() => setFailed(true)}
-          className={`block size-full object-cover transition-opacity duration-slow ease-out-soft motion-reduce:transition-none ${
-            loaded ? "opacity-100" : "opacity-0"
-          }`}
-        />
-        {protect && (
-          <span
-            data-testid={`shield-${index}`}
-            aria-hidden="true"
-            className="absolute inset-0"
-            onContextMenu={(e) => e.preventDefault()}
-          />
-        )}
-      </button>
+      <TileImage
+        index={index}
+        label={label}
+        src={thumb}
+        retry={retry}
+        loaded={loaded}
+        protect={protect}
+        onOpen={open}
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+        imgRef={imgRef}
+      />
       {failed && (
-        <button
-          type="button"
-          data-testid={`retry-${index}`}
-          aria-label={t("lightbox.retry")}
-          className="absolute bottom-1 left-1 flex size-11 items-center justify-center text-grey-500 hover:text-grey-900"
-          onClick={() => {
+        <RetryButton
+          index={index}
+          label={t("lightbox.retry")}
+          onRetry={() => {
             setFailed(false);
             setRetry((n) => n + 1);
           }}
-        >
-          <Retry className="size-5" aria-hidden="true" />
-        </button>
+        />
       )}
-      {/* Touch devices: actions live in the lightbox to keep the grid clean. */}
       {hasActions && (
-        <div className="absolute top-0 right-0 flex pointer-coarse:hidden bg-linear-to-bl from-black/40 to-transparent transition-opacity duration-base ease-out-soft pointer-fine:opacity-0 pointer-fine:group-focus-within:opacity-100 pointer-fine:group-hover:opacity-100">
-          {onFavorite && (
-            <button
-              type="button"
-              className={ACTION}
-              aria-label={t(favorite ? "favorites.remove" : "favorites.add")}
-              aria-pressed={favorite}
-              onClick={() => onFavorite(photo.id)}
-            >
-              {favorite ? (
-                <HeartFilled width={20} height={20} />
-              ) : (
-                <Heart width={20} height={20} />
-              )}
-            </button>
-          )}
-          {onDownload && (
-            <button
-              type="button"
-              className={ACTION}
-              aria-label={t("download.title")}
-              onClick={() => onDownload(photo.id)}
-            >
-              <Download width={20} height={20} />
-            </button>
-          )}
-        </div>
+        <TileHoverActions
+          t={t}
+          photoId={photo.id}
+          favorite={favorite}
+          onFavorite={onFavorite}
+          onDownload={onDownload}
+        />
       )}
     </div>
+  );
+}
+
+function RetryButton({
+  index,
+  label,
+  onRetry,
+}: {
+  index: number;
+  label: string;
+  onRetry: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid={`retry-${index}`}
+      aria-label={label}
+      className="absolute bottom-1 left-1 flex size-11 items-center justify-center text-grey-500 hover:text-grey-900"
+      onClick={onRetry}
+    >
+      <Retry className="size-5" aria-hidden="true" />
+    </button>
+  );
+}
+
+/** Favourite / download buttons over a tile (fine pointers; touch uses the lightbox). */
+function TileHoverActions({
+  t,
+  photoId,
+  favorite,
+  onFavorite,
+  onDownload,
+}: {
+  t: TFunction;
+  photoId: string;
+  favorite: boolean;
+  onFavorite?: (id: string) => void;
+  onDownload?: (id: string) => void;
+}) {
+  return (
+    <div className="absolute top-0 right-0 flex pointer-coarse:hidden bg-linear-to-bl from-black/40 to-transparent transition-opacity duration-base ease-out-soft pointer-fine:opacity-0 pointer-fine:group-focus-within:opacity-100 pointer-fine:group-hover:opacity-100">
+      {onFavorite && (
+        <button
+          type="button"
+          className={ACTION}
+          aria-label={t(favorite ? "favorites.remove" : "favorites.add")}
+          aria-pressed={favorite}
+          onClick={() => onFavorite(photoId)}
+        >
+          {favorite ? (
+            <HeartFilled width={20} height={20} />
+          ) : (
+            <Heart width={20} height={20} />
+          )}
+        </button>
+      )}
+      {onDownload && (
+        <button
+          type="button"
+          className={ACTION}
+          aria-label={t("download.title")}
+          onClick={() => onDownload(photoId)}
+        >
+          <Download width={20} height={20} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** The thumbnail button (opens the lightbox) with its loading fade and proofing shield. */
+function TileImage({
+  index,
+  label,
+  src,
+  retry,
+  loaded,
+  protect,
+  onOpen,
+  onLoad,
+  onError,
+  imgRef,
+}: {
+  index: number;
+  label: string;
+  src: string;
+  retry: number;
+  loaded: boolean;
+  protect: boolean;
+  onOpen: (e: MouseEvent<HTMLButtonElement>) => void;
+  onLoad: () => void;
+  onError: () => void;
+  imgRef: (img: HTMLImageElement | null) => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid={`open-${index}`}
+      aria-label={label}
+      onClick={onOpen}
+      className="absolute inset-0 block size-full cursor-zoom-in"
+    >
+      <img
+        ref={imgRef}
+        key={retry}
+        src={`${src}${retry ? `${src.includes("?") ? "&" : "?"}r=${retry}` : ""}`}
+        alt={label}
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+        onLoad={onLoad}
+        onError={onError}
+        className={`block size-full object-cover transition-opacity duration-slow ease-out-soft motion-reduce:transition-none ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+      />
+      {protect && (
+        <span
+          data-testid={`shield-${index}`}
+          aria-hidden="true"
+          className="absolute inset-0"
+          onContextMenu={(e) => e.preventDefault()}
+        />
+      )}
+    </button>
   );
 }
