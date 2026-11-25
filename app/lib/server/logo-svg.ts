@@ -134,6 +134,87 @@ function safeAttr(name: string, value: string): boolean {
   return safeCss(value);
 }
 
+/** Scanner state for {@link checkSvg}; every `scan*` step returns false on anything unsafe. */
+interface Scan {
+  text: string;
+  i: number;
+  stack: string[];
+  elements: number;
+  rootClosed: boolean;
+  sawRoot: boolean;
+  rootNs: boolean;
+}
+
+/** Character data up to the next tag: only whitespace, or text inside a text element. */
+function scanText(s: Scan): boolean {
+  const next = s.text.indexOf("<", s.i);
+  const chunk = s.text.slice(s.i, next < 0 ? s.text.length : next);
+  if (/&/.test(chunk)) return false;
+  if (/[^ \t\r\n]/.test(chunk)) {
+    const top = s.stack[s.stack.length - 1];
+    if (!top || !TEXT_ELEMENTS.has(top)) return false;
+    if (top === "style" && !safeCss(chunk)) return false;
+    if (SCHEMES.test(chunk) && top === "style") return false;
+  }
+  s.i = next < 0 ? s.text.length : next;
+  return true;
+}
+
+function scanComment(s: Scan): boolean {
+  const end = s.text.indexOf("-->", s.i + 4);
+  if (end < 0) return false;
+  const body = s.text.slice(s.i + 4, end);
+  if (body.includes("--") || body.endsWith("-")) return false;
+  s.i = end + 3;
+  return true;
+}
+
+/** The attributes of one start tag: allow-listed, unique, bounded, namespace only on the root. */
+function scanAttrs(s: Scan, name: string, attrText: string): boolean {
+  const seen = new Set<string>();
+  for (const m of attrText.matchAll(ATTR)) {
+    const attr = m[1];
+    const value = m[2] ?? m[3] ?? "";
+    if (seen.has(attr) || seen.size >= MAX_ATTRS) return false;
+    seen.add(attr);
+    if (!SVG_ATTRS.has(attr) || !safeAttr(attr, value)) return false;
+    if (attr.startsWith("xmlns") && s.sawRoot) return false;
+    if (attr === "type" && name !== "style") return false;
+    if (attr === "xmlns" && !s.sawRoot) s.rootNs = true;
+  }
+  return true;
+}
+
+function scanOpenTag(s: Scan): boolean {
+  OPEN_TAG.lastIndex = s.i;
+  const open = OPEN_TAG.exec(s.text);
+  if (!open) return false;
+  const [, name, attrText, selfClose] = open;
+  if (!SVG_ELEMENTS.has(name) || s.rootClosed) return false;
+  if (!s.sawRoot && name !== "svg") return false;
+  if (++s.elements > MAX_ELEMENTS || s.stack.length >= MAX_DEPTH) return false;
+  if (!scanAttrs(s, name, attrText)) return false;
+  if (!s.sawRoot && !s.rootNs) return false; // the SVG namespace is required
+  s.sawRoot = true;
+  s.i = OPEN_TAG.lastIndex;
+  if (selfClose) {
+    if (s.stack.length === 0) s.rootClosed = true;
+  } else s.stack.push(name);
+  return true;
+}
+
+/** One markup token at `s.i`: comment, end tag or start tag. */
+function scanMarkup(s: Scan): boolean {
+  if (s.text.startsWith("<!--", s.i)) return scanComment(s);
+  CLOSE_TAG.lastIndex = s.i;
+  const close = CLOSE_TAG.exec(s.text);
+  if (!close) return scanOpenTag(s);
+  if (s.stack.pop() !== close[1]) return false;
+  if (s.stack.length === 0) s.rootClosed = true;
+  s.i = CLOSE_TAG.lastIndex;
+  return true;
+}
+
 export function checkSvg(b: Uint8Array): LogoCheck {
   let text: string;
   try {
@@ -141,75 +222,26 @@ export function checkSvg(b: Uint8Array): LogoCheck {
   } catch {
     return bad("svg_unsafe");
   }
-  if (CONTROL.test(text)) return bad("svg_unsafe");
   const unsafe = bad("svg_unsafe");
-  const stack: string[] = [];
-  let i = 0;
-  let elements = 0;
-  let rootClosed = false;
-  let sawRoot = false;
-  let rootNs = false;
+  if (CONTROL.test(text)) return unsafe;
+  const s: Scan = {
+    text,
+    i: 0,
+    stack: [],
+    elements: 0,
+    rootClosed: false,
+    sawRoot: false,
+    rootNs: false,
+  };
   XML_DECL.lastIndex = 0;
   if (text.startsWith("<?xml")) {
     if (!XML_DECL.test(text)) return unsafe;
-    i = XML_DECL.lastIndex;
+    s.i = XML_DECL.lastIndex;
   }
-  while (i < text.length) {
-    if (text[i] !== "<") {
-      const next = text.indexOf("<", i);
-      const chunk = text.slice(i, next < 0 ? text.length : next);
-      if (/&/.test(chunk)) return unsafe;
-      if (/[^ \t\r\n]/.test(chunk)) {
-        const top = stack[stack.length - 1];
-        if (!top || !TEXT_ELEMENTS.has(top)) return unsafe;
-        if (top === "style" && !safeCss(chunk)) return unsafe;
-        if (SCHEMES.test(chunk) && top === "style") return unsafe;
-      }
-      i = next < 0 ? text.length : next;
-      continue;
-    }
-    if (text.startsWith("<!--", i)) {
-      const end = text.indexOf("-->", i + 4);
-      if (end < 0) return unsafe;
-      const body = text.slice(i + 4, end);
-      if (body.includes("--") || body.endsWith("-")) return unsafe;
-      i = end + 3;
-      continue;
-    }
-    CLOSE_TAG.lastIndex = i;
-    const close = CLOSE_TAG.exec(text);
-    if (close) {
-      if (stack.pop() !== close[1]) return unsafe;
-      if (stack.length === 0) rootClosed = true;
-      i = CLOSE_TAG.lastIndex;
-      continue;
-    }
-    OPEN_TAG.lastIndex = i;
-    const open = OPEN_TAG.exec(text);
-    if (!open) return unsafe;
-    const [, name, attrText, selfClose] = open;
-    if (!SVG_ELEMENTS.has(name) || rootClosed) return unsafe;
-    if (!sawRoot && name !== "svg") return unsafe;
-    if (++elements > MAX_ELEMENTS || stack.length >= MAX_DEPTH) return unsafe;
-    const seen = new Set<string>();
-    for (const m of attrText.matchAll(ATTR)) {
-      const attr = m[1];
-      const value = m[2] ?? m[3] ?? "";
-      if (seen.has(attr) || seen.size >= MAX_ATTRS) return unsafe;
-      seen.add(attr);
-      if (!SVG_ATTRS.has(attr) || !safeAttr(attr, value)) return unsafe;
-      if (attr.startsWith("xmlns") && sawRoot) return unsafe;
-      if (attr === "type" && name !== "style") return unsafe;
-      if (attr === "xmlns" && !sawRoot) rootNs = true;
-    }
-    if (!sawRoot && !rootNs) return unsafe; // the SVG namespace is required
-    sawRoot = true;
-    i = OPEN_TAG.lastIndex;
-    if (selfClose) {
-      if (stack.length === 0) rootClosed = true;
-    } else stack.push(name);
+  while (s.i < text.length) {
+    if (!(text[s.i] !== "<" ? scanText(s) : scanMarkup(s))) return unsafe;
   }
-  return sawRoot && rootClosed && stack.length === 0
+  return s.sawRoot && s.rootClosed && s.stack.length === 0
     ? { ok: true, type: "image/svg+xml" }
     : unsafe;
 }
