@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   SetupView,
   type SetupActionData,
@@ -75,5 +76,165 @@ describe("SetupView characterization (T6.47)", () => {
         result: { ...synced.result!, skipped: "locked" },
       }),
     ).toMatchSnapshot();
+  });
+
+  it("connected but no root folder chosen", async () => {
+    expect(
+      await html({ ...full, rootName: null, ignoredFolders: [] }),
+    ).toMatchSnapshot();
+  });
+  it("not connected and not demo", async () => {
+    expect(
+      await html({
+        ...full,
+        connected: false,
+        mock: false,
+        rootName: null,
+        cacheWarm: undefined,
+        lastError: null,
+      }),
+    ).toMatchSnapshot();
+  });
+  it("both logos uploaded", async () => {
+    expect(
+      await html({ ...full, logo: { onLight: "v1", onDark: "v2" } }),
+    ).toMatchSnapshot();
+  });
+  it("only a dark logo uploaded", async () => {
+    expect(
+      await html({ ...full, logo: { onLight: null, onDark: "v2" } }),
+    ).toMatchSnapshot();
+  });
+  it("success message feedback for the studio intent", async () => {
+    expect(
+      await html(full, { intent: "studio", ok: true, message: "Guardado" }),
+    ).toMatchSnapshot();
+  });
+});
+
+describe("SetupView pending logo previews (T6.47)", () => {
+  const origCreate = URL.createObjectURL;
+  const origRevoke = URL.revokeObjectURL;
+  afterEach(() => {
+    URL.createObjectURL = origCreate;
+    URL.revokeObjectURL = origRevoke;
+  });
+  const png = () =>
+    new File([new Uint8Array([1])], "a.png", { type: "image/png" });
+
+  async function pick(label: string, data: SetupViewData, files: string[]) {
+    let n = 0;
+    URL.createObjectURL = () => `blob:${n++}`;
+    URL.revokeObjectURL = () => {};
+    const Stub = createRoutesStub([
+      {
+        path: "/admin/setup",
+        Component: () => <SetupView data={data} actionData={undefined} />,
+      },
+    ]);
+    const { container } = render(<Stub initialEntries={["/admin/setup"]} />);
+    for (const l of files)
+      fireEvent.change(await screen.findByLabelText(l), {
+        target: { files: [png()] },
+      });
+    void label;
+    return container.innerHTML.replace(/blob:[^"]+/g, "blob:X");
+  }
+
+  it("light pick without an uploaded dark logo: dark swatch shows it inverted", async () => {
+    const out = await pick(
+      "l",
+      { ...empty, logo: { onLight: null, onDark: null } },
+      ["Logo para fondos claros"],
+    );
+    expect(out).toMatchSnapshot();
+    expect(out).toContain("brightness-0 invert");
+  });
+  it("light pick with an uploaded dark logo: dark swatch keeps the upload (no invert)", async () => {
+    const out = await pick(
+      "l",
+      { ...empty, logo: { onLight: null, onDark: "v2" } },
+      ["Logo para fondos claros"],
+    );
+    expect(out).toMatchSnapshot();
+    expect(out).not.toContain("brightness-0 invert");
+  });
+  it("dark pick, then light pick: both previews are the picked files", async () => {
+    const out = await pick(
+      "d",
+      { ...empty, logo: { onLight: null, onDark: null } },
+      ["Logo para fondos oscuros (opcional)", "Logo para fondos claros"],
+    );
+    expect(out).toMatchSnapshot();
+    expect(out).not.toContain("brightness-0 invert");
+  });
+});
+
+describe("SetupView busy state and confirms (T6.47)", () => {
+  const origConfirm = window.confirm;
+  afterEach(() => {
+    window.confirm = origConfirm;
+  });
+
+  it("shows the syncing label (and disables the buttons) while the sync submits", async () => {
+    const Stub = createRoutesStub([
+      {
+        path: "/admin/setup",
+        Component: () => <SetupView data={full} actionData={undefined} />,
+        action: () => new Promise(() => {}),
+      },
+    ]);
+    const { container } = render(<Stub initialEntries={["/admin/setup"]} />);
+    const form = (
+      container.querySelector('input[value="sync"]') as HTMLInputElement
+    ).form!;
+    await userEvent
+      .setup()
+      .click(form.querySelector("button[type=submit]") as HTMLElement);
+    await waitFor(() => expect(form.textContent).toBe("Sincronizando…"));
+    expect(container.innerHTML).toMatchSnapshot();
+  });
+
+  function confirms(answer: boolean) {
+    const asked: string[] = [];
+    window.confirm = (m?: string) => (asked.push(String(m)), answer);
+    return asked;
+  }
+  async function formOf(data: SetupViewData, intent: string) {
+    const Stub = createRoutesStub([
+      {
+        path: "/admin/setup",
+        Component: () => <SetupView data={data} actionData={undefined} />,
+      },
+    ]);
+    const { container } = render(<Stub initialEntries={["/admin/setup"]} />);
+    await screen.findByRole("heading", { level: 1 });
+    return (
+      container.querySelector(`input[value="${intent}"]`) as HTMLInputElement
+    ).form!;
+  }
+
+  it("root form asks to confirm when a root exists; declining cancels the submit", async () => {
+    const asked = confirms(false);
+    const form = await formOf(full, "root");
+    expect(fireEvent.submit(form)).toBe(false);
+    expect(asked).toHaveLength(1);
+    expect(form.querySelector('input[name="confirm"]')).not.toBeNull();
+  });
+  it("root form does not ask without a root folder", async () => {
+    const asked = confirms(false);
+    const form = await formOf({ ...full, rootName: null }, "root");
+    fireEvent.submit(form);
+    expect(asked).toHaveLength(0);
+    expect(form.querySelector('input[name="confirm"]')).toBeNull();
+  });
+  it("re-include asks to confirm; declining cancels, accepting asks once more and goes on", async () => {
+    const asked = confirms(false);
+    const form = await formOf(full, "reinclude");
+    expect(fireEvent.submit(form)).toBe(false);
+    expect(asked).toHaveLength(1);
+    const accepted = confirms(true);
+    fireEvent.submit(form);
+    expect(accepted).toHaveLength(1);
   });
 });

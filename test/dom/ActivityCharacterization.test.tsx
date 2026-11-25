@@ -105,4 +105,59 @@ describe("ActivityView characterization (T6.47)", () => {
     await screen.findByRole("heading", { level: 1 });
     expect(container.innerHTML).toMatchSnapshot();
   });
+  it("rows without device or software, unknown device, unknown size, deleted photo", async () => {
+    const bare = {
+      device: null,
+      browser: null,
+      browserVersion: null,
+      os: null,
+      country: null,
+      region: null,
+      city: null,
+      lang: null,
+      referrerHost: null,
+    };
+    const odd = {
+      ...data,
+      rows: [
+        row({ id: "r1", ...bare }),
+        row({ id: "r2", ...bare, device: "fridge", variant: "weird" }),
+        row({ id: "r3", ...bare, device: "bot", browser: null, os: "Linux" }),
+        row({ id: "r4", name: null, photoId: "gone" }),
+        {
+          ...row({ id: "r5", photoId: null, name: null }),
+          bulk: { scope: "all", count: 0, children: [] },
+        },
+      ],
+      views: [view({ ...bare, email: null })],
+      next: null,
+      filters: { visitor: "", size: "" },
+      visitorOptions: [],
+    } as unknown as ActivityViewData;
+    const { container } = show(odd);
+    await screen.findByRole("table", { name: "Descargas" });
+    expect(container.innerHTML).toMatchSnapshot();
+  });
+  it("older-link carries visitor, size and cursor; options come from visitorOptions", async () => {
+    const more = {
+      ...data,
+      visitorOptions: ["ana@example.com", "bob@example.com"],
+      filters: { visitor: "bob@example.com", size: "ig" },
+    } as unknown as ActivityViewData;
+    const { container } = show(more);
+    await screen.findByRole("table", { name: "Descargas" });
+    const older = container.querySelector("a[href*='cursor=']")!;
+    const qs = new URLSearchParams(older.getAttribute("href")!.split("?")[1]);
+    expect(Object.fromEntries(qs)).toEqual({
+      visitor: "bob@example.com",
+      size: "ig",
+      cursor: "2026-01-01T00:00:00Z|d0",
+    });
+    expect(
+      [...container.querySelectorAll("select[name=visitor] option")].map((o) =>
+        o.getAttribute("value"),
+      ),
+    ).toEqual(["", "anon", "ana@example.com", "bob@example.com"]);
+    expect(container.innerHTML).toMatchSnapshot();
+  });
 });
