@@ -30,7 +30,7 @@ export async function savePin(
   }
   if (mode !== "set") return fail(intent, t("admin.msg.unknownAction"));
   const pin = str(f, "pin");
-  if (pin.length < PIN_MIN || pin.length > PIN_MAX || CONTROL_RE.test(pin))
+  if (!isValidPin(pin))
     return fail(intent, t("admin.msg.pinCheck"), {
       pin: t("admin.msg.pinLength", { min: PIN_MIN, max: PIN_MAX }),
     });
