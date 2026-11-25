@@ -33,15 +33,11 @@ export interface EditPhoto {
   hasWm?: boolean;
 }
 
-export async function loadGalleryEdit(env: Env, id: string) {
-  const db = getDb(env);
-  const [g] = await db
-    .select()
-    .from(schema.galleries)
-    .where(eq(schema.galleries.id, id));
-  if (!g) return null;
-  const clients = await listClientChoices(env, g.clientId);
-  const ps = await db
+type GalleryRow = typeof schema.galleries.$inferSelect;
+
+/** The visible photos with everything the editor derives from them (flags, image token inputs). */
+function editPhotoRows(db: ReturnType<typeof getDb>, galleryId: string) {
+  return db
     .select({
       id: schema.photos.id,
       set: schema.photos.setName,
@@ -60,12 +56,76 @@ export async function loadGalleryEdit(env: Env, id: string) {
       variantVersions: schema.photos.variantVersions,
     })
     .from(schema.photos)
-    .where(and(eq(schema.photos.galleryId, id), photoVisible))
+    .where(and(eq(schema.photos.galleryId, galleryId), photoVisible))
     .orderBy(
       asc(schema.photos.setName),
       asc(schema.photos.sort),
       asc(schema.photos.baseName),
     );
+}
+
+/** Sync issues, plus (proofing only) the photos without preview-wm, which 404 for clients. */
+function editIssues(g: GalleryRow, noWm: { set: string; name: string }[]) {
+  const issues = groupIssues(g.syncIssuesJson);
+  if (g.mode === "proofing" && noWm.length > 0) {
+    issues.groups.push({
+      type: "missing_wm",
+      label: ISSUE_LABELS.missing_wm,
+      items: noWm.map((p) => ({ set: p.set, name: p.name })),
+    });
+    issues.total += noWm.length;
+  }
+  return issues;
+}
+
+/** The gallery fields the editor shows (never ids of Drive files). */
+function editGallery(
+  env: Env,
+  g: GalleryRow,
+  clients: Awaited<ReturnType<typeof listClientChoices>>,
+  cover: ReturnType<typeof resolveCover>,
+) {
+  return {
+    id: g.id,
+    title: g.title,
+    slug: g.slug,
+    clientId: g.clientId,
+    clientSlug: clients.find((c) => c.id === g.clientId)?.slug ?? null,
+    eventDate: g.eventDate,
+    expires: utcIsoToLocal(g.expiresAt, validTimezone(env.TIMEZONE)),
+    status: g.status,
+    allowHighres: g.allowHighres,
+    allowWeb: g.allowWeb,
+    allowIg: g.allowIg,
+    allowBulk: g.allowBulk,
+    requireEmail: g.requireEmail,
+    mode: g.mode,
+    palette: g.palette,
+    coverLayout: g.coverLayout,
+    gridStyle: g.gridStyle,
+    gridGap: g.gridGap,
+    hasPin: g.pinHash !== null,
+    showOnHome: g.showOnHome,
+    coverPhotoId: cover.editCover,
+    coverFocus: focusOf(g.coverFocusX, g.coverFocusY),
+    // Optional mobile cover: only while that photo is visible.
+    coverPhotoIdMobile: cover.mobile,
+    ...(cover.mobileNoWm ? { mobileCoverNoWm: true as const } : {}),
+    coverFocusMobile: cover.mobile
+      ? focusOf(g.coverFocusMobileX, g.coverFocusMobileY)
+      : null,
+  };
+}
+
+export async function loadGalleryEdit(env: Env, id: string) {
+  const db = getDb(env);
+  const [g] = await db
+    .select()
+    .from(schema.galleries)
+    .where(eq(schema.galleries.id, id));
+  if (!g) return null;
+  const clients = await listClientChoices(env, g.clientId);
+  const ps = await editPhotoRows(db, id);
   const photos: EditPhoto[] = await Promise.all(
     ps.map(async (p) => ({
       id: p.id,
@@ -78,52 +138,13 @@ export async function loadGalleryEdit(env: Env, id: string) {
       hasWm: !!p.hasWm,
     })),
   );
-  // Proofing serves only preview-wm: photos without it 404 for clients.
   const noWm = ps.filter((p) => !p.hasWm);
-  const issues = groupIssues(g.syncIssuesJson);
   const cover = resolveCover(
     ps.map((p) => ({ id: p.id, hasWm: !!p.hasWm })),
     g,
   );
-  if (g.mode === "proofing" && noWm.length > 0) {
-    issues.groups.push({
-      type: "missing_wm",
-      label: ISSUE_LABELS.missing_wm,
-      items: noWm.map((p) => ({ set: p.set, name: p.name })),
-    });
-    issues.total += noWm.length;
-  }
   return {
-    gallery: {
-      id: g.id,
-      title: g.title,
-      slug: g.slug,
-      clientId: g.clientId,
-      clientSlug: clients.find((c) => c.id === g.clientId)?.slug ?? null,
-      eventDate: g.eventDate,
-      expires: utcIsoToLocal(g.expiresAt, validTimezone(env.TIMEZONE)),
-      status: g.status,
-      allowHighres: g.allowHighres,
-      allowWeb: g.allowWeb,
-      allowIg: g.allowIg,
-      allowBulk: g.allowBulk,
-      requireEmail: g.requireEmail,
-      mode: g.mode,
-      palette: g.palette,
-      coverLayout: g.coverLayout,
-      gridStyle: g.gridStyle,
-      gridGap: g.gridGap,
-      hasPin: g.pinHash !== null,
-      showOnHome: g.showOnHome,
-      coverPhotoId: cover.editCover,
-      coverFocus: focusOf(g.coverFocusX, g.coverFocusY),
-      // Optional mobile cover: only while that photo is visible.
-      coverPhotoIdMobile: cover.mobile,
-      ...(cover.mobileNoWm ? { mobileCoverNoWm: true as const } : {}),
-      coverFocusMobile: cover.mobile
-        ? focusOf(g.coverFocusMobileX, g.coverFocusMobileY)
-        : null,
-    },
+    gallery: editGallery(env, g, clients, cover),
     /** Client folders for the album select (T6.40c): id, name, public slug. */
     clients,
     /** Deletion started but not finished: the editor only offers to continue it. */
@@ -138,6 +159,6 @@ export async function loadGalleryEdit(env: Env, id: string) {
     hasThumbWmFiles: ps.some((p) => p.hasThumbWm),
     photos,
     version: await photoSetVersion(photos.map((p) => p.id)),
-    issues,
+    issues: editIssues(g, noWm),
   };
 }
