@@ -81,163 +81,201 @@ export interface MockOptions {
   shuffleSeed?: number;
 }
 
-export function createMockDrive(
-  fixtures?: MockFixtures,
-  options: MockOptions = {},
-): MockDrive {
-  const fx = fixtures ?? buildFixtures();
-  const entries = new Map<string, MockEntry>(
-    fx.entries.map((e) => [e.id, { ...e }]),
-  );
-  let token = 1;
-  // Deterministic clock for mutations: one second past the latest known time.
-  let clock = Math.max(
-    0,
-    ...[...entries.values()]
-      .map((e) => Date.parse(e.modifiedTime))
-      .filter((t) => Number.isFinite(t)),
-  );
-  const shuffleRand =
-    options.shuffleSeed === undefined ? null : mulberry32(options.shuffleSeed);
-  let counter = 0;
-  let subs = 0;
-  const tick = () => new Date((clock += 1000)).toISOString();
+const IDS_PER_CHUNK = 40;
 
-  const need = (id: string): MockEntry => {
-    const e = entries.get(id);
+/** The mutable world of one mock Drive: entries, change token, deterministic clock, subrequest count. */
+class MockStore {
+  readonly entries: Map<string, MockEntry>;
+  token = 1;
+  counter = 0;
+  subs = 0;
+  private clock: number;
+  private readonly shuffleRand: (() => number) | null;
+
+  constructor(fx: MockFixtures, options: MockOptions) {
+    this.entries = new Map(fx.entries.map((e) => [e.id, { ...e }]));
+    // Deterministic clock for mutations: one second past the latest known time.
+    this.clock = Math.max(
+      0,
+      ...[...this.entries.values()]
+        .map((e) => Date.parse(e.modifiedTime))
+        .filter((t) => Number.isFinite(t)),
+    );
+    this.shuffleRand =
+      options.shuffleSeed === undefined
+        ? null
+        : mulberry32(options.shuffleSeed);
+  }
+
+  tick = () => new Date((this.clock += 1000)).toISOString();
+
+  need(id: string): MockEntry {
+    const e = this.entries.get(id);
     if (!e) throw new DriveError(404, `File not found: ${id}`);
     return e;
-  };
+  }
 
-  const list = (folderId: string): DriveFile[] => {
-    const parent = need(folderId);
+  list(folderId: string): DriveFile[] {
+    const parent = this.need(folderId);
     if (parent.mimeType !== FOLDER_MIME)
       throw new DriveError(400, "Not a folder");
-    const out = [...entries.values()]
+    const out = [...this.entries.values()]
       .filter((e) => e.parentId === folderId && !e.trashed)
       .map(strip);
-    if (shuffleRand)
+    const rand = this.shuffleRand;
+    if (rand)
       for (let i = out.length - 1; i > 0; i--) {
-        const j = Math.floor(shuffleRand() * (i + 1));
+        const j = Math.floor(rand() * (i + 1));
         [out[i], out[j]] = [out[j], out[i]];
       }
     return out;
-  };
+  }
 
+  /** Bumps the parent's modified time (when it still exists). */
+  touchParent(e: MockEntry) {
+    const parent = e.parentId ? this.entries.get(e.parentId) : undefined;
+    if (parent) parent.modifiedTime = this.tick();
+  }
+}
+
+/** The 200 or 206 response for a mock file, honouring a single `bytes=a-b` / `bytes=-n` range. */
+function mockFileResponse(id: string, e: MockEntry, range?: string) {
+  const body = mockBody(id);
+  const total = body.length;
+  const headers: Record<string, string> = {
+    "Content-Type": e.mimeType,
+    "Accept-Ranges": "bytes",
+  };
+  const m = range ? /^bytes=(\d*)-(\d*)$/.exec(range.trim()) : null;
+  if (range && (!m || (m[1] === "" && m[2] === ""))) {
+    throw new DriveError(416, "Range not satisfiable");
+  }
+  if (!m) {
+    headers["Content-Length"] = String(total);
+    return new Response(body, { status: 200, headers });
+  }
+  let start: number;
+  let end: number;
+  if (m[1] === "") {
+    const n = Number(m[2]);
+    if (n === 0) throw new DriveError(416, "Range not satisfiable");
+    start = Math.max(0, total - n);
+    end = total - 1;
+  } else {
+    start = Number(m[1]);
+    end = m[2] === "" ? total - 1 : Math.min(Number(m[2]), total - 1);
+  }
+  if (start >= total || start > end)
+    throw new DriveError(416, "Range not satisfiable");
+  const part = body.slice(start, end + 1);
+  headers["Content-Length"] = String(part.length);
+  headers["Content-Range"] = `bytes ${start}-${end}/${total}`;
+  return new Response(part, { status: 206, headers });
+}
+
+/** The read-only DriveClient surface over a store. */
+function mockReads(st: MockStore): DriveClient {
   return {
-    subrequests: () => subs,
+    subrequests: () => st.subs,
     async listChildren(folderId) {
-      subs++;
-      return list(folderId);
+      st.subs++;
+      return st.list(folderId);
     },
     async listChildrenMany(folderIds) {
       const ids = [...new Set(folderIds)];
       const result = new Map<string, DriveFile[]>();
-      for (let i = 0; i < ids.length; i += 40) {
-        subs++;
-        for (const id of ids.slice(i, i + 40)) {
-          const e = entries.get(id);
-          result.set(id, e && e.mimeType === FOLDER_MIME ? list(id) : []);
+      for (let i = 0; i < ids.length; i += IDS_PER_CHUNK) {
+        st.subs++;
+        for (const id of ids.slice(i, i + IDS_PER_CHUNK)) {
+          const e = st.entries.get(id);
+          result.set(id, e && e.mimeType === FOLDER_MIME ? st.list(id) : []);
         }
       }
       return result;
     },
     async getMeta(id) {
-      subs++;
-      return strip(need(id));
+      st.subs++;
+      return strip(st.need(id));
     },
     async streamFile(id, opts?: StreamOptions) {
-      subs++;
-      const e = need(id);
+      st.subs++;
+      const e = st.need(id);
       if (e.mimeType === FOLDER_MIME)
         throw new DriveError(400, "Cannot download a folder");
-      const body = mockBody(id);
-      const total = body.length;
-      const headers: Record<string, string> = {
-        "Content-Type": e.mimeType,
-        "Accept-Ranges": "bytes",
-      };
-      const m = opts?.range
-        ? /^bytes=(\d*)-(\d*)$/.exec(opts.range.trim())
-        : null;
-      if (opts?.range && (!m || (m[1] === "" && m[2] === ""))) {
-        throw new DriveError(416, "Range not satisfiable");
-      }
-      if (m) {
-        let start: number;
-        let end: number;
-        if (m[1] === "") {
-          const n = Number(m[2]);
-          if (n === 0) throw new DriveError(416, "Range not satisfiable");
-          start = Math.max(0, total - n);
-          end = total - 1;
-        } else {
-          start = Number(m[1]);
-          end = m[2] === "" ? total - 1 : Math.min(Number(m[2]), total - 1);
-        }
-        if (start >= total || start > end)
-          throw new DriveError(416, "Range not satisfiable");
-        const part = body.slice(start, end + 1);
-        headers["Content-Length"] = String(part.length);
-        headers["Content-Range"] = `bytes ${start}-${end}/${total}`;
-        return new Response(part, { status: 206, headers });
-      }
-      headers["Content-Length"] = String(total);
-      return new Response(body, { status: 200, headers });
+      return mockFileResponse(id, e, opts?.range);
     },
     async getStartPageToken() {
-      return String(token);
+      return String(st.token);
     },
     async listChanges(pageToken): Promise<DriveChanges> {
-      subs++;
+      st.subs++;
       const since = /^\d+$/.test(pageToken) ? Number(pageToken) : NaN;
       if (Number.isNaN(since)) throw new DriveError(400, "Invalid page token");
-      return { changed: token > since, newStartPageToken: String(token) };
+      return {
+        changed: st.token > since,
+        newStartPageToken: String(st.token),
+      };
     },
+  };
+}
+
+/** The fixture mutations tests use to simulate Drive changes (each bumps the change token). */
+function mockMutations(
+  st: MockStore,
+): Pick<MockDrive, "addFile" | "removeFile" | "renameFile" | "trashFile"> {
+  return {
     addFile(parentId, file) {
-      const parent = need(parentId);
+      const parent = st.need(parentId);
       if (parent.mimeType !== FOLDER_MIME)
         throw new DriveError(400, "Parent is not a folder");
-      if (file.id !== undefined && entries.has(file.id))
+      if (file.id !== undefined && st.entries.has(file.id))
         throw new DriveError(409, `File already exists: ${file.id}`);
       const entry: MockEntry = {
         mimeType: "image/jpeg",
         ...file,
-        id: file.id || `mock-add-${String(++counter).padStart(5, "0")}`,
-        modifiedTime: file.modifiedTime ?? tick(),
+        id: file.id || `mock-add-${String(++st.counter).padStart(5, "0")}`,
+        modifiedTime: file.modifiedTime ?? st.tick(),
         parentId,
       };
-      entries.set(entry.id, entry);
-      parent.modifiedTime = tick();
-      token++;
+      st.entries.set(entry.id, entry);
+      parent.modifiedTime = st.tick();
+      st.token++;
       return strip(entry);
     },
     removeFile(id) {
-      const target = need(id);
-      const parent = target.parentId ? entries.get(target.parentId) : undefined;
+      const target = st.need(id);
+      const parent = target.parentId
+        ? st.entries.get(target.parentId)
+        : undefined;
       const drop = (x: string) => {
-        for (const e of entries.values()) if (e.parentId === x) drop(e.id);
-        entries.delete(x);
+        for (const e of st.entries.values()) if (e.parentId === x) drop(e.id);
+        st.entries.delete(x);
       };
       drop(id);
-      if (parent) parent.modifiedTime = tick();
-      token++;
+      if (parent) parent.modifiedTime = st.tick();
+      st.token++;
     },
     renameFile(id, name) {
-      const e = need(id);
+      const e = st.need(id);
       e.name = name;
-      e.modifiedTime = tick();
-      const parent = e.parentId ? entries.get(e.parentId) : undefined;
-      if (parent) parent.modifiedTime = tick();
-      token++;
+      e.modifiedTime = st.tick();
+      st.touchParent(e);
+      st.token++;
       return strip(e);
     },
     trashFile(id) {
-      const e = need(id);
+      const e = st.need(id);
       e.trashed = true;
-      const parent = e.parentId ? entries.get(e.parentId) : undefined;
-      if (parent) parent.modifiedTime = tick();
-      token++;
+      st.touchParent(e);
+      st.token++;
     },
   };
+}
+
+export function createMockDrive(
+  fixtures?: MockFixtures,
+  options: MockOptions = {},
+): MockDrive {
+  const st = new MockStore(fixtures ?? buildFixtures(), options);
+  return { ...mockReads(st), ...mockMutations(st) };
 }
