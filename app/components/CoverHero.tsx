@@ -17,31 +17,7 @@ import { Logo } from "./Logo";
 export { MOBILE_COVER_MEDIA };
 export type { CoverImage };
 
-/**
- * The gallery cover (full-bleed photo, title, date, studio, scroll cue).
- * Used by the public gallery and by the admin live preview, so they cannot
- * drift. `embedded` is the preview flavour: it fills its box instead of the
- * viewport and is inert (no heading level, no real button).
- */
-export function CoverHero({
-  title,
-  date,
-  studio,
-  src,
-  srcSet,
-  placeholder = null,
-  proofing,
-  focus,
-  aspect = null,
-  scrollLabel,
-  onScroll,
-  embedded = false,
-  headerRef,
-  layout = "completa",
-  palette = "claro",
-  mobile = null,
-  device,
-}: {
+type CoverHeroProps = {
   title: string;
   date: string | null;
   studio: string;
@@ -71,8 +47,33 @@ export function CoverHero({
    * viewport). Absent = decide by the viewport (`MOBILE_COVER_MEDIA`).
    */
   device?: "desktop" | "mobile";
-}) {
-  const Title = embedded ? "p" : "h1";
+};
+
+/**
+ * The gallery cover (full-bleed photo, title, date, studio, scroll cue).
+ * Used by the public gallery and by the admin live preview, so they cannot
+ * drift. `embedded` is the preview flavour: it fills its box instead of the
+ * viewport and is inert (no heading level, no real button).
+ */
+export function CoverHero({
+  title,
+  date,
+  studio,
+  src,
+  srcSet,
+  placeholder = null,
+  proofing,
+  focus,
+  aspect = null,
+  scrollLabel,
+  onScroll,
+  embedded = false,
+  headerRef,
+  layout = "completa",
+  palette = "claro",
+  mobile = null,
+  device,
+}: CoverHeroProps) {
   const parts: CoverParts = {
     headerRef,
     box: embedded ? "h-full" : "h-dvh min-h-96",
@@ -93,14 +94,7 @@ export function CoverHero({
         layout={layout}
       />
     ),
-    shield: proofing && (src || mobile) && (
-      <span
-        data-testid="cover-shield"
-        aria-hidden="true"
-        className="absolute inset-0"
-        onContextMenu={(e) => e.preventDefault()}
-      />
-    ),
+    shield: proofing && (src || mobile) && <ProofingShield />,
     logo: (
       <Logo
         variant={isDarkPalette(palette) ? "light" : "dark"}
@@ -108,17 +102,44 @@ export function CoverHero({
       />
     ),
     titleBlock: (
-      <>
-        <Title className="text-display font-light uppercase">{title}</Title>
-        {date && (
-          <p className="text-body -mt-3 font-light tracking-wide">{date}</p>
-        )}
-        <p className="text-micro-label uppercase">{studio}</p>
-      </>
+      <TitleBlock Title={embedded ? "p" : "h1"} {...{ title, date, studio }} />
     ),
   };
   if (layout === "dividida") return <DividedaCover {...parts} />;
   if (layout === "centrada") return <CentradaCover {...parts} />;
   if (layout === "minima") return <MinimaCover {...parts} />;
   return <CompletaCover {...parts} />;
+}
+
+function ProofingShield() {
+  return (
+    <span
+      data-testid="cover-shield"
+      aria-hidden="true"
+      className="absolute inset-0"
+      onContextMenu={(e) => e.preventDefault()}
+    />
+  );
+}
+
+function TitleBlock({
+  Title,
+  title,
+  date,
+  studio,
+}: {
+  Title: "p" | "h1";
+  title: string;
+  date: string | null;
+  studio: string;
+}) {
+  return (
+    <>
+      <Title className="text-display font-light uppercase">{title}</Title>
+      {date && (
+        <p className="text-body -mt-3 font-light tracking-wide">{date}</p>
+      )}
+      <p className="text-micro-label uppercase">{studio}</p>
+    </>
+  );
 }

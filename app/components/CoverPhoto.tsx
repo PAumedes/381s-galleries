@@ -66,6 +66,18 @@ function useImageFrame(shownSrc: string | null, layout: string) {
   return { setImgNode, frame };
 }
 
+type CoverPhotoProps = {
+  src: string | null;
+  srcSet?: string;
+  placeholder: string | null;
+  focus: Focus | null;
+  aspect: number | null;
+  mobile: CoverImage | null;
+  device?: "desktop" | "mobile";
+  embedded: boolean;
+  layout: string;
+};
+
 /**
  * The cover photo: picks desktop or mobile file, measures its frame and
  * places the focal point. Renders nothing without a file.
@@ -80,17 +92,7 @@ export function CoverPhoto({
   device,
   embedded,
   layout,
-}: {
-  src: string | null;
-  srcSet?: string;
-  placeholder: string | null;
-  focus: Focus | null;
-  aspect: number | null;
-  mobile: CoverImage | null;
-  device?: "desktop" | "mobile";
-  embedded: boolean;
-  layout: string;
-}) {
+}: CoverPhotoProps) {
   const narrow = useNarrowViewport(!device && !!mobile);
   const active =
     mobile && (device ? device === "mobile" : narrow) ? mobile : null;
