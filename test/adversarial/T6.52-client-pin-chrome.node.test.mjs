@@ -43,6 +43,8 @@ async function buildPage(dir) {
 }
 
 const PIN_FORM = "form:has(input[name=pin])";
+// T6.54: the submit button sits next to "remove", outside the form (form=...).
+const SET_BTN = "button[form=client-pin-set]";
 const MEASURE = `(() => {
   const r = (e) => e.getBoundingClientRect();
   const sec = document.querySelector('${PIN_FORM}').closest('section');
@@ -95,11 +97,11 @@ async function measure(file, { width, lang, dir }, pending) {
       await ev(
         `document.querySelector('${PIN_FORM} input[name=pin]').value='123456'`,
       );
-      await ev(`document.querySelector('${PIN_FORM} button').click()`);
+      await ev(`document.querySelector('${SET_BTN}').click()`);
       await until(
         () =>
           ev(
-            `document.querySelector('${PIN_FORM} button')?.getAttribute('aria-busy') === 'true'`,
+            `document.querySelector('${SET_BTN}')?.getAttribute('aria-busy') === 'true'`,
           ),
         "pending button",
       );
