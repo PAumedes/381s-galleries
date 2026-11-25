@@ -67,6 +67,31 @@ export function BulkProgressView(props: ProgressViewProps) {
   );
 }
 
+/** The thin progress bar of a running download. */
+function ProgressBar({
+  t,
+  progress,
+}: Pick<ProgressViewProps, "t" | "progress">) {
+  const pct = progress.total
+    ? Math.min(100, (progress.done / progress.total) * 100)
+    : 0;
+  return (
+    <div
+      role="progressbar"
+      aria-label={t("download.title")}
+      aria-valuemin={0}
+      aria-valuenow={progress.done}
+      aria-valuemax={progress.total}
+      className="bg-grey-200 h-px w-full"
+    >
+      <div
+        className="bg-ink h-px transition-[width] duration-base ease-out-soft motion-reduce:transition-none"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
+}
+
 function RunningView({
   t,
   progress,
@@ -77,24 +102,9 @@ function RunningView({
   noRef,
   cancelRef,
 }: ProgressViewProps) {
-  const pct = progress.total
-    ? Math.min(100, (progress.done / progress.total) * 100)
-    : 0;
   return (
     <>
-      <div
-        role="progressbar"
-        aria-label={t("download.title")}
-        aria-valuemin={0}
-        aria-valuenow={progress.done}
-        aria-valuemax={progress.total}
-        className="bg-grey-200 h-px w-full"
-      >
-        <div
-          className="bg-ink h-px transition-[width] duration-base ease-out-soft motion-reduce:transition-none"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+      <ProgressBar t={t} progress={progress} />
       <p className="text-micro-label text-grey-600">
         {t("download.progress", {
           done: progress.done,
@@ -212,68 +222,80 @@ type ChooseViewProps = {
 };
 
 /** Scope and size pickers, count and warnings before a bulk download starts. */
-export function BulkChooseView({
-  t,
-  scopes,
-  scope,
-  setScope,
-  sizes,
-  variant,
-  setVariant,
-  count,
-  warning,
-  error,
-  startRef,
-  disabled,
-  onStart,
-}: ChooseViewProps) {
+export function BulkChooseView(props: ChooseViewProps) {
+  const { t, scope, setScope, variant, setVariant, startRef } = props;
   return (
     <div className="flex flex-col gap-5">
-      <fieldset className="flex flex-col">
-        <legend className="text-micro-label text-grey-600 mb-1 uppercase">
-          {t("download.scope")}
-        </legend>
-        {scopes.map((s) => (
-          <Radio
-            key={s.label}
-            name="dl-scope"
-            checked={scope === s.key}
-            label={s.label}
-            onChange={() => setScope(s.key)}
-          />
-        ))}
-      </fieldset>
-      <fieldset className="flex flex-col">
-        <legend className="text-micro-label text-grey-600 mb-1 uppercase">
-          {t("download.size")}
-        </legend>
-        {sizes.map((s) => (
-          <Radio
-            key={t(s.key)}
-            name="dl-size"
-            checked={variant === s.variant}
-            label={t(s.key)}
-            onChange={() => setVariant(s.variant)}
-          />
-        ))}
-      </fieldset>
+      <RadioGroup
+        legend={t("download.scope")}
+        name="dl-scope"
+        options={props.scopes.map((s) => ({
+          key: s.label,
+          label: s.label,
+          checked: scope === s.key,
+          onSelect: () => setScope(s.key),
+        }))}
+      />
+      <RadioGroup
+        legend={t("download.size")}
+        name="dl-size"
+        options={props.sizes.map((s) => ({
+          key: t(s.key),
+          label: t(s.key),
+          checked: variant === s.variant,
+          onSelect: () => setVariant(s.variant),
+        }))}
+      />
       <ChooseNotes
         t={t}
-        count={count}
+        count={props.count}
         variant={variant}
-        warning={warning}
-        error={error}
+        warning={props.warning}
+        error={props.error}
       />
       <button
         type="button"
         ref={startRef}
-        disabled={disabled}
-        onClick={onStart}
+        disabled={props.disabled}
+        onClick={props.onStart}
         className="text-micro-label bg-ink text-paper hover:bg-grey-800 h-11 uppercase transition-colors duration-base ease-out-soft disabled:opacity-60"
       >
         {t("download.start")}
       </button>
     </div>
+  );
+}
+
+/** A titled group of radio rows. */
+function RadioGroup({
+  legend,
+  name,
+  options,
+}: {
+  legend: string;
+  name: string;
+  options: {
+    key: string;
+    label: string;
+    checked: boolean;
+    onSelect: () => void;
+  }[];
+}) {
+  return (
+    <fieldset className="flex flex-col">
+      <legend className="text-micro-label text-grey-600 mb-1 uppercase">
+        {legend}
+      </legend>
+      {options.map((o) => (
+        <Radio
+          key={o.key}
+          name={name}
+          checked={o.checked}
+          label={o.label}
+          onChange={o.onSelect}
+        />
+      ))}
+    </fieldset>
   );
 }
 
