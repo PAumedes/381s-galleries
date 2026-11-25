@@ -7,7 +7,6 @@
  * production layout. Every utility class used by the components reachable
  * from the test's entry must be present in the listed sources.
  */
-import { execSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
@@ -27,10 +26,6 @@ const listed = globbed
     ].map((m) => m[1]);
 
 const tok = (s) => s.split(/[\s"'`<>{}=,;]+/).filter(Boolean);
-const classTokens = (src) =>
-  [...src.matchAll(/className=(?:"([^"]*)"|\{`([^`]*)`\})/g)]
-    .flatMap((m) => tok(m[1] ?? m[2]))
-    .filter((t) => /[-:[]/.test(t) && !/[${}]/.test(t));
 
 describe("T6.35 Chrome focal test stylesheet", () => {
   it("builds from a directory glob, not a file list", () => {
@@ -38,18 +33,10 @@ describe("T6.35 Chrome focal test stylesheet", () => {
   });
   it("covers every class the five original files used before the T6.48 split", () => {
     const have = new Set(listed.flatMap((f) => tok(readFileSync(f, "utf8"))));
-    const before = [
-      "admin/CoverPreview",
-      "admin/FocalPicker",
-      "admin/CoverChooser",
-      "admin/LivePreview",
-      "CoverHero",
-    ].flatMap((n) =>
-      classTokens(
-        execSync(`git show 34d294f:app/components/${n}.tsx`, {
-          encoding: "utf8",
-        }),
-      ),
+    // Captured from the five original components at 34d294f (before the split)
+    // so the test does not need git history (CI checks out one commit).
+    const before = JSON.parse(
+      readFileSync("test/fixtures/focal-original-classes.json", "utf8"),
     );
     const missing = [...new Set(before)].filter((c) => !have.has(c));
     expect(missing).toEqual([]);
