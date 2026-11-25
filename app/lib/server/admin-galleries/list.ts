@@ -53,15 +53,10 @@ function clientFilterSql(v: string): SQL | undefined {
     : eq(schema.galleries.clientId, v);
 }
 
-export async function listGalleries(
-  env: Env,
-  filter: Filter,
-  q = "",
-  clientFilter = "",
-): Promise<GalleryListRow[]> {
+function selectListRows(env: Env, filter: Filter, clientFilter: string) {
   const g = schema.galleries;
   const status = FILTER_STATUS[filter];
-  const rows = await getDb(env)
+  return getDb(env)
     .select({
       id: g.id,
       title: g.title,
@@ -95,30 +90,50 @@ export async function listGalleries(
       asc(g.title),
       asc(g.id),
     );
-  const now = Date.now();
-  // Search on the loaded rows (a studio has well under 1000 galleries):
-  // accent/case-insensitive substring over title, slug and the client name the
-  // row shows (the folder's, else the legacy text).
+}
+
+type ListQueryRow = Awaited<ReturnType<typeof selectListRows>>[number];
+
+/**
+ * Search on the loaded rows (a studio has well under 1000 galleries):
+ * accent/case-insensitive substring over title, slug and the client name the
+ * row shows (the folder's, else the legacy text).
+ */
+function searchRows(rows: ListQueryRow[], q: string) {
   const needle = normalizeSearch(q);
-  const matched = needle
-    ? rows.filter((r) =>
-        [r.title, r.slug, r.clientRowName ?? r.clientName ?? ""].some((v) =>
-          normalizeSearch(v).includes(needle),
-        ),
-      )
-    : rows;
-  return matched.map(
-    ({ syncIssuesJson, clientId, clientRowName, clientSlug, ...r }) => ({
-      ...r,
-      client:
-        clientId && clientRowName !== null && clientSlug !== null
-          ? { id: clientId, name: clientRowName, slug: clientSlug }
-          : null,
-      deleting: !!r.deleting,
-      expired: isExpired(r.expiresAt, now),
-      issueCount: groupIssues(syncIssuesJson).total,
-    }),
+  if (!needle) return rows;
+  return rows.filter((r) =>
+    [r.title, r.slug, r.clientRowName ?? r.clientName ?? ""].some((v) =>
+      normalizeSearch(v).includes(needle),
+    ),
   );
+}
+
+function toListRow(
+  { syncIssuesJson, clientId, clientRowName, clientSlug, ...r }: ListQueryRow,
+  now: number,
+): GalleryListRow {
+  return {
+    ...r,
+    client:
+      clientId && clientRowName !== null && clientSlug !== null
+        ? { id: clientId, name: clientRowName, slug: clientSlug }
+        : null,
+    deleting: !!r.deleting,
+    expired: isExpired(r.expiresAt, now),
+    issueCount: groupIssues(syncIssuesJson).total,
+  };
+}
+
+export async function listGalleries(
+  env: Env,
+  filter: Filter,
+  q = "",
+  clientFilter = "",
+): Promise<GalleryListRow[]> {
+  const rows = await selectListRows(env, filter, clientFilter);
+  const now = Date.now();
+  return searchRows(rows, q).map((r) => toListRow(r, now));
 }
 
 /** Number of galleries per status (for the empty-state decision). */
