@@ -105,7 +105,7 @@ function useGridInView(
 /** The bottom bar: iOS share instructions, or the Android install button, and a dismiss button. */
 function HintBar({
   kind,
-  onAccept,
+  onAccept: accept,
   onClose,
 }: {
   kind: "ios" | "android";
@@ -130,7 +130,7 @@ function HintBar({
           </p>
           <button
             type="button"
-            onClick={onAccept}
+            onClick={accept}
             className="motion-safe:transition-opacity min-h-12 min-w-0 basis-0 grow border border-current px-3 text-sm font-medium tracking-micro max-[22rem]:tracking-wider uppercase min-[28rem]:shrink-0 min-[28rem]:basis-auto min-[28rem]:grow-0 hover:opacity-80"
           >
             {t("pwa.install")}
