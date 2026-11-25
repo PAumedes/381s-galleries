@@ -67,7 +67,12 @@ describe("T6.46 listedOnClientPage vs real loader (all combos)", () => {
       "c1",
     );
     const shown = new Set(page!.tiles.map((t) => t.slug));
-    expect(admin.publicPage.visible).toBe(Math.min(page!.tiles.length, 60));
+    // T6.49: the count is no longer capped at one page; it is every page's tiles
+    let listed = page!.tiles.length;
+    for (let n = 2; n <= page!.pageCount; n++)
+      listed += (await loadClientTiles(e, "acme", n))!.tiles.length;
+    expect(page!.pageCount).toBeGreaterThan(1);
+    expect(admin.publicPage.visible).toBe(listed);
     for (const t of page!.tiles) {
       const g = (await db.select().from(schema.galleries)).find(
         (x) => x.slug === t.slug,
