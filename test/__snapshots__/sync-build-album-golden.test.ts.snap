@@ -1,0 +1,241 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`T6.48 buildAlbum (golden, pre-refactor) > empty album 1`] = `
+{
+  "folder": {
+    "id": "f26",
+    "mimeType": "image/jpeg",
+    "modifiedTime": "2026-01-01T00:00:00Z",
+    "name": "E",
+  },
+  "hasWm": false,
+  "issues": [],
+  "photos": [],
+}
+`;
+
+exports[`T6.48 buildAlbum (golden, pre-refactor) > full recipe sets, fallback dimensions, issues, duplicates, case folding 1`] = `
+{
+  "folder": {
+    "id": "f25",
+    "mimeType": "application/vnd.google-apps.folder",
+    "modifiedTime": "2026-01-01T00:00:00Z",
+    "name": "Album",
+  },
+  "hasWm": true,
+  "issues": [
+    {
+      "name": "img_4",
+      "set": "fiesta",
+      "type": "duplicate",
+    },
+    {
+      "name": "ORPHAN2",
+      "set": "Fiesta",
+      "type": "missing_highres",
+    },
+    {
+      "name": "ORPHAN",
+      "set": "Highlights",
+      "type": "missing_highres",
+    },
+    {
+      "name": "IMG_3",
+      "set": "Fiesta",
+      "type": "missing_thumb",
+    },
+    {
+      "name": "IMG_3",
+      "set": "Fiesta",
+      "type": "missing_web",
+    },
+    {
+      "name": "IMG_5.png",
+      "set": "Fiesta",
+      "type": "not_jpeg",
+    },
+    {
+      "name": "x.txt",
+      "set": null,
+      "type": "stray_file",
+    },
+  ],
+  "photos": [
+    {
+      "baseName": "IMG_1",
+      "height": 4000,
+      "highres": {
+        "height": 4000,
+        "id": "f01",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_1.jpg",
+        "width": 6000,
+      },
+      "ig": {
+        "id": "f03",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "img_1.JPG",
+      },
+      "setName": "Highlights",
+      "thumb": {
+        "id": "f04",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_1.jpg",
+      },
+      "thumbWm": {
+        "id": "f06",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_1.jpg",
+      },
+      "web": {
+        "id": "f02",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_1.jpg",
+      },
+      "width": 6000,
+      "wm": {
+        "id": "f05",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_1.jpg",
+      },
+    },
+    {
+      "baseName": "IMG_2",
+      "height": 1365,
+      "highres": {
+        "id": "f07",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_2.jpg",
+      },
+      "ig": undefined,
+      "setName": "Fiesta",
+      "thumb": {
+        "height": 400,
+        "id": "f09",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_2.jpg",
+        "width": 600,
+      },
+      "thumbWm": undefined,
+      "web": {
+        "height": 800,
+        "id": "f08",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_2.jpg",
+        "width": 1200,
+      },
+      "width": 2048,
+      "wm": undefined,
+    },
+    {
+      "baseName": "IMG_3",
+      "height": null,
+      "highres": {
+        "id": "f10",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_3.jpg",
+      },
+      "ig": undefined,
+      "setName": "Fiesta",
+      "thumb": undefined,
+      "thumbWm": undefined,
+      "web": undefined,
+      "width": null,
+      "wm": undefined,
+    },
+    {
+      "baseName": "img_4",
+      "height": null,
+      "highres": {
+        "id": "f12",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-02-01T00:00:00Z",
+        "name": "img_4.jpg",
+      },
+      "ig": undefined,
+      "setName": "fiesta",
+      "thumb": {
+        "id": "f14",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_4.jpg",
+      },
+      "thumbWm": undefined,
+      "web": {
+        "id": "f13",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_4.jpg",
+      },
+      "width": null,
+      "wm": undefined,
+    },
+    {
+      "baseName": "IMG_6",
+      "height": null,
+      "highres": {
+        "id": "f16",
+        "mimeType": "application/octet-stream",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_6.jpeg",
+      },
+      "ig": undefined,
+      "setName": "Fiesta",
+      "thumb": {
+        "id": "f18",
+        "mimeType": "application/octet-stream",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_6.jpeg",
+      },
+      "thumbWm": undefined,
+      "web": {
+        "id": "f17",
+        "mimeType": "application/octet-stream",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "IMG_6.jpeg",
+      },
+      "width": null,
+      "wm": undefined,
+    },
+    {
+      "baseName": "Café",
+      "height": 2000,
+      "highres": {
+        "height": 2000,
+        "id": "f22",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "Café.jpg",
+        "width": 3000,
+      },
+      "ig": undefined,
+      "setName": "Highlights",
+      "thumb": {
+        "id": "f24",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "Café.jpg",
+      },
+      "thumbWm": undefined,
+      "web": {
+        "id": "f23",
+        "mimeType": "image/jpeg",
+        "modifiedTime": "2026-01-01T00:00:00Z",
+        "name": "Café.jpg",
+      },
+      "width": 3000,
+      "wm": undefined,
+    },
+  ],
+}
+`;
