@@ -1,13 +1,13 @@
 /* global WebSocket */
 import process from "node:process";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build } from "vite";
 import { describe, expect, it } from "vitest";
 import { launchChrome, until } from "../support/chrome.mjs";
-import { classesOf, css } from "../support/tailwind-css.mjs";
+import { classesOf, css, sourcesOf } from "../support/tailwind-css.mjs";
 
 const HAS_CHROME =
   spawnSync("google-chrome", ["--version"], { stdio: "ignore" }).status === 0;
@@ -33,12 +33,7 @@ async function buildPage(dir) {
     ? built.flatMap((o) => o.output)
     : built.output;
   const bundled = chunks.find((c) => c.type === "chunk").code;
-  const srcs = [
-    "app/components/admin/clients/ClientList.tsx",
-    "app/components/admin/clients/SubmitButton.tsx",
-    "app/components/admin/clients/ui.ts",
-    "app/components/admin/gallery-edit/ui.tsx",
-  ].map((f) => readFileSync(f, "utf8"));
+  const srcs = sourcesOf("app/components");
   const style = await css(classesOf(srcs));
   const file = join(dir, "page.html");
   writeFileSync(

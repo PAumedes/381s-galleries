@@ -83,4 +83,33 @@ describe("T6.48 buildAlbum (golden, pre-refactor)", () => {
   it("empty album", () => {
     expect(buildAlbum(file("E"), [], [], false)).toMatchSnapshot();
   });
+  describe("photo size fallback (half-known high-res, sibling precedence)", () => {
+    const sizeOf = (located: Located[]) => {
+      const { photos } = buildAlbum(file("A"), located, [], false);
+      return { width: photos[0].width, height: photos[0].height };
+    };
+    it("a high-res with only a width falls back to a sibling, never a half size", () => {
+      expect(
+        sizeOf([
+          loc("high-res", "S", "a.jpg", { width: 6000 }),
+          loc("web", "S", "a.jpg", { width: 1200, height: 800 }),
+        ]),
+      ).toEqual({ width: 2048, height: 1365 });
+    });
+    it("a high-res with only a width and no sibling size is null/null", () => {
+      expect(sizeOf([loc("high-res", "S", "a.jpg", { width: 6000 })])).toEqual({
+        width: null,
+        height: null,
+      });
+    });
+    it("the sibling order is web before thumb", () => {
+      expect(
+        sizeOf([
+          loc("high-res", "S", "a.jpg"),
+          loc("thumb", "S", "a.jpg", { width: 400, height: 400 }),
+          loc("web", "S", "a.jpg", { width: 3000, height: 1000 }),
+        ]),
+      ).toEqual({ width: 2048, height: 683 });
+    });
+  });
 });

@@ -3,7 +3,10 @@ import { RouterContextProvider } from "react-router";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getDb, nowIso, schema } from "../app/db";
 import { hashPin } from "../app/lib/server/crypto";
-import { CLIENT_PAGE_D1_QUERIES } from "../app/lib/server/d1-limits";
+import {
+  CLIENT_PAGE_D1_QUERIES,
+  D1_MAX_BOUND_PARAMS,
+} from "../app/lib/server/d1-limits";
 import { executionContext } from "../app/lib/server/context";
 import { galleryLoader } from "../app/lib/server/gallery-route";
 import { loadHome } from "../app/lib/server/home";
@@ -272,6 +275,45 @@ describe("T6.40e client homepage /:client", () => {
     const u = countingEnv(e);
     await load("/nope", "nope", u.e);
     expect(u.count()).toBe(2);
+  });
+
+  it("binds no PIN album id and stays within the bound-parameter budget (many PIN albums)", async () => {
+    await album("pub1", "c-acme");
+    for (let i = 0; i < 120; i++)
+      await album(`pin${i}`, "c-acme", { pinHash: await hashPin("1") });
+    const binds: unknown[][] = [];
+    const DB = new Proxy(e.DB, {
+      get(target, prop) {
+        const v = (target as never)[prop];
+        if (prop !== "prepare")
+          return typeof v === "function"
+            ? (v as (...a: unknown[]) => unknown).bind(target)
+            : v;
+        return (sql: string) => {
+          const st = (v as (s: string) => D1PreparedStatement).call(
+            target,
+            sql,
+          );
+          return new Proxy(st, {
+            get(t, p) {
+              const f = (t as never)[p];
+              if (p !== "bind")
+                return (f as (...a: unknown[]) => unknown).bind(t);
+              return (...a: unknown[]) => {
+                binds.push(a);
+                return (f as (...x: unknown[]) => unknown).apply(t, a);
+              };
+            },
+          });
+        };
+      },
+    });
+    const r = await load("/acme", "acme", { ...e, DB } as Env);
+    expect(r.data.items?.length).toBeGreaterThan(0);
+    expect(binds.length).toBeGreaterThan(0);
+    for (const b of binds)
+      expect(b.length).toBeLessThanOrEqual(D1_MAX_BOUND_PARAMS);
+    expect(binds.flat().filter((v) => /pin\d/.test(String(v)))).toEqual([]);
   });
 
   it("sends the same security headers as the other public pages", async () => {

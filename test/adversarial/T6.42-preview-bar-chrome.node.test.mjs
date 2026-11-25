@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { launchChrome } from "../support/chrome.mjs";
-import { classesOf, css } from "../support/tailwind-css.mjs";
+import { classesOf, css, sourcesOf } from "../support/tailwind-css.mjs";
 
 const HAS_CHROME =
   spawnSync("google-chrome", ["--version"], { stdio: "ignore" }).status === 0;
@@ -81,7 +81,7 @@ describe.skipIf(!HAS_CHROME)("T6.42 'Vista previa' bar layout", () => {
     const bar = /data-admin-preview-bar=""\s*className="([^"]*)"/.exec(BAR)[1];
     const p = /<p className="([^"]*)">/.exec(BAR)[1];
     const a = /<a\s+href=\{[^]*?className="([^"]*)"/.exec(BAR)[1];
-    const style = await css(classesOf([BAR]));
+    const style = await css(classesOf(sourcesOf("app/components")));
     const html = `<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><style>${style}</style><body style="margin:0"><div id=bar class="${bar}"><p class="${p}">${str("admin.preview.bar")} \u00b7 Borrador \u00b7 Con PIN \u00b7 Prueba</p><a href="#" class="${a}">${str("admin.preview.back")}</a></div>`;
     const { ch, ev } = await session(
       "data:text/html;charset=utf-8," + encodeURIComponent(html),

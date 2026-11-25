@@ -1,7 +1,7 @@
 // Compiles app/app.css (real theme, custom variants) for the given class
 // candidates, so real-browser tests style their markup like production.
 import process from "node:process";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { compile } from "tailwindcss";
 
@@ -38,4 +38,15 @@ export function classesOf(sources) {
       sources.flatMap((s) => s.split(/[\s"'`<>{}=,;]+/)).filter(Boolean),
     ),
   ];
+}
+
+/**
+ * Contents of every .ts/.tsx file under a directory (recursive). Chrome tests
+ * build their CSS from a directory, never from a list of files: a refactor
+ * that moves markup to a new file must not leave the test on a stale sheet.
+ */
+export function sourcesOf(dir) {
+  return readdirSync(dir, { recursive: true })
+    .filter((f) => /\.tsx?$/.test(f))
+    .map((f) => readFileSync(`${dir}/${f}`, "utf8"));
 }

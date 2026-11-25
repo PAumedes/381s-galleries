@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { build } from "vite";
 import { describe, expect, it } from "vitest";
 import { launchChrome } from "../support/chrome.mjs";
-import { classesOf, css } from "../support/tailwind-css.mjs";
+import { classesOf, css, sourcesOf } from "../support/tailwind-css.mjs";
 
 const HAS_CHROME =
   spawnSync("google-chrome", ["--version"], { stdio: "ignore" }).status === 0;
@@ -46,13 +46,7 @@ async function buildPage() {
     ? built.flatMap((o) => o.output)
     : built.output;
   const bundled = chunks.find((c) => c.type === "chunk").code;
-  const srcs = [
-    "app/components/admin/CoverPreview.tsx",
-    "app/components/admin/FocalPicker.tsx",
-    "app/components/admin/CoverChooser.tsx",
-    "app/components/admin/LivePreview.tsx",
-    "app/components/CoverHero.tsx",
-  ].map((f) => readFileSync(f, "utf8"));
+  const srcs = sourcesOf("app/components");
   const style = await css(classesOf(srcs));
   const file = join(dir, "page.html");
   writeFileSync(

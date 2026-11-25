@@ -109,6 +109,7 @@ describe("T6.48 home / client tiles (golden, pre-refactor)", () => {
         {
           id: `m${String(i).padStart(2, "0")}`,
           eventDate: `2026-01-${String((i % 28) + 1).padStart(2, "0")}`,
+          createdAt: "2026-01-01T00:00:00.000Z",
         },
         {},
       );
