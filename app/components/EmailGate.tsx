@@ -19,7 +19,6 @@ export type EmailGateProps = {
   onClose: () => void;
 };
 
-/** Minimal modal asking for an email (+ optional name) before saving favourites. */
 /** Focus goes to the email field; Escape closes; Tab stays inside; focus returns to the opener. */
 function useGateKeys(
   dialogRef: RefObject<HTMLElement | null>,
@@ -134,6 +133,7 @@ function GateForm({
   );
 }
 
+/** Minimal modal asking for an email (+ optional name) before saving favourites. */
 export function EmailGate({ t, onSubmit, onClose }: EmailGateProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
