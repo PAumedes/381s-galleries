@@ -2,7 +2,15 @@ import { clearCache } from "./support/cache";
 import { migrateDb, resetTables } from "./support/d1";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { getDb, schema } from "../app/db";
 import {
   galleryAction,
@@ -14,7 +22,9 @@ import {
   warmGalleryAtPublish,
   warmGalleryOnOpen,
 } from "../app/lib/server/gallery-warm";
+import { OPEN_WARM_D1_BUDGET } from "../app/lib/server/d1-limits";
 import { warmProgress } from "../app/lib/server/warm";
+import { countingEnv, noRatePrune } from "./support/warm";
 
 const db = getDb(env);
 const e = { ...env, DRIVE_MODE: "google" } as Env;
@@ -97,13 +107,28 @@ const setCovers = (over: {
 const cached = async (id: string, v: string) =>
   (await env.CACHE.head(`${id}/${v}`)) !== null;
 
+afterEach(() => vi.restoreAllMocks());
 beforeEach(async () => {
+  noRatePrune();
   await db.delete(schema.galleries);
   await resetTables("settings", "rate_limits");
   await clearCache();
 });
 
 describe("T6.37 open warm throughput", () => {
+  it("when the limiter's random prune query fires (1% of hits) the run still stays within the D1 budget", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    await gallery();
+    await photos(40);
+    const { drive } = fakeDrive();
+    const { e: counted, count } = countingEnv(e);
+    const r = await warmGalleryOnOpen(counted, drive, SLUG);
+    // The prune is one of the budget's queries, so it costs the run a photo
+    // (8 instead of 9) but never pushes the invocation past the allowance.
+    expect(count()).toBeLessThanOrEqual(OPEN_WARM_D1_BUDGET);
+    expect(r.warmed).toBeGreaterThanOrEqual(16);
+  });
+
   it("one open on a cold gallery warms at least 9 photos (thumb + view-sm)", async () => {
     await gallery();
     await photos(40);
