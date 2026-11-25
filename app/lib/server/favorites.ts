@@ -204,6 +204,56 @@ export async function handleListFavorites(
   });
 }
 
+/** The `{ photoId, on }` of a set-favorite request, or null when malformed. */
+function parseSetFavorite(body: Record<string, unknown> | null) {
+  const photoId = body?.photoId;
+  const on = body?.on;
+  if (
+    typeof photoId !== "string" ||
+    photoId.length === 0 ||
+    photoId.length > 128 ||
+    typeof on !== "boolean"
+  ) {
+    return null;
+  }
+  return { photoId, on };
+}
+
+async function removeFavorite(
+  env: FavEnv,
+  g: GalleryRow,
+  visitor: VisitorRow,
+  photoId: string,
+) {
+  await env.DB.prepare(
+    "DELETE FROM favorites WHERE visitor_id = ?1 AND photo_id = ?2 AND gallery_id = ?3 AND list_name = ?4",
+  )
+    .bind(visitor.id, photoId, g.id, DEFAULT_LIST)
+    .run();
+}
+
+/** Adds a favorite for a visitor, enforcing FAVORITES_MAX in the same statement. Returns false at the limit. */
+async function insertFavorite(
+  env: FavEnv,
+  g: GalleryRow,
+  visitor: VisitorRow,
+  photoId: string,
+) {
+  const db = getDb(env as Env);
+  const res = await db.run(
+    sql`INSERT OR IGNORE INTO favorites (gallery_id, visitor_id, photo_id, list_name)
+     SELECT ${g.id}, ${visitor.id}, ${photoId}, ${DEFAULT_LIST}
+     WHERE (SELECT COUNT(*) FROM (${visibleFavoritesQuery(db, visitor.id, g.id)})) < ${FAVORITES_MAX}`,
+  );
+  if (res.meta.changes !== 0) return true;
+  const exists = await env.DB.prepare(
+    "SELECT 1 AS x FROM favorites WHERE visitor_id = ?1 AND photo_id = ?2 AND list_name = ?3",
+  )
+    .bind(visitor.id, photoId, DEFAULT_LIST)
+    .first();
+  return !!exists;
+}
+
 export async function handleSetFavorite(
   request: Request,
   slug: string,
@@ -214,35 +264,20 @@ export async function handleSetFavorite(
   if (!open) return notFound();
   const { g, session } = open;
 
-  const body = await readJson(request);
-  const photoId = body?.photoId;
-  const on = body?.on;
-  if (
-    typeof photoId !== "string" ||
-    photoId.length === 0 ||
-    photoId.length > 128 ||
-    typeof on !== "boolean"
-  ) {
-    return bad();
-  }
+  const req = parseSetFavorite(await readJson(request));
+  if (!req) return bad();
+  const { photoId, on } = req;
 
-  const db = getDb(env as Env);
   const gate = await requireVisitor(env, g, session);
   if (gate.error) return reply({ error: gate.error }, 403);
   let v = gate.visitor;
-  let cookie: string | undefined;
   if (!v && !on) return reply({ ok: true }); // nothing to remove
-
   if (!on && v) {
-    await env.DB.prepare(
-      "DELETE FROM favorites WHERE visitor_id = ?1 AND photo_id = ?2 AND gallery_id = ?3 AND list_name = ?4",
-    )
-      .bind(v.id, photoId, g.id, DEFAULT_LIST)
-      .run();
+    await removeFavorite(env, g, v, photoId);
     return reply({ ok: true });
   }
 
-  const [photo] = await db
+  const [photo] = await getDb(env as Env)
     .select({ id: schema.photos.id })
     .from(schema.photos)
     .where(
@@ -254,25 +289,14 @@ export async function handleSetFavorite(
     );
   if (!photo) return notFound();
 
+  let cookie: string | undefined;
   if (!v) {
     const anon = await createAnonVisitor(request, env, g);
     if (!anon) return reply({ error: "rate_limited" }, 429);
     v = anon.visitor;
     cookie = anon.cookie;
   }
-
-  const res = await db.run(
-    sql`INSERT OR IGNORE INTO favorites (gallery_id, visitor_id, photo_id, list_name)
-     SELECT ${g.id}, ${v.id}, ${photo.id}, ${DEFAULT_LIST}
-     WHERE (SELECT COUNT(*) FROM (${visibleFavoritesQuery(db, v.id, g.id)})) < ${FAVORITES_MAX}`,
-  );
-  if (res.meta.changes === 0) {
-    const exists = await env.DB.prepare(
-      "SELECT 1 AS x FROM favorites WHERE visitor_id = ?1 AND photo_id = ?2 AND list_name = ?3",
-    )
-      .bind(v.id, photo.id, DEFAULT_LIST)
-      .first();
-    if (!exists) return reply({ error: "limit" }, 409, cookie);
-  }
+  if (!(await insertFavorite(env, g, v, photo.id)))
+    return reply({ error: "limit" }, 409, cookie);
   return reply({ ok: true }, 200, cookie);
 }

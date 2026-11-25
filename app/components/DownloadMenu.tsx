@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 import { downloadSingle, type DlVariant } from "../lib/download-client";
 import { FOCUSABLE, restoreFocus, trapTab, useLatest } from "./dialog-keys";
@@ -12,21 +13,15 @@ import type { GalleryPhoto } from "./types";
 export { enabledSizes };
 export type { DownloadMenuProps, DownloadMode };
 
-export function DownloadMenu(props: DownloadMenuProps) {
-  const { t, onClose } = props;
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const runningRef = useRef(false);
-  const [confirming, setConfirming] = useState(false);
-  // While a bulk run is going, closing asks first instead of aborting.
-  const requestClose = () => {
-    if (runningRef.current) setConfirming(true);
-    else onClose();
-  };
-  const closeRef = useLatest(requestClose);
-  const title = t(
-    props.mode.kind === "single" ? "download.photo" : "download.title",
-  );
-
+/**
+ * Keyboard of the sheet: focus moves in on open and back to the opener on
+ * close; Escape closes (and is hidden from the lightbox underneath); Tab is
+ * trapped. A dialog on top (the email gate) keeps the keyboard to itself.
+ */
+function useSheetKeys(
+  dialogRef: RefObject<HTMLDivElement | null>,
+  closeRef: RefObject<() => void>,
+) {
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
@@ -52,7 +47,25 @@ export function DownloadMenu(props: DownloadMenuProps) {
       document.removeEventListener("keydown", onKey, true);
       restoreFocus(opener);
     };
-  }, [closeRef]);
+  }, [dialogRef, closeRef]);
+}
+
+export function DownloadMenu(props: DownloadMenuProps) {
+  const { t, onClose } = props;
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const runningRef = useRef(false);
+  const [confirming, setConfirming] = useState(false);
+  // While a bulk run is going, closing asks first instead of aborting.
+  const requestClose = () => {
+    if (runningRef.current) setConfirming(true);
+    else onClose();
+  };
+  const closeRef = useLatest(requestClose);
+  const title = t(
+    props.mode.kind === "single" ? "download.photo" : "download.title",
+  );
+
+  useSheetKeys(dialogRef, closeRef);
 
   return (
     <div

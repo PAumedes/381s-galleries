@@ -1,5 +1,44 @@
 import { useCallback, useState } from "react";
-import type { ImgHTMLAttributes, ReactNode } from "react";
+import type { CSSProperties, ImgHTMLAttributes, ReactNode } from "react";
+
+type FadeImgProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "placeholder"> & {
+  placeholder?: string | null;
+  /** Receives the real image element (null on unmount), e.g. to measure it. */
+  onElement?: (el: HTMLImageElement | null) => void;
+  /** `<source>` elements: the browser picks the file, the `<img>` is the fallback. */
+  sources?: ReactNode;
+};
+
+/** The class the real image gets: hidden until loaded (or failed) when there is a placeholder. */
+const fadeClass = (placeholder: string | null, shown: boolean) =>
+  placeholder
+    ? shown
+      ? " opacity-100 transition-opacity duration-base"
+      : " opacity-0"
+    : "";
+
+/** The small stand-in drawn under the real image. */
+function PlaceholderImg({
+  src,
+  className,
+  style,
+}: {
+  src: string;
+  className: string;
+  style: CSSProperties | undefined;
+}) {
+  return (
+    <img
+      data-placeholder=""
+      src={src}
+      alt=""
+      draggable={false}
+      aria-hidden="true"
+      className={className}
+      style={style}
+    />
+  );
+}
 
 /**
  * An image that shows `placeholder` (a small version the browser already has)
@@ -21,13 +60,7 @@ export function FadeImg({
   onLoad,
   onError,
   ...rest
-}: Omit<ImgHTMLAttributes<HTMLImageElement>, "placeholder"> & {
-  placeholder?: string | null;
-  /** Receives the real image element (null on unmount), e.g. to measure it. */
-  onElement?: (el: HTMLImageElement | null) => void;
-  /** `<source>` elements: the browser picks the file, the `<img>` is the fallback. */
-  sources?: ReactNode;
-}) {
+}: FadeImgProps) {
   const [loaded, setLoaded] = useState<string | null>(null);
   // The real image failed: drop the placeholder instead of a blurry stand-in forever.
   const [failed, setFailed] = useState<string | null>(null);
@@ -41,11 +74,7 @@ export function FadeImg({
     },
     [onElement],
   );
-  const fade = placeholder
-    ? loaded === src || hasFailed
-      ? " opacity-100 transition-opacity duration-base"
-      : " opacity-0"
-    : "";
+  const fade = fadeClass(placeholder, loaded === src || hasFailed);
   const real = (
     <img
       {...rest}
@@ -67,15 +96,7 @@ export function FadeImg({
   return (
     <>
       {placeholder && !hasFailed && (
-        <img
-          data-placeholder=""
-          src={placeholder}
-          alt=""
-          draggable={false}
-          aria-hidden="true"
-          className={className}
-          style={style}
-        />
+        <PlaceholderImg src={placeholder} className={className} style={style} />
       )}
       {sources ? (
         <picture>

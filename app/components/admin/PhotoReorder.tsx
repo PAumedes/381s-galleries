@@ -9,7 +9,7 @@ import { PhotoViewer } from "./PhotoViewer";
 import { QuickLook, useQuickLook } from "./QuickLook";
 import { ReorderSetGrid } from "./ReorderSetGrid";
 import { ReorderSaveBar } from "./ReorderBars";
-import { usePhotoOrder } from "./use-photo-order";
+import { usePhotoOrder, type Orders } from "./use-photo-order";
 import { useReorderDnd } from "./use-reorder-dnd";
 
 export interface ReorderPhoto {
@@ -42,22 +42,33 @@ type PhotoReorderProps = {
   actionData?: GalleryActionResult;
 };
 
-export function PhotoReorder({
-  photos,
-  version,
-  coverPhotoId = null,
-  coverAuto = false,
-  mobileCoverId = null,
-  actionData,
-}: PhotoReorderProps) {
+/** The photo viewer: which photo is open; opening / closing keeps the quick look quiet. */
+function useReorderViewer(quick: ReturnType<typeof useQuickLook>) {
+  const [viewing, setViewing] = useState<string | null>(null);
+  return {
+    viewing,
+    setViewing,
+    open: (id: string) => {
+      quick.stop();
+      setViewing(id);
+    },
+    close: () => {
+      quick.quiet();
+      setViewing(null);
+    },
+  };
+}
+
+export function PhotoReorder(props: PhotoReorderProps) {
+  const { photos, version, actionData } = props;
   const t = useT();
   const root = useRef<HTMLDivElement>(null);
   const order = usePhotoOrder(photos, t, root);
   const { orders, byId } = order;
   const dndFor = useReorderDnd((id) => byId.get(id)?.set, order.apply);
-  const [viewing, setViewing] = useState<string | null>(null);
   const [prefs, setPrefs] = useFitPrefs();
   const quick = useQuickLook();
+  const viewer = useReorderViewer(quick);
   const busy = useNavigation().state !== "idle";
 
   return (
@@ -79,14 +90,11 @@ export function PhotoReorder({
           busy={busy}
           quick={quick}
           cover={{
-            coverId: coverPhotoId,
-            mobileId: mobileCoverId,
-            auto: coverAuto,
+            coverId: props.coverPhotoId ?? null,
+            mobileId: props.mobileCoverId ?? null,
+            auto: props.coverAuto ?? false,
           }}
-          onView={(id) => {
-            quick.stop();
-            setViewing(id);
-          }}
+          onView={viewer.open}
         />
       ))}
 
@@ -104,19 +112,30 @@ export function PhotoReorder({
 
       <QuickLook look={quick.look} />
 
-      {viewing && (
-        <PhotoViewer
-          ids={Object.values(orders).flat()}
-          names={byId}
-          current={viewing}
-          onChange={setViewing}
-          onClose={() => {
-            quick.quiet();
-            setViewing(null);
-          }}
-        />
-      )}
+      <ReorderViewer viewer={viewer} orders={orders} names={byId} />
     </div>
+  );
+}
+
+/** The full-size viewer over the photos of every set, while one is open. */
+function ReorderViewer({
+  viewer,
+  orders,
+  names,
+}: {
+  viewer: ReturnType<typeof useReorderViewer>;
+  orders: Orders;
+  names: ReturnType<typeof usePhotoOrder>["byId"];
+}) {
+  if (!viewer.viewing) return null;
+  return (
+    <PhotoViewer
+      ids={Object.values(orders).flat()}
+      names={names}
+      current={viewer.viewing}
+      onChange={viewer.setViewing}
+      onClose={viewer.close}
+    />
   );
 }
 

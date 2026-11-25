@@ -9,19 +9,7 @@ import { StatusSection } from "./StatusSection";
 import { fieldErrorsOf } from "./field-errors";
 import type { EditGallery, GalleryEditData } from "./types";
 
-/** Datos tab: details, status, PIN, home, options and the danger zone. */
-export function DatosSections({
-  g,
-  data,
-  proofing,
-  onMode,
-  title,
-  onTitle,
-  eventDate,
-  onEventDate,
-  busy,
-  actionData,
-}: {
+type DatosSectionsProps = {
   g: EditGallery;
   data: GalleryEditData;
   proofing: boolean;
@@ -32,17 +20,21 @@ export function DatosSections({
   onEventDate: (v: string) => void;
   busy: boolean;
   actionData: GalleryActionResult | undefined;
-}) {
+};
+
+/** Datos tab: details, status, PIN, home, options and the danger zone. */
+export function DatosSections(p: DatosSectionsProps) {
+  const { g, data, busy, actionData } = p;
   return (
     <>
       <DetailsSection
         g={g}
         clients={data.clients}
         errors={fieldErrorsOf(actionData, "details")}
-        title={title}
-        onTitle={onTitle}
-        eventDate={eventDate}
-        onEventDate={onEventDate}
+        title={p.title}
+        onTitle={p.onTitle}
+        eventDate={p.eventDate}
+        onEventDate={p.onEventDate}
         busy={busy}
         actionData={actionData}
       />
@@ -62,8 +54,8 @@ export function DatosSections({
       <OptionsSection
         g={g}
         data={data}
-        proofing={proofing}
-        onMode={onMode}
+        proofing={p.proofing}
+        onMode={p.onMode}
         errors={fieldErrorsOf(actionData, "flags")}
         busy={busy}
         actionData={actionData}

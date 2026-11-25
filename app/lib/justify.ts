@@ -31,14 +31,12 @@ export function aspectOf(p: JustifyInput): number {
   return Number.isFinite(a) && a > 0 ? a : DEFAULT_ASPECT;
 }
 
-export function justify(
-  photos: readonly JustifyInput[],
-  opts: JustifyOptions,
-): JustifiedLayout {
+type Metrics = { W: number; gap: number; target: number; max: number };
+
+/** Container width, gap and row-height bounds from the options (null: nothing to lay out). */
+function metricsOf(opts: JustifyOptions): Metrics | null {
   const W = Math.floor(opts.containerWidth);
-  if (!Number.isFinite(W) || W <= 0 || photos.length === 0) {
-    return { tiles: [], height: 0 };
-  }
+  if (!Number.isFinite(W) || W <= 0) return null;
   const num = (v: number | undefined, d: number) =>
     typeof v === "number" && Number.isFinite(v) ? v : d;
   const gap = Math.max(0, Math.round(num(opts.gap, 6)));
@@ -47,79 +45,108 @@ export function justify(
     num(opts.targetRowHeight, opts.containerWidth < 640 ? 180 : 280),
   );
   const max = Math.max(target, num(opts.maxRowHeight, target * 1.5));
-  const aspects = photos.map(aspectOf);
+  return { W, gap, target, max };
+}
 
+const sumAspects = (aspects: number[], from: number, to: number) => {
+  let sum = 0;
+  for (let i = from; i < to; i++) sum += aspects[i];
+  return sum;
+};
+
+/** Row height that makes aspects[start..end) fill W exactly. */
+const fitHeight = (aspects: number[], m: Metrics, start: number, end: number) =>
+  (m.W - m.gap * (end - start - 1)) / sumAspects(aspects, start, end);
+
+/** Grows the row from `start` until it would be at least as wide as the container (`full`). */
+function growRow(aspects: number[], m: Metrics, start: number) {
+  let end = start;
+  let sum = 0;
+  while (end < aspects.length) {
+    sum += aspects[end];
+    end++;
+    if (sum * m.target + m.gap * (end - start - 1) >= m.W) break;
+  }
+  const full = sum * m.target + m.gap * (end - start - 1) >= m.W;
+  return { end, full };
+}
+
+/** Pixel widths of a full row: proportional to aspect, the rounding remainder spread one pixel at a time. */
+function rowWidths(aspects: number[], m: Metrics, start: number, end: number) {
+  const n = end - start;
+  const avail = m.W - m.gap * (n - 1);
+  const scale = avail / sumAspects(aspects, start, end);
+  const widths: number[] = [];
+  let used = 0;
+  for (let i = start; i < end; i++) {
+    const w = Math.max(1, Math.floor(aspects[i] * scale));
+    widths.push(w);
+    used += w;
+  }
+  // The remainder can be negative only if the 1px minimum pushed us over;
+  // trim from the widest then.
+  let rem = avail - used;
+  for (let k = 0; rem > 0; k = (k + 1) % n, rem--) widths[k]++;
+  while (rem < 0) {
+    let wi = 0;
+    for (let k = 1; k < n; k++) if (widths[k] > widths[wi]) wi = k;
+    if (widths[wi] <= 1) break;
+    widths[wi]--;
+    rem++;
+  }
+  return widths;
+}
+
+/** Tiles of one row, left to right, from per-tile widths. */
+function placeRow(
+  start: number,
+  widths: number[],
+  top: number,
+  height: number,
+  gap: number,
+): JustifiedTile[] {
+  let left = 0;
+  return widths.map((width, k) => {
+    const tile = { index: start + k, left, top, width, height };
+    left += width + gap;
+    return tile;
+  });
+}
+
+export function justify(
+  photos: readonly JustifyInput[],
+  opts: JustifyOptions,
+): JustifiedLayout {
+  const m = metricsOf(opts);
+  if (!m || photos.length === 0) return { tiles: [], height: 0 };
+  const aspects = photos.map(aspectOf);
   const tiles: JustifiedTile[] = [];
   let top = 0;
   let start = 0;
 
-  // Row height that makes aspects[start..end) fill W exactly.
-  const fitHeight = (end: number) => {
-    let sum = 0;
-    for (let i = start; i < end; i++) sum += aspects[i];
-    return (W - gap * (end - start - 1)) / sum;
-  };
-
   while (start < photos.length) {
-    // Grow the row until it would be at least as wide as the container.
-    let end = start;
-    let sum = 0;
-    while (end < photos.length) {
-      sum += aspects[end];
-      end++;
-      if (sum * target + gap * (end - start - 1) >= W) break;
-    }
-    const full = sum * target + gap * (end - start - 1) >= W;
-
-    if (!full) {
+    const grown = growRow(aspects, m, start);
+    let end = grown.end;
+    if (!grown.full) {
       // Last row: keep the target height, left-aligned, never stretched.
-      const h = Math.max(1, Math.round(target));
-      let left = 0;
-      for (let i = start; i < end; i++) {
-        const width = Math.max(1, Math.round(aspects[i] * h));
-        tiles.push({ index: i, left, top, width, height: h });
-        left += width + gap;
-      }
+      const h = Math.max(1, Math.round(m.target));
+      const widths = aspects
+        .slice(start, end)
+        .map((a) => Math.max(1, Math.round(a * h)));
+      tiles.push(...placeRow(start, widths, top, h, m.gap));
       break;
     }
-
     // Pick whichever of {with, without} the last photo is closer to target.
     if (end - start > 1) {
-      const hWith = fitHeight(end);
-      const hWithout = fitHeight(end - 1);
-      if (hWithout <= max && hWithout - target < target - hWith) end--;
+      const hWith = fitHeight(aspects, m, start, end);
+      const hWithout = fitHeight(aspects, m, start, end - 1);
+      if (hWithout <= m.max && hWithout - m.target < m.target - hWith) end--;
     }
-
-    const n = end - start;
-    const h = Math.max(1, Math.round(fitHeight(end)));
-    const avail = W - gap * (n - 1);
-    let rowSum = 0;
-    for (let i = start; i < end; i++) rowSum += aspects[i];
-    const scale = avail / rowSum;
-    const widths = [];
-    let used = 0;
-    for (let i = start; i < end; i++) {
-      const w = Math.max(1, Math.floor(aspects[i] * scale));
-      widths.push(w);
-      used += w;
-    }
-    // Distribute the rounding remainder one pixel at a time (can be negative
-    // only if the 1px minimum pushed us over; trim from the widest then).
-    let rem = avail - used;
-    for (let k = 0; rem > 0; k = (k + 1) % n, rem--) widths[k]++;
-    while (rem < 0) {
-      let wi = 0;
-      for (let k = 1; k < n; k++) if (widths[k] > widths[wi]) wi = k;
-      if (widths[wi] <= 1) break;
-      widths[wi]--;
-      rem++;
-    }
-    let left = 0;
-    for (let k = 0; k < n; k++) {
-      tiles.push({ index: start + k, left, top, width: widths[k], height: h });
-      left += widths[k] + gap;
-    }
-    top += h + gap;
+    const h = Math.max(1, Math.round(fitHeight(aspects, m, start, end)));
+    tiles.push(
+      ...placeRow(start, rowWidths(aspects, m, start, end), top, h, m.gap),
+    );
+    top += h + m.gap;
     start = end;
   }
 

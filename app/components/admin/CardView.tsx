@@ -20,41 +20,42 @@ const TEXT = {
   en: { print: "Print", other: "ES", otherLang: "es" },
 } as const;
 
+type CardText = (typeof TEXT)[CardLang];
+
+/** Screen-only buttons: print and switch the card's language. */
+function CardToolbar({ t }: { t: CardText }) {
+  return (
+    <div className="flex items-center gap-3 print:hidden">
+      <button
+        type="button"
+        onClick={() => window.print()}
+        className="text-micro uppercase border border-ink bg-ink min-h-tap px-4 py-2 text-paper md:min-h-0"
+      >
+        {t.print}
+      </button>
+      <a
+        href={`?lang=${t.otherLang}`}
+        lang={t.otherLang}
+        data-tap
+        className="text-micro uppercase border border-ink px-4 py-2"
+      >
+        {t.other}
+      </a>
+    </div>
+  );
+}
+
 /** A6 portrait (105x148 mm) card; print CSS in app.css (.print-card). */
-export function CardView({
-  title,
-  eventDate,
-  url,
-  hasPin,
-  studioName,
-  lang,
-  logo,
-}: CardData) {
-  const t = TEXT[lang];
-  const date = formatEventDate(eventDate, lang);
-  const cardLogo = logoSource("dark", logo);
+export function CardView(card: CardData) {
+  const { title, url, hasPin, studioName, lang } = card;
+  const date = formatEventDate(card.eventDate, lang);
+  const cardLogo = logoSource("dark", card.logo);
   return (
     <div
       data-admin
       className="card-screen bg-grey-100 flex min-h-screen flex-col items-center gap-6 p-6 print:block print:min-h-0 print:bg-white print:p-0"
     >
-      <div className="flex items-center gap-3 print:hidden">
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="text-micro uppercase border border-ink bg-ink min-h-tap px-4 py-2 text-paper md:min-h-0"
-        >
-          {t.print}
-        </button>
-        <a
-          href={`?lang=${t.otherLang}`}
-          lang={t.otherLang}
-          data-tap
-          className="text-micro uppercase border border-ink px-4 py-2"
-        >
-          {t.other}
-        </a>
-      </div>
+      <CardToolbar t={TEXT[lang]} />
       <article
         lang={lang}
         className="print-card flex flex-col items-center justify-between bg-white text-black"

@@ -138,6 +138,15 @@ const PHOTO_D1_COST = 5;
 /** D1 queries kept for what follows the batch (idle marker, lock release). */
 const BATCH_D1_RESERVE = 4;
 
+/** How many stale photos the D1 allowance buys; the select itself is one query. */
+function maxStaleRows(d1: D1Allowance | undefined) {
+  if (!d1) return Infinity;
+  return Math.max(
+    0,
+    Math.floor((d1.budget - d1.used() - 1 - BATCH_D1_RESERVE) / PHOTO_D1_COST),
+  );
+}
+
 export async function warmBatch(
   env: Env,
   opts: { drive: DriveClient; budget?: number; d1?: D1Allowance },
@@ -147,15 +156,7 @@ export async function warmBatch(
   const used = () => drive.subrequests() - start;
   let cf = 0;
 
-  // The select itself is one query; the rest of the allowance buys photos.
-  const maxRows = d1
-    ? Math.max(
-        0,
-        Math.floor(
-          (d1.budget - d1.used() - 1 - BATCH_D1_RESERVE) / PHOTO_D1_COST,
-        ),
-      )
-    : Infinity;
+  const maxRows = maxStaleRows(d1);
   const { rows: stale, writes, more } = await staleRows(env, maxRows);
   cf += 1 + writes;
   // `more`: photos were left unexamined, so the library is not idle yet.

@@ -54,6 +54,46 @@ function DeviceSwitch({
   );
 }
 
+/** Why the mobile cover looks the way it does: no preview-wm, or falling back to the desktop cover. */
+function DeviceNotes({
+  mobileNoWm,
+  mobileFallback,
+}: {
+  mobileNoWm: boolean;
+  mobileFallback: boolean;
+}) {
+  const t = useT();
+  return (
+    <>
+      {mobileNoWm && (
+        <p
+          role="alert"
+          className="text-small text-ink border-ink border-l-2 pl-3"
+        >
+          {t("admin.cover.mobileNoWm")}
+        </p>
+      )}
+      {mobileFallback && (
+        <p className="text-small text-grey-700 border-grey-300 border-l-2 pl-3">
+          {t("admin.cover.mobileFallback")}
+        </p>
+      )}
+    </>
+  );
+}
+
+function StepHeader({ id }: { id: string }) {
+  const t = useT();
+  return (
+    <div className="flex flex-col gap-1">
+      <h2 id={id} className="text-micro text-ink uppercase">
+        {t("admin.cover.step1")}
+      </h2>
+      <p className="text-small text-grey-600">{t("admin.cover.step1Hint")}</p>
+    </div>
+  );
+}
+
 type FocalStepProps = {
   editor: ReturnType<typeof useCoverEditor>;
   coverId: string | null;
@@ -67,17 +107,8 @@ type FocalStepProps = {
 };
 
 /** Step 1: choose the focal point of the cover being edited, save it, change the photo. */
-export function FocalStep({
-  editor,
-  coverId,
-  hasMobileCover,
-  mobileNoWm,
-  photos,
-  coverAuto,
-  versions,
-  busy,
-  feedback,
-}: FocalStepProps) {
+export function FocalStep(props: FocalStepProps) {
+  const { editor, versions, busy, feedback } = props;
   const t = useT();
   const stepId = useId();
   const { device, editing, pickId, cur, setCur } = editor;
@@ -89,26 +120,14 @@ export function FocalStep({
       aria-labelledby={`${stepId}-1`}
       className="border-grey-200 flex min-w-0 flex-col gap-4 border bg-white p-4 md:p-6"
     >
-      <div className="flex flex-col gap-1">
-        <h2 id={`${stepId}-1`} className="text-micro text-ink uppercase">
-          {t("admin.cover.step1")}
-        </h2>
-        <p className="text-small text-grey-600">{t("admin.cover.step1Hint")}</p>
-      </div>
+      <StepHeader id={`${stepId}-1`} />
       <DeviceSwitch device={device} onDevice={editor.setDevice} />
-      {mobileNoWm && (
-        <p
-          role="alert"
-          className="text-small text-ink border-ink border-l-2 pl-3"
-        >
-          {t("admin.cover.mobileNoWm")}
-        </p>
-      )}
-      {device === "mobile" && !hasMobileCover && coverId && (
-        <p className="text-small text-grey-700 border-grey-300 border-l-2 pl-3">
-          {t("admin.cover.mobileFallback")}
-        </p>
-      )}
+      <DeviceNotes
+        mobileNoWm={props.mobileNoWm}
+        mobileFallback={
+          device === "mobile" && !props.hasMobileCover && !!props.coverId
+        }
+      />
       <FocalPicker
         pickId={pickId}
         aspect={editor.pickAspect}
@@ -133,11 +152,11 @@ export function FocalStep({
       )}
 
       <CoverChooser
-        photos={photos}
+        photos={props.photos}
         editing={editing}
         device={device}
-        coverAuto={coverAuto}
-        hasMobileCover={hasMobileCover}
+        coverAuto={props.coverAuto}
+        hasMobileCover={props.hasMobileCover}
         pickId={pickId}
         versions={versions}
         busy={busy}

@@ -28,13 +28,9 @@ type GalleryViewProps = {
   backToClient?: BackToClientLink;
 };
 
-export function GalleryView({
-  gallery,
-  photos,
-  downloadSlot,
-  preview = false,
-  backToClient,
-}: GalleryViewProps) {
+export function GalleryView(props: GalleryViewProps) {
+  const { gallery, photos, downloadSlot, backToClient } = props;
+  const preview = props.preview ?? false;
   const t = useT();
   const view = useGalleryView(gallery, photos, preview);
   const { active, favCount, favs } = view;

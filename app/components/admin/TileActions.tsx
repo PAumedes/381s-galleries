@@ -45,6 +45,58 @@ function Action({
   );
 }
 
+/** "Use as (mobile) cover" button, or the current cover shown as a pressed one. */
+function CoverAction({
+  id,
+  device,
+  current,
+  busy,
+  Icon,
+  label,
+  currentName,
+  useName,
+}: {
+  id: string;
+  /** Posted as `device` for the mobile cover; the desktop cover omits it. */
+  device?: "mobile";
+  current: boolean;
+  busy: boolean;
+  Icon: typeof Monitor;
+  label: string;
+  currentName: string;
+  useName: string;
+}) {
+  const icon = <Icon aria-hidden="true" className="size-4 shrink-0" />;
+  const describedBy = `photo-${id}`;
+  if (current)
+    return (
+      <Action
+        icon={icon}
+        label={label}
+        name={currentName}
+        title={currentName}
+        describedBy={describedBy}
+        pressed
+      />
+    );
+  return (
+    <Form method="post" className="contents">
+      <input type="hidden" name="intent" value="cover" />
+      {device && <input type="hidden" name="device" value={device} />}
+      <input type="hidden" name="photoId" value={id} />
+      <Action
+        type="submit"
+        icon={icon}
+        label={label}
+        name={useName}
+        title={useName}
+        describedBy={describedBy}
+        disabled={busy}
+      />
+    </Form>
+  );
+}
+
 /**
  * Per-tile actions under the picture (nothing on top of it): use as cover,
  * use as mobile cover, view whole. Icon + short label; the accessible name is
@@ -67,69 +119,34 @@ export function TileActions({
   onView: () => void;
 }) {
   const t = useT();
-  const desc = `photo-${id}`;
-  const icon = (I: typeof Monitor) => (
-    <I aria-hidden="true" className="size-4 shrink-0" />
-  );
-  const pinned = isCover && !coverAuto;
   return (
     <div data-tile-actions="" className={BAR}>
-      {pinned ? (
-        <Action
-          icon={icon(Monitor)}
-          label={t("admin.reorder.tileCover")}
-          name={t("admin.reorder.isCover")}
-          title={t("admin.reorder.isCover")}
-          describedBy={desc}
-          pressed
-        />
-      ) : (
-        <Form method="post" className="contents">
-          <input type="hidden" name="intent" value="cover" />
-          <input type="hidden" name="photoId" value={id} />
-          <Action
-            type="submit"
-            icon={icon(Monitor)}
-            label={t("admin.reorder.tileCover")}
-            name={t("admin.reorder.useAsCover")}
-            title={t("admin.reorder.useAsCover")}
-            describedBy={desc}
-            disabled={busy}
-          />
-        </Form>
-      )}
-      {isMobile ? (
-        <Action
-          icon={icon(Phone)}
-          label={t("admin.reorder.tileMobile")}
-          name={t("admin.reorder.isMobileCover")}
-          title={t("admin.reorder.isMobileCover")}
-          describedBy={desc}
-          pressed
-        />
-      ) : (
-        <Form method="post" className="contents">
-          <input type="hidden" name="intent" value="cover" />
-          <input type="hidden" name="device" value="mobile" />
-          <input type="hidden" name="photoId" value={id} />
-          <Action
-            type="submit"
-            icon={icon(Phone)}
-            label={t("admin.reorder.tileMobile")}
-            name={t("admin.reorder.useAsMobileCover")}
-            title={t("admin.reorder.useAsMobileCover")}
-            describedBy={desc}
-            disabled={busy}
-          />
-        </Form>
-      )}
+      <CoverAction
+        id={id}
+        current={isCover && !coverAuto}
+        busy={busy}
+        Icon={Monitor}
+        label={t("admin.reorder.tileCover")}
+        currentName={t("admin.reorder.isCover")}
+        useName={t("admin.reorder.useAsCover")}
+      />
+      <CoverAction
+        id={id}
+        device="mobile"
+        current={isMobile}
+        busy={busy}
+        Icon={Phone}
+        label={t("admin.reorder.tileMobile")}
+        currentName={t("admin.reorder.isMobileCover")}
+        useName={t("admin.reorder.useAsMobileCover")}
+      />
       <Action
         type="button"
-        icon={icon(Expand)}
+        icon={<Expand aria-hidden="true" className="size-4 shrink-0" />}
         label={t("admin.reorder.tileView")}
         name={t("admin.reorder.viewFull")}
         title={t("admin.reorder.viewFull")}
-        describedBy={desc}
+        describedBy={`photo-${id}`}
         onClick={onView}
       />
     </div>

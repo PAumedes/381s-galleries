@@ -7,13 +7,11 @@ import { PhotoCell, VisitorCells, Who } from "./cells";
 import { rowCls, td } from "./styles";
 import type { Row } from "./types";
 
-export function ActivityRows({ r }: { r: Row }) {
-  const [open, setOpen] = useState(false);
+/** When and who: the first two cells of every row. */
+function WhenWho({ x }: { x: Row }) {
   const t = useT();
   const { dateTimeOrEmpty } = useFormat();
-  const sizeLabel = (variant: string) =>
-    Object.hasOwn(SIZE_KEYS, variant) ? t(SIZE_KEYS[variant]!) : variant;
-  const common = (x: Row) => (
+  return (
     <>
       <td role="cell" className={td} data-label={t("admin.activity.col.when")}>
         {dateTimeOrEmpty(x.createdAt)}
@@ -23,7 +21,14 @@ export function ActivityRows({ r }: { r: Row }) {
       </td>
     </>
   );
-  const tail = (x: Row) => (
+}
+
+/** Size and visitor details: the last cells of every row. */
+function SizeAndVisitor({ x }: { x: Row }) {
+  const t = useT();
+  const sizeLabel = (variant: string) =>
+    Object.hasOwn(SIZE_KEYS, variant) ? t(SIZE_KEYS[variant]!) : variant;
+  return (
     <>
       <td role="cell" className={td} data-label={t("admin.activity.col.size")}>
         {sizeLabel(x.variant)}
@@ -31,18 +36,52 @@ export function ActivityRows({ r }: { r: Row }) {
       <VisitorCells x={x} />
     </>
   );
+}
+
+function WhatCell({ children }: { children: React.ReactNode }) {
+  const t = useT();
+  return (
+    <td role="cell" className={td} data-label={t("admin.activity.col.what")}>
+      {children}
+    </td>
+  );
+}
+
+/** One photo of a bulk download, indented under its header row. */
+function BulkChildRow({ c }: { c: Row }) {
+  const t = useT();
+  const { dateTimeOrEmpty } = useFormat();
+  return (
+    <tr role="row" className={`${rowCls} bg-grey-100`}>
+      <td role="cell" className={td} data-label={t("admin.activity.col.when")}>
+        {dateTimeOrEmpty(c.createdAt)}
+      </td>
+      <td
+        role="cell"
+        aria-hidden="true"
+        className={`${td} text-grey-700 hidden md:table-cell`}
+      >
+        ↳
+      </td>
+      <WhatCell>
+        <PhotoCell r={c} />
+      </WhatCell>
+      <SizeAndVisitor x={c} />
+    </tr>
+  );
+}
+
+export function ActivityRows({ r }: { r: Row }) {
+  const [open, setOpen] = useState(false);
+  const t = useT();
   if (!r.bulk) {
     return (
       <tr role="row" className={rowCls}>
-        {common(r)}
-        <td
-          role="cell"
-          className={td}
-          data-label={t("admin.activity.col.what")}
-        >
+        <WhenWho x={r} />
+        <WhatCell>
           <PhotoCell r={r} />
-        </td>
-        {tail(r)}
+        </WhatCell>
+        <SizeAndVisitor x={r} />
       </tr>
     );
   }
@@ -50,12 +89,8 @@ export function ActivityRows({ r }: { r: Row }) {
   return (
     <>
       <tr role="row" className={rowCls}>
-        {common(r)}
-        <td
-          role="cell"
-          className={td}
-          data-label={t("admin.activity.col.what")}
-        >
+        <WhenWho x={r} />
+        <WhatCell>
           <span className="flex flex-wrap items-center gap-3">
             <span>{bulkTitle(bulk.scope, bulk.count, t)}</span>
             {bulk.children.length > 0 ? (
@@ -69,36 +104,11 @@ export function ActivityRows({ r }: { r: Row }) {
               </button>
             ) : null}
           </span>
-        </td>
-        {tail(r)}
+        </WhatCell>
+        <SizeAndVisitor x={r} />
       </tr>
       {open
-        ? bulk.children.map((c) => (
-            <tr key={c.id} role="row" className={`${rowCls} bg-grey-100`}>
-              <td
-                role="cell"
-                className={td}
-                data-label={t("admin.activity.col.when")}
-              >
-                {dateTimeOrEmpty(c.createdAt)}
-              </td>
-              <td
-                role="cell"
-                aria-hidden="true"
-                className={`${td} text-grey-700 hidden md:table-cell`}
-              >
-                ↳
-              </td>
-              <td
-                role="cell"
-                className={td}
-                data-label={t("admin.activity.col.what")}
-              >
-                <PhotoCell r={c} />
-              </td>
-              {tail(c)}
-            </tr>
-          ))
+        ? bulk.children.map((c) => <BulkChildRow key={c.id} c={c} />)
         : null}
     </>
   );

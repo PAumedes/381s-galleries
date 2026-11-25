@@ -68,17 +68,8 @@ function ogOf(g: GalleryRow, ogCover: Row | undefined): OpenData["og"] {
   };
 }
 
-/**
- * The client payload of an open gallery (cover, design, sets, photos with
- * their `?v=` tokens, link-preview data). No access checks and no side
- * effects: callers decide who may see it (`loadGallery` for visitors, the
- * admin preview for the owner). Never carries Drive ids, the client name or
- * PIN data.
- */
-export async function buildOpenData(
-  env: Env,
-  g: GalleryRow,
-): Promise<OpenData> {
+/** Visible photos in gallery order, trimmed to what the open-data payload needs. */
+async function loadOpenRows(env: Env, g: GalleryRow) {
   const full = await getDb(env)
     .select()
     .from(schema.photos)
@@ -97,43 +88,67 @@ export async function buildOpenData(
     driveIgId: p.driveIgId,
     driveWmId: p.driveWmId,
   }));
+  return { full, rows };
+}
 
+/** Gallery fields of the payload. Proofing: no downloads at all (the server refuses them too). */
+function openGallery(
+  g: GalleryRow,
+  rows: Row[],
+  cover: { cover: string | null; mobile: string | null },
+  proofing: boolean,
+): OpenData["gallery"] {
+  const { cover: coverId, mobile } = cover;
+  return {
+    slug: g.slug,
+    requireEmail: g.requireEmail,
+    title: g.title,
+    eventDate: g.eventDate,
+    coverPhotoId: coverId,
+    coverFocus: focusOf(g.coverFocusX, g.coverFocusY),
+    coverPhotoIdMobile: mobile,
+    coverFocusMobile: mobile
+      ? focusOf(g.coverFocusMobileX, g.coverFocusMobileY)
+      : null,
+    mode: g.mode,
+    allowBulk: !proofing && g.allowBulk,
+    allowHighres: !proofing && g.allowHighres,
+    allowWeb: !proofing && g.allowWeb,
+    allowIg: !proofing && g.allowIg,
+    palette: g.palette,
+    coverLayout: g.coverLayout,
+    gridStyle: g.gridStyle,
+    gridGap: g.gridGap,
+    sets: setsOf(rows),
+  };
+}
+
+/**
+ * The client payload of an open gallery (cover, design, sets, photos with
+ * their `?v=` tokens, link-preview data). No access checks and no side
+ * effects: callers decide who may see it (`loadGallery` for visitors, the
+ * admin preview for the owner). Never carries Drive ids, the client name or
+ * PIN data.
+ */
+export async function buildOpenData(
+  env: Env,
+  g: GalleryRow,
+): Promise<OpenData> {
+  const { full, rows } = await loadOpenRows(env, g);
   // In proofing, crawlers only get /view-sm of a photo that has a
   // preview-wm; otherwise the og:image URL would 404.
   const proofing = g.mode === "proofing";
-  const { cover, mobile } = resolveCover(
+  const cover = resolveCover(
     rows.map((p) => ({ id: p.id, hasWm: !!p.driveWmId })),
     g,
   );
   const ogCover = proofing
-    ? rows.find((p) => p.id === cover && p.driveWmId) ||
+    ? rows.find((p) => p.id === cover.cover && p.driveWmId) ||
       rows.find((p) => p.driveWmId)
-    : rows.find((p) => p.id === cover);
+    : rows.find((p) => p.id === cover.cover);
 
   return {
-    gallery: {
-      slug: g.slug,
-      requireEmail: g.requireEmail,
-      title: g.title,
-      eventDate: g.eventDate,
-      coverPhotoId: cover,
-      coverFocus: focusOf(g.coverFocusX, g.coverFocusY),
-      coverPhotoIdMobile: mobile,
-      coverFocusMobile: mobile
-        ? focusOf(g.coverFocusMobileX, g.coverFocusMobileY)
-        : null,
-      mode: g.mode,
-      // Proofing: no downloads at all (the server refuses them too).
-      allowBulk: !proofing && g.allowBulk,
-      allowHighres: !proofing && g.allowHighres,
-      allowWeb: !proofing && g.allowWeb,
-      allowIg: !proofing && g.allowIg,
-      palette: g.palette,
-      coverLayout: g.coverLayout,
-      gridStyle: g.gridStyle,
-      gridGap: g.gridGap,
-      sets: setsOf(rows),
-    },
+    gallery: openGallery(g, rows, cover, proofing),
     photos: await Promise.all(
       rows.map(async ({ driveWebId, driveIgId, driveWmId: _wm, ...p }, i) => ({
         ...p,

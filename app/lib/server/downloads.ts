@@ -154,6 +154,58 @@ async function ownBulkId(
   return row?.id ?? null;
 }
 
+/** The visible photos among `photoIds` of this gallery, by id. */
+async function visiblePhotosById(
+  env: DlEnv,
+  g: GalleryRow,
+  photoIds: string[],
+) {
+  const rows = await getDb(env as Env)
+    .select()
+    .from(schema.photos)
+    .where(
+      and(
+        eq(schema.photos.galleryId, g.id),
+        inArray(schema.photos.id, photoIds),
+        photoVisible,
+      ),
+    );
+  return new Map(rows.map((p) => [p.id, p]));
+}
+
+interface TokenContext {
+  g: GalleryRow;
+  visitor: VisitorRow;
+  variant: DlVariant;
+  pf: string;
+  /** Tokens issued under the allow_bulk gate remember it, so /dl can re-check. */
+  bulkTag: string | undefined;
+}
+
+/** A signed one-photo download token (never exposes Drive ids: only our own /dl/ path). */
+async function issueToken(env: DlEnv, c: TokenContext, p: PhotoRow) {
+  const payload: DlToken = {
+    t: "dl",
+    jti: newId(),
+    g: c.g.id,
+    p: p.id,
+    v: c.variant,
+    vid: c.visitor.id,
+    pf: c.pf,
+    ...(c.bulkTag ? { b: c.bulkTag } : {}),
+  };
+  const token = await signToken(
+    payload,
+    env.DOWNLOAD_SECRET,
+    DL_TOKEN_TTL_SECONDS,
+  );
+  return {
+    photoId: p.id,
+    url: `/dl/${token}`,
+    filename: downloadFilename(p.baseName, c.variant),
+  };
+}
+
 export async function handleDownloadTokens(
   request: Request,
   slug: string,
@@ -176,52 +228,24 @@ export async function handleDownloadTokens(
     if (!own) return bad();
     bulkId = own;
   }
-  // Tokens issued under the allow_bulk gate remember it, so /dl can re-check.
-  const bulkTag = bulkId ?? (photoIds.length > 1 ? "multi" : undefined);
-
-  const rows = await getDb(env as Env)
-    .select()
-    .from(schema.photos)
-    .where(
-      and(
-        eq(schema.photos.galleryId, g.id),
-        inArray(schema.photos.id, photoIds),
-        photoVisible,
-      ),
-    );
-  const byId = new Map(rows.map((p) => [p.id, p]));
-  const pf = await pinFingerprint(g.pinHash, env);
-  const out: { photoId: string; url: string; filename: string }[] = [];
+  const byId = await visiblePhotosById(env, g, photoIds);
+  const ctx: TokenContext = {
+    g,
+    visitor,
+    variant,
+    pf: await pinFingerprint(g.pinHash, env),
+    bulkTag: bulkId ?? (photoIds.length > 1 ? "multi" : undefined),
+  };
+  const tokens: Awaited<ReturnType<typeof issueToken>>[] = [];
   const missing: string[] = [];
   const unavailable: string[] = [];
   for (const id of photoIds) {
     const p = byId.get(id);
     if (!p) missing.push(id);
     else if (!fileIdFor(p, variant)) unavailable.push(id);
-    else {
-      const payload: DlToken = {
-        t: "dl",
-        jti: newId(),
-        g: g.id,
-        p: p.id,
-        v: variant,
-        vid: visitor.id,
-        pf,
-        ...(bulkTag ? { b: bulkTag } : {}),
-      };
-      const token = await signToken(
-        payload,
-        env.DOWNLOAD_SECRET,
-        DL_TOKEN_TTL_SECONDS,
-      );
-      out.push({
-        photoId: p.id,
-        url: `/dl/${token}`,
-        filename: downloadFilename(p.baseName, variant),
-      });
-    }
+    else tokens.push(await issueToken(env, ctx, p));
   }
-  return reply({ tokens: out, missing, unavailable }, 200, cookie);
+  return reply({ tokens, missing, unavailable }, 200, cookie);
 }
 
 const isBulkScope = (b: Record<string, unknown>) =>

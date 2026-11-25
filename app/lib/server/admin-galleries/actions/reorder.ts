@@ -30,6 +30,61 @@ function parseOrder(raw: string): Record<string, string[]> | null {
   return out;
 }
 
+type CurrentPhoto = { id: string; set: string; sort: number };
+
+/**
+ * The sort writes that turn `current` into `order` (only rows whose position
+ * changed), or null when `order` is not a permutation of the visible photos
+ * within their own sets.
+ */
+function planWrites(current: CurrentPhoto[], order: Record<string, string[]>) {
+  const byId = new Map(current.map((p) => [p.id, p]));
+  const seen = new Set<string>();
+  const writes: { id: string; sort: number }[] = [];
+  for (const [set, ids] of Object.entries(order)) {
+    for (const [i, pid] of ids.entries()) {
+      const p = byId.get(pid);
+      if (!p || p.set !== set || seen.has(pid)) return null;
+      seen.add(pid);
+      if (p.sort !== i) writes.push({ id: pid, sort: i });
+    }
+  }
+  return seen.size === byId.size ? writes : null;
+}
+
+/** One CASE update per chunk of writes (D1 bound-parameter limit). */
+function sortStatements(
+  db: Db,
+  galleryId: string,
+  writes: { id: string; sort: number }[],
+): BatchItem[] {
+  const stmts: BatchItem[] = [];
+  for (let i = 0; i < writes.length; i += REORDER_CHUNK) {
+    const part = writes.slice(i, i + REORDER_CHUNK);
+    const cases = sql.join(
+      part.map(
+        (w) => sql`WHEN ${w.id} THEN ${sql.raw(String(Math.trunc(w.sort)))}`,
+      ),
+      sql` `,
+    );
+    stmts.push(
+      db
+        .update(schema.photos)
+        .set({ sort: sql`CASE ${schema.photos.id} ${cases} END` })
+        .where(
+          and(
+            eq(schema.photos.galleryId, galleryId),
+            inArray(
+              schema.photos.id,
+              part.map((w) => w.id),
+            ),
+          ),
+        ),
+    );
+  }
+  return stmts;
+}
+
 export async function reorder(
   env: Env,
   g: GalleryRow,
@@ -50,46 +105,12 @@ export async function reorder(
     .where(and(eq(schema.photos.galleryId, g.id), photoVisible));
   if ((await photoSetVersion(current.map((p) => p.id))) !== str(f, "version"))
     return fail(intent, t("admin.msg.orderStale"), undefined, { stale: true });
-  const byId = new Map(current.map((p) => [p.id, p]));
-  const seen = new Set<string>();
-  const writes: { id: string; sort: number }[] = [];
-  for (const [set, ids] of Object.entries(order)) {
-    for (const [i, pid] of ids.entries()) {
-      const p = byId.get(pid);
-      if (!p || p.set !== set || seen.has(pid))
-        return fail(intent, t("admin.msg.orderInvalid"));
-      seen.add(pid);
-      if (p.sort !== i) writes.push({ id: pid, sort: i });
-    }
-  }
-  if (seen.size !== byId.size) return fail(intent, t("admin.msg.orderInvalid"));
+  const writes = planWrites(current, order);
+  if (!writes) return fail(intent, t("admin.msg.orderInvalid"));
 
-  // One CASE update per chunk, all chunks in a single batch (a D1 batch is a
-  // transaction), so a failure never leaves a half-applied order.
-  const stmts: BatchItem[] = [];
-  for (let i = 0; i < writes.length; i += REORDER_CHUNK) {
-    const part = writes.slice(i, i + REORDER_CHUNK);
-    const cases = sql.join(
-      part.map(
-        (w) => sql`WHEN ${w.id} THEN ${sql.raw(String(Math.trunc(w.sort)))}`,
-      ),
-      sql` `,
-    );
-    stmts.push(
-      db
-        .update(schema.photos)
-        .set({ sort: sql`CASE ${schema.photos.id} ${cases} END` })
-        .where(
-          and(
-            eq(schema.photos.galleryId, g.id),
-            inArray(
-              schema.photos.id,
-              part.map((w) => w.id),
-            ),
-          ),
-        ),
-    );
-  }
+  // All chunks in a single batch (a D1 batch is a transaction), so a failure
+  // never leaves a half-applied order.
+  const stmts = sortStatements(db, g.id, writes);
   if (stmts.length) await db.batch(stmts as [BatchItem, ...BatchItem[]]);
   return done(intent, t("admin.msg.orderSaved"));
 }

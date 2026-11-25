@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { NavLink, useLocation } from "react-router";
 
 import { useFormat } from "../../i18n/use-format";
@@ -54,19 +55,32 @@ export function StatusLine({ status }: { status: AdminStatus }) {
   );
 }
 
-export function AdminShell({
-  status,
-  children,
-}: {
-  status: AdminStatus;
-  children: React.ReactNode;
-}) {
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `text-micro flex min-h-tap items-center px-3 uppercase md:min-h-0 md:py-2 ${isActive ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`;
+
+function NavLinks({ onNavigate }: { onNavigate: () => void }) {
   const t = useT();
+  return (
+    <nav aria-label={t("admin.nav.label")} className="flex flex-col gap-1">
+      {NAV.map((n) => (
+        <NavLink
+          key={n.to}
+          to={n.to}
+          end={n.end}
+          className={navLinkClass}
+          onClick={onNavigate}
+        >
+          {t(n.label)}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
+/** Phones: the menu panel's open state; it closes after navigating and with Escape (focus back on the toggle). */
+function usePhoneMenu(toggleRef: RefObject<HTMLButtonElement | null>) {
   const [open, setOpen] = useState(false);
-  const panelId = useId();
-  const toggleRef = useRef<HTMLButtonElement>(null);
   const { pathname } = useLocation();
-  // Phones: the menu closes after navigating and with Escape.
   const [openAt, setOpenAt] = useState(pathname);
   if (openAt !== pathname) {
     setOpenAt(pathname);
@@ -82,9 +96,21 @@ export function AdminShell({
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
-  const link = ({ isActive }: { isActive: boolean }) =>
-    `text-micro flex min-h-tap items-center px-3 uppercase md:min-h-0 md:py-2 ${isActive ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`;
+  }, [open, toggleRef]);
+  return [open, setOpen] as const;
+}
+
+export function AdminShell({
+  status,
+  children,
+}: {
+  status: AdminStatus;
+  children: React.ReactNode;
+}) {
+  const t = useT();
+  const panelId = useId();
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = usePhoneMenu(toggleRef);
   return (
     <div className="bg-paper text-ink min-h-dvh md:flex" data-admin>
       <aside className="border-grey-200 flex flex-col border-b md:min-h-dvh md:w-64 md:shrink-0 md:border-r md:border-b-0 md:p-6">
@@ -111,22 +137,7 @@ export function AdminShell({
           id={panelId}
           className={`${open ? "flex" : "hidden"} flex-col gap-4 px-4 pb-4 md:mt-8 md:flex md:gap-8 md:p-0`}
         >
-          <nav
-            aria-label={t("admin.nav.label")}
-            className="flex flex-col gap-1"
-          >
-            {NAV.map((n) => (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                end={n.end}
-                className={link}
-                onClick={() => setOpen(false)}
-              >
-                {t(n.label)}
-              </NavLink>
-            ))}
-          </nav>
+          <NavLinks onNavigate={() => setOpen(false)} />
           <div className="flex flex-col gap-4">
             <StatusLine status={status} />
             <AdminLangToggle />

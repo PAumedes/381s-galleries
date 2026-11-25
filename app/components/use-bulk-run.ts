@@ -26,31 +26,19 @@ export interface BulkRunInput {
   runningRef: { current: boolean };
 }
 
-/** State and start/abort of one bulk-download run (the zip fetch and its prompts). */
-export function useBulkRun(input: BulkRunInput) {
-  const { runningRef } = input;
-  const [phase, setPhase] = useState<BulkPhase>("choose");
-  const [progress, setProgress] = useState<BulkProgress>({
-    done: 0,
-    total: 0,
-    bytes: 0,
-    failed: [],
-  });
-  const [status, setStatus] = useState<"done" | "cancelled">("done");
-  const [error, setError] = useState(false);
-  const ctl = useRef<AbortController | null>(null);
-  const started = useRef(false);
-  const live = useRef(false);
-  // A yes/no question to the visitor while running (save dialog failed / large in-memory zip).
+const emptyProgress = (total: number): BulkProgress => ({
+  done: 0,
+  total,
+  bytes: 0,
+  failed: [],
+});
+
+/** A yes/no question to the visitor while running (save dialog failed / large in-memory zip). */
+function useVisitorQuestion() {
   const [fallback, setFallback] = useState<{
     key: TKey;
     answer: (ok: boolean) => void;
   } | null>(null);
-  useEffect(() => () => ctl.current?.abort(), []);
-  useEffect(() => {
-    runningRef.current = phase === "running";
-  }, [phase, runningRef]);
-
   const ask = (key: TKey) =>
     new Promise<boolean>((resolve) =>
       setFallback({
@@ -61,15 +49,59 @@ export function useBulkRun(input: BulkRunInput) {
         },
       }),
     );
+  return { fallback, ask };
+}
+
+/** The `downloadBulk` options for this run; no size prompt when the warning was already shown. */
+function bulkRequest(
+  input: BulkRunInput,
+  signal: AbortSignal,
+  onProgress: (p: BulkProgress) => void,
+  ask: (key: TKey) => Promise<boolean>,
+) {
+  const { slug, scope, variant, activeSet, photos, warning } = input;
+  return {
+    slug,
+    scope,
+    ...(scope === "set" && activeSet ? { set: activeSet } : {}),
+    variant,
+    signal,
+    sets: new Map(photos.map((p) => [p.id, p.set])),
+    onProgress,
+    confirmFallback: () => ask("download.pickerFailed"),
+    ...(warning === "large"
+      ? {}
+      : { confirmLarge: () => ask("download.warnLarge") }),
+  };
+}
+
+/**
+ * State and start/abort of one bulk-download run (the zip fetch and its prompts).
+ *
+ * `start` goes through `ensure`, which runs the action synchronously unless it
+ * opens the email gate. Only a direct click may open the save picker, so a
+ * gate-resumed action does nothing (`live` is false by then) and the visitor
+ * presses Download again.
+ */
+export function useBulkRun(input: BulkRunInput) {
+  const { runningRef } = input;
+  const [phase, setPhase] = useState<BulkPhase>("choose");
+  const [progress, setProgress] = useState<BulkProgress>(emptyProgress(0));
+  const [status, setStatus] = useState<"done" | "cancelled">("done");
+  const [error, setError] = useState(false);
+  const ctl = useRef<AbortController | null>(null);
+  const started = useRef(false);
+  const live = useRef(false);
+  const { fallback, ask } = useVisitorQuestion();
+  useEffect(() => () => ctl.current?.abort(), []);
+  useEffect(() => {
+    runningRef.current = phase === "running";
+  }, [phase, runningRef]);
 
   const start = () => {
     if (started.current) return Promise.resolve();
     started.current = true;
-    // `ensure` runs the action synchronously unless it opens the email gate;
-    // only a direct click may open the save picker, so a gate-resumed action
-    // does nothing and the visitor presses Download again.
     live.current = true;
-    const { slug, scope, variant, activeSet, photos, count, warning } = input;
     const p = input.ensure(async () => {
       if (!live.current) {
         started.current = false;
@@ -78,22 +110,12 @@ export function useBulkRun(input: BulkRunInput) {
       const c = new AbortController();
       ctl.current = c;
       setError(false);
-      setProgress({ done: 0, total: count, bytes: 0, failed: [] });
+      setProgress(emptyProgress(input.count));
       setPhase("running");
       try {
-        const r = await downloadBulk({
-          slug,
-          scope,
-          ...(scope === "set" && activeSet ? { set: activeSet } : {}),
-          variant,
-          signal: c.signal,
-          sets: new Map(photos.map((p) => [p.id, p.set])),
-          onProgress: setProgress,
-          confirmFallback: () => ask("download.pickerFailed"),
-          ...(warning === "large"
-            ? {}
-            : { confirmLarge: () => ask("download.warnLarge") }),
-        });
+        const r = await downloadBulk(
+          bulkRequest(input, c.signal, setProgress, ask),
+        );
         setProgress({ ...r });
         setStatus(r.status);
         setPhase("done");

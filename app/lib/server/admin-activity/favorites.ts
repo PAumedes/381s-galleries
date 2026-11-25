@@ -51,19 +51,17 @@ async function favoriteRows(env: Env, galleryId: string) {
     );
 }
 
-export async function loadFavoritesAdmin(env: Env, id: string) {
-  const g = await loadGallery(env, id);
-  if (!g) return null;
-  const rows = await favoriteRows(env, id);
-  const by = new Map<
-    string,
-    {
-      id: string;
-      label: string;
-      anon: boolean;
-      lists: Map<string, { name: string; last: string; photos: FavPhoto[] }>;
-    }
-  >();
+type FavRow = Awaited<ReturnType<typeof favoriteRows>>[number];
+type FavPerson = {
+  id: string;
+  label: string;
+  anon: boolean;
+  lists: Map<string, { name: string; last: string; photos: FavPhoto[] }>;
+};
+
+/** Rows grouped per person (lowercased email; one per device when anonymous) and per picked photo. */
+function groupFavoriteRows(rows: FavRow[]) {
+  const by = new Map<string, FavPerson>();
   const picks = new Map<string, { photo: FavPhoto; visitors: Set<string> }>();
   for (const r of rows) {
     const anon = isAnon(r.email);
@@ -97,7 +95,11 @@ export async function loadFavoritesAdmin(env: Env, id: string) {
     p.visitors.add(person);
     picks.set(r.photoId, p);
   }
-  const visitors = [...by.values()]
+  return { by, picks };
+}
+
+function visitorsView(by: Map<string, FavPerson>) {
+  return [...by.values()]
     .map((v) => ({
       id: v.id,
       label: v.label,
@@ -114,10 +116,22 @@ export async function loadFavoritesAdmin(env: Env, id: string) {
     .sort((a, b) =>
       a.label.localeCompare(b.label, "es", { sensitivity: "base" }),
     );
-  const all = [...picks.values()]
+}
+
+/** Every picked photo with how many people picked it, most picked first. */
+function picksView(
+  picks: Map<string, { photo: FavPhoto; visitors: Set<string> }>,
+) {
+  return [...picks.values()]
     .map((p) => ({ ...p.photo, picks: p.visitors.size }))
     .sort((a, b) => b.picks - a.picks || a.name.localeCompare(b.name, "es"));
-  return { gallery: g, visitors, all };
+}
+
+export async function loadFavoritesAdmin(env: Env, id: string) {
+  const g = await loadGallery(env, id);
+  if (!g) return null;
+  const { by, picks } = groupFavoriteRows(await favoriteRows(env, id));
+  return { gallery: g, visitors: visitorsView(by), all: picksView(picks) };
 }
 
 /** `.txt` for Capture One: one base name per line, existing photos only. Null = unknown gallery/visitor. */

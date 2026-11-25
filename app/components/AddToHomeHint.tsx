@@ -52,31 +52,12 @@ function environment(slug: string): "no" | "ios" | "other" {
 }
 
 /**
- * "Add to home screen" note: mobile only, never when already installed, shown
- * once per gallery after the visitor has scrolled into the grid.
- * Android/Chrome gets a button that fires the captured install prompt; iOS
- * Safari gets the manual Share instructions; other browsers get nothing.
+ * The captured `beforeinstallprompt` event (Android / Chrome), or null. It may
+ * have fired before hydration (picked up from `window.__a2hs`); `onInstalled`
+ * runs when the app gets installed.
  */
-export function AddToHomeHint({
-  slug,
-  gridRef,
-}: {
-  slug: string;
-  gridRef: RefObject<HTMLElement | null>;
-}) {
-  const t = useT();
-  // "no" on the server and for desktop / installed / already-dismissed.
-  const env = useSyncExternalStore(
-    noopSubscribe,
-    () => environment(slug),
-    () => "no" as const,
-  );
-  const eligible = env !== "no";
-  const ios = env === "ios";
+function useInstallPrompt(eligible: boolean, onInstalled: () => void) {
   const [install, setInstall] = useState<InstallEvent | null>(null);
-  const [inGrid, setInGrid] = useState(false);
-  const [done, setDone] = useState(false);
-
   useEffect(() => {
     if (!eligible) return;
     const onPrompt = (e: Event) => {
@@ -90,7 +71,6 @@ export function AddToHomeHint({
     window.addEventListener("a2hs", onEarly);
     // Already fired before hydration: pick it up asynchronously.
     const t = setTimeout(onEarly, 0);
-    const onInstalled = () => setDone(true);
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
@@ -99,8 +79,16 @@ export function AddToHomeHint({
       clearTimeout(t);
       window.removeEventListener("appinstalled", onInstalled);
     };
-  }, [eligible]);
+  }, [eligible, onInstalled]);
+  return install;
+}
 
+/** True once the grid has scrolled up to the middle of the screen (and stays true). */
+function useGridInView(
+  eligible: boolean,
+  gridRef: RefObject<HTMLElement | null>,
+) {
+  const [inGrid, setInGrid] = useState(false);
   useEffect(() => {
     if (!eligible || inGrid) return;
     const check = () => {
@@ -111,26 +99,20 @@ export function AddToHomeHint({
     window.addEventListener("scroll", check, { passive: true });
     return () => window.removeEventListener("scroll", check);
   }, [eligible, inGrid, gridRef]);
+  return inGrid;
+}
 
-  const kind = install ? "android" : ios ? "ios" : null;
-  const visible = eligible && inGrid && !done && kind !== null;
-
-  const close = useCallback(() => {
-    write(slug);
-    setDone(true);
-  }, [slug]);
-
-  const accept = useCallback(async () => {
-    const ev = install;
-    close();
-    try {
-      await ev?.prompt();
-    } catch {
-      /* prompt already used or blocked */
-    }
-  }, [install, close]);
-
-  if (!visible) return null;
+/** The bottom bar: iOS share instructions, or the Android install button, and a dismiss button. */
+function HintBar({
+  kind,
+  onAccept: accept,
+  onClose,
+}: {
+  kind: "ios" | "android";
+  onAccept: () => void;
+  onClose: () => void;
+}) {
+  const t = useT();
   return (
     <div
       role="status"
@@ -157,7 +139,7 @@ export function AddToHomeHint({
       )}
       <button
         type="button"
-        onClick={close}
+        onClick={onClose}
         aria-label={t("pwa.dismiss")}
         className="ml-auto flex size-12 shrink-0 items-center justify-center"
       >
@@ -165,4 +147,52 @@ export function AddToHomeHint({
       </button>
     </div>
   );
+}
+
+/**
+ * "Add to home screen" note: mobile only, never when already installed, shown
+ * once per gallery after the visitor has scrolled into the grid.
+ * Android/Chrome gets a button that fires the captured install prompt; iOS
+ * Safari gets the manual Share instructions; other browsers get nothing.
+ */
+export function AddToHomeHint({
+  slug,
+  gridRef,
+}: {
+  slug: string;
+  gridRef: RefObject<HTMLElement | null>;
+}) {
+  // "no" on the server and for desktop / installed / already-dismissed.
+  const env = useSyncExternalStore(
+    noopSubscribe,
+    () => environment(slug),
+    () => "no" as const,
+  );
+  const eligible = env !== "no";
+  const ios = env === "ios";
+  const [done, setDone] = useState(false);
+  const markDone = useCallback(() => setDone(true), []);
+  const install = useInstallPrompt(eligible, markDone);
+  const inGrid = useGridInView(eligible, gridRef);
+
+  const kind = install ? "android" : ios ? "ios" : null;
+  const visible = eligible && inGrid && !done && kind !== null;
+
+  const close = useCallback(() => {
+    write(slug);
+    setDone(true);
+  }, [slug]);
+
+  const accept = useCallback(async () => {
+    const ev = install;
+    close();
+    try {
+      await ev?.prompt();
+    } catch {
+      /* prompt already used or blocked */
+    }
+  }, [install, close]);
+
+  if (!visible) return null;
+  return <HintBar kind={kind} onAccept={accept} onClose={close} />;
 }

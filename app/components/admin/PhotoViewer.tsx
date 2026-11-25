@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 
 import { useT } from "../../i18n/use-t";
 import { adminImgSrc } from "../img-url";
@@ -6,6 +7,120 @@ import { ChevronLeft, ChevronRight, Close } from "../icons";
 
 const BTN =
   "flex size-11 items-center justify-center text-white/80 hover:text-white disabled:opacity-25 focus-visible:outline-2 focus-visible:outline-white";
+
+const TABBABLE =
+  "button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex='-1'])";
+
+/** Tab wraps inside the dialog. Returns false when the browser's own Tab move is fine. */
+function wrapTab(e: KeyboardEvent, dialog: HTMLElement | null) {
+  const nodes = Array.from(
+    dialog?.querySelectorAll<HTMLElement>(TABBABLE) ?? [],
+  );
+  if (nodes.length === 0) return false;
+  const first = nodes[0]!;
+  const last = nodes[nodes.length - 1]!;
+  const active = document.activeElement;
+  if (!dialog?.contains(active)) first.focus();
+  else if (e.shiftKey && active === first) last.focus();
+  else if (!e.shiftKey && active === last) first.focus();
+  else return false;
+  return true;
+}
+
+/** Tab is trapped, Escape closes, the arrows walk to the previous / next photo (when there is one). */
+function useViewerKeys(
+  dialogRef: RefObject<HTMLElement | null>,
+  {
+    prev,
+    next,
+    onChange,
+    onClose,
+  }: {
+    prev: string | undefined;
+    next: string | undefined;
+    onChange: (id: string) => void;
+    onClose: () => void;
+  },
+) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Tab") {
+        if (!wrapTab(e, dialogRef.current)) return;
+      } else if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowLeft" && prev) onChange(prev);
+      else if (e.key === "ArrowRight" && next) onChange(next);
+      else return;
+      e.preventDefault();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [dialogRef, prev, next, onChange, onClose]);
+}
+
+function ViewerBar({
+  name,
+  position,
+  closeRef,
+  onClose,
+}: {
+  name: string;
+  position: string;
+  closeRef: RefObject<HTMLButtonElement | null>;
+  onClose: () => void;
+}) {
+  const t = useT();
+  return (
+    <div className="flex items-center justify-between gap-4 py-1 pr-1 pl-4">
+      <p className="text-micro truncate uppercase">
+        {name}
+        <span className="text-white/60"> · {position}</span>
+      </p>
+      <button
+        ref={closeRef}
+        type="button"
+        aria-label={t("admin.viewer.close")}
+        onClick={onClose}
+        className={BTN}
+      >
+        <Close aria-hidden="true" className="size-5" />
+      </button>
+    </div>
+  );
+}
+
+function ViewerArrows({
+  prev,
+  next,
+  onChange,
+}: {
+  prev: string | undefined;
+  next: string | undefined;
+  onChange: (id: string) => void;
+}) {
+  const t = useT();
+  return (
+    <>
+      <button
+        type="button"
+        aria-label={t("admin.viewer.prev")}
+        disabled={!prev}
+        onClick={() => prev && onChange(prev)}
+        className={`${BTN} absolute top-1/2 left-0 -translate-y-1/2`}
+      >
+        <ChevronLeft aria-hidden="true" className="size-6" />
+      </button>
+      <button
+        type="button"
+        aria-label={t("admin.viewer.next")}
+        disabled={!next}
+        onClick={() => next && onChange(next)}
+        className={`${BTN} absolute top-1/2 right-0 -translate-y-1/2`}
+      >
+        <ChevronRight aria-hidden="true" className="size-6" />
+      </button>
+    </>
+  );
+}
 
 /**
  * "Ver completa": the whole photo (uncropped, 1200 px admin view) over a dark
@@ -25,7 +140,6 @@ export function PhotoViewer({
   onChange: (id: string) => void;
   onClose: () => void;
 }) {
-  const t = useT();
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const i = ids.indexOf(current);
@@ -38,31 +152,7 @@ export function PhotoViewer({
     closeRef.current?.focus();
     return () => back?.focus?.();
   }, []);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Tab") {
-        const nodes = Array.from(
-          dialogRef.current?.querySelectorAll<HTMLElement>(
-            "button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex='-1'])",
-          ) ?? [],
-        );
-        if (nodes.length === 0) return;
-        const first = nodes[0]!;
-        const last = nodes[nodes.length - 1]!;
-        const active = document.activeElement;
-        if (!dialogRef.current?.contains(active)) first.focus();
-        else if (e.shiftKey && active === first) last.focus();
-        else if (!e.shiftKey && active === last) first.focus();
-        else return;
-      } else if (e.key === "Escape") onClose();
-      else if (e.key === "ArrowLeft" && prev) onChange(prev);
-      else if (e.key === "ArrowRight" && next) onChange(next);
-      else return;
-      e.preventDefault();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [prev, next, onChange, onClose]);
+  useViewerKeys(dialogRef, { prev, next, onChange, onClose });
 
   return (
     <div
@@ -75,24 +165,12 @@ export function PhotoViewer({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="flex items-center justify-between gap-4 py-1 pr-1 pl-4">
-        <p className="text-micro truncate uppercase">
-          {name}
-          <span className="text-white/60">
-            {" "}
-            · {i + 1} / {ids.length}
-          </span>
-        </p>
-        <button
-          ref={closeRef}
-          type="button"
-          aria-label={t("admin.viewer.close")}
-          onClick={onClose}
-          className={BTN}
-        >
-          <Close aria-hidden="true" className="size-5" />
-        </button>
-      </div>
+      <ViewerBar
+        name={name}
+        position={`${i + 1} / ${ids.length}`}
+        closeRef={closeRef}
+        onClose={onClose}
+      />
       <div className="relative flex min-h-0 flex-1 items-center justify-center px-12 pb-6">
         <img
           key={current}
@@ -101,24 +179,7 @@ export function PhotoViewer({
           draggable={false}
           className="max-h-full max-w-full object-contain select-none"
         />
-        <button
-          type="button"
-          aria-label={t("admin.viewer.prev")}
-          disabled={!prev}
-          onClick={() => prev && onChange(prev)}
-          className={`${BTN} absolute top-1/2 left-0 -translate-y-1/2`}
-        >
-          <ChevronLeft aria-hidden="true" className="size-6" />
-        </button>
-        <button
-          type="button"
-          aria-label={t("admin.viewer.next")}
-          disabled={!next}
-          onClick={() => next && onChange(next)}
-          className={`${BTN} absolute top-1/2 right-0 -translate-y-1/2`}
-        >
-          <ChevronRight aria-hidden="true" className="size-6" />
-        </button>
+        <ViewerArrows prev={prev} next={next} onChange={onChange} />
       </div>
     </div>
   );

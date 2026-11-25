@@ -18,6 +18,103 @@ export function focusAt(
   };
 }
 
+type ActiveDrag = {
+  id: number;
+  last: Focus;
+  moved: boolean;
+  before: Focus | null;
+};
+type ActiveRef = { current: ActiveDrag | null };
+type PointerEv = React.PointerEvent<HTMLElement>;
+
+const focusOfEvent = (e: PointerEv) =>
+  focusAt(e.currentTarget.getBoundingClientRect(), e.clientX, e.clientY);
+
+/**
+ * A callback ref that cancels the browser's touch pan while a drag is active.
+ * The picker may mount after the component (the cover arrives later) or
+ * remount; the listener follows the element.
+ */
+function useTouchPanGuard(active: ActiveRef) {
+  const detach = useRef<(() => void) | null>(null);
+  return useCallback(
+    (el: HTMLDivElement | null) => {
+      detach.current?.();
+      detach.current = null;
+      if (!el) return;
+      const stop = (e: TouchEvent) => {
+        if (active.current && e.cancelable) e.preventDefault();
+      };
+      el.addEventListener("touchmove", stop, { passive: false });
+      detach.current = () => el.removeEventListener("touchmove", stop);
+    },
+    [active],
+  );
+}
+
+interface FocalCallbacks {
+  /** The current point, restored when the browser takes the pointer away. */
+  point: Focus | null;
+  onPoint: (f: Focus | null) => void;
+  onCommit: (f: Focus) => void;
+}
+
+/**
+ * The pointer handlers of one drag (named `use…` because it takes the drag
+ * ref, which the React compiler only lets hooks receive); `end` clears the active drag and the dragging flag. */
+function useFocalHandlers(
+  active: ActiveRef,
+  { point, onPoint, onCommit }: FocalCallbacks,
+  start: () => void,
+  end: () => void,
+) {
+  return {
+    onPointerDown(e: PointerEv) {
+      if (e.pointerType === "mouse" || !e.isPrimary) return;
+      const f = focusOfEvent(e);
+      if (!f) return;
+      active.current = {
+        id: e.pointerId,
+        last: f,
+        moved: false,
+        before: point,
+      };
+      // Before React re-renders: the browser reads touch-action now.
+      e.currentTarget.style.touchAction = "none";
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+      start();
+      onPoint(f);
+    },
+    onPointerMove(e: PointerEv) {
+      const a = active.current;
+      if (!a || a.id !== e.pointerId) return;
+      const f = focusOfEvent(e);
+      if (!f) return;
+      a.last = f;
+      a.moved = true;
+      onPoint(f);
+    },
+    onPointerUp(e: PointerEv) {
+      const a = active.current;
+      if (!a || a.id !== e.pointerId) return;
+      e.currentTarget.releasePointerCapture?.(e.pointerId);
+      end();
+      if (a.moved) onCommit(a.last);
+    },
+    onPointerCancel(e: PointerEv) {
+      if (active.current?.id === e.pointerId) end();
+    },
+    // The browser took the pointer away mid-drag (not our own release,
+    // which clears `active` first): nothing is saved, the point goes back.
+    onLostPointerCapture(e: PointerEv) {
+      const a = active.current;
+      if (!a || a.id !== e.pointerId) return;
+      end();
+      onPoint(a.before);
+    },
+  };
+}
+
 /**
  * Drag the focal point with a finger or pen (a mouse keeps using `click`).
  * Pointer down sets the point and captures the pointer; moves follow it;
@@ -27,98 +124,19 @@ export function focusAt(
  * a touch that already started keeps its scroll behaviour, a non-passive
  * `touchmove` listener cancels the browser's pan for the gesture.
  */
-export function useFocalDrag({
-  point,
-  onPoint,
-  onCommit,
-}: {
-  /** The current point, restored when the browser takes the pointer away. */
-  point: Focus | null;
-  onPoint: (f: Focus | null) => void;
-  onCommit: (f: Focus) => void;
-}) {
+export function useFocalDrag(callbacks: FocalCallbacks) {
   const [dragging, setDragging] = useState(false);
-  const active = useRef<{
-    id: number;
-    last: Focus;
-    moved: boolean;
-    before: Focus | null;
-  } | null>(null);
-
-  // A callback ref: the picker may mount after the component (the cover
-  // arrives later) or remount; the listener follows the element.
-  const detach = useRef<(() => void) | null>(null);
-  const ref = useCallback((el: HTMLDivElement | null) => {
-    detach.current?.();
-    detach.current = null;
-    if (!el) return;
-    const stop = (e: TouchEvent) => {
-      if (active.current && e.cancelable) e.preventDefault();
-    };
-    el.addEventListener("touchmove", stop, { passive: false });
-    detach.current = () => el.removeEventListener("touchmove", stop);
-  }, []);
-
+  const active = useRef<ActiveDrag | null>(null);
+  const ref = useTouchPanGuard(active);
   const end = () => {
     active.current = null;
     setDragging(false);
   };
-
-  return {
-    ref,
-    dragging,
-    handlers: {
-      onPointerDown(e: React.PointerEvent<HTMLElement>) {
-        if (e.pointerType === "mouse" || !e.isPrimary) return;
-        const f = focusAt(
-          e.currentTarget.getBoundingClientRect(),
-          e.clientX,
-          e.clientY,
-        );
-        if (!f) return;
-        active.current = {
-          id: e.pointerId,
-          last: f,
-          moved: false,
-          before: point,
-        };
-        // Before React re-renders: the browser reads touch-action now.
-        e.currentTarget.style.touchAction = "none";
-        e.currentTarget.setPointerCapture?.(e.pointerId);
-        setDragging(true);
-        onPoint(f);
-      },
-      onPointerMove(e: React.PointerEvent<HTMLElement>) {
-        const a = active.current;
-        if (!a || a.id !== e.pointerId) return;
-        const f = focusAt(
-          e.currentTarget.getBoundingClientRect(),
-          e.clientX,
-          e.clientY,
-        );
-        if (!f) return;
-        a.last = f;
-        a.moved = true;
-        onPoint(f);
-      },
-      onPointerUp(e: React.PointerEvent<HTMLElement>) {
-        const a = active.current;
-        if (!a || a.id !== e.pointerId) return;
-        e.currentTarget.releasePointerCapture?.(e.pointerId);
-        end();
-        if (a.moved) onCommit(a.last);
-      },
-      onPointerCancel(e: React.PointerEvent<HTMLElement>) {
-        if (active.current?.id === e.pointerId) end();
-      },
-      // The browser took the pointer away mid-drag (not our own release,
-      // which clears `active` first): nothing is saved, the point goes back.
-      onLostPointerCapture(e: React.PointerEvent<HTMLElement>) {
-        const a = active.current;
-        if (!a || a.id !== e.pointerId) return;
-        end();
-        onPoint(a.before);
-      },
-    },
-  };
+  const handlers = useFocalHandlers(
+    active,
+    callbacks,
+    () => setDragging(true),
+    end,
+  );
+  return { ref, dragging, handlers };
 }

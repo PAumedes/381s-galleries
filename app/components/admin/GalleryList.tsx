@@ -73,15 +73,7 @@ function EmptyLibrary({ rootName }: { rootName?: string | null }) {
   );
 }
 
-export function GalleryList({
-  galleries,
-  filter,
-  total,
-  q = "",
-  rootName,
-  clientFilter = "",
-  clients = [],
-}: {
+interface GalleryListProps {
   galleries: GalleryListItem[];
   filter: Filter;
   total: number;
@@ -93,7 +85,38 @@ export function GalleryList({
   clientFilter?: string;
   /** Clients for the filter select (at most 100). */
   clients?: ClientChoice[];
+}
+
+/** Status filter chips, keeping the search and client filter. */
+function FilterChips({
+  filter,
+  q,
+  clientFilter,
+}: {
+  filter: Filter;
+  q: string;
+  clientFilter: string;
 }) {
+  const t = useT();
+  return (
+    <nav aria-label={t("admin.filter.label")} className={FILTER_NAV_CLS}>
+      {FILTERS.map((f) => (
+        <Link
+          key={f}
+          to={filterHref(f, q, clientFilter)}
+          aria-current={f === filter ? "page" : undefined}
+          className={`${FILTER_CHIP_CLS} ${f === filter ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`}
+        >
+          {t(FILTER_KEYS[f])}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+export function GalleryList(props: GalleryListProps) {
+  const { galleries, filter, total, q = "", rootName } = props;
+  const { clientFilter = "", clients = [] } = props;
   const navigate = useNavigate();
   const t = useT();
   const fmt = useFormat();
@@ -115,18 +138,7 @@ export function GalleryList({
           hrefFor={(c) => filterHref(filter, q, c)}
         />
       )}
-      <nav aria-label={t("admin.filter.label")} className={FILTER_NAV_CLS}>
-        {FILTERS.map((f) => (
-          <Link
-            key={f}
-            to={filterHref(f, q, clientFilter)}
-            aria-current={f === filter ? "page" : undefined}
-            className={`${FILTER_CHIP_CLS} ${f === filter ? "bg-ink text-paper" : "text-grey-700 hover:text-ink"}`}
-          >
-            {t(FILTER_KEYS[f])}
-          </Link>
-        ))}
-      </nav>
+      <FilterChips filter={filter} q={q} clientFilter={clientFilter} />
       {galleries.length === 0 ? (
         <p className="text-body text-grey-600">
           {q ? t("admin.list.noMatch") : t("admin.list.noneInFilter")}

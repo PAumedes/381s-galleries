@@ -18,6 +18,28 @@ type TopBarProps = {
   onDownload?: (id: string) => void;
 };
 
+function FavoriteButton({
+  t,
+  favorite,
+  onClick,
+}: {
+  t: TFunction;
+  favorite: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={BTN}
+      aria-label={t(favorite ? "favorites.remove" : "favorites.add")}
+      aria-pressed={favorite}
+      onClick={onClick}
+    >
+      {favorite ? <HeartFilled className={ICON} /> : <Heart className={ICON} />}
+    </button>
+  );
+}
+
 /** Counter plus favourite / download (only when wired) and close. */
 export function TopBar({
   t,
@@ -46,19 +68,11 @@ export function TopBar({
       </span>
       <div className="flex">
         {onFavorite && (
-          <button
-            type="button"
-            className={BTN}
-            aria-label={t(favorite ? "favorites.remove" : "favorites.add")}
-            aria-pressed={favorite}
+          <FavoriteButton
+            t={t}
+            favorite={favorite}
             onClick={() => onFavorite(photoId)}
-          >
-            {favorite ? (
-              <HeartFilled className={ICON} />
-            ) : (
-              <Heart className={ICON} />
-            )}
-          </button>
+          />
         )}
         {onDownload && (
           <button

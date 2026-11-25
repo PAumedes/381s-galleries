@@ -97,61 +97,81 @@ function delayFor(attempt: number, res: Response): number {
   return delay;
 }
 
+/** The I/O a requester depends on, injectable for tests. */
+interface Transport {
+  getToken: (forceRefresh?: boolean) => Promise<string>;
+  doFetch: NonNullable<DriveClientOptions["fetch"]>;
+  sleep: (ms: number) => Promise<void>;
+  /** Called once per outgoing subrequest. */
+  count: () => void;
+}
+
+/** GET with token refresh on one 401 and bounded retries (network, 429, 5xx, rate-limit 403). */
+async function requestWithRetry(
+  tr: Transport,
+  url: string,
+  headers: Record<string, string> = {},
+  streaming = false,
+): Promise<Response> {
+  let token = await tr.getToken();
+  let refreshed = false;
+  let retries = 0;
+  for (;;) {
+    let res: Response;
+    try {
+      tr.count();
+      res = await tr.doFetch(url, {
+        method: "GET",
+        headers: { ...headers, Authorization: `Bearer ${token}` },
+      });
+    } catch {
+      if (retries < MAX_RETRIES) {
+        const exp = BASE_DELAY_MS * 2 ** retries;
+        retries++;
+        await tr.sleep(exp + Math.random() * exp * 0.5);
+        continue;
+      }
+      throw new DriveError(503, "Drive request failed (network)");
+    }
+    if (res.ok) return res;
+    if (res.status === 401 && !refreshed) {
+      refreshed = true;
+      await res.body?.cancel().catch(() => {});
+      token = await tr.getToken(true);
+      continue;
+    }
+    if (streaming) throw await toError(res, token);
+    const retryable =
+      res.status === 429 || res.status >= 500 || (await isRateLimit403(res));
+    if (retryable && retries < MAX_RETRIES) {
+      const wait = delayFor(retries, res);
+      retries++;
+      await res.body?.cancel().catch(() => {});
+      await tr.sleep(wait);
+      continue;
+    }
+    throw await toError(res, token);
+  }
+}
+
 export function createRequester(
   getToken: (forceRefresh?: boolean) => Promise<string>,
   opts: DriveClientOptions,
 ) {
-  const doFetch = opts.fetch ?? ((i, init) => fetch(i, init));
-  const sleep =
-    opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
-
   let subrequestCount = 0;
-
-  async function request(
+  const tr: Transport = {
+    getToken,
+    doFetch: opts.fetch ?? ((i, init) => fetch(i, init)),
+    sleep:
+      opts.sleep ??
+      ((ms: number) => new Promise<void>((r) => setTimeout(r, ms))),
+    count: () => void subrequestCount++,
+  };
+  const request = (
     url: string,
     headers: Record<string, string> = {},
     streaming = false,
-  ): Promise<Response> {
-    let token = await getToken();
-    let refreshed = false;
-    let retries = 0;
-    for (;;) {
-      let res: Response;
-      try {
-        subrequestCount++;
-        res = await doFetch(url, {
-          method: "GET",
-          headers: { ...headers, Authorization: `Bearer ${token}` },
-        });
-      } catch {
-        if (retries < MAX_RETRIES) {
-          const exp = BASE_DELAY_MS * 2 ** retries;
-          retries++;
-          await sleep(exp + Math.random() * exp * 0.5);
-          continue;
-        }
-        throw new DriveError(503, "Drive request failed (network)");
-      }
-      if (res.ok) return res;
-      if (res.status === 401 && !refreshed) {
-        refreshed = true;
-        await res.body?.cancel().catch(() => {});
-        token = await getToken(true);
-        continue;
-      }
-      if (streaming) throw await toError(res, token);
-      const retryable =
-        res.status === 429 || res.status >= 500 || (await isRateLimit403(res));
-      if (retryable && retries < MAX_RETRIES) {
-        const wait = delayFor(retries, res);
-        retries++;
-        await res.body?.cancel().catch(() => {});
-        await sleep(wait);
-        continue;
-      }
-      throw await toError(res, token);
-    }
-  }
+  ) => requestWithRetry(tr, url, headers, streaming);
 
   async function json<T>(url: string): Promise<T> {
     const res = await request(url);

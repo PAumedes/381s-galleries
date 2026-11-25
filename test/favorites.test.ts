@@ -390,6 +390,21 @@ describe("POST favorites", () => {
     expect(await db.select().from(schema.favorites)).toHaveLength(0);
   });
 
+  it("T6.51: removing without any visitor is a 200 {ok:true} no-op that creates nothing", async () => {
+    await addGallery({ requireEmail: false });
+    await addPhoto("p1");
+    const r = await handleSetFavorite(
+      favReq({ photoId: "p1", on: false }),
+      "boda",
+      env,
+    );
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ ok: true });
+    expect(r.headers.getSetCookie()).toHaveLength(0);
+    expect(await db.select().from(schema.visitors)).toHaveLength(0);
+    expect(await db.select().from(schema.favorites)).toHaveLength(0);
+  });
+
   it("requires a visitor when require_email is true", async () => {
     await addGallery();
     await addPhoto("p1");
