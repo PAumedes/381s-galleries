@@ -11,7 +11,7 @@ import { saveIntent } from "./admin-clients/save";
 import { requireAdmin } from "./auth";
 import { getClient, listClients } from "./clients";
 import { homeCoverIdSql } from "./cover";
-import { HOME_CAP, listedOnClientPage } from "./home";
+import { CLIENT_CANDIDATE_CAP, listedOnClientPage } from "./home";
 
 export type { ClientActionResult } from "./admin-clients/errors";
 
@@ -58,7 +58,7 @@ export async function clientEditData(request: Request, env: Env, id: string) {
   const now = Date.now();
   const visible = Math.min(
     rows.filter((r) => listedOnClientPage(r, now)).length,
-    HOME_CAP,
+    CLIENT_CANDIDATE_CAP,
   );
   const albums = rows.map(({ id, title, slug, status, mode }) => ({
     id,

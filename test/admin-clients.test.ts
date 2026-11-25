@@ -168,6 +168,17 @@ describe("T6.40b admin clients: loaders", () => {
     expect(await status()).toEqual({ visible: 2, reason: "disabled" });
   });
 
+  it("T6.49 edit: the visible count is not capped at one page (60)", async () => {
+    const c = await createClient(e, { name: "Big", slug: "big" });
+    for (let i = 0; i < 65; i++) {
+      await addGallery(`g-b${i}`, `b${i}`, c.id, { status: "'published'" });
+      await addPhoto(`pb${i}`, `g-b${i}`, null);
+    }
+    expect(
+      (await clientEditData(new Request(BASE + "/x"), e, c.id)).publicPage,
+    ).toEqual({ visible: 65, reason: null });
+  });
+
   it("edit: 404 for an unknown client, 401 for non-admins", async () => {
     expect(
       (await thrown(clientEditData(new Request(BASE + "/x"), e, "nope")))

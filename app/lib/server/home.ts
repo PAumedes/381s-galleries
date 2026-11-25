@@ -6,6 +6,13 @@ import { isExpired } from "./time";
 
 /** Most galleries shown on the public home. */
 export const HOME_CAP = 60;
+/** Albums per page of a client's homepage (T6.49); also the covers query size (<= 100 binds). */
+export const CLIENT_PAGE_SIZE = 60;
+/**
+ * Most candidate rows one client page reads (newest first), so the query and
+ * the JS filter stay bounded; older albums beyond it are not listed.
+ */
+export const CLIENT_CANDIDATE_CAP = 1000;
 
 /**
  * Public payload of one home tile. Deliberately tiny: no client name, Drive
@@ -58,18 +65,24 @@ export type ClientTile = Omit<HomeItem, "cover"> & {
  * Tiles of one client's page (T6.40e): every published, unexpired album of the
  * client with a cover, regardless of show_on_home; PIN albums
  * are listed too (owner decision), without a cover. `null` when the client does
- * not exist or has `page_enabled = 0`; the caller adds the "no tiles" 404.
+ * not exist or has `page_enabled = 0`, or when `page` is beyond the last one
+ * (T6.49: `CLIENT_PAGE_SIZE` per page); the caller adds the "no tiles" 404.
  */
 export async function loadClientTiles(
   env: Env,
   slug: string,
+  page = 1,
 ): Promise<{
   clientName: string;
   clientSlug: string;
   tiles: ClientTile[];
+  page: number;
+  pageCount: number;
 } | null> {
-  const r = await loadTiles(env, { kind: "client", slug });
-  return r.client ? { ...r.client, tiles: r.tiles } : null;
+  const r = await loadTiles(env, { kind: "client", slug }, page);
+  return r.client
+    ? { ...r.client, tiles: r.tiles, page, pageCount: r.pageCount }
+    : null;
 }
 
 /**
@@ -99,7 +112,7 @@ type TileRow = Awaited<ReturnType<typeof queryTileRows>>[number];
 async function queryTileRows(db: Db, scope: Scope) {
   const g = schema.galleries;
   const c = schema.clients;
-  return db
+  const q = db
     .select({
       slug: g.slug,
       title: g.title,
@@ -128,7 +141,10 @@ async function queryTileRows(db: Db, scope: Scope) {
       sql`COALESCE(NULLIF(${g.eventDate}, ''), ${g.createdAt}) DESC`,
       sql`${g.createdAt} DESC`,
       sql`${g.id}`,
-    );
+    )
+    .$dynamic();
+  // the home filters in JS down to HOME_CAP; a client page is bounded here
+  return scope.kind === "home" ? q : q.limit(CLIENT_CANDIDATE_CAP);
 }
 
 /** The cover photos of the unlocked tiles, by id (one query, none when nothing to fetch). */
@@ -175,21 +191,24 @@ async function buildTile(
 async function loadTiles(
   env: Env,
   scope: Scope,
+  page = 1,
 ): Promise<{
   tiles: ClientTile[];
   client?: { clientName: string; clientSlug: string };
+  pageCount: number;
 }> {
   const db = getDb(env);
   const home = scope.kind === "home";
   const rows = await queryTileRows(db, scope);
   const now = Date.now();
-  const shown = rows
-    .filter(
-      (r) =>
-        (r.coverId !== null || (!home && r.pinned)) &&
-        !isExpired(r.expiresAt, now),
-    )
-    .slice(0, HOME_CAP);
+  const listed = rows.filter(
+    (r) =>
+      (r.coverId !== null || (!home && r.pinned)) &&
+      !isExpired(r.expiresAt, now),
+  );
+  const size = home ? HOME_CAP : CLIENT_PAGE_SIZE;
+  const pageCount = home ? 1 : Math.ceil(listed.length / size);
+  const shown = listed.slice((page - 1) * size, page * size);
   const client = shown[0]
     ? { clientName: shown[0].clientName!, clientSlug: shown[0].clientSlug! }
     : undefined;
@@ -200,5 +219,5 @@ async function loadTiles(
     if (!r.pinned && !p) continue;
     tiles.push(await buildTile(env, r, p));
   }
-  return { tiles, client };
+  return { tiles, client, pageCount };
 }
