@@ -597,6 +597,10 @@ export const esAdmin = {
   "admin.clients.delete.button": "Eliminar cliente",
   "admin.clients.delete.confirm":
     "Se eliminará el cliente. Sus álbumes quedarán sin cliente y las direcciones del cliente dejarán de funcionar. ¿Continuar?",
+  "admin.clients.delete.warningPin":
+    "Este cliente tiene PIN: al eliminarlo, sus álbumes quedan accesibles sin el PIN y no se listan en la portada (cualquiera con la dirección del álbum puede abrirlos).",
+  "admin.clients.delete.confirmPin":
+    "Se eliminará el cliente. Sus álbumes quedarán sin cliente y accesibles sin el PIN, y las direcciones del cliente dejarán de funcionar. ¿Continuar?",
   "admin.clients.msg.saved": "Cliente guardado.",
   "admin.clients.section.pin": "PIN del cliente",
   "admin.clients.pin.active": "PIN activo",
@@ -635,6 +639,8 @@ export const esAdmin = {
   "admin.edit.hint.clientFolder":
     "Agrupa el álbum bajo un cliente y su dirección pasa a ser /cliente/álbum. La primera vez se copian el modo y «mostrar en inicio» del cliente.",
   "admin.edit.clientFolder.none": "Sin cliente",
+  "admin.edit.clientFolder.pinWarning":
+    "Este cliente tiene PIN. Si desasignás el álbum o lo movés a otro cliente, deja de estar protegido por el PIN del cliente (sigue fuera de la portada hasta que lo actives).",
   "admin.msg.clientUnknown": "Ese cliente ya no existe.",
   "admin.msg.clientAssigned": "Álbum asignado a {client}.",
   "admin.msg.clientUnassigned": "Álbum sin cliente.",

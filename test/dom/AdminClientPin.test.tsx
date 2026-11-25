@@ -137,4 +137,39 @@ describe("T6.52 client PIN admin form", () => {
       target: { value: "123456" },
     });
   });
+
+  it.each([
+    ["es", /quedan accesibles sin el PIN y no se listan en la portada/],
+    ["en", /become accessible without the PIN and are not listed on the home/],
+  ] as const)(
+    "delete warning of a PIN client says its albums open without the PIN (%s)",
+    async (lang, re) => {
+      view({ hasPin: true }, undefined, lang);
+      const form = (
+        await screen.findByRole("button", {
+          name: lang === "es" ? "Eliminar cliente" : "Delete client",
+        })
+      ).closest("form")!;
+      expect(form.textContent).toMatch(re);
+    },
+  );
+
+  it("delete warning does not add the PIN sentence for a client without a PIN", async () => {
+    view({ hasPin: false });
+    const form = (
+      await screen.findByRole("button", { name: "Eliminar cliente" })
+    ).closest("form")!;
+    expect(form.textContent).not.toMatch(/sin el PIN y no se listan/);
+  });
+
+  it("the delete confirm dialog also names the PIN consequence", async () => {
+    let asked = "";
+    window.confirm = (m?: string) => ((asked = m ?? ""), false);
+    view({ hasPin: true });
+    const btn = await screen.findByRole("button", { name: "Eliminar cliente" });
+    const form = btn.closest("form")!;
+    form.querySelector<HTMLInputElement>("input[name=slug]")!.value = "acme";
+    fireEvent.submit(form);
+    expect(asked).toMatch(/sin el PIN/);
+  });
 });

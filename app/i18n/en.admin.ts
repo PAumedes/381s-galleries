@@ -593,6 +593,10 @@ export const enAdmin = {
   "admin.clients.delete.button": "Delete client",
   "admin.clients.delete.confirm":
     "The client will be deleted. Its albums become unassigned and the client's addresses stop working. Continue?",
+  "admin.clients.delete.warningPin":
+    "This client has a PIN: when it is deleted its albums become accessible without the PIN and are not listed on the home (anyone with the album address can open them).",
+  "admin.clients.delete.confirmPin":
+    "The client will be deleted. Its albums become unassigned and accessible without the PIN, and the client's addresses stop working. Continue?",
   "admin.clients.msg.saved": "Client saved.",
   "admin.clients.section.pin": "Client PIN",
   "admin.clients.pin.active": "PIN active",
@@ -631,6 +635,8 @@ export const enAdmin = {
   "admin.edit.hint.clientFolder":
     "Groups the album under a client and its address becomes /client/album. The first time, the client’s mode and «show on home» are copied.",
   "admin.edit.clientFolder.none": "No client",
+  "admin.edit.clientFolder.pinWarning":
+    "This client has a PIN. If you unassign the album or move it to another client, it loses the client PIN protection (it stays off the home until you turn it on).",
   "admin.msg.clientUnknown": "That client no longer exists.",
   "admin.msg.clientAssigned": "Album assigned to {client}.",
   "admin.msg.clientUnassigned": "Album has no client.",

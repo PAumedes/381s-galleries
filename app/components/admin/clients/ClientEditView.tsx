@@ -136,7 +136,11 @@ export function ClientEditView({
         <Albums albums={albums} clientSlug={client.slug} />
       </Section>
       <Section title={t("admin.clients.section.danger")}>
-        <DeleteClientForm slug={client.slug} data={actionData} />
+        <DeleteClientForm
+          slug={client.slug}
+          hasPin={client.hasPin}
+          data={actionData}
+        />
       </Section>
     </div>
   );

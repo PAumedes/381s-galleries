@@ -20,7 +20,11 @@ export type GalleryRow = typeof schema.galleries.$inferSelect;
  * client it is assigned to (T6.52; null = unassigned or the client has no PIN).
  * Every lookup that feeds `openGallery` joins it, so the gate cannot forget it.
  */
-export type AccessRow = GalleryRow & { clientPinHash: string | null };
+export type AccessRow = GalleryRow & {
+  clientPinHash: string | null;
+  /** Times the client's PIN was set/changed/removed (null/0 = never). */
+  clientPinEpoch?: number | null;
+};
 export type VisitorRow = typeof schema.visitors.$inferSelect;
 
 /** Visitors created for "favourite without email" use this synthetic domain. */
@@ -31,12 +35,21 @@ export const isAnon = (email: string) => email.endsWith(ANON_DOMAIN);
 export const accessSelect = {
   gallery: schema.galleries,
   clientPinHash: schema.clients.pinHash,
+  clientPinEpoch: schema.clients.pinEpoch,
 };
 export const withClientPin = <
-  R extends { gallery: GalleryRow; clientPinHash: string | null },
+  R extends {
+    gallery: GalleryRow;
+    clientPinHash: string | null;
+    clientPinEpoch: number | null;
+  },
 >(
   r: R,
-): AccessRow => ({ ...r.gallery, clientPinHash: r.clientPinHash });
+): AccessRow => ({
+  ...r.gallery,
+  clientPinHash: r.clientPinHash,
+  clientPinEpoch: r.clientPinEpoch,
+});
 
 export async function findGallery(
   env: AccessEnv,
@@ -53,16 +66,19 @@ export async function findGallery(
 /**
  * Fingerprint of everything that gates this album, for download tokens: the
  * album's PIN hash, plus the client's when it has one, so changing either one
- * voids tokens already issued. Unchanged for albums without a client PIN.
+ * voids tokens already issued. The client's PIN epoch (bumped on every set /
+ * change / remove) keeps links issued before a PIN dead after the PIN is
+ * removed. Unchanged for albums whose client never had a PIN.
  */
 export function accessFingerprint(
   g: AccessRow,
   env: AccessEnv,
 ): Promise<string> {
+  const epoch = g.clientPinEpoch ?? 0;
+  if (g.clientPinHash === null && epoch === 0)
+    return pinFingerprint(g.pinHash, env);
   return pinFingerprint(
-    g.clientPinHash === null
-      ? g.pinHash
-      : `${g.pinHash ?? ""}|client|${g.clientPinHash}`,
+    `${g.pinHash ?? ""}|client|${g.clientPinHash ?? ""}|${epoch}`,
     env,
   );
 }

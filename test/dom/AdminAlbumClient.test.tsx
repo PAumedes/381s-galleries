@@ -15,7 +15,11 @@ const clients = [
   { id: "c2", name: "Beta", slug: "beta" },
 ];
 
-const edit = (g: Partial<GalleryEditData["gallery"]>, url = "/admin/g/g1") => {
+const edit = (
+  g: Partial<GalleryEditData["gallery"]>,
+  url = "/admin/g/g1",
+  clientList: unknown[] = clients,
+) => {
   const data = {
     gallery: {
       id: "g1",
@@ -43,7 +47,7 @@ const edit = (g: Partial<GalleryEditData["gallery"]>, url = "/admin/g/g1") => {
       coverFocus: null,
       ...g,
     },
-    clients,
+    clients: clientList,
     hasWmFiles: false,
     hasThumbWmFiles: false,
     photoCount: 0,
@@ -238,5 +242,31 @@ describe("T6.40c GalleryList client column and filter", () => {
     const sel = (await screen.findByLabelText("Cliente")) as HTMLSelectElement;
     fireEvent.change(sel, { target: { value: "" } });
     expect((await screen.findByTestId("where")).textContent).toBe("/admin");
+  });
+});
+
+describe("T6.52 client PIN warning on the album's client folder field", () => {
+  const pinClients = [
+    { id: "c1", name: "Acme", slug: "acme", hasPin: true },
+    { id: "c2", name: "Beta", slug: "beta", hasPin: false },
+  ];
+  it("warns (ES) when the album's current client has a PIN", async () => {
+    edit({ clientId: "c1", clientSlug: "acme" }, "/admin/g/g1", pinClients);
+    await screen.findByLabelText("Carpeta de cliente");
+    const note = screen.getByRole("note");
+    expect(note.textContent).toMatch(
+      /deja de estar protegido por el PIN del cliente/,
+    );
+    expect(note.textContent).toMatch(/desasign/);
+  });
+  it("EN copy mentions the client PIN protection and unassigning", async () => {
+    const { en } = await import("../../app/i18n/en");
+    expect(en["admin.edit.clientFolder.pinWarning"]).toMatch(/client PIN/i);
+    expect(en["admin.edit.clientFolder.pinWarning"]).toMatch(/unassign/i);
+  });
+  it("no warning when the client has no PIN or the album has no client", async () => {
+    edit({ clientId: "c2", clientSlug: "beta" }, "/admin/g/g1", pinClients);
+    await screen.findByLabelText("Carpeta de cliente");
+    expect(screen.queryByRole("note")).toBeNull();
   });
 });

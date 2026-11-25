@@ -50,9 +50,11 @@ export function ApplyDefaultsForm({
 /** Danger zone: typed-slug confirmation (also checked by the server). */
 export function DeleteClientForm({
   slug,
+  hasPin = false,
   data,
 }: {
   slug: string;
+  hasPin?: boolean;
   data: ClientActionResult | undefined;
 }) {
   const t = useT();
@@ -61,13 +63,22 @@ export function DeleteClientForm({
       method="post"
       className="border-ink flex flex-col gap-3 border-2 p-4"
       onSubmit={(ev) => {
-        if (!window.confirm(t("admin.clients.delete.confirm")))
+        if (
+          !window.confirm(
+            t(
+              hasPin
+                ? "admin.clients.delete.confirmPin"
+                : "admin.clients.delete.confirm",
+            ),
+          )
+        )
           ev.preventDefault();
       }}
     >
       <input type="hidden" name="intent" value="delete" />
       <p className="text-small text-grey-700">
         {t("admin.clients.delete.warning")}
+        {hasPin && ` ${t("admin.clients.delete.warningPin")}`}
       </p>
       <Field label={t("admin.clients.delete.label", { slug })}>
         {(p) => (

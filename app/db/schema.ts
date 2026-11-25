@@ -60,6 +60,8 @@ export const clients = sqliteTable(
       .default(true),
     /** Optional client PIN (T6.52), same PBKDF2 format as `galleries.pin_hash`. */
     pinHash: text("pin_hash"),
+    /** Bumped on every PIN set/change/remove; part of the download-token fingerprint. */
+    pinEpoch: integer("pin_epoch").notNull().default(0),
     createdAt: createdAt(),
   },
   (t) => [

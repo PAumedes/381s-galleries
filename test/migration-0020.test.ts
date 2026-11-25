@@ -60,6 +60,7 @@ describe("migration 0020_clients (T6.40a)", () => {
       "id",
       "name",
       "page_enabled",
+      "pin_epoch",
       "pin_hash", // added by 0021 (T6.52)
       "slug",
     ]);

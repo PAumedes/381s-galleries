@@ -13,7 +13,7 @@ const read = (f) =>
   );
 
 describe("migration 0021_client_pin snapshot (T6.52)", () => {
-  it("adds only clients.pin_hash, chained to 0020", () => {
+  it("adds only clients.pin_hash and pin_epoch, chained to 0020", () => {
     const s20 = read("0020_snapshot.json");
     const s21 = read("0021_snapshot.json");
     expect(s21.prevId).toBe(s20.id);
@@ -24,11 +24,18 @@ describe("migration 0021_client_pin snapshot (T6.52)", () => {
       primaryKey: false,
       notNull: false,
     });
-    const without = (o, key) =>
-      Object.fromEntries(Object.entries(o).filter(([k]) => k !== key));
-    expect(without(s21.tables.clients.columns, "pin_hash")).toEqual(
-      s20.tables.clients.columns,
-    );
+    expect(s21.tables.clients.columns.pin_epoch).toMatchObject({
+      name: "pin_epoch",
+      type: "integer",
+      primaryKey: false,
+      notNull: true,
+      default: 0,
+    });
+    const without = (o, ...keys) =>
+      Object.fromEntries(Object.entries(o).filter(([k]) => !keys.includes(k)));
+    expect(
+      without(s21.tables.clients.columns, "pin_hash", "pin_epoch"),
+    ).toEqual(s20.tables.clients.columns);
     expect(without(s21.tables, "clients")).toEqual(
       without(s20.tables, "clients"),
     );

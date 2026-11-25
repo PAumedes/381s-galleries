@@ -8,6 +8,8 @@ export interface ClientChoice {
   id: string;
   name: string;
   slug: string;
+  /** The client has a PIN (never the hash): unassigning an album removes that gate. */
+  hasPin: boolean;
 }
 
 /**
@@ -20,7 +22,12 @@ export async function listClientChoices(
 ): Promise<ClientChoice[]> {
   const c = schema.clients;
   const rows = await getDb(env)
-    .select({ id: c.id, name: c.name, slug: c.slug })
+    .select({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      hasPin: sql<number>`${c.pinHash} IS NOT NULL`,
+    })
     .from(c)
     .orderBy(
       sql`${c.id} = ${keepId ?? ""} DESC`,
@@ -28,11 +35,12 @@ export async function listClientChoices(
       asc(c.slug),
     )
     .limit(CLIENT_CHOICES_MAX);
+  const choices = rows.map((r) => ({ ...r, hasPin: !!r.hasPin }));
   return keepId
-    ? rows.sort(
+    ? choices.sort(
         (a, b) =>
           a.name.toLowerCase().localeCompare(b.name.toLowerCase()) ||
           a.slug.localeCompare(b.slug),
       )
-    : rows;
+    : choices;
 }

@@ -52,7 +52,10 @@ const MEASURE = `(() => {
   }));
   const wide = [...sec.querySelectorAll('*')].filter((e) => r(e).right > innerWidth + 0.5 || r(e).left < -0.5).length;
   const alert = sec.querySelector('[role=alert]');
-  return { controls, wide, iw: innerWidth, docOverflow: document.documentElement.scrollWidth > innerWidth,
+  const del = document.querySelector('form:has(input[name=intent][value=delete])');
+  const delWide = [del, ...del.querySelectorAll('*')].filter((e) => r(e).right > innerWidth + 0.5 || r(e).left < -0.5).length;
+  const delClip = [...del.querySelectorAll('p')].some((e) => e.scrollWidth > e.clientWidth + 1);
+  return { controls, wide, delWide, delClip, delHasPin: /PIN/.test(del.querySelector('p').textContent), iw: innerWidth, docOverflow: document.documentElement.scrollWidth > innerWidth,
     alertClip: alert ? alert.scrollWidth > alert.clientWidth + 1 : null,
     busy: [...sec.querySelectorAll('button')].filter((b) => b.getAttribute('aria-busy') === 'true').map((b) => b.textContent) };
 })()`;
@@ -121,6 +124,10 @@ describe.skipIf(!HAS_CHROME)("T6.52 client PIN field in Chrome", () => {
         expect(m.controls.length).toBeGreaterThanOrEqual(3); // input, change, remove
         expect(m.docOverflow).toBe(false);
         expect(m.wide).toBe(0);
+        // the delete warning of a PIN client (longer text) stays inside too
+        expect(m.delHasPin).toBe(true);
+        expect(m.delWide).toBe(0);
+        expect(m.delClip).toBe(false);
         expect(m.alertClip).toBe(false);
         for (const k of m.controls) {
           expect(k.h, JSON.stringify(k)).toBeGreaterThanOrEqual(47.5);
