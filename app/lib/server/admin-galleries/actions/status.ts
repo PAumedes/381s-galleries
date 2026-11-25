@@ -5,6 +5,59 @@ import { scheduleWarmAtPublish } from "../../gallery-warm";
 import { done, fail } from "./shared";
 import type { GalleryActionDeps, GalleryRow } from "./shared";
 
+type Transition = {
+  from: GalleryRow["status"];
+  set: Partial<typeof schema.galleries.$inferInsert>;
+  message: string;
+};
+
+/** What each status action changes, and the status it may start from; null for an unknown or already-applied one. */
+function transitionFor(
+  g: GalleryRow,
+  to: string,
+  t: TFunction,
+): Transition | "stale" | null {
+  switch (to) {
+    case "publish":
+      // show_on_home stays 0: needs a new opt-in
+      return {
+        from: "draft",
+        set: { status: "published" },
+        message: t("admin.msg.published"),
+      };
+    case "draft":
+      return {
+        from: "published",
+        set: { status: "draft", showOnHome: false },
+        message: t("admin.msg.movedToDraft"),
+      };
+    case "archive":
+      if (g.status === "archived") return "stale";
+      return {
+        from: g.status,
+        set: {
+          status: "archived",
+          showOnHome: false,
+          archivedPrevStatus: g.status,
+          archivedBySync: false,
+        },
+        message: t("admin.msg.archived"),
+      };
+    case "restore":
+      return {
+        from: "archived",
+        set: {
+          status: g.archivedPrevStatus ?? "draft",
+          archivedPrevStatus: null,
+          archivedBySync: false,
+        },
+        message: t("admin.msg.restored"),
+      };
+    default:
+      return null;
+  }
+}
+
 export async function changeStatus(
   env: Env,
   g: GalleryRow,
@@ -13,50 +66,14 @@ export async function changeStatus(
   deps?: GalleryActionDeps,
 ) {
   const intent = "status";
-  const db = getDb(env);
-  let from: GalleryRow["status"];
-  let set: Partial<typeof schema.galleries.$inferInsert>;
-  let message: string;
-  switch (to) {
-    case "publish":
-      from = "draft";
-      set = { status: "published" }; // show_on_home stays 0: needs a new opt-in
-      message = t("admin.msg.published");
-      break;
-    case "draft":
-      from = "published";
-      set = { status: "draft", showOnHome: false };
-      message = t("admin.msg.movedToDraft");
-      break;
-    case "archive":
-      if (g.status === "archived") return stale();
-      from = g.status;
-      set = {
-        status: "archived",
-        showOnHome: false,
-        archivedPrevStatus: g.status,
-        archivedBySync: false,
-      };
-      message = t("admin.msg.archived");
-      break;
-    case "restore":
-      from = "archived";
-      set = {
-        status: g.archivedPrevStatus ?? "draft",
-        archivedPrevStatus: null,
-        archivedBySync: false,
-      };
-      message = t("admin.msg.restored");
-      break;
-    default:
-      return fail(intent, t("admin.msg.unknownAction"));
-  }
-  function stale() {
-    return fail(intent, t("admin.msg.stale"));
-  }
+  const stale = () => fail(intent, t("admin.msg.stale"));
+  const tr = transitionFor(g, to, t);
+  if (!tr) return fail(intent, t("admin.msg.unknownAction"));
+  if (tr === "stale") return stale();
+  const { from, set, message } = tr;
   if (g.status !== from) return stale();
   // Compare-and-set: a concurrent change makes this a no-op instead of a clobber.
-  const res = await db
+  const res = await getDb(env)
     .update(schema.galleries)
     .set(set)
     .where(
