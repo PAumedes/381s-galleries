@@ -129,21 +129,26 @@ async function loadRecentViews(env: Env, id: string) {
   return views;
 }
 
-export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
-  const g = await loadGallery(env, id);
-  if (!g) return null;
-  const db = getDb(env);
-  const visitorParam = (q.get("visitor") ?? "").trim().slice(0, 254);
+/** The `visitor` / `size` / `cursor` query filters, sanitised. */
+function parseFilters(q: URLSearchParams) {
+  const visitor = (q.get("visitor") ?? "").trim().slice(0, 254);
   const sizeParam = q.get("size") ?? "";
   const variant = (DOWNLOAD_SIZES as readonly string[]).includes(sizeParam)
     ? (sizeParam as Variant)
     : undefined;
-  const before = parseCursor(q.get("cursor"));
+  return { visitor, variant, before: parseCursor(q.get("cursor")) };
+}
 
-  const top = await activityQuery(db, id, {
-    visitor: visitorParam || undefined,
-    variant,
-    before,
+/** One page of top-level rows plus the cursor of the next page (null at the end). */
+async function loadTopPage(
+  env: Env,
+  id: string,
+  f: ReturnType<typeof parseFilters>,
+) {
+  const top = await activityQuery(getDb(env), id, {
+    visitor: f.visitor || undefined,
+    variant: f.variant,
+    before: f.before,
     topLevel: true,
     limit: ACTIVITY_PAGE + 1,
   });
@@ -151,9 +156,12 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
   const last = pageRows[ACTIVITY_PAGE - 1];
   const next =
     top.length > ACTIVITY_PAGE ? `${last.createdAt}|${last.id}` : null;
+  return { pageRows, next };
+}
 
+async function rowMapper(env: Env, id: string) {
   const photos = await photoMap(env, id);
-  const toRow = (r: QRow): ActivityRow => {
+  return (r: QRow): ActivityRow => {
     const p = r.photoId ? photos.get(r.photoId) : undefined;
     return {
       id: r.id,
@@ -166,9 +174,13 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
       set: p?.set ?? null,
     };
   };
+}
 
+/** Page rows as view rows; bulk headers carry their scope, count and children. */
+async function loadPageRows(env: Env, id: string, pageRows: TopRow[]) {
+  const toRow = await rowMapper(env, id);
   const { children, counts } = await loadBulkChildren(env, id, pageRows, toRow);
-  const rows = pageRows.map((r) => {
+  return pageRows.map((r) => {
     const row = toRow(r);
     if (r.photoId === null) {
       row.bulk = {
@@ -179,11 +191,17 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
     }
     return row;
   });
+}
 
+export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
+  const g = await loadGallery(env, id);
+  if (!g) return null;
+  const f = parseFilters(q);
+  const { pageRows, next } = await loadTopPage(env, id, f);
+  const rows = await loadPageRows(env, id, pageRows);
   const sum = await loadSummary(env, id);
   const opts = await loadVisitorOptions(env, id);
   const views = await loadRecentViews(env, id);
-
   const breakdown = await visitBreakdown(env, id);
 
   return {
@@ -197,7 +215,7 @@ export async function loadActivity(env: Env, id: string, q: URLSearchParams) {
     },
     rows,
     next,
-    filters: { visitor: visitorParam, size: variant ?? "" },
+    filters: { visitor: f.visitor, size: f.variant ?? "" },
     visitorOptions: opts.results.map((r) => r.email),
     views,
   };
