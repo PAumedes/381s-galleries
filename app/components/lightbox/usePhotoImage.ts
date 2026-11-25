@@ -6,6 +6,37 @@ export const withRetry = (url: string, n: number) =>
   n === 0 ? url : `${url}${url.includes("?") ? "&" : "?"}r=${n}`;
 
 /**
+ * The <img> callbacks of the current photo. Events that arrive after the
+ * photo changed (out-of-order loads) are ignored via the latest id.
+ */
+function useImageEvents(
+  photoId: string,
+  setLoadedId: (id: string) => void,
+  setFailedId: (id: string) => void,
+) {
+  const currentId = useRef(photoId);
+  useEffect(() => {
+    currentId.current = photoId;
+  });
+  return {
+    imgRef: (img: HTMLImageElement | null) => {
+      if (
+        img?.complete &&
+        img.naturalWidth > 0 &&
+        currentId.current === photoId
+      )
+        setLoadedId(photoId);
+    },
+    onLoad: () => {
+      if (currentId.current === photoId) setLoadedId(photoId);
+    },
+    onError: () => {
+      if (currentId.current === photoId) setFailedId(photoId);
+    },
+  };
+}
+
+/**
  * Load/error/retry state of the current photo. Events from images of other
  * photos (out-of-order loads) are ignored.
  */
@@ -22,11 +53,6 @@ export function usePhotoImage(
     id: "",
     n: 0,
   });
-  const currentId = useRef(photo.id);
-  useEffect(() => {
-    currentId.current = photo.id;
-  });
-
   // An error belongs to one photo; navigating away forgets it so coming back
   // tries again.
   if (failedId !== null && failedId !== photo.id) setFailedId(null);
@@ -45,25 +71,14 @@ export function usePhotoImage(
       ? photos.find((p) => p.id === shownId)
       : undefined;
 
+  const events = useImageEvents(photo.id, setLoadedId, setFailedId);
+
   return {
     loaded,
     failed,
     behind,
     retry,
-    imgRef: (img: HTMLImageElement | null) => {
-      if (
-        img?.complete &&
-        img.naturalWidth > 0 &&
-        currentId.current === photo.id
-      )
-        setLoadedId(photo.id);
-    },
-    onLoad: () => {
-      if (currentId.current === photo.id) setLoadedId(photo.id);
-    },
-    onError: () => {
-      if (currentId.current === photo.id) setFailedId(photo.id);
-    },
+    ...events,
     onRetry: () => {
       setFailedId(null);
       setRetryState((r) => ({
