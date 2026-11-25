@@ -1,5 +1,6 @@
 /** Shared fixtures for the warm tests: a fake Drive, gallery/photo seeds, a D1 query counter. */
 import { env } from "cloudflare:workers";
+import { vi } from "vitest";
 import { getDb, schema } from "../../app/db";
 import { meterD1 } from "../../app/lib/server/d1-meter";
 import { DriveError } from "../../app/lib/server/drive-types";
@@ -89,3 +90,10 @@ export function countingEnv(base: Env) {
   const m = meterD1(base);
   return { e: m.env, count: m.used };
 }
+
+/**
+ * The rate limiter prunes old rows on a random 1% of hits (one extra D1
+ * query). Tests that assert an exact query count call this in `beforeEach`
+ * (and `vi.restoreAllMocks()` after) so the count does not depend on the dice.
+ */
+export const noRatePrune = () => vi.spyOn(Math, "random").mockReturnValue(0.5);

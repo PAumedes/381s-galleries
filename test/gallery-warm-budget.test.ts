@@ -1,11 +1,20 @@
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { getDb, schema } from "../app/db";
 import { clearCache } from "./support/cache";
 import { migrateDb, resetTables } from "./support/d1";
 import {
   countingEnv,
+  noRatePrune,
   fakeWarmDrive,
   photoId,
   seedGallery,
@@ -22,7 +31,9 @@ const base = { ...env, DRIVE_MODE: "google" } as Env;
 beforeAll(async () => {
   await migrateDb();
 });
+afterEach(() => vi.restoreAllMocks());
 beforeEach(async () => {
+  noRatePrune();
   await db.delete(schema.galleries);
   await resetTables("settings", "rate_limits");
   await clearCache();

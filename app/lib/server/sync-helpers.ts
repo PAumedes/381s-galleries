@@ -101,15 +101,16 @@ export interface Located {
   file: DriveFile;
 }
 
-export function buildAlbum(
-  folder: DriveFile,
-  located: Located[],
-  issues: SyncIssue[],
-  hasWm: boolean,
-): AlbumDraft {
-  // recipe -> key -> winning file (newest modifiedTime, then id)
-  const byRecipe = new Map<Recipe, Map<string, Located & { base: string }>>();
-  const groups = new Map<string, (Located & { base: string })[]>();
+type Winner = Located & { base: string };
+type ByRecipe = Map<Recipe, Map<string, Winner>>;
+
+/**
+ * Winning file per recipe and (set, base name): the newest modifiedTime, then
+ * the lowest id. Non-JPEG files and duplicates are reported into `issues`.
+ */
+function pickWinners(located: Located[], issues: SyncIssue[]): ByRecipe {
+  const byRecipe: ByRecipe = new Map();
+  const groups = new Map<string, Winner[]>();
   for (const l of located) {
     if (!isJpeg(l.file)) {
       issues.push({ type: "not_jpeg", set: l.set, name: l.file.name });
@@ -134,54 +135,53 @@ export function buildAlbum(
     m.set(`${w.set.toLowerCase()}\0${w.base.toLowerCase()}`, w);
     byRecipe.set(w.recipe, m);
   }
+  return byRecipe;
+}
 
-  const hi = byRecipe.get("high-res") ?? new Map();
-  const photos: PhotoDraft[] = [];
-  for (const [key, h] of hi) {
-    const pick = (r: Recipe) => byRecipe.get(r)?.get(key)?.file;
-    const web = pick("web");
-    const ig = pick("ig");
-    const thumb = pick("thumb");
-    const wm = pick("preview-wm");
-    const thumbWm = pick("thumb-wm");
-    let width = h.file.width ?? null;
-    let height = h.file.height ?? null;
-    if (!(width && height)) {
-      width = height = null;
-      const alt = [web, ig, thumb, wm, thumbWm].find(
-        (f) => f?.width && f?.height,
-      );
-      if (alt) {
-        const k = 2048 / Math.max(alt.width!, alt.height!);
-        width = Math.round(alt.width! * k);
-        height = Math.round(alt.height! * k);
-      }
-    }
-    if (!web) issues.push({ type: "missing_web", set: h.set, name: h.base });
-    if (!thumb)
-      issues.push({ type: "missing_thumb", set: h.set, name: h.base });
-    photos.push({
-      setName: h.set,
-      baseName: h.base,
-      highres: h.file,
-      web,
-      ig,
-      thumb,
-      wm,
-      thumbWm,
-      width,
-      height,
-    });
-  }
-  for (const r of RECIPES) {
-    if (r === "high-res") continue;
-    for (const [key, v] of byRecipe.get(r) ?? [])
-      if (!hi.has(key))
-        issues.push({ type: "missing_highres", set: v.set, name: v.base });
-  }
+/** Pixel size of a photo: the high-res's, else scaled from the first sibling that has one. */
+function sizeOfPhoto(h: DriveFile, siblings: (DriveFile | undefined)[]) {
+  if (h.width && h.height) return { width: h.width, height: h.height };
+  const alt = siblings.find((f) => f?.width && f?.height);
+  if (!alt) return { width: null, height: null };
+  const k = 2048 / Math.max(alt.width!, alt.height!);
+  return {
+    width: Math.round(alt.width! * k),
+    height: Math.round(alt.height! * k),
+  };
+}
 
+/** One photo from its high-res winner; reports the missing web / thumb files. */
+function draftPhoto(
+  h: Winner,
+  key: string,
+  byRecipe: ByRecipe,
+  issues: SyncIssue[],
+): PhotoDraft {
+  const pick = (r: Recipe) => byRecipe.get(r)?.get(key)?.file;
+  const web = pick("web");
+  const ig = pick("ig");
+  const thumb = pick("thumb");
+  const wm = pick("preview-wm");
+  const thumbWm = pick("thumb-wm");
+  if (!web) issues.push({ type: "missing_web", set: h.set, name: h.base });
+  if (!thumb) issues.push({ type: "missing_thumb", set: h.set, name: h.base });
+  return {
+    setName: h.set,
+    baseName: h.base,
+    highres: h.file,
+    web,
+    ig,
+    thumb,
+    wm,
+    thumbWm,
+    ...sizeOfPhoto(h.file, [web, ig, thumb, wm, thumbWm]),
+  };
+}
+
+/** Each issue once, sorted by type, set, name. */
+function uniqueSortedIssues(issues: SyncIssue[]): SyncIssue[] {
   const seen = new Set<string>();
-  const uniq = issues
+  return issues
     .filter((i) => {
       const k = `${i.type}\0${i.set}\0${i.name}`;
       if (seen.has(k)) return false;
@@ -194,7 +194,26 @@ export function buildAlbum(
         cmp(a.set ?? "", b.set ?? "") ||
         cmp(a.name, b.name),
     );
-  return { folder, hasWm, photos, issues: uniq };
+}
+
+export function buildAlbum(
+  folder: DriveFile,
+  located: Located[],
+  issues: SyncIssue[],
+  hasWm: boolean,
+): AlbumDraft {
+  const byRecipe = pickWinners(located, issues);
+  const hi = byRecipe.get("high-res") ?? new Map();
+  const photos = [...hi].map(([key, h]) =>
+    draftPhoto(h, key, byRecipe, issues),
+  );
+  for (const r of RECIPES) {
+    if (r === "high-res") continue;
+    for (const [key, v] of byRecipe.get(r) ?? [])
+      if (!hi.has(key))
+        issues.push({ type: "missing_highres", set: v.set, name: v.base });
+  }
+  return { folder, hasWm, photos, issues: uniqueSortedIssues(issues) };
 }
 
 export const keyOf = (set: string, base: string) =>

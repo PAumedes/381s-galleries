@@ -15,7 +15,4 @@ export function resolveEditorCover(
   };
 }
 
-export const aspectOf = (p?: {
-  width?: number | null;
-  height?: number | null;
-}) => (p?.width && p.height ? p.width / p.height : null);
+export { aspectOf } from "../../cover-files";

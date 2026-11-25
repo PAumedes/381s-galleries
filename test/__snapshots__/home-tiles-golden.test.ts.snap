@@ -1,0 +1,238 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`T6.48 home / client tiles (golden, pre-refactor) > caps at 60 and lists nothing for an empty home > cap order 1`] = `
+[
+  "m27",
+  "m55",
+  "m26",
+  "m54",
+  "m25",
+  "m53",
+  "m24",
+  "m52",
+  "m23",
+  "m51",
+  "m22",
+  "m50",
+  "m21",
+  "m49",
+  "m20",
+  "m48",
+  "m19",
+  "m47",
+  "m18",
+  "m46",
+  "m17",
+  "m45",
+  "m16",
+  "m44",
+  "m15",
+  "m43",
+  "m14",
+  "m42",
+  "m13",
+  "m41",
+  "m12",
+  "m40",
+  "m11",
+  "m39",
+  "m10",
+  "m38",
+  "m09",
+  "m37",
+  "m08",
+  "m36",
+  "m07",
+  "m35",
+  "m06",
+  "m34",
+  "m62",
+  "m05",
+  "m33",
+  "m61",
+  "m04",
+  "m32",
+  "m60",
+  "m03",
+  "m31",
+  "m59",
+  "m02",
+  "m30",
+  "m58",
+  "m01",
+  "m29",
+  "m57",
+]
+`;
+
+exports[`T6.48 home / client tiles (golden, pre-refactor) > home and client page over a mixed fixture > acme 1`] = `
+{
+  "clientName": "Acme",
+  "clientSlug": "acme",
+  "tiles": [
+    {
+      "clientSlug": "acme",
+      "cover": {
+        "aspect": null,
+        "focus": null,
+        "id": "p-a6",
+      },
+      "eventDate": null,
+      "slug": "a6",
+      "title": "T a6",
+    },
+    {
+      "clientSlug": "acme",
+      "cover": null,
+      "eventDate": null,
+      "locked": true,
+      "slug": "a4",
+      "title": "T a4",
+    },
+    {
+      "clientSlug": "acme",
+      "cover": {
+        "aspect": 0.6666666666666666,
+        "focus": null,
+        "id": "p-a2",
+      },
+      "eventDate": "2026-06-01",
+      "slug": "a2",
+      "title": "T a2",
+    },
+    {
+      "clientSlug": "acme",
+      "cover": {
+        "aspect": 1.5,
+        "focus": {
+          "x": 30,
+          "y": 60,
+        },
+        "id": "p-a1",
+        "v": "0e4aaf7deffe9087",
+      },
+      "eventDate": "2026-05-01",
+      "slug": "a1",
+      "title": "T a1",
+    },
+  ],
+}
+`;
+
+exports[`T6.48 home / client tiles (golden, pre-refactor) > home and client page over a mixed fixture > acme upper 1`] = `
+{
+  "clientName": "Acme",
+  "clientSlug": "acme",
+  "tiles": [
+    {
+      "clientSlug": "acme",
+      "cover": {
+        "aspect": null,
+        "focus": null,
+        "id": "p-a6",
+      },
+      "eventDate": null,
+      "slug": "a6",
+      "title": "T a6",
+    },
+    {
+      "clientSlug": "acme",
+      "cover": null,
+      "eventDate": null,
+      "locked": true,
+      "slug": "a4",
+      "title": "T a4",
+    },
+    {
+      "clientSlug": "acme",
+      "cover": {
+        "aspect": 0.6666666666666666,
+        "focus": null,
+        "id": "p-a2",
+      },
+      "eventDate": "2026-06-01",
+      "slug": "a2",
+      "title": "T a2",
+    },
+    {
+      "clientSlug": "acme",
+      "cover": {
+        "aspect": 1.5,
+        "focus": {
+          "x": 30,
+          "y": 60,
+        },
+        "id": "p-a1",
+        "v": "0e4aaf7deffe9087",
+      },
+      "eventDate": "2026-05-01",
+      "slug": "a1",
+      "title": "T a1",
+    },
+  ],
+}
+`;
+
+exports[`T6.48 home / client tiles (golden, pre-refactor) > home and client page over a mixed fixture > home 1`] = `
+{
+  "items": [
+    {
+      "clientSlug": "off",
+      "cover": {
+        "aspect": null,
+        "focus": null,
+        "id": "p-b1",
+      },
+      "eventDate": null,
+      "slug": "b1",
+      "title": "T b1",
+    },
+    {
+      "cover": {
+        "aspect": null,
+        "focus": null,
+        "id": "p-n2",
+      },
+      "eventDate": null,
+      "slug": "n2",
+      "title": "T n2",
+    },
+    {
+      "clientSlug": "acme",
+      "cover": {
+        "aspect": 0.6666666666666666,
+        "focus": null,
+        "id": "p-a2",
+      },
+      "eventDate": "2026-06-01",
+      "slug": "a2",
+      "title": "T a2",
+    },
+    {
+      "clientSlug": "acme",
+      "cover": {
+        "aspect": 1.5,
+        "focus": {
+          "x": 30,
+          "y": 60,
+        },
+        "id": "p-a1",
+        "v": "0e4aaf7deffe9087",
+      },
+      "eventDate": "2026-05-01",
+      "slug": "a1",
+      "title": "T a1",
+    },
+    {
+      "cover": {
+        "aspect": 1.3333333333333333,
+        "focus": null,
+        "id": "p-n1",
+      },
+      "eventDate": "2026-04-01",
+      "slug": "n1",
+      "title": "T n1",
+    },
+  ],
+}
+`;

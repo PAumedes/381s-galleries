@@ -10,12 +10,8 @@ import type { Filter } from "../../lib/admin-gallery";
 import type { GalleryListRow } from "../../lib/server/admin-galleries";
 import { ClientFilter } from "./ClientFilter";
 import type { ClientChoice } from "../../lib/server/admin-galleries/client-choices";
-import {
-  GalleryListHead,
-  GalleryRow,
-  SearchForm,
-  StatusPill,
-} from "./GalleryListParts";
+import { GalleryRow } from "./GalleryRow";
+import { GalleryListHead, SearchForm, StatusPill } from "./GalleryListParts";
 
 export { StatusPill };
 

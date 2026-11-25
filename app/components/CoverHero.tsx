@@ -1,59 +1,23 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import type { Ref } from "react";
+import type { MouseEvent, Ref } from "react";
 
-import { coverObjectPosition, type Focus } from "../lib/cover-focus";
+import type { Focus } from "../lib/cover-focus";
 import { MOBILE_COVER_MEDIA } from "../lib/preview-device";
 import { isDarkPalette, type CoverLayout, type Palette } from "../lib/design";
 
-import { FadeImg } from "./FadeImg";
+import { CoverPhoto, type CoverImage } from "./CoverPhoto";
+import {
+  CentradaCover,
+  CompletaCover,
+  DividedaCover,
+  MinimaCover,
+  type CoverParts,
+} from "./CoverLayouts";
 import { Logo } from "./Logo";
-import { ChevronDown } from "./icons";
 
 export { MOBILE_COVER_MEDIA };
-/** The cover is full-bleed: it needs a file as wide as the viewport. */
-const COVER_SIZES = "100vw";
+export type { CoverImage };
 
-export type CoverImage = {
-  src: string;
-  /** `src` candidates by width (`url 1200w, url 2048w`): phones take the small one. */
-  srcSet?: string;
-  focus: Focus | null;
-  aspect: number | null;
-  /** Small version shown until `src` loads (admin previews only). */
-  placeholder?: string | null;
-};
-
-/**
- * The gallery cover (full-bleed photo, title, date, studio, scroll cue).
- * Used by the public gallery and by the admin live preview, so they cannot
- * drift. `embedded` is the preview flavour: it fills its box instead of the
- * viewport and is inert (no heading level, no real button).
- */
-export function CoverHero({
-  title,
-  date,
-  studio,
-  src,
-  srcSet,
-  placeholder = null,
-  proofing,
-  focus,
-  aspect = null,
-  scrollLabel,
-  onScroll,
-  embedded = false,
-  headerRef,
-  layout = "completa",
-  palette = "claro",
-  mobile = null,
-  device,
-}: {
+type CoverHeroProps = {
   title: string;
   date: string | null;
   studio: string;
@@ -83,53 +47,72 @@ export function CoverHero({
    * viewport). Absent = decide by the viewport (`MOBILE_COVER_MEDIA`).
    */
   device?: "desktop" | "mobile";
-}) {
-  const Title = embedded ? "p" : "h1";
-  const imgRef = useRef<HTMLImageElement | null>(null);
-  const setImgNode = useCallback((el: HTMLImageElement | null) => {
-    imgRef.current = el;
-  }, []);
-  const [narrow, setNarrow] = useState(false);
-  const hasMobile = !!mobile;
-  useEffect(() => {
-    if (device || !hasMobile || typeof window.matchMedia !== "function") return;
-    const mq = window.matchMedia(MOBILE_COVER_MEDIA);
-    const sync = () => setNarrow(mq.matches);
-    sync();
-    mq.addEventListener?.("change", sync);
-    return () => mq.removeEventListener?.("change", sync);
-  }, [device, hasMobile]);
-  const active =
-    mobile && (device ? device === "mobile" : narrow) ? mobile : null;
-  const onMobile = active !== null;
-  // Narrow public viewport: the `<picture>` source already picks the mobile
-  // file; also pointing the `<img>` at it covers browsers that ignore
-  // `<source media>` (same URL, so no second download).
-  const shownSrc = active ? active.src : src;
-  const shownSrcSet = active ? active.srcSet : srcSet;
-  const shownPlaceholder = active ? active.placeholder : placeholder;
-  const shownFocus = active ? active.focus : focus;
-  const shownAspect = active ? active.aspect : aspect;
-  const [frame, setFrame] = useState<{ w: number; h: number } | null>(null);
-  // Measure the real frame (the image fills it; layout size is unaffected by
-  // the preview's scale transform) so object-position can be computed per
-  // axis. SSR / before the first measure: centered.
-  useLayoutEffect(() => {
-    const node = imgRef.current;
-    if (!node) return;
-    const measure = () => {
-      const w = node.clientWidth;
-      const h = node.clientHeight;
-      setFrame((f) => (f && f.w === w && f.h === h ? f : { w, h }));
-    };
-    measure();
-    if (typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(measure);
-    ro.observe(node);
-    return () => ro.disconnect();
-  }, [shownSrc, layout]);
-  const pos = coverObjectPosition(shownFocus, shownAspect, frame);
-  const shield = proofing && (src || mobile) && (
+};
+
+/**
+ * The gallery cover (full-bleed photo, title, date, studio, scroll cue).
+ * Used by the public gallery and by the admin live preview, so they cannot
+ * drift. `embedded` is the preview flavour: it fills its box instead of the
+ * viewport and is inert (no heading level, no real button).
+ */
+export function CoverHero({
+  title,
+  date,
+  studio,
+  src,
+  srcSet,
+  placeholder = null,
+  proofing,
+  focus,
+  aspect = null,
+  scrollLabel,
+  onScroll,
+  embedded = false,
+  headerRef,
+  layout = "completa",
+  palette = "claro",
+  mobile = null,
+  device,
+}: CoverHeroProps) {
+  const parts: CoverParts = {
+    headerRef,
+    box: embedded ? "h-full" : "h-dvh min-h-96",
+    protect: proofing && layout !== "minima" ? " img-protect" : "",
+    noMenu: proofing ? (e: MouseEvent) => e.preventDefault() : undefined,
+    embedded,
+    scroll: { embedded, label: scrollLabel, onScroll },
+    photo: (
+      <CoverPhoto
+        src={src}
+        srcSet={srcSet}
+        placeholder={placeholder}
+        focus={focus}
+        aspect={aspect}
+        mobile={mobile}
+        device={device}
+        embedded={embedded}
+        layout={layout}
+      />
+    ),
+    shield: proofing && (src || mobile) && <ProofingShield />,
+    logo: (
+      <Logo
+        variant={isDarkPalette(palette) ? "light" : "dark"}
+        className="h-12"
+      />
+    ),
+    titleBlock: (
+      <TitleBlock Title={embedded ? "p" : "h1"} {...{ title, date, studio }} />
+    ),
+  };
+  if (layout === "dividida") return <DividedaCover {...parts} />;
+  if (layout === "centrada") return <CentradaCover {...parts} />;
+  if (layout === "minima") return <MinimaCover {...parts} />;
+  return <CompletaCover {...parts} />;
+}
+
+function ProofingShield() {
+  return (
     <span
       data-testid="cover-shield"
       aria-hidden="true"
@@ -137,52 +120,20 @@ export function CoverHero({
       onContextMenu={(e) => e.preventDefault()}
     />
   );
-  // Public page with a mobile cover: the browser picks the file by viewport.
-  const sources =
-    mobile && !device ? (
-      <source
-        media={MOBILE_COVER_MEDIA}
-        srcSet={mobile.srcSet ?? mobile.src}
-        sizes={mobile.srcSet ? COVER_SIZES : undefined}
-      />
-    ) : undefined;
-  // Mobile cover without a desktop one: no `src`, phones still pick the source.
-  const photo = (shownSrc || sources) && (
-    <FadeImg
-      sources={sources}
-      onElement={setImgNode}
-      placeholder={shownPlaceholder}
-      data-cover-img=""
-      data-cover-device={onMobile ? "mobile" : "desktop"}
-      src={shownSrc ?? undefined}
-      srcSet={shownSrcSet}
-      sizes={shownSrcSet ? COVER_SIZES : undefined}
-      alt=""
-      fetchPriority={embedded ? undefined : "high"}
-      draggable={false}
-      style={{ objectPosition: `${pos.x}% ${pos.y}%` }}
-      className="absolute inset-0 size-full object-cover"
-    />
-  );
-  const protect = proofing && layout !== "minima" ? " img-protect" : "";
-  const noMenu = proofing
-    ? (e: React.MouseEvent) => e.preventDefault()
-    : undefined;
-  const logo = (
-    <Logo
-      variant={isDarkPalette(palette) ? "light" : "dark"}
-      className="h-12"
-    />
-  );
-  const cue = (
-    <ScrollCue
-      embedded={embedded}
-      label={scrollLabel}
-      onScroll={onScroll}
-      className="text-grey-600 hover:text-ink"
-    />
-  );
-  const titleBlock = (
+}
+
+function TitleBlock({
+  Title,
+  title,
+  date,
+  studio,
+}: {
+  Title: "p" | "h1";
+  title: string;
+  date: string | null;
+  studio: string;
+}) {
+  return (
     <>
       <Title className="text-display font-light uppercase">{title}</Title>
       {date && (
@@ -190,126 +141,5 @@ export function CoverHero({
       )}
       <p className="text-micro-label uppercase">{studio}</p>
     </>
-  );
-  const box = embedded ? "h-full" : "h-dvh min-h-96";
-
-  if (layout === "dividida") {
-    return (
-      <header
-        ref={headerRef}
-        data-cover-layout="dividida"
-        className={`@container bg-paper text-ink relative w-full overflow-hidden ${box}${protect}`}
-        onContextMenu={noMenu}
-      >
-        <div className="flex size-full flex-col @3xl:flex-row">
-          <div
-            data-cover-pane="image"
-            className="bg-night relative min-h-0 flex-3 overflow-hidden"
-          >
-            {photo}
-            {shield}
-          </div>
-          <div
-            data-cover-pane="text"
-            className="bg-paper text-ink flex min-h-0 flex-2 flex-col items-center justify-between gap-6 px-6 py-6 text-center"
-          >
-            {logo}
-            <div className="flex flex-col items-center gap-6">{titleBlock}</div>
-            {cue}
-          </div>
-        </div>
-      </header>
-    );
-  }
-
-  if (layout === "centrada") {
-    return (
-      <header
-        ref={headerRef}
-        data-cover-layout="centrada"
-        className={`bg-paper text-ink relative flex w-full flex-col items-center gap-6 px-6 py-6 text-center sm:px-16 ${box}${protect}`}
-        onContextMenu={noMenu}
-      >
-        {logo}
-        <div
-          data-cover-frame=""
-          className="bg-grey-100 relative min-h-0 w-full max-w-6xl flex-1 overflow-hidden"
-        >
-          {photo}
-          {shield}
-        </div>
-        <div className="flex flex-col items-center gap-4">
-          {titleBlock}
-          {cue}
-        </div>
-      </header>
-    );
-  }
-
-  if (layout === "minima") {
-    return (
-      <header
-        ref={headerRef}
-        data-cover-layout="minima"
-        className={`bg-paper text-ink relative flex w-full flex-col items-center gap-6 px-6 pt-8 pb-12 text-center ${embedded ? "h-full justify-center" : ""}`}
-      >
-        {logo}
-        {titleBlock}
-      </header>
-    );
-  }
-
-  return (
-    <header
-      ref={headerRef}
-      data-cover-layout="completa"
-      className={`on-dark relative flex w-full flex-col justify-between overflow-hidden bg-night text-white ${box}${protect}`}
-      onContextMenu={noMenu}
-    >
-      {photo}
-      {shield}
-      <div aria-hidden="true" className="cover-scrim absolute inset-0" />
-      <div className="relative p-6">
-        <Logo variant="light" className="h-12" />
-      </div>
-      <div className="relative flex flex-col items-center gap-6 px-6 pb-10 text-center">
-        {titleBlock}
-        <ScrollCue
-          embedded={embedded}
-          label={scrollLabel}
-          onScroll={onScroll}
-          className="text-white/80 hover:text-white"
-        />
-      </div>
-    </header>
-  );
-}
-
-function ScrollCue({
-  embedded,
-  label,
-  onScroll,
-  className,
-}: {
-  embedded: boolean;
-  label: string;
-  onScroll?: () => void;
-  className: string;
-}) {
-  const cls = `text-micro-label flex min-h-11 flex-col items-center gap-1 uppercase ${className}`;
-  return embedded ? (
-    <span aria-hidden="true" className={cls}>
-      {label}
-      <ChevronDown className="size-5" />
-    </span>
-  ) : (
-    <button
-      type="button"
-      onClick={onScroll}
-      className={`${cls} duration-base ease-out-soft transition-colors`}
-    >
-      {label}
-      <ChevronDown className="size-5" aria-hidden="true" />
-    </button>
   );
 }

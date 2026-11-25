@@ -14,3 +14,9 @@ export function coverFiles(imgUrl: ImgUrlFn, id: string, v?: string) {
     ? { src, srcSet: undefined }
     : { src, srcSet: srcSetOf(imgUrl)(id, v) };
 }
+
+/** Photo width / height, or null when the size is unknown. */
+export const aspectOf = (p?: {
+  width?: number | null;
+  height?: number | null;
+}) => (p?.width && p.height ? p.width / p.height : null);
