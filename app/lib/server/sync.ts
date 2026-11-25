@@ -209,22 +209,41 @@ async function applyLibrary(
   return pass.pendingIds;
 }
 
-export async function runSync(
-  env: SyncEnv,
-  opts: SyncOptions,
-): Promise<SyncResult> {
-  const { drive, force = false, budget = 45 } = opts;
-  const now = opts.now ?? new Date();
-  const result = emptyResult();
-  const startSubs = drive.subrequests();
-  const guard = makeGuard(drive, budget);
-  const db = getDb(env as Env);
+/** The run context: Drive guard (external budget) and the Cloudflare-service op counter. */
+function newRun(env: SyncEnv, opts: SyncOptions, now: Date): SyncRun {
+  const { drive, budget = 45 } = opts;
   let cfOps = 0;
   const op: Op = (n = 1) => {
     cfOps += n;
     if (cfOps > CF_SUBREQUEST_CAP) throw new SyncBudgetError();
   };
-  const run: SyncRun = { env, db, drive, guard, op, now };
+  return {
+    env,
+    db: getDb(env as Env),
+    drive,
+    guard: makeGuard(drive, budget),
+    op,
+    now,
+  };
+}
+
+export async function runSync(
+  env: SyncEnv,
+  opts: SyncOptions,
+): Promise<SyncResult> {
+  const { drive, force = false } = opts;
+  const now = opts.now ?? new Date();
+  const result = emptyResult();
+  const startSubs = drive.subrequests();
+  const run = newRun(env, opts, now);
+  const { op } = run;
+  const skippedAfterScan = (
+    skipped: "unchanged" | "empty_root",
+  ): SyncResult => ({
+    ...result,
+    skipped,
+    subrequests: drive.subrequests() - startSubs,
+  });
 
   const lockValue = newLockValue(now);
   if (!(await acquireLock(env, lockValue, now)))
@@ -241,12 +260,7 @@ export async function runSync(
 
     // 2. Change detection; take the next token BEFORE scanning.
     const detected = await detectChanges(run, force);
-    if (detected.unchanged)
-      return {
-        ...result,
-        skipped: "unchanged",
-        subrequests: drive.subrequests() - startSubs,
-      };
+    if (detected.unchanged) return skippedAfterScan("unchanged");
     const nextToken = detected.nextToken;
 
     // 3-4. Scan (no writes yet) and read the current galleries.
@@ -254,11 +268,7 @@ export async function runSync(
     if (albums.length === 0 && existing.length > 0) {
       // A transient empty listing must never archive the library.
       console.error("sync: root listing is empty but galleries exist; aborted");
-      return {
-        ...result,
-        skipped: "empty_root",
-        subrequests: drive.subrequests() - startSubs,
-      };
+      return skippedAfterScan("empty_root");
     }
     const pendingIds = await applyLibrary(
       run,
