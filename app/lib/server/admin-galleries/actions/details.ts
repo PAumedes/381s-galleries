@@ -15,6 +15,85 @@ const EXPIRY_YEAR_MAX = 2100;
 export const TITLE_MAX = 120;
 export { SLUG_MAX };
 
+function titleError(title: string, t: TFunction) {
+  return title.length < 1 || title.length > TITLE_MAX || CONTROL_RE.test(title)
+    ? t("admin.msg.titleLength", { max: TITLE_MAX })
+    : undefined;
+}
+
+function slugFormatError(slug: string, t: TFunction) {
+  if (RESERVED_SLUGS.includes(slug)) return t("admin.msg.slugReserved");
+  return !slug || slug.length > SLUG_MAX || !SLUG_RE.test(slug)
+    ? t("admin.msg.slugFormat", { max: SLUG_MAX })
+    : undefined;
+}
+
+/** The expiry from the date/time inputs (UTC ISO or null) and the error to show, if any. */
+function parseExpiry(
+  env: Env,
+  g: GalleryRow,
+  f: FormData,
+  t: TFunction,
+): { expiresAt: string | null; error?: string } {
+  const expDate = str(f, "expiresDate").trim();
+  const expTime = str(f, "expiresTime").trim();
+  if (!expDate && !expTime) return { expiresAt: null };
+  const yr = Number(expDate.slice(0, 4));
+  if (expDate && (yr < EXPIRY_YEAR_MIN || yr > EXPIRY_YEAR_MAX))
+    return {
+      expiresAt: null,
+      error: t("admin.msg.expiryYear", {
+        min: EXPIRY_YEAR_MIN,
+        max: EXPIRY_YEAR_MAX,
+      }),
+    };
+  // A date without a time means "until the end of that day" (studio time).
+  const expiresAt = expDate
+    ? resolveExpiry(
+        expDate,
+        expTime || "23:59",
+        g.expiresAt,
+        validTimezone(env.TIMEZONE),
+      )
+    : null;
+  if (expiresAt) return { expiresAt };
+  return {
+    expiresAt,
+    error: expDate
+      ? t("admin.msg.expiryInvalid")
+      : t("admin.msg.expiryNeedsDate"),
+  };
+}
+
+/** Saves the details; false when the slug unique constraint lost a race. */
+async function writeDetails(
+  env: Env,
+  g: GalleryRow,
+  clientSet: object,
+  v: {
+    title: string;
+    slug: string;
+    eventDate: string | null;
+    expiresAt: string | null;
+  },
+): Promise<boolean> {
+  try {
+    await getDb(env)
+      .update(schema.galleries)
+      .set({
+        ...v,
+        // An expired gallery stops qualifying: the opt-in does not survive.
+        ...clientSet,
+        ...(isExpired(v.expiresAt, Date.now()) ? { showOnHome: false } : {}),
+      })
+      .where(eq(schema.galleries.id, g.id));
+    return true;
+  } catch (err) {
+    if (isConstraintError(err)) return false;
+    throw err;
+  }
+}
+
 export async function saveDetails(
   env: Env,
   g: GalleryRow,
@@ -25,44 +104,19 @@ export async function saveDetails(
   const errors: Record<string, string> = {};
 
   const title = str(f, "title").trim();
-  if (title.length < 1 || title.length > TITLE_MAX || CONTROL_RE.test(title))
-    errors.title = t("admin.msg.titleLength", { max: TITLE_MAX });
+  const tErr = titleError(title, t);
+  if (tErr) errors.title = tErr;
 
   const slug = str(f, "slug").trim().toLowerCase();
-  if (RESERVED_SLUGS.includes(slug)) errors.slug = t("admin.msg.slugReserved");
-  else if (!slug || slug.length > SLUG_MAX || !SLUG_RE.test(slug))
-    errors.slug = t("admin.msg.slugFormat", { max: SLUG_MAX });
+  const sErr = slugFormatError(slug, t);
+  if (sErr) errors.slug = sErr;
 
   const eventDate = str(f, "eventDate").trim();
   if (eventDate && !isValidDate(eventDate))
     errors.eventDate = t("admin.msg.eventDateInvalid");
 
-  const expDate = str(f, "expiresDate").trim();
-  const expTime = str(f, "expiresTime").trim();
-  let expiresAt: string | null = null;
-  if (expDate || expTime) {
-    const yr = Number(expDate.slice(0, 4));
-    if (expDate && (yr < EXPIRY_YEAR_MIN || yr > EXPIRY_YEAR_MAX))
-      errors.expires = t("admin.msg.expiryYear", {
-        min: EXPIRY_YEAR_MIN,
-        max: EXPIRY_YEAR_MAX,
-      });
-    else {
-      // A date without a time means "until the end of that day" (studio time).
-      expiresAt = expDate
-        ? resolveExpiry(
-            expDate,
-            expTime || "23:59",
-            g.expiresAt,
-            validTimezone(env.TIMEZONE),
-          )
-        : null;
-      if (!expiresAt)
-        errors.expires = expDate
-          ? t("admin.msg.expiryInvalid")
-          : t("admin.msg.expiryNeedsDate");
-    }
-  }
+  const { expiresAt, error: expiryError } = parseExpiry(env, g, f, t);
+  if (expiryError) errors.expires = expiryError;
 
   if (
     !errors.slug &&
@@ -77,26 +131,17 @@ export async function saveDetails(
   if (Object.keys(errors).length)
     return fail(intent, t("admin.msg.checkFields"), errors);
 
-  try {
-    await getDb(env)
-      .update(schema.galleries)
-      .set({
-        title,
-        slug,
-        eventDate: eventDate || null,
-        expiresAt,
-        // An expired gallery stops qualifying: the opt-in does not survive.
-        ...client.set,
-        ...(isExpired(expiresAt, Date.now()) ? { showOnHome: false } : {}),
-      })
-      .where(eq(schema.galleries.id, g.id));
-  } catch (err) {
-    if (isConstraintError(err))
-      return fail(intent, t("admin.msg.checkFields"), {
-        slug: t("admin.msg.slugTaken"),
-      });
-    throw err;
-  }
+  if (
+    !(await writeDetails(env, g, client.set, {
+      title,
+      slug,
+      eventDate: eventDate || null,
+      expiresAt,
+    }))
+  )
+    return fail(intent, t("admin.msg.checkFields"), {
+      slug: t("admin.msg.slugTaken"),
+    });
   const vanished =
     client.assignId && !(await isAssignedTo(env, g.id, client.assignId));
   return done(
