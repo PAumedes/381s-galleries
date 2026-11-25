@@ -64,76 +64,95 @@ export interface AlbumPass {
   pendingIds: string[];
 }
 
+/** The status an existing gallery returns to: only galleries sync itself archived come back; an admin-archived one stays archived. */
+function restoreStatus(ex: GalleryRow) {
+  return ex.archivedBySync && ex.status === "archived"
+    ? (ex.archivedPrevStatus ?? "draft")
+    : undefined;
+}
+
+/** The update of an existing gallery row after a sync (lastSyncedAt, issues, un-missing, un-archive). */
+function updateGalleryStmt(
+  { db }: SyncRun,
+  syncedAt: string,
+  a: AlbumDraft,
+  ex: GalleryRow,
+  issuesJson: string,
+  restore: GalleryRow["status"] | undefined,
+) {
+  return db
+    .update(schema.galleries)
+    .set({
+      syncIssuesJson: issuesJson,
+      driveModifiedAt: a.folder.modifiedTime,
+      lastSyncedAt: syncedAt,
+      folderMissingSince: null,
+      ...(ex.archivedBySync
+        ? {
+            archivedBySync: false,
+            archivedPrevStatus: null,
+            ...(restore ? { status: restore } : {}),
+          }
+        : {}),
+    })
+    .where(eq(schema.galleries.id, ex.id));
+}
+
+function insertGalleryStmt(
+  { env, db }: SyncRun,
+  { syncedAt, takenSlugs }: AlbumPass,
+  a: AlbumDraft,
+  galleryId: string,
+  issuesJson: string,
+) {
+  const full = nfc(a.folder.name);
+  const { title, eventDate } = parseFolderDate(full);
+  return db.insert(schema.galleries).values({
+    id: galleryId,
+    driveFolderId: a.folder.id,
+    slug: uniqueSlug(full, takenSlugs),
+    title,
+    eventDate,
+    status: env.DRIVE_MODE === "mock" ? "published" : "draft",
+    mode: a.hasWm ? "proofing" : "delivery",
+    syncIssuesJson: issuesJson,
+    driveModifiedAt: a.folder.modifiedTime,
+    lastSyncedAt: syncedAt,
+  });
+}
+
 /**
  * The gallery-row statement(s) for one album: an update of an existing
  * gallery (only when something changed, or it must come back from a missing /
  * sync-archived state) or the insert of a new one.
  */
 function galleryStatements(
-  { env, db }: SyncRun,
-  { result, syncedAt, takenSlugs }: AlbumPass,
+  run: SyncRun,
+  pass: AlbumPass,
   a: AlbumDraft,
   ex: GalleryRow | undefined,
   galleryId: string,
   issuesJson: string,
 ): BatchItem[] {
-  const stmts: BatchItem[] = [];
-  if (ex) {
-    // Only galleries sync itself archived come back when the folder does;
-    // an admin-archived gallery stays archived.
-    const restore =
-      ex.archivedBySync && ex.status === "archived"
-        ? (ex.archivedPrevStatus ?? "draft")
-        : undefined;
-    // The admin owns the gallery mode: sync never changes it for an
-    // existing gallery (switching to proofing would silently disable a
-    // client's downloads). Only new galleries get a default from the
-    // presence of preview-wm. A proofing gallery that loses its
-    // preview-wm files 404s (admin sees "falta preview-wm").
-    const changed =
-      ex.syncIssuesJson !== issuesJson ||
-      ex.driveModifiedAt !== a.folder.modifiedTime ||
-      restore !== undefined;
-    if (changed) result.galleries.updated++;
-    if (changed || ex.folderMissingSince !== null || ex.archivedBySync)
-      stmts.push(
-        db
-          .update(schema.galleries)
-          .set({
-            syncIssuesJson: issuesJson,
-            driveModifiedAt: a.folder.modifiedTime,
-            lastSyncedAt: syncedAt,
-            folderMissingSince: null,
-            ...(ex.archivedBySync
-              ? {
-                  archivedBySync: false,
-                  archivedPrevStatus: null,
-                  ...(restore ? { status: restore } : {}),
-                }
-              : {}),
-          })
-          .where(eq(schema.galleries.id, ex.id)),
-      );
-  } else {
+  const { result, syncedAt } = pass;
+  if (!ex) {
     result.galleries.created++;
-    const full = nfc(a.folder.name);
-    const { title, eventDate } = parseFolderDate(full);
-    stmts.push(
-      db.insert(schema.galleries).values({
-        id: galleryId,
-        driveFolderId: a.folder.id,
-        slug: uniqueSlug(full, takenSlugs),
-        title,
-        eventDate,
-        status: env.DRIVE_MODE === "mock" ? "published" : "draft",
-        mode: a.hasWm ? "proofing" : "delivery",
-        syncIssuesJson: issuesJson,
-        driveModifiedAt: a.folder.modifiedTime,
-        lastSyncedAt: syncedAt,
-      }),
-    );
+    return [insertGalleryStmt(run, pass, a, galleryId, issuesJson)];
   }
-  return stmts;
+  const restore = restoreStatus(ex);
+  // The admin owns the gallery mode: sync never changes it for an
+  // existing gallery (switching to proofing would silently disable a
+  // client's downloads). Only new galleries get a default from the
+  // presence of preview-wm. A proofing gallery that loses its
+  // preview-wm files 404s (admin sees "falta preview-wm").
+  const changed =
+    ex.syncIssuesJson !== issuesJson ||
+    ex.driveModifiedAt !== a.folder.modifiedTime ||
+    restore !== undefined;
+  if (changed) result.galleries.updated++;
+  return changed || ex.folderMissingSince !== null || ex.archivedBySync
+    ? [updateGalleryStmt(run, syncedAt, a, ex, issuesJson, restore)]
+    : [];
 }
 
 /** New photos: capture time first (dated before undated), then name, then set. */
@@ -210,6 +229,40 @@ const warmMarker = (db: Db, galleryId: string, syncedAt: string) => {
     });
 };
 
+/** Persists the removed photo ids in the same batch as the row deletes: they survive any later failure. */
+function pendingDeletesStmt(db: Db, pass: AlbumPass, goneIds: string[]) {
+  pass.pendingIds = [...new Set([...pass.pendingIds, ...goneIds])].slice(
+    -PENDING_DELETES_CAP,
+  );
+  const value = JSON.stringify(pass.pendingIds);
+  return db
+    .insert(schema.settings)
+    .values({ key: PENDING_DELETES_KEY, value })
+    .onConflictDoUpdate({ target: schema.settings.key, set: { value } });
+}
+
+/** Inserts for the new photos, in capture order, appended after the existing sort values. */
+function insertPhotoStmts(
+  db: Db,
+  galleryId: string,
+  fresh: PhotoDraft[],
+  rows: Row[],
+): BatchItem[] {
+  fresh.sort(freshOrder);
+  let sort = rows.reduce((m, r) => Math.max(m, r.sort), -1) + 1;
+  // D1 allows 100 bound parameters per statement (d1-limits.ts); a photo row binds ~18.
+  return chunk(fresh, PHOTO_INSERT_ROWS).map((part) =>
+    db.insert(schema.photos).values(
+      part.map((p) => ({
+        id: crypto.randomUUID(),
+        galleryId,
+        ...photoFields(p),
+        sort: sort++,
+      })),
+    ),
+  );
+}
+
 /**
  * The photo statements for one album, in the order that keeps every committed
  * prefix consistent: pending-R2 ids, deletes, marks, updates, inserts.
@@ -234,19 +287,7 @@ function photoStatements(
   result.photos.added += fresh.length;
   const stmts: BatchItem[] = [];
 
-  if (goneIds.length) {
-    // Same batch as the row deletes: ids survive any later failure.
-    pass.pendingIds = [...new Set([...pass.pendingIds, ...goneIds])].slice(
-      -PENDING_DELETES_CAP,
-    );
-    const value = JSON.stringify(pass.pendingIds);
-    stmts.push(
-      db
-        .insert(schema.settings)
-        .values({ key: PENDING_DELETES_KEY, value })
-        .onConflictDoUpdate({ target: schema.settings.key, set: { value } }),
-    );
-  }
+  if (goneIds.length) stmts.push(pendingDeletesStmt(db, pass, goneIds));
   for (const ids of chunk(goneIds, D1_IN_CHUNK))
     stmts.push(db.delete(schema.photos).where(inArray(schema.photos.id, ids)));
   for (const ids of chunk(
@@ -261,20 +302,7 @@ function photoStatements(
     );
   stmts.push(...updates);
   if (fresh.length || changed) stmts.push(warmMarker(db, galleryId, syncedAt));
-  fresh.sort(freshOrder);
-  let sort = rows.reduce((m, r) => Math.max(m, r.sort), -1) + 1;
-  // D1 allows 100 bound parameters per statement (d1-limits.ts); a photo row binds ~18.
-  for (const part of chunk(fresh, PHOTO_INSERT_ROWS))
-    stmts.push(
-      db.insert(schema.photos).values(
-        part.map((p) => ({
-          id: crypto.randomUUID(),
-          galleryId,
-          ...photoFields(p),
-          sort: sort++,
-        })),
-      ),
-    );
+  stmts.push(...insertPhotoStmts(db, galleryId, fresh, rows));
   return stmts;
 }
 
