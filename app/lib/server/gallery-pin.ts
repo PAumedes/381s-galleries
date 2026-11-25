@@ -48,8 +48,30 @@ const DUMMY_HASH = `pbkdf2$100000$${"A".repeat(22)}$${"A".repeat(43)}`;
 export type UnlockResult =
   | { status: 303; location: string; setCookie: string }
   | { status: 303; location: string; setCookie?: undefined }
-  | { status: 400; step: PinStep }
-  | { status: 403 | 404 | 429 };
+  | { status: 400; step: PinStep; attempt: number }
+  | { status: 403; attempt: number }
+  | { status: 404 | 429; attempt: number };
+
+/**
+ * What the gate form posted: the PIN and the cosmetic attempt counter (a plain
+ * count of at most 4 digits, else 0; the rate limit, not this, stops guessing).
+ */
+async function readGateForm(
+  request: Request,
+): Promise<{ pin: string; attempt: number }> {
+  let pin = "";
+  let attempt = 0;
+  try {
+    const form = await request.formData();
+    const v = form.get("pin");
+    if (typeof v === "string") pin = v.slice(0, 256);
+    const a = form.get("attempt");
+    if (typeof a === "string" && /^\d{1,4}$/.test(a)) attempt = Number(a);
+  } catch {
+    /* treated as empty */
+  }
+  return { pin, attempt };
+}
 
 export async function unlockGallery(
   request: Request,
@@ -58,15 +80,10 @@ export async function unlockGallery(
   /** `/:client/:album` POST: the client segment must be the album's client. */
   client?: string,
 ): Promise<UnlockResult> {
-  if (crossSite(request)) return { status: 403 };
+  if (crossSite(request)) return { status: 403, attempt: 0 };
 
-  let pin = "";
-  try {
-    const v = (await request.formData()).get("pin");
-    if (typeof v === "string") pin = v.slice(0, 256);
-  } catch {
-    /* treated as empty */
-  }
+  // The one parse of the body: the PIN and the cosmetic attempt counter.
+  const { pin, attempt } = await readGateForm(request);
 
   const found = await findGalleryWithClient(env, slug);
   const g = found?.gallery;
@@ -78,10 +95,11 @@ export async function unlockGallery(
     !isAvailable(g) ||
     !(client === undefined || sameClient(client, found!.clientSlug))
   ) {
-    if (!ipHash) return { status: 429 };
-    if (!(await pinLimit(UNKNOWN_GALLERY, ipHash))) return { status: 429 };
+    if (!ipHash) return { status: 429, attempt };
+    if (!(await pinLimit(UNKNOWN_GALLERY, ipHash)))
+      return { status: 429, attempt };
     await verifyPin(pin, DUMMY_HASH);
-    return { status: 404 };
+    return { status: 404, attempt };
   }
   const lang = asLang(new URL(request.url).searchParams.get("lang"));
   const location =
@@ -92,16 +110,18 @@ export async function unlockGallery(
   if ((await openGallery(request, g, env)) !== null)
     return { status: 303, location };
 
-  if (!ipHash) return { status: 429 };
+  if (!ipHash) return { status: 429, attempt };
   // Client PIN first (T6.52), then the album's own. Its guesses are budgeted
   // per CLIENT, so rotating across the client's albums multiplies nothing.
   const forClient = await clientGateClosed(request, g, env);
   const scopeId = forClient ? g.clientId! : g.id;
   const stored = forClient ? g.clientPinHash! : g.pinHash!;
-  if (!(await pinLimit(scopeId, ipHash))) return { status: 429 };
-  if (!(await hit(env, PIN_GALLERY_RATE, scopeId))) return { status: 429 };
+  if (!(await pinLimit(scopeId, ipHash))) return { status: 429, attempt };
+  if (!(await hit(env, PIN_GALLERY_RATE, scopeId)))
+    return { status: 429, attempt };
   const ok = await verifyPin(pin, stored);
-  if (!ok || !pin) return { status: 400, step: forClient ? "client" : "album" };
+  if (!ok || !pin)
+    return { status: 400, step: forClient ? "client" : "album", attempt };
 
   await resetRateLimit(env, PIN_RATE.scope, `${ipHash}:${scopeId}`);
   // Only wrong guesses consume the gallery-wide budget: refund just this

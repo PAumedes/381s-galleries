@@ -97,7 +97,7 @@ describe("T6.54 (4) which PIN the gate asks for", () => {
   it("the album PIN entered at the client step is refused (no oracle on the album PIN without the client PIN)", async () => {
     await seed({ clientPin: true, ownPin: true });
     const r = await unlockGallery(post(OWN_PIN), "boda", e, "acme");
-    expect(r).toEqual({ status: 400, step: "client" });
+    expect(r).toEqual({ status: 400, step: "client", attempt: 0 });
     expect(r).not.toHaveProperty("setCookie");
     expect(await gate()).toMatchObject({ step: "client" });
   });
@@ -112,7 +112,7 @@ describe("T6.54 (4) which PIN the gate asks for", () => {
       ).setCookie,
     );
     const wrong = await unlockGallery(post(CLIENT_PIN, c), "boda", e);
-    expect(wrong).toEqual({ status: 400, step: "album" });
+    expect(wrong).toEqual({ status: 400, step: "album", attempt: 0 });
     const ok = await unlockGallery(post(OWN_PIN, c), "boda", e);
     expect(ok.status).toBe(303);
     const both = `${c}; ${pair((ok as { setCookie: string }).setCookie)}`;
@@ -136,6 +136,7 @@ describe("T6.54 (4) which PIN the gate asks for", () => {
       expect(await unlockGallery(post("nope-" + i), "boda", e)).toEqual({
         status: 400,
         step: "client",
+        attempt: 0,
       });
     // 6th wrong: throttled, even with the right PIN
     expect((await unlockGallery(post(CLIENT_PIN), "boda", e)).status).toBe(429);
@@ -182,13 +183,12 @@ describe("T6.54 (6) the gate's answer to a wrong PIN", () => {
     expect(r.data.error).toBe("Wrong gallery PIN (attempt 4)");
   });
 
-  it("a forged counter is clamped (negative, huge, garbage)", async () => {
+  it("a forged counter is ignored (negative, over 4 digits, garbage) and a real one is never clamped", async () => {
     await seed({ ownPin: true });
     expect((await act("x", { attempt: "-5" })).data.attempt).toBe(1);
-    expect(
-      (await act("x", { attempt: "99999999999" })).data.attempt,
-    ).toBeLessThanOrEqual(100);
+    expect((await act("x", { attempt: "99999999999" })).data.attempt).toBe(1);
     expect((await act("x", { attempt: "abc" })).data.attempt).toBe(1);
+    expect((await act("x", { attempt: "250" })).data.attempt).toBe(251);
   });
 
   it("a throttled attempt still answers with a fresh counter and the throttle text", async () => {
@@ -202,5 +202,34 @@ describe("T6.54 (6) the gate's answer to a wrong PIN", () => {
 
   it("the action never needs a router context", () => {
     expect(new RouterContextProvider()).toBeTruthy();
+  });
+});
+
+describe("T6.54 the gate form body is parsed once", () => {
+  it("a refused attempt reads the body one time (no clone, no second formData)", async () => {
+    await seed({ ownPin: true });
+    const req = post("nope", "", { attempt: "7" });
+    let reads = 0;
+    const read = req.formData.bind(req);
+    req.formData = () => {
+      reads++;
+      return read();
+    };
+    const clone = req.clone.bind(req);
+    let clones = 0;
+    req.clone = () => {
+      clones++;
+      return clone();
+    };
+    const res = (await galleryAction(
+      { request: req },
+      { album: "boda" },
+      e,
+    )) as {
+      data: { attempt: number };
+    };
+    expect(res.data.attempt).toBe(8);
+    expect(reads).toBe(1);
+    expect(clones).toBe(0);
   });
 });

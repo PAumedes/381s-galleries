@@ -13,7 +13,7 @@ import {
 } from "./client-page";
 import { backLink, type BackToClient } from "./back-to-client";
 import { PAGE_PARAM } from "../page-param";
-import { pinFeedback, postedAttempt } from "./pin-feedback";
+import { pinFeedback } from "./pin-feedback";
 import { NOSNIFF, PRIVATE_NO_STORE } from "./http";
 import { publicOrigin } from "./public-url";
 
@@ -116,13 +116,12 @@ export async function galleryAction(
   env: RouteEnv,
 ) {
   const headers = baseHeaders(request);
-  const posted = await postedAttempt(request);
   const result = await unlockGallery(request, target.album, env, target.client);
   if (result.status === 303) {
     if (result.setCookie) headers.append("Set-Cookie", result.setCookie);
     return redirect(result.location, { status: 303, headers });
   }
-  return data(pinFeedback(request, result, posted), {
+  return data(pinFeedback(request, result), {
     status: result.status,
     headers,
   });

@@ -369,6 +369,8 @@ export const enAdmin = {
   "admin.msg.stale":
     "That change isn't possible from the current state. Reload the page.",
   "admin.msg.pinRemoved":
+    "PIN removed. Download links sent earlier stop working.",
+  "admin.msg.pinRemovedOpen":
     "PIN removed. The gallery is open to anyone with the link and download links sent earlier stop working.",
   "admin.msg.pinCheck": "Check the PIN.",
   "admin.msg.pinLength": "The PIN must be {min} to {max} characters.",

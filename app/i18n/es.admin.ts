@@ -368,6 +368,8 @@ export const esAdmin = {
   "admin.msg.stale":
     "Ese cambio no es posible desde el estado actual. Recargá la página.",
   "admin.msg.pinRemoved":
+    "PIN eliminado. Los enlaces de descarga enviados antes dejan de funcionar.",
+  "admin.msg.pinRemovedOpen":
     "PIN eliminado. La galería queda abierta para quien tenga el enlace y los enlaces de descarga enviados antes dejan de funcionar.",
   "admin.msg.pinCheck": "Revisá el PIN.",
   "admin.msg.pinLength": "El PIN debe tener entre {min} y {max} caracteres.",

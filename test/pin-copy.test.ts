@@ -6,6 +6,7 @@ import { es } from "../app/i18n/es";
 const KEYS = [
   "admin.msg.pinSaved",
   "admin.msg.pinRemoved",
+  "admin.msg.pinRemovedOpen",
   "admin.clients.msg.pinSaved",
   "admin.clients.msg.pinRemoved",
 ] as const;
@@ -27,7 +28,7 @@ describe("T6.54 PIN saved/removed messages (plain words)", () => {
     expect(es[k]).toMatch(
       /enlaces de descarga enviados antes dejan de funcionar/,
     );
-    expect(en[k]).toMatch(/download links sent earlier stop working/);
+    expect(en[k]).toMatch(/download links sent earlier stop working/i);
   });
   it.each(KEYS)("%s has no ASCII double quotes or escaped quotes", (k) => {
     expect(es[k]).not.toMatch(/["\\]/);
