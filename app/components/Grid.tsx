@@ -135,17 +135,8 @@ type TileProps = {
   protect: boolean;
 };
 
-function Tile({
-  photo,
-  index,
-  box,
-  t,
-  onOpen,
-  onFavorite,
-  onDownload,
-  favorite,
-  protect,
-}: TileProps) {
+/** Load / error / retry state of one tile's thumbnail. */
+function useTileImage() {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [retry, setRetry] = useState(0);
@@ -153,6 +144,23 @@ function Tile({
   const imgRef = useCallback((img: HTMLImageElement | null) => {
     if (img?.complete && img.naturalWidth > 0) setLoaded(true);
   }, []);
+  return {
+    loaded,
+    failed,
+    retry,
+    imgRef,
+    onLoad: () => setLoaded(true),
+    onError: () => setFailed(true),
+    onRetry: () => {
+      setFailed(false);
+      setRetry((n) => n + 1);
+    },
+  };
+}
+
+function Tile(props: TileProps) {
+  const { photo, index, box, t, onFavorite, onDownload } = props;
+  const img = useTileImage();
   const label = t("grid.photo", { n: index + 1 });
   const imgUrl = useImgUrl();
   const thumb = imgUrl(photo.id, "thumb", photo.v);
@@ -161,7 +169,7 @@ function Tile({
   const open = (e: MouseEvent<HTMLButtonElement>) => {
     // Safari does not focus buttons on click; the lightbox restores focus here.
     e.currentTarget.focus();
-    onOpen(index);
+    props.onOpen(index);
   };
 
   return (
@@ -179,29 +187,26 @@ function Tile({
         index={index}
         label={label}
         src={thumb}
-        retry={retry}
-        loaded={loaded}
-        protect={protect}
+        retry={img.retry}
+        loaded={img.loaded}
+        protect={props.protect}
         onOpen={open}
-        onLoad={() => setLoaded(true)}
-        onError={() => setFailed(true)}
-        imgRef={imgRef}
+        onLoad={img.onLoad}
+        onError={img.onError}
+        imgRef={img.imgRef}
       />
-      {failed && (
+      {img.failed && (
         <RetryButton
           index={index}
           label={t("lightbox.retry")}
-          onRetry={() => {
-            setFailed(false);
-            setRetry((n) => n + 1);
-          }}
+          onRetry={img.onRetry}
         />
       )}
       {hasActions && (
         <TileHoverActions
           t={t}
           photoId={photo.id}
-          favorite={favorite}
+          favorite={props.favorite}
           onFavorite={onFavorite}
           onDownload={onDownload}
         />
