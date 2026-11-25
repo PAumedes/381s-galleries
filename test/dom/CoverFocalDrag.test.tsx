@@ -1,7 +1,15 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+} from "@testing-library/react";
 import { createRoutesStub } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CoverPreview } from "../../app/components/admin/CoverPreview";
+import { useFocalDrag } from "../../app/components/admin/use-focal-drag";
 
 const submitted: FormData[] = [];
 function show() {
@@ -187,5 +195,105 @@ describe("T6.35 focal point drag on touch", () => {
     expect(move()).toBe(true);
     fireEvent.pointerUp(el, { ...ptr("touch"), clientX: 150, clientY: 75 });
     expect(move()).toBe(false);
+  });
+});
+
+describe("T6.51 focal drag (mutant guards)", () => {
+  it("releasing the finger releases the pointer capture", async () => {
+    show();
+    const el = await picker();
+    size(el);
+    el.setPointerCapture = vi.fn();
+    el.releasePointerCapture = vi.fn();
+    fireEvent.pointerDown(el, { ...ptr("touch"), clientX: 150, clientY: 75 });
+    expect(el.releasePointerCapture).not.toHaveBeenCalled();
+    fireEvent.pointerUp(el, { ...ptr("touch"), clientX: 150, clientY: 75 });
+    expect(el.releasePointerCapture).toHaveBeenCalledWith(7);
+  });
+
+  it("a second (non-primary) finger neither captures, sets touch-action nor moves the marker", async () => {
+    show();
+    const el = await picker();
+    size(el);
+    el.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(el, {
+      ...ptr("touch"),
+      isPrimary: false,
+      pointerId: 8,
+      clientX: 250,
+      clientY: 125,
+    });
+    expect(el.setPointerCapture).not.toHaveBeenCalled();
+    expect(el.style.touchAction).toBe("");
+    expect(marker().style.left).toBe("50%");
+  });
+});
+
+describe("T6.51 useFocalDrag listener lifecycle", () => {
+  const fresh = () => {
+    const el = document.createElement("div");
+    vi.spyOn(el, "addEventListener");
+    vi.spyOn(el, "removeEventListener");
+    return el;
+  };
+  const hook = () =>
+    renderHook(() =>
+      useFocalDrag({ point: null, onPoint: () => {}, onCommit: () => {} }),
+    );
+
+  it("moving the ref to another element detaches the touchmove listener from the old one", () => {
+    const { result } = hook();
+    const a = fresh();
+    const b = fresh();
+    result.current.ref(a);
+    expect(a.addEventListener).toHaveBeenCalledWith(
+      "touchmove",
+      expect.any(Function),
+      { passive: false },
+    );
+    const added = vi.mocked(a.addEventListener).mock.calls[0]![1];
+    result.current.ref(b);
+    expect(a.removeEventListener).toHaveBeenCalledWith("touchmove", added);
+    expect(b.addEventListener).toHaveBeenCalledTimes(1);
+    expect(b.removeEventListener).not.toHaveBeenCalled();
+  });
+
+  it("unmounting the element (ref null) detaches the listener", () => {
+    const { result } = hook();
+    const a = fresh();
+    result.current.ref(a);
+    const added = vi.mocked(a.addEventListener).mock.calls[0]![1];
+    result.current.ref(null);
+    expect(a.removeEventListener).toHaveBeenCalledTimes(1);
+    expect(a.removeEventListener).toHaveBeenCalledWith("touchmove", added);
+    // A second null does not detach twice.
+    result.current.ref(null);
+    expect(a.removeEventListener).toHaveBeenCalledTimes(1);
+  });
+
+  it("touch-action is none the moment the drag starts (before any re-render)", () => {
+    const { result } = hook();
+    const el = fresh();
+    vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 200,
+      height: 100,
+      right: 200,
+      bottom: 100,
+      x: 0,
+      y: 0,
+      toJSON() {},
+    });
+    const ev = {
+      pointerType: "touch",
+      isPrimary: true,
+      pointerId: 3,
+      clientX: 50,
+      clientY: 50,
+      currentTarget: el,
+    } as unknown as React.PointerEvent<HTMLElement>;
+    act(() => result.current.handlers.onPointerDown(ev));
+    expect(el.style.touchAction).toBe("none");
   });
 });

@@ -326,12 +326,70 @@ describe("deleteGallery", () => {
     expect(await count("ignored_folders", "drive_folder_id = 'folder-a'")).toBe(
       1,
     );
-    expect(await count("photos", "gallery_id = ?1", A)).toBeLessThan(701);
+    // exactly one R2 call of floor(1000 / 3) = 333 photos was spent (seed() adds one photo: 701)
+    expect(await count("photos", "gallery_id = ?1", A)).toBe(701 - 333);
     // progress is kept: the re-submit does not start over
     expect(await deleteGallery(e, A, { r2CallsMax: 1 })).toBe("continue");
+    expect(await count("photos", "gallery_id = ?1", A)).toBe(701 - 666);
     expect(await deleteGallery(e, A, { r2CallsMax: 1 })).toBe("deleted");
     expect(await count("galleries", "id = ?1", A)).toBe(0);
     expect((await env.CACHE.list()).objects).toHaveLength(0);
+  });
+
+  it("pending flush spends the same per-request R2 budget: an exhausted budget leaves the photos untouched and keeps only the unflushed pending ids", async () => {
+    await seed(A, "a");
+    const stmts: D1PreparedStatement[] = [];
+    for (let i = 0; i < 5; i++)
+      stmts.push(
+        sql(
+          "INSERT INTO photos (id, gallery_id, base_name, drive_highres_id) VALUES (?1, ?2, ?3, 'h')",
+          `ph-${i}`,
+          A,
+          `N${i}`,
+        ),
+      );
+    await env.DB.batch(stmts);
+    const pend = Array.from({ length: 700 }, (_, i) => `old-${i}`);
+    await env.DB.prepare(
+      "INSERT INTO settings (key, value) VALUES ('r2_pending_deletes', ?1)",
+    )
+      .bind(JSON.stringify(pend))
+      .run();
+    expect(await deleteGallery(e, A, { r2CallsMax: 1 })).toBe("continue");
+    const left = async () =>
+      JSON.parse(
+        (await sql(
+          "SELECT value FROM settings WHERE key = 'r2_pending_deletes'",
+        ).first<{ value: string }>())!.value,
+      ) as string[];
+    expect(await left()).toEqual(pend.slice(333));
+    // seed() adds one photo besides the 5 above
+    expect(await count("photos", "gallery_id = ?1", A)).toBe(6);
+  });
+
+  it("a fully flushed pending list leaves only the REST of the budget for the photos", async () => {
+    await seed(A, "a");
+    const rows: D1PreparedStatement[] = [];
+    for (let i = 0; i < 700; i++)
+      rows.push(
+        sql(
+          "INSERT INTO photos (id, gallery_id, base_name, drive_highres_id) VALUES (?1, ?2, ?3, 'h')",
+          `bulk-${i}`,
+          A,
+          `N${i}`,
+        ),
+      );
+    for (let i = 0; i < rows.length; i += 50)
+      await env.DB.batch(rows.slice(i, i + 50));
+    await env.DB.prepare(
+      "INSERT INTO settings (key, value) VALUES ('r2_pending_deletes', ?1)",
+    )
+      .bind(JSON.stringify(["old-1", "old-2"]))
+      .run();
+    // budget 2: one call flushes the pending ids, one is left for 333 photos
+    expect(await deleteGallery(e, A, { r2CallsMax: 2 })).toBe("continue");
+    expect(await count("photos", "gallery_id = ?1", A)).toBe(701 - 333);
+    expect(await count("settings", "key = 'r2_pending_deletes'")).toBe(0);
   });
 
   it("an R2 failure leaves the gallery intact (hidden, not half-deleted in D1) and a retry succeeds", async () => {

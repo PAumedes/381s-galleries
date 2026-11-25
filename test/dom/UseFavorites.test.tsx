@@ -244,6 +244,70 @@ describe("T6.51 useFavorites (characterization)", () => {
   });
 });
 
+describe("T6.51 useFavorites (mutant guards)", () => {
+  it("a saved favourite marks the visitor known: a later email requirement does not gate", async () => {
+    const { result, rerender } = renderHook(
+      ({ req }) => useFavorites("boda", req),
+      { initialProps: { req: false } },
+    );
+    await waitFor(() => expect(calls.length).toBe(1));
+    await act(async () => {
+      await result.current.toggle("p1"); // POST ok -> markKnown
+    });
+    rerender({ req: true });
+    await act(async () => {
+      await result.current.toggle("p2");
+    });
+    expect(result.current.gateOpen).toBe(false);
+    expect(calls.filter((c) => c.method === "POST")).toHaveLength(2);
+  });
+
+  it("toggling after the gallery changed posts to the new gallery", async () => {
+    const { result, rerender } = renderHook(
+      ({ slug }) => useFavorites(slug, false),
+      { initialProps: { slug: "uno" } },
+    );
+    await waitFor(() => expect(calls.length).toBe(1));
+    rerender({ slug: "dos" });
+    await waitFor(() => expect(calls.length).toBe(2));
+    expect(calls[1].url).toBe("/api/g/dos/favorites");
+    await act(async () => {
+      await result.current.toggle("p1");
+    });
+    expect(calls.at(-1)).toMatchObject({
+      url: "/api/g/dos/favorites",
+      method: "POST",
+    });
+  });
+
+  it("leaving offline mode loads the favourites from the server", async () => {
+    const { rerender } = renderHook(
+      ({ offline }) => useFavorites("boda", false, undefined, offline),
+      { initialProps: { offline: true } },
+    );
+    expect(calls).toHaveLength(0);
+    rerender({ offline: false });
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({ method: "GET" });
+  });
+
+  it.each([404, 429, 500])(
+    "a %i is a plain failure even if its body says email_required",
+    async (status) => {
+      post = async () => json({ error: "email_required" }, status);
+      const onError = vi.fn();
+      const { result } = renderHook(() => useFavorites("boda", false, onError));
+      await waitFor(() => expect(calls.length).toBe(1));
+      await act(async () => {
+        await result.current.toggle("p1");
+      });
+      expect(result.current.gateOpen).toBe(false);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(result.current.ids.has("p1")).toBe(false);
+    },
+  );
+});
+
 describe("T6.51 useVisitor (characterization)", () => {
   it("ensure runs the action at once when no email is required", async () => {
     const { result } = renderHook(() => useVisitor("boda", false));

@@ -362,3 +362,45 @@ describe("T6.34 phone-sized controls", () => {
     expect(document.querySelector("[data-swipe-hint-chevron]")).toBeNull();
   });
 });
+
+describe("T6.51 closing guards", () => {
+  const startExit = (y = 220) => {
+    down(200, 100);
+    move(200, y);
+    up(200, y);
+  };
+
+  it("the exit animation starts from the distance the photo was pulled down", () => {
+    stubAnimate();
+    render(<Harness />);
+    startExit(250); // pulled 150px
+    const exit = animations.find((a) =>
+      JSON.stringify(a.frames).includes("translateY"),
+    )!;
+    expect((exit.frames[0] as { transform: string }).transform).toMatch(
+      /^translateY\(150px\)/,
+    );
+  });
+
+  it("while the exit plays, Next / Previous and arrow keys do not navigate", async () => {
+    stubAnimate();
+    const onIndex = vi.fn();
+    render(<Harness onIndex={onIndex} />);
+    startExit();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    fireEvent.keyDown(document.body, { key: "ArrowRight" });
+    fireEvent.keyDown(document.body, { key: "ArrowLeft" });
+    expect(onIndex).not.toHaveBeenCalled();
+    animations.forEach((a) => a.done());
+    await settle();
+  });
+
+  it("without an exit running, the same controls navigate", () => {
+    stubAnimate();
+    const onIndex = vi.fn();
+    render(<Harness onIndex={onIndex} />);
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(onIndex).toHaveBeenCalledWith(4);
+  });
+});

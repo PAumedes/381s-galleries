@@ -89,7 +89,9 @@ describe("T6.51 download token payload (characterization)", () => {
       ["exp", "g", "jti", "p", "pf", "t", "v", "vid"].sort(),
     );
     expect(c).toMatchObject({ t: "dl", g: G, p: "p1", v: "highres" });
-    expect(typeof c?.vid).toBe("string");
+    const visitors = await db.select().from(schema.visitors);
+    expect(visitors).toHaveLength(1);
+    expect(c?.vid).toBe(visitors[0].id);
   });
 
   it("a multi-photo request tags every token b:'multi' with a distinct jti", async () => {
