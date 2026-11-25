@@ -12,51 +12,56 @@ import { enabledSizes, hasVariant } from "./download-sizes";
 import { useBulkFocus } from "./use-bulk-focus";
 import { useBulkRun } from "./use-bulk-run";
 
-export function BulkBody({
-  gallery,
-  t,
-  ensure,
-  onClose,
-  mode,
-  runningRef,
-  confirming,
-  setConfirming,
-}: DownloadMenuProps & {
+type BulkBodyProps = DownloadMenuProps & {
   mode: Extract<DownloadMode, { kind: "bulk" }>;
   runningRef: { current: boolean };
   confirming: boolean;
   setConfirming: (v: boolean) => void;
-}) {
+};
+type BulkMode = BulkBodyProps["mode"];
+
+/** The scopes on offer: everything, the open set (when one is open) and the favourites (when any). */
+function scopeOptions(t: DownloadMenuProps["t"], mode: BulkMode) {
+  const { activeSet, favoriteIds } = mode;
+  const scopes: { key: BulkScope; label: string }[] = [
+    { key: "all", label: t("download.scopeAll") },
+  ];
+  if (activeSet)
+    scopes.push({
+      key: "set",
+      label: t("download.scopeSet", { set: activeSet }),
+    });
+  if (favoriteIds.size > 0)
+    scopes.push({ key: "favorites", label: t("download.scopeFavorites") });
+  return scopes;
+}
+
+/** Photos that have a file in `variant` within `scope`. */
+function countInScope(
+  photos: BulkMode["photos"],
+  activeSet: string | null,
+  favoriteIds: BulkMode["favoriteIds"],
+  variant: DlVariant,
+  scope: BulkScope,
+) {
+  return photos.filter(
+    (p) =>
+      hasVariant(p, variant) &&
+      (scope === "all" ||
+        (scope === "set" ? p.set === activeSet : favoriteIds.has(p.id))),
+  ).length;
+}
+
+/** What the visitor picks before downloading (scope, size) and what that means (count, warning). */
+function useBulkChoices({ gallery, t, mode }: BulkBodyProps) {
   const sizes = enabledSizes(gallery);
-  const { photos, activeSet, favoriteIds } = mode;
   const [scope, setScope] = useState<BulkScope>("all");
   const [variant, setVariant] = useState<DlVariant>(
     sizes[0]?.variant ?? "highres",
   );
-
-  const scopes: { key: BulkScope; label: string }[] = [
-    { key: "all", label: t("download.scopeAll") },
-    ...(activeSet
-      ? [
-          {
-            key: "set" as const,
-            label: t("download.scopeSet", { set: activeSet }),
-          },
-        ]
-      : []),
-    ...(favoriteIds.size > 0
-      ? [{ key: "favorites" as const, label: t("download.scopeFavorites") }]
-      : []),
-  ];
-
+  const { photos, activeSet, favoriteIds } = mode;
   const count = useMemo(
-    () =>
-      photos.filter(
-        (p) =>
-          hasVariant(p, variant) &&
-          (scope === "all" ||
-            (scope === "set" ? p.set === activeSet : favoriteIds.has(p.id))),
-      ).length,
+    () => countInScope(photos, activeSet, favoriteIds, variant, scope),
     [photos, variant, scope, activeSet, favoriteIds],
   );
   const warning = bulkWarning({
@@ -64,17 +69,33 @@ export function BulkBody({
     variant,
     picker: Boolean(currentPicker()),
   });
+  return {
+    sizes,
+    scope,
+    setScope,
+    variant,
+    setVariant,
+    scopes: scopeOptions(t, mode),
+    count,
+    warning,
+  };
+}
+
+export function BulkBody(props: BulkBodyProps) {
+  const { gallery, t, ensure, onClose, mode, confirming } = props;
+  const { photos, activeSet } = mode;
+  const c = useBulkChoices(props);
 
   const run = useBulkRun({
     slug: gallery.slug,
     ensure,
-    scope,
-    variant,
+    scope: c.scope,
+    variant: c.variant,
     activeSet,
     photos,
-    count,
-    warning,
-    runningRef,
+    count: c.count,
+    warning: c.warning,
+    runningRef: props.runningRef,
   });
   const { cancelRef, noRef, closeBtnRef, startRef } = useBulkFocus(
     run.phase,
@@ -90,7 +111,7 @@ export function BulkBody({
         status={run.status}
         fallback={run.fallback}
         confirming={confirming}
-        setConfirming={setConfirming}
+        setConfirming={props.setConfirming}
         onAbort={run.abort}
         onClose={onClose}
         noRef={noRef}
@@ -103,17 +124,17 @@ export function BulkBody({
   return (
     <BulkChooseView
       t={t}
-      scopes={scopes}
-      scope={scope}
-      setScope={setScope}
-      sizes={sizes}
-      variant={variant}
-      setVariant={setVariant}
-      count={count}
-      warning={warning}
+      scopes={c.scopes}
+      scope={c.scope}
+      setScope={c.setScope}
+      sizes={c.sizes}
+      variant={c.variant}
+      setVariant={c.setVariant}
+      count={c.count}
+      warning={c.warning}
       error={run.error}
       startRef={startRef}
-      disabled={count === 0 || run.phase !== "choose"}
+      disabled={c.count === 0 || run.phase !== "choose"}
       onStart={() => void run.start().catch(() => run.setError(true))}
     />
   );
