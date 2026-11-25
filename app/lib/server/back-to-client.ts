@@ -1,4 +1,5 @@
 import { PAGE_PARAM } from "../page-param";
+import { isPinned } from "./access";
 import { parsePageParam } from "./client-page";
 import {
   CLIENT_CANDIDATE_CAP,
@@ -49,7 +50,7 @@ export function backToClient(
       status: g.status,
       expiresAt: g.expiresAt,
       coverId,
-      pinned: g.pinHash !== null,
+      pinned: isPinned(g),
     },
     Date.now(),
   );

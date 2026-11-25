@@ -58,6 +58,8 @@ export const clients = sqliteTable(
     pageEnabled: integer("page_enabled", { mode: "boolean" })
       .notNull()
       .default(true),
+    /** Optional client PIN (T6.52), same PBKDF2 format as `galleries.pin_hash`. */
+    pinHash: text("pin_hash"),
     createdAt: createdAt(),
   },
   (t) => [

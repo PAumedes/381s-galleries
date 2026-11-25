@@ -55,7 +55,7 @@ export function sessionCookieName(galleryId: string): string {
 }
 
 /** All values for cookies with this name (a stale duplicate must not shadow a valid one). */
-function getCookies(request: Request, name: string): string[] {
+export function getCookies(request: Request, name: string): string[] {
   const header = request.headers.get("Cookie");
   if (!header) return [];
   const out: string[] = [];

@@ -8,6 +8,7 @@ import { StatusPill } from "../GalleryListParts";
 import { Section } from "../gallery-edit/ui";
 import { ApplyDefaultsForm, DeleteClientForm } from "./ClientActions";
 import { ClientDetailsForm } from "./ClientDetailsForm";
+import { ClientPinSection } from "./ClientPinSection";
 import { WRAP } from "./ui";
 
 export interface ClientEditItem {
@@ -17,6 +18,8 @@ export interface ClientEditItem {
   pageEnabled: boolean;
   defaultMode: GalleryMode;
   defaultShowOnHome: boolean;
+  /** A client PIN is set (the hash never reaches the browser). */
+  hasPin: boolean;
 }
 
 export interface ClientAlbumItem {
@@ -125,6 +128,7 @@ export function ClientEditView({
       <Section title={t("admin.clients.section.details")}>
         <ClientDetailsForm client={client} data={actionData} />
       </Section>
+      <ClientPinSection hasPin={client.hasPin} data={actionData} />
       <Section title={t("admin.clients.section.apply")}>
         <ApplyDefaultsForm data={actionData} />
       </Section>

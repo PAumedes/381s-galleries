@@ -1,4 +1,3 @@
-import type { schema } from "../../db";
 import type { Palette } from "../design";
 import {
   crossSite,
@@ -7,7 +6,7 @@ import {
   isSecure,
   openGallery,
 } from "./access";
-import type { AccessEnv } from "./access";
+import type { AccessEnv, AccessRow } from "./access";
 import {
   buildOpenData,
   OG_LONG_EDGE,
@@ -16,7 +15,6 @@ import {
 import { recordView } from "./gallery-views";
 
 type GalleryEnv = AccessEnv;
-type GalleryRow = typeof schema.galleries.$inferSelect;
 
 // Re-exported for existing importers.
 export { crossSite, findGallery, isAvailable, isSecure };
@@ -52,7 +50,7 @@ export async function loadGallery(
   slug: string,
   env: GalleryEnv,
   /** The row the caller already fetched (T6.40d: one joined lookup). */
-  preloaded?: { gallery: GalleryRow | undefined },
+  preloaded?: { gallery: AccessRow | undefined },
 ): Promise<LoadResult> {
   // Slugs with a dot are files (favicon.ico, robots.txt, ...), never galleries.
   if (slug.includes(".")) return unavailable();

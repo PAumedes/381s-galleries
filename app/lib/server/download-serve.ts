@@ -1,7 +1,12 @@
 import { and, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
-import { clientIpHash, isAvailable } from "./access";
-import { pinFingerprint } from "./auth";
+import {
+  accessFingerprint,
+  accessSelect,
+  clientIpHash,
+  isAvailable,
+  withClientPin,
+} from "./access";
 import { verifyToken } from "./crypto";
 import { mockImageUrl } from "./drive-mock";
 import { DriveError } from "./drive-types";
@@ -84,12 +89,13 @@ async function downloadRateLimited(
 /** The photo, gallery and Drive file a token still entitles to; null = gone. */
 async function loadDownloadTarget(env: DlEnv, claims: DlToken) {
   const [row] = await getDb(env as Env)
-    .select({ photo: schema.photos, gallery: schema.galleries })
+    .select({ photo: schema.photos, ...accessSelect })
     .from(schema.photos)
     .innerJoin(
       schema.galleries,
       eq(schema.galleries.id, schema.photos.galleryId),
     )
+    .leftJoin(schema.clients, eq(schema.galleries.clientId, schema.clients.id))
     .where(
       and(
         eq(schema.photos.id, claims.p),
@@ -98,9 +104,10 @@ async function loadDownloadTarget(env: DlEnv, claims: DlToken) {
       ),
     );
   if (!row) return null;
-  const { photo, gallery } = row;
+  const { photo } = row;
+  const gallery = withClientPin(row);
   if (!isAvailable(gallery)) return null;
-  if (claims.pf !== (await pinFingerprint(gallery.pinHash, env))) return null;
+  if (claims.pf !== (await accessFingerprint(gallery, env))) return null;
   if (!variantAllowed(gallery, claims.v)) return null;
   if (claims.b && !gallery.allowBulk) return null;
   const fileId = fileIdFor(photo, claims.v);

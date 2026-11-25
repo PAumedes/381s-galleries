@@ -1,9 +1,18 @@
 /** PIN unlock of a locked gallery (POST), with its two rate limits. */
 import { asLang } from "../../i18n/lang";
 import { galleryPath } from "../gallery-path";
-import { clientIpHash, crossSite, isAvailable, openGallery } from "./access";
+import {
+  clientGateClosed,
+  clientIpHash,
+  crossSite,
+  isAvailable,
+  isPinned,
+  isSecure,
+  openGallery,
+} from "./access";
 import type { AccessEnv } from "./access";
 import { updateSession } from "./auth";
+import { clientUnlockCookie } from "./client-unlock";
 import { verifyPin } from "./crypto";
 import { findGalleryWithClient, sameClient } from "./gallery-resolve";
 import {
@@ -76,23 +85,32 @@ export async function unlockGallery(
   const lang = asLang(new URL(request.url).searchParams.get("lang"));
   const location =
     galleryPath(g.slug, found!.clientSlug) + (lang ? `?lang=${lang}` : "");
-  if (!g.pinHash) return { status: 303, location };
+  if (!isPinned(g)) return { status: 303, location };
 
   // Already unlocked: nothing to verify and never throttled.
   if ((await openGallery(request, g, env)) !== null)
     return { status: 303, location };
 
   if (!ipHash) return { status: 429 };
-  if (!(await pinLimit(g.id, ipHash))) return { status: 429 };
-  if (!(await hit(env, PIN_GALLERY_RATE, g.id))) return { status: 429 };
-  const ok = await verifyPin(pin, g.pinHash);
+  // Client PIN first (T6.52), then the album's own. Its guesses are budgeted
+  // per CLIENT, so rotating across the client's albums multiplies nothing.
+  const forClient = await clientGateClosed(request, g, env);
+  const scopeId = forClient ? g.clientId! : g.id;
+  const stored = forClient ? g.clientPinHash! : g.pinHash!;
+  if (!(await pinLimit(scopeId, ipHash))) return { status: 429 };
+  if (!(await hit(env, PIN_GALLERY_RATE, scopeId))) return { status: 429 };
+  const ok = await verifyPin(pin, stored);
   if (!ok || !pin) return { status: 400 };
 
-  await resetRateLimit(env, PIN_RATE.scope, `${ipHash}:${g.id}`);
+  await resetRateLimit(env, PIN_RATE.scope, `${ipHash}:${scopeId}`);
   // Only wrong guesses consume the gallery-wide budget: refund just this
   // attempt's hit. Never reset the counter, or a correct PIN would hand
   // guessers a fresh budget (PLAN §6: 100 wrong guesses / 10 min / gallery).
-  await refundRateLimit(env, PIN_GALLERY_RATE.scope, g.id);
-  const setCookie = await updateSession(request, g, { unlocked: true }, env);
+  await refundRateLimit(env, PIN_GALLERY_RATE.scope, scopeId);
+  const setCookie = forClient
+    ? await clientUnlockCookie({ id: g.clientId!, pinHash: stored }, env, {
+        secure: isSecure(request),
+      })
+    : await updateSession(request, g, { unlocked: true }, env);
   return { status: 303, location, setCookie };
 }

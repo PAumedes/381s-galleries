@@ -142,7 +142,9 @@ async function queryTileRows(db: Db, scope: Scope) {
       // Cover: chosen photo when visible (and servable), else the first one,
       // in the same order as the gallery page.
       coverId: homeCoverIdSql(),
-      pinned: sql<number>`${g.pinHash} IS NOT NULL`,
+      // Locked tile: the album's own PIN or its client's (a client PIN also
+      // protects the covers, which /img refuses without the unlock).
+      pinned: sql<number>`(${g.pinHash} IS NOT NULL OR ${c.pinHash} IS NOT NULL)`,
       clientSlug: c.slug,
       clientName: c.name,
     })
@@ -150,7 +152,7 @@ async function queryTileRows(db: Db, scope: Scope) {
     .leftJoin(c, eq(g.clientId, c.id))
     .where(
       scope.kind === "home"
-        ? sql`${g.showOnHome} = 1 AND ${g.status} = 'published' AND ${g.pinHash} IS NULL`
+        ? sql`${g.showOnHome} = 1 AND ${g.status} = 'published' AND ${g.pinHash} IS NULL AND ${c.pinHash} IS NULL`
         : // A client's page lists all its published albums, whatever show_on_home
           // says (that flag is only for the studio home); PIN albums show locked.
           sql`${g.status} = 'published' AND ${c.pageEnabled} = 1 AND ${c.slug} = ${scope.slug} COLLATE NOCASE`,

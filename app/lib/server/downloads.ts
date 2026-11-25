@@ -1,15 +1,16 @@
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
 import {
+  accessFingerprint,
   clientIpHash,
   crossSite,
   findGallery,
   openGallery,
   requireVisitor,
+  type AccessRow,
   type GalleryRow,
   type VisitorRow,
 } from "./access";
-import { pinFingerprint } from "./auth";
 import { newId, signToken } from "./crypto";
 import {
   ANON_RATE,
@@ -48,7 +49,7 @@ async function readJson(
 }
 
 interface Gate {
-  g: GalleryRow;
+  g: AccessRow;
   visitor: VisitorRow;
   cookie?: string;
   variant: DlVariant;
@@ -91,7 +92,7 @@ async function gate(
 async function finishGate(
   request: Request,
   env: DlEnv,
-  g: GalleryRow,
+  g: AccessRow,
   visitor: VisitorRow | null,
   variant: DlVariant,
   body: Record<string, unknown>,
@@ -174,7 +175,7 @@ async function visiblePhotosById(
 }
 
 interface TokenContext {
-  g: GalleryRow;
+  g: AccessRow;
   visitor: VisitorRow;
   variant: DlVariant;
   pf: string;
@@ -233,7 +234,7 @@ export async function handleDownloadTokens(
     g,
     visitor,
     variant,
-    pf: await pinFingerprint(g.pinHash, env),
+    pf: await accessFingerprint(g, env),
     bulkTag: bulkId ?? (photoIds.length > 1 ? "multi" : undefined),
   };
   const tokens: Awaited<ReturnType<typeof issueToken>>[] = [];

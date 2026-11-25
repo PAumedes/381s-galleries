@@ -1,14 +1,20 @@
 import { eq, sql } from "drizzle-orm";
 import { getDb, schema } from "../../db";
 import { galleryPath } from "../gallery-path";
-import { isAvailable, type AccessEnv, type GalleryRow } from "./access";
+import {
+  accessSelect,
+  isAvailable,
+  withClientPin,
+  type AccessEnv,
+  type AccessRow,
+} from "./access";
 import { RESERVED_SLUGS } from "./slug";
 
 /** What the URL names: `/:album` (no client) or `/:client/:album`. */
 export type GalleryTarget = { client?: string; album: string };
 
 export type GalleryHit = {
-  gallery: GalleryRow;
+  gallery: AccessRow;
   clientSlug: string | null;
   /** The client's own columns, from the same join (T6.50: no extra query). */
   clientName: string | null;
@@ -22,7 +28,7 @@ export async function findGalleryWithClient(
 ): Promise<GalleryHit | undefined> {
   const [row] = await getDb(env as Env)
     .select({
-      gallery: schema.galleries,
+      ...accessSelect,
       clientSlug: schema.clients.slug,
       clientName: schema.clients.name,
       clientPageEnabled: schema.clients.pageEnabled,
@@ -30,7 +36,7 @@ export async function findGalleryWithClient(
     .from(schema.galleries)
     .leftJoin(schema.clients, eq(schema.galleries.clientId, schema.clients.id))
     .where(sql`${schema.galleries.slug} = ${slug} COLLATE NOCASE`);
-  return row;
+  return row && { ...row, gallery: withClientPin(row) };
 }
 
 /** SQLite NOCASE folds ASCII only; String#toLowerCase also folds e.g. the Kelvin sign. */

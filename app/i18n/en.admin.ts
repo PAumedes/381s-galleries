@@ -587,13 +587,31 @@ export const enAdmin = {
   "admin.clients.apply.confirm":
     'This changes the mode and "show on home" of every album of this client. Continue?',
   "admin.clients.delete.warning":
-    "Deletes the client. Its albums are NOT deleted: they become unassigned. The client's addresses (its page and /client/album) stop working; the albums stay at their own address. This cannot be undone.",
+    "Deletes the client. Its albums are NOT deleted: they become unassigned. The client's addresses (its page and /client/album) stop working; the albums stay at their own address. The client PIN is deleted with it: its albums are no longer protected by that PIN. This cannot be undone.",
   "admin.clients.delete.label":
     "To confirm, type the client's address ({slug})",
   "admin.clients.delete.button": "Delete client",
   "admin.clients.delete.confirm":
     "The client will be deleted. Its albums become unassigned and the client's addresses stop working. Continue?",
   "admin.clients.msg.saved": "Client saved.",
+  "admin.clients.section.pin": "Client PIN",
+  "admin.clients.pin.active": "PIN active",
+  "admin.clients.pin.none": "No PIN",
+  "admin.clients.pin.note":
+    "With a PIN, whoever enters it once opens every album of this client. Albums with their own PIN still ask for it, after the client PIN. The client page keeps listing its albums, without covers. Changing or removing the PIN signs visitors out and voids download links that were already issued.",
+  "admin.clients.pin.new": "New PIN",
+  "admin.clients.pin.hint": "6 to 32 characters.",
+  "admin.clients.pin.save": "Save PIN",
+  "admin.clients.pin.change": "Change PIN",
+  "admin.clients.pin.remove": "Remove PIN",
+  "admin.clients.pin.removeConfirm":
+    "The client PIN will be removed: all its albums (without their own PIN) become open to anyone with the link. Continue?",
+  "admin.clients.pin.pending": "Saving…",
+  "admin.clients.pin.removePending": "Removing…",
+  "admin.clients.msg.pinSaved":
+    "Client PIN saved. Earlier sessions and download links no longer work.",
+  "admin.clients.msg.pinRemoved":
+    "Client PIN removed. Earlier sessions and download links no longer work.",
   "admin.clients.msg.deleted":
     "Client deleted. Its albums still exist, without a client.",
   "admin.clients.msg.slugTaken":

@@ -1,6 +1,12 @@
 import { and, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "../../db";
-import { isSecure, readGallerySession, type GallerySession } from "./auth";
+import {
+  isSecure,
+  pinFingerprint,
+  readGallerySession,
+  type GallerySession,
+} from "./auth";
+import { clientUnlocked } from "./client-unlock";
 import { hashIp } from "./crypto";
 import { isExpired } from "./time";
 
@@ -9,22 +15,66 @@ export { isSecure };
 export type AccessEnv = Pick<Env, "DB" | "SESSION_SECRET"> &
   Partial<Pick<Env, "DRIVE_MODE">>;
 export type GalleryRow = typeof schema.galleries.$inferSelect;
+/**
+ * The album as the access gate needs it: the row plus the PIN hash of the
+ * client it is assigned to (T6.52; null = unassigned or the client has no PIN).
+ * Every lookup that feeds `openGallery` joins it, so the gate cannot forget it.
+ */
+export type AccessRow = GalleryRow & { clientPinHash: string | null };
 export type VisitorRow = typeof schema.visitors.$inferSelect;
 
 /** Visitors created for "favourite without email" use this synthetic domain. */
 export const ANON_DOMAIN = "@anon.invalid";
 export const isAnon = (email: string) => email.endsWith(ANON_DOMAIN);
 
-export async function findGallery(env: AccessEnv, slug: string) {
-  const [g] = await getDb(env as Env)
-    .select()
+/** Columns that turn a `galleries` row into an `AccessRow` (use with a left join on clients). */
+export const accessSelect = {
+  gallery: schema.galleries,
+  clientPinHash: schema.clients.pinHash,
+};
+export const withClientPin = <
+  R extends { gallery: GalleryRow; clientPinHash: string | null },
+>(
+  r: R,
+): AccessRow => ({ ...r.gallery, clientPinHash: r.clientPinHash });
+
+export async function findGallery(
+  env: AccessEnv,
+  slug: string,
+): Promise<AccessRow | undefined> {
+  const [row] = await getDb(env as Env)
+    .select(accessSelect)
     .from(schema.galleries)
+    .leftJoin(schema.clients, eq(schema.galleries.clientId, schema.clients.id))
     .where(sql`${schema.galleries.slug} = ${slug} COLLATE NOCASE`);
-  return g;
+  return row && withClientPin(row);
 }
 
+/**
+ * Fingerprint of everything that gates this album, for download tokens: the
+ * album's PIN hash, plus the client's when it has one, so changing either one
+ * voids tokens already issued. Unchanged for albums without a client PIN.
+ */
+export function accessFingerprint(
+  g: AccessRow,
+  env: AccessEnv,
+): Promise<string> {
+  return pinFingerprint(
+    g.clientPinHash === null
+      ? g.pinHash
+      : `${g.pinHash ?? ""}|client|${g.clientPinHash}`,
+    env,
+  );
+}
+
+/** True when the album asks for any PIN: its own or its client's. */
+export const isPinned = (g: {
+  pinHash: string | null;
+  clientPinHash?: string | null;
+}) => g.pinHash !== null || (g.clientPinHash ?? null) !== null;
+
 /** Draft, archived, expired and unknown all look the same. */
-export function isAvailable(g: GalleryRow | undefined): g is GalleryRow {
+export function isAvailable<G extends GalleryRow>(g: G | undefined): g is G {
   return !!g && g.status === "published" && !isExpired(g.expiresAt);
 }
 
@@ -108,15 +158,34 @@ export async function clientIpHash(
 }
 
 /**
- * The gate every client route shares: the gallery is available and, when it
- * has a PIN, this request holds a matching unlocked session. Otherwise null.
+ * True when the album's client has a PIN that this request has not entered.
+ * Checked first: the client PIN comes before the album's own PIN (T6.52).
+ */
+export async function clientGateClosed(
+  request: Request,
+  gallery: AccessRow,
+  env: AccessEnv,
+): Promise<boolean> {
+  if (!gallery.clientId || !gallery.clientPinHash) return false;
+  return !(await clientUnlocked(
+    request,
+    { id: gallery.clientId, pinHash: gallery.clientPinHash },
+    env,
+  ));
+}
+
+/**
+ * The gate every client route shares: the gallery is available, the client PIN
+ * (when its client has one) was entered, and, when the album has its own PIN,
+ * this request holds a matching unlocked session. Otherwise null.
  */
 export async function openGallery(
   request: Request,
-  gallery: GalleryRow | undefined,
+  gallery: AccessRow | undefined,
   env: AccessEnv,
-): Promise<{ g: GalleryRow; session: GallerySession | null } | null> {
+): Promise<{ g: AccessRow; session: GallerySession | null } | null> {
   if (!isAvailable(gallery)) return null;
+  if (await clientGateClosed(request, gallery, env)) return null;
   const session = await readGallerySession(
     request,
     { id: gallery.id, pinHash: gallery.pinHash },
