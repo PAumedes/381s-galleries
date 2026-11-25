@@ -1,10 +1,10 @@
 import { useId, useState } from "react";
-import { Link } from "react-router";
 
 import { useFormat } from "../../i18n/use-format";
 import { useT } from "../../i18n/use-t";
 import { captureOneResult } from "../../lib/admin-activity";
 import type { loadFavoritesAdmin } from "../../lib/server/admin-activity";
+import { GalleryPageHeader } from "./GalleryPageHeader";
 import { GalleryTabs } from "./GalleryTabs";
 
 export type FavoritesViewData = NonNullable<
@@ -165,21 +165,6 @@ function VisitorSection({
   );
 }
 
-function FavoritesHeader({ title }: { title: string }) {
-  const t = useT();
-  return (
-    <div className="flex flex-wrap items-center gap-4">
-      <Link
-        to="/admin"
-        className="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0"
-      >
-        {t("admin.backToGalleries")}
-      </Link>
-      <h1 className="text-title text-ink">{title}</h1>
-    </div>
-  );
-}
-
 /** Every picked photo across visitors, with how many people picked each. */
 function AllPicks({
   data,
@@ -217,7 +202,7 @@ export function FavoritesView({ data }: { data: FavoritesViewData }) {
   const t = useT();
   return (
     <div className="flex flex-col gap-8">
-      <FavoritesHeader title={data.gallery.title} />
+      <GalleryPageHeader title={data.gallery.title} />
       <GalleryTabs id={data.gallery.id} current="favoritos" />
 
       {data.visitors.length === 0 ? (

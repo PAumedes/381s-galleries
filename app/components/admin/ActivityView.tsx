@@ -7,9 +7,45 @@ import { DownloadsTable } from "./activity/DownloadsTable";
 import { FilterForm } from "./activity/FilterForm";
 import type { ActivityViewData } from "./activity/types";
 import { VisitsTable } from "./activity/VisitsTable";
+import { GalleryPageHeader } from "./GalleryPageHeader";
 import { GalleryTabs } from "./GalleryTabs";
 
 export type { ActivityViewData } from "./activity/types";
+
+/** Visit, email-visitor and download counters. */
+function SummaryCards({
+  summary: s,
+}: {
+  summary: ActivityViewData["summary"];
+}) {
+  const t = useT();
+  return (
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <Card label={t("admin.activity.visits")} value={s.views} />
+      <Card label={t("admin.activity.visitorsWithEmail")} value={s.visitors} />
+      <Card label={t("admin.activity.photosDownloaded")} value={s.photos} />
+      <Card label={t("admin.activity.fullDownloads")} value={s.bulks} />
+    </div>
+  );
+}
+
+function LatestVisits({ views }: { views: ActivityViewData["views"] }) {
+  const t = useT();
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="text-micro text-grey-700 uppercase">
+        {t("admin.activity.latestVisits")}
+      </h2>
+      {views.length === 0 ? (
+        <p className="text-small text-grey-700">
+          {t("admin.activity.noVisits")}
+        </p>
+      ) : (
+        <VisitsTable views={views} />
+      )}
+    </section>
+  );
+}
 
 export function ActivityView({ data }: { data: ActivityViewData }) {
   const t = useT();
@@ -19,29 +55,12 @@ export function ActivityView({ data }: { data: ActivityViewData }) {
   if (f.visitor) moreQs.set("visitor", f.visitor);
   if (f.size) moreQs.set("size", f.size);
   if (data.next) moreQs.set("cursor", data.next);
-  const s = data.summary;
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-center gap-4">
-        <Link
-          to="/admin"
-          className="text-micro text-grey-700 hover:text-ink flex min-h-tap items-center uppercase md:min-h-0"
-        >
-          {t("admin.backToGalleries")}
-        </Link>
-        <h1 className="text-title text-ink">{data.gallery.title}</h1>
-      </div>
+      <GalleryPageHeader title={data.gallery.title} />
       <GalleryTabs id={data.gallery.id} current="actividad" />
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card label={t("admin.activity.visits")} value={s.views} />
-        <Card
-          label={t("admin.activity.visitorsWithEmail")}
-          value={s.visitors}
-        />
-        <Card label={t("admin.activity.photosDownloaded")} value={s.photos} />
-        <Card label={t("admin.activity.fullDownloads")} value={s.bulks} />
-      </div>
+      <SummaryCards summary={data.summary} />
 
       <Breakdown data={data.breakdown} />
 
@@ -74,18 +93,7 @@ export function ActivityView({ data }: { data: ActivityViewData }) {
         ) : null}
       </section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-micro text-grey-700 uppercase">
-          {t("admin.activity.latestVisits")}
-        </h2>
-        {data.views.length === 0 ? (
-          <p className="text-small text-grey-700">
-            {t("admin.activity.noVisits")}
-          </p>
-        ) : (
-          <VisitsTable views={data.views} />
-        )}
-      </section>
+      <LatestVisits views={data.views} />
     </div>
   );
 }
