@@ -13,23 +13,11 @@ const G = schema.galleries;
 export const WARM_SELECT_LIMIT = 200;
 export const eligible = and(ne(G.status, "archived"), photoVisible);
 
-/**
- * Stale, retry-eligible photos (newest gallery first, never-failed first),
- * at most WARM_SELECT_LIMIT, with only the columns warming needs. Rows whose
- * expected key is unknown (NULL) get it computed here and written back; those
- * that turn out current are dropped.
- */
-export async function staleRows(
-  env: Env,
-  maxRows = Infinity,
-): Promise<{
-  rows: { photo: Photo; wm: boolean; key: string; fails: number }[];
-  writes: number;
-  /** Stopped at `maxRows` with rows left unexamined (the next run continues). */
-  more: boolean;
-}> {
-  const db = getDb(env);
-  const found = await db
+type StaleRow = { photo: Photo; wm: boolean; key: string; fails: number };
+
+/** The stale, retry-eligible photos (newest gallery first, never-failed first), with only the columns warming needs. */
+function selectStale(db: ReturnType<typeof getDb>) {
+  return db
     .select({
       photo: {
         id: P.id,
@@ -67,7 +55,26 @@ export async function staleRows(
       asc(P.baseName),
     )
     .limit(WARM_SELECT_LIMIT);
-  const rows: { photo: Photo; wm: boolean; key: string; fails: number }[] = [];
+}
+
+/**
+ * Stale, retry-eligible photos (newest gallery first, never-failed first),
+ * at most WARM_SELECT_LIMIT, with only the columns warming needs. Rows whose
+ * expected key is unknown (NULL) get it computed here and written back; those
+ * that turn out current are dropped.
+ */
+export async function staleRows(
+  env: Env,
+  maxRows = Infinity,
+): Promise<{
+  rows: StaleRow[];
+  writes: number;
+  /** Stopped at `maxRows` with rows left unexamined (the next run continues). */
+  more: boolean;
+}> {
+  const db = getDb(env);
+  const found = await selectStale(db);
+  const rows: StaleRow[] = [];
   let writes = 0;
   let more = false;
   for (const r of found) {
