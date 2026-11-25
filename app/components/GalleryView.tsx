@@ -3,6 +3,7 @@ import type { ReactNode, RefObject } from "react";
 
 import { useT } from "../i18n/use-t";
 import { AddToHomeHint } from "./AddToHomeHint";
+import { BackToClient, type BackToClientLink } from "./BackToClient";
 import { reducedMotion, useHideOnScroll } from "./use-gallery-chrome";
 import { PageCover } from "./gallery-view/PageCover";
 import { PageFooter } from "./gallery-view/PageFooter";
@@ -23,6 +24,8 @@ type GalleryViewProps = {
    * memory, no downloads, no share or install prompts, no API calls.
    */
   preview?: boolean;
+  /** Link to the client page the visitor came from (T6.50); never in preview. */
+  backToClient?: BackToClientLink;
 };
 
 export function GalleryView({
@@ -30,6 +33,7 @@ export function GalleryView({
   photos,
   downloadSlot,
   preview = false,
+  backToClient,
 }: GalleryViewProps) {
   const t = useT();
   const view = useGalleryView(gallery, photos, preview);
@@ -45,12 +49,14 @@ export function GalleryView({
       data-theme={gallery.palette}
       className="bg-paper text-ink min-h-dvh"
     >
-      <PageCover
-        gallery={gallery}
-        photos={photos}
-        headerRef={coverRef}
-        onScroll={scrollToGrid}
-      />
+      <BackToClient link={preview ? undefined : backToClient}>
+        <PageCover
+          gallery={gallery}
+          photos={photos}
+          headerRef={coverRef}
+          onScroll={scrollToGrid}
+        />
+      </BackToClient>
       <PageNav
         gallery={gallery}
         hidden={hidden}
