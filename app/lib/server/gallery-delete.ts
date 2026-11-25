@@ -137,47 +137,55 @@ export async function deleteGallery(
   }
 }
 
-async function deleteLocked(
+/** Archives the gallery and tombstones its Drive folder so sync never re-imports it. */
+async function archiveAndTombstone(
   env: Env,
   galleryId: string,
-  { r2CallsMax = R2_CALLS_PER_REQUEST }: DeleteOptions,
-): Promise<DeleteOutcome> {
-  const db = getDb(env);
-  const [g] = await db
-    .select({ folder: schema.galleries.driveFolderId })
-    .from(schema.galleries)
-    .where(eq(schema.galleries.id, galleryId));
-  if (!g) return "not_found";
-
+  folder: string,
+) {
   await env.DB.batch([
     env.DB.prepare(
       "UPDATE galleries SET status = 'archived', show_on_home = 0, archived_by_sync = 0, archived_prev_status = NULL WHERE id = ?1",
     ).bind(galleryId),
     env.DB.prepare(
       "INSERT OR IGNORE INTO ignored_folders (drive_folder_id, deleted_at) VALUES (?1, ?2)",
-    ).bind(g.folder, nowIso()),
+    ).bind(folder, nowIso()),
   ]);
+}
 
-  let calls = Math.max(0, r2CallsMax);
+/**
+ * Finishes the R2 deletes an earlier sync left pending, within the call budget.
+ * Returns the calls left, or null when the budget ran out first (progress saved).
+ */
+async function drainPendingR2(env: Env, calls: number): Promise<number | null> {
   const pending = await readPending(env);
-  if (pending.length) {
-    const parts = chunk(pending, PHOTOS_PER_R2_CALL);
-    const take = parts.slice(0, calls);
-    for (const part of take) await env.CACHE.delete(r2Keys(part));
-    calls -= take.length;
-    if (take.length < parts.length) {
-      await putSetting(
-        env,
-        SETTINGS_KEYS.r2PendingDeletes,
-        JSON.stringify(parts.slice(take.length).flat()),
-      );
-      return "continue";
-    }
-    await deleteSetting(env, SETTINGS_KEYS.r2PendingDeletes);
+  if (!pending.length) return calls;
+  const parts = chunk(pending, PHOTOS_PER_R2_CALL);
+  const take = parts.slice(0, calls);
+  for (const part of take) await env.CACHE.delete(r2Keys(part));
+  if (take.length < parts.length) {
+    await putSetting(
+      env,
+      SETTINGS_KEYS.r2PendingDeletes,
+      JSON.stringify(parts.slice(take.length).flat()),
+    );
+    return null;
   }
+  await deleteSetting(env, SETTINGS_KEYS.r2PendingDeletes);
+  return calls - take.length;
+}
 
+/**
+ * Deletes the gallery's cached R2 objects, within the call budget. Returns
+ * false when some remain (the photo rows already cleaned are dropped as progress).
+ */
+async function purgePhotoCaches(
+  env: Env,
+  galleryId: string,
+  calls: number,
+): Promise<boolean> {
   const ids = (
-    await db
+    await getDb(env)
       .select({ id: schema.photos.id })
       .from(schema.photos)
       .where(eq(schema.photos.galleryId, galleryId))
@@ -186,23 +194,24 @@ async function deleteLocked(
   const parts = chunk(ids, PHOTOS_PER_R2_CALL);
   const now = parts.slice(0, calls);
   for (const part of now) await env.CACHE.delete(r2Keys(part));
-  if (now.length < parts.length) {
-    // Progress: drop the photo rows whose cache is already gone (same order as `ids`).
-    const cleaned = now.reduce((n, p) => n + p.length, 0);
-    if (cleaned > 0)
-      await env.DB.prepare(
-        "DELETE FROM photos WHERE id IN (SELECT id FROM photos WHERE gallery_id = ?1 ORDER BY id LIMIT ?2)",
-      )
-        .bind(galleryId, cleaned)
-        .run();
-    return "continue";
-  }
+  if (now.length >= parts.length) return true;
+  // Progress: drop the photo rows whose cache is already gone (same order as `ids`).
+  const cleaned = now.reduce((n, p) => n + p.length, 0);
+  if (cleaned > 0)
+    await env.DB.prepare(
+      "DELETE FROM photos WHERE id IN (SELECT id FROM photos WHERE gallery_id = ?1 ORDER BY id LIMIT ?2)",
+    )
+      .bind(galleryId, cleaned)
+      .run();
+  return false;
+}
 
+/** The final batch: every per-gallery row, plus its (otherwise exempt) settings rows. */
+async function deleteGalleryRows(env: Env, galleryId: string) {
   await env.DB.batch([
     ...Object.values(DELETE_STATEMENTS).map((s) =>
       env.DB.prepare(s).bind(galleryId),
     ),
-    // Per-gallery rows in the (otherwise exempt) settings table.
     env.DB.prepare("DELETE FROM settings WHERE key = ?1").bind(
       SETTINGS_KEYS.warmCursorPrefix + galleryId,
     ),
@@ -210,6 +219,24 @@ async function deleteLocked(
       SETTINGS_KEYS.warmPendingPrefix + galleryId,
     ),
   ]);
+}
+
+async function deleteLocked(
+  env: Env,
+  galleryId: string,
+  { r2CallsMax = R2_CALLS_PER_REQUEST }: DeleteOptions,
+): Promise<DeleteOutcome> {
+  const [g] = await getDb(env)
+    .select({ folder: schema.galleries.driveFolderId })
+    .from(schema.galleries)
+    .where(eq(schema.galleries.id, galleryId));
+  if (!g) return "not_found";
+  await archiveAndTombstone(env, galleryId, g.folder);
+
+  const calls = await drainPendingR2(env, Math.max(0, r2CallsMax));
+  if (calls === null) return "continue";
+  if (!(await purgePhotoCaches(env, galleryId, calls))) return "continue";
+  await deleteGalleryRows(env, galleryId);
   return "deleted";
 }
 
