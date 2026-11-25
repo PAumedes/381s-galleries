@@ -1,6 +1,6 @@
 import { allMessages } from "../../../i18n/dictionaries";
 import { DEFAULT_LANG, type Lang } from "../../../i18n/lang";
-import { makeT } from "../../../i18n/t";
+import { makeT, type TFunction, type TKey } from "../../../i18n/t";
 import { getDb } from "../../../db";
 import { CSV_BOM, csvLine, fmtStudioSeconds } from "../../admin-activity";
 import { validTimezone } from "../../studio-time";
@@ -67,37 +67,37 @@ function csvRow(
   ];
 }
 
-/** CSV of every download row, newest first, streamed in keyset pages. */
-export async function activityCsv(
+/** Display labels of the size and kind columns (unknown values pass through). */
+function csvLabels(t: TFunction) {
+  const sizeKeys: Record<string, TKey> = {
+    highres: "admin.size.highres",
+    web: "admin.size.web",
+    ig: "admin.size.ig",
+  };
+  const kindKeys: Record<string, TKey> = {
+    single: "admin.export.kind.single",
+    bulk: "admin.export.kind.bulk",
+  };
+  const label = (keys: Record<string, TKey>) => (v: string) =>
+    Object.hasOwn(keys, v) ? t(keys[v]) : v;
+  return { size: label(sizeKeys), kind: label(kindKeys) };
+}
+
+/** BOM + header, then the download rows in keyset pages of CSV_CHUNK, pulled on demand. */
+function csvStream(
   env: Env,
   id: string,
-  lang: Lang = DEFAULT_LANG,
-): Promise<Response | null> {
-  const g = await loadGallery(env, id);
-  if (!g) return null;
-  const t = makeT(lang, allMessages(lang));
-  const sizeLabel = (v: string) =>
-    v === "highres"
-      ? t("admin.size.highres")
-      : v === "web"
-        ? t("admin.size.web")
-        : v === "ig"
-          ? t("admin.size.ig")
-          : v;
-  const kindLabel = (v: string) =>
-    v === "single"
-      ? t("admin.export.kind.single")
-      : v === "bulk"
-        ? t("admin.export.kind.bulk")
-        : v;
+  t: TFunction,
+  photos: Awaited<ReturnType<typeof photoMap>>,
+) {
   const db = getDb(env);
   const tz = validTimezone(env.TIMEZONE);
-  const photos = await photoMap(env, id);
+  const labels = csvLabels(t);
   const enc = new TextEncoder();
   let cursor: { createdAt: string; id: string } | undefined;
   let started = false;
   let done = false;
-  const body = new ReadableStream<Uint8Array>({
+  return new ReadableStream<Uint8Array>({
     async pull(ctrl) {
       if (!started) {
         started = true;
@@ -114,12 +114,7 @@ export async function activityCsv(
       let out = "";
       for (const r of rows) {
         const p = r.photoId ? photos.get(r.photoId) : undefined;
-        out += csvLine(
-          csvRow(r, p, tz, {
-            size: sizeLabel,
-            kind: kindLabel,
-          }),
-        );
+        out += csvLine(csvRow(r, p, tz, labels));
       }
       if (out) ctrl.enqueue(enc.encode(out));
       if (rows.length < CSV_CHUNK) {
@@ -130,6 +125,18 @@ export async function activityCsv(
       cursor = { createdAt: l.createdAt, id: l.id };
     },
   });
+}
+
+/** CSV of every download row, newest first, streamed in keyset pages. */
+export async function activityCsv(
+  env: Env,
+  id: string,
+  lang: Lang = DEFAULT_LANG,
+): Promise<Response | null> {
+  const g = await loadGallery(env, id);
+  if (!g) return null;
+  const t = makeT(lang, allMessages(lang));
+  const body = csvStream(env, id, t, await photoMap(env, id));
   return new Response(body, {
     headers: {
       ...adminHeaders(),
