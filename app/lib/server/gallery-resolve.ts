@@ -7,7 +7,13 @@ import { RESERVED_SLUGS } from "./slug";
 /** What the URL names: `/:album` (no client) or `/:client/:album`. */
 export type GalleryTarget = { client?: string; album: string };
 
-export type GalleryHit = { gallery: GalleryRow; clientSlug: string | null };
+export type GalleryHit = {
+  gallery: GalleryRow;
+  clientSlug: string | null;
+  /** The client's own columns, from the same join (T6.50: no extra query). */
+  clientName: string | null;
+  clientPageEnabled: boolean | null;
+};
 
 /** The album and its client's slug in ONE query (left join). */
 export async function findGalleryWithClient(
@@ -15,7 +21,12 @@ export async function findGalleryWithClient(
   slug: string,
 ): Promise<GalleryHit | undefined> {
   const [row] = await getDb(env as Env)
-    .select({ gallery: schema.galleries, clientSlug: schema.clients.slug })
+    .select({
+      gallery: schema.galleries,
+      clientSlug: schema.clients.slug,
+      clientName: schema.clients.name,
+      clientPageEnabled: schema.clients.pageEnabled,
+    })
     .from(schema.galleries)
     .leftJoin(schema.clients, eq(schema.galleries.clientId, schema.clients.id))
     .where(sql`${schema.galleries.slug} = ${slug} COLLATE NOCASE`);

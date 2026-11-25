@@ -14,6 +14,7 @@ import {
   parsePageParam,
   type ClientPageData,
 } from "./client-page";
+import { backToClient, type BackToClient } from "./back-to-client";
 import { PAGE_PARAM } from "../page-param";
 import { NOSNIFF, PRIVATE_NO_STORE } from "./http";
 import { publicOrigin } from "./public-url";
@@ -23,6 +24,8 @@ export type GalleryRouteData = (GalleryData | ClientPageData) & {
   origin: string;
   /** Owning client's slug; never on an unavailable page (no leak). */
   clientSlug?: string;
+  /** Only for a visitor who came from the owning client's page (T6.50). */
+  backToClient?: BackToClient;
 };
 
 type Args = { request: Request; context: Readonly<RouterContextProvider> };
@@ -85,11 +88,22 @@ export async function galleryLoader(
   if (result.setCookie) headers.append("Set-Cookie", result.setCookie);
   const clientSlug =
     result.data.state === "unavailable" ? null : res.hit?.clientSlug;
+  const back =
+    result.data.state === "unavailable"
+      ? undefined
+      : backToClient(
+          request,
+          res.hit,
+          result.data.state === "open"
+            ? result.data.gallery.coverPhotoId
+            : null,
+        );
   return data(
     {
       ...result.data,
       origin: publicOrigin(env, request),
       ...(clientSlug ? { clientSlug } : {}),
+      ...(back ? { backToClient: back } : {}),
     },
     { status: result.status, headers },
   );

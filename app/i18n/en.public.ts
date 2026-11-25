@@ -15,6 +15,7 @@ export const enPublic = {
   "pwa.install": "Add to Home Screen",
   "pwa.dismiss": "Close",
   "pwa.androidText": "Keep this gallery one tap away on your home screen",
+  "gallery.backToClient": "Back to {name}",
   "gallery.linkCopied": "Link copied",
 
   "pin.placeholder": "PIN",

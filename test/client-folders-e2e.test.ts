@@ -370,4 +370,57 @@ describe("T6.40f client folders end to end", () => {
     expect(again.status).toBe(303);
     expect((await viaSlug("boda")).status).toBe(200);
   });
+
+  it("T6.50 client page -> album carries the back link; a direct open does not", async () => {
+    const created = await redirectTarget(
+      createClientAction(
+        post("/admin/clients", { name: "ACME Corp", slug: "acme" }),
+        e,
+      ),
+    );
+    const clientId = created.headers.get("Location")!.split("/").pop()!;
+    await addAlbum("boda");
+    await env.DB.prepare(
+      "UPDATE galleries SET client_id = ?1 WHERE id = 'g-boda'",
+    )
+      .bind(clientId)
+      .run();
+    const open = (path: string, referer?: string) =>
+      settle(
+        clientRoute.loader({
+          request: new Request(ORIGIN + path, {
+            headers: {
+              "Sec-Fetch-Mode": "navigate",
+              ...(referer ? { Referer: referer } : {}),
+            },
+          }),
+          params: { client: "acme", album: "boda" },
+          context: ctx(),
+        } as never) as Promise<unknown>,
+      );
+
+    // the client page lists the album; its tile href is where the visitor clicks
+    const page = await viaSlug("acme");
+    const tile = page
+      .data!.items!.map((i) => i as { slug: string; clientSlug?: string })
+      .find((i) => i.slug === "boda")!;
+    expect(tile.clientSlug).toBe("acme");
+
+    const from = await open("/acme/boda", `${ORIGIN}/acme?pagina=2`);
+    expect(from.data!.backToClient).toEqual({
+      name: "ACME Corp",
+      href: "/acme?pagina=2",
+    });
+    const direct = await open("/acme/boda");
+    expect(direct.data!.state).toBe("open");
+    expect(JSON.stringify(direct.data)).not.toContain("ACME Corp");
+    expect(direct.data).not.toHaveProperty("backToClient");
+    // the client page switched off: the link is gone with the page
+    await env.DB.prepare("UPDATE clients SET page_enabled = 0 WHERE id = ?1")
+      .bind(clientId)
+      .run();
+    expect(
+      (await open("/acme/boda", `${ORIGIN}/acme`)).data,
+    ).not.toHaveProperty("backToClient");
+  });
 });
