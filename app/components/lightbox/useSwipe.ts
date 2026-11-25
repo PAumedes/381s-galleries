@@ -5,12 +5,9 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
+import { dragOffsets, swipeOutcome } from "./swipe-math";
 import { isZoomed } from "./useZoomed";
 
-const SWIPE_DISTANCE = 50;
-const SWIPE_VELOCITY = 0.5; // px per ms
-const SWIPE_MIN_FAST = 20;
-const CLOSE_DISTANCE = 80;
 const DRAG_SLOP = 10;
 
 type SwipeInput = {
@@ -21,6 +18,74 @@ type SwipeInput = {
   /** `fromY`: how far the photo was pulled down when released. */
   onClose: (fromY: number) => void;
 };
+
+type PointerEv = ReactPointerEvent<HTMLDivElement>;
+
+/**
+ * Which touch is being tracked, with no React state: down / move / end return
+ * what the caller needs to render. Mouse is ignored; a second finger or a
+ * zoomed photo cancels the drag.
+ */
+function useTouchTrack() {
+  const pointers = useRef(new Set<number>());
+  const drag = useRef<{ x: number; y: number; t: number; id: number } | null>(
+    null,
+  );
+  // Set once a touch drag passes the slop; swallows the trailing click.
+  const dragged = useRef(false);
+
+  return {
+    /** "reset" when this touch cancels any drag (second finger / zoomed). */
+    down(e: PointerEv): "tracking" | "reset" | "ignored" {
+      dragged.current = false;
+      if (e.pointerType === "mouse") return "ignored";
+      pointers.current.add(e.pointerId);
+      if (pointers.current.size > 1 || isZoomed()) {
+        drag.current = null;
+        return "reset";
+      }
+      drag.current = {
+        x: e.clientX,
+        y: e.clientY,
+        t: Date.now(),
+        id: e.pointerId,
+      };
+      return "tracking";
+    },
+    /** Travel since pointer down, and whether it already counts as a drag. */
+    move(e: PointerEv) {
+      const d = drag.current;
+      if (!d || d.id !== e.pointerId) return null;
+      const dx = e.clientX - d.x;
+      const dy = e.clientY - d.y;
+      if (Math.hypot(dx, dy) > DRAG_SLOP && !dragged.current) {
+        // Capture only once it is a drag, so a plain tap still clicks its target.
+        dragged.current = true;
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+      }
+      return { dx, dy, dragged: dragged.current };
+    },
+    /** Ends the tracked touch: its travel and duration (at least 1ms), or null if it was not the tracked one. */
+    end(e: PointerEv) {
+      pointers.current.delete(e.pointerId);
+      const d = drag.current;
+      if (!d || d.id !== e.pointerId) return null;
+      drag.current = null;
+      return {
+        dx: e.clientX - d.x,
+        dy: e.clientY - d.y,
+        dt: Math.max(1, Date.now() - d.t),
+      };
+    },
+    /** The click that ends a touch swipe must not hit what was under it. */
+    swallowClick(e: ReactMouseEvent<HTMLDivElement>) {
+      if (!dragged.current) return;
+      dragged.current = false;
+      e.stopPropagation();
+      e.preventDefault();
+    },
+  };
+}
 
 /**
  * Touch gestures on the dialog root: horizontal swipe navigates, a downward
@@ -36,88 +101,31 @@ export function useSwipe({
 }: SwipeInput) {
   const [dragX, setDragX] = useState(0);
   const [dragY, setDragY] = useState(0);
-  const pointers = useRef(new Set<number>());
-  const drag = useRef<{ x: number; y: number; t: number; id: number } | null>(
-    null,
-  );
-  // Set once a touch drag passes the slop; swallows the trailing click.
-  const dragged = useRef(false);
+  const track = useTouchTrack();
 
   const resetDrag = () => {
     setDragX(0);
     setDragY(0);
   };
-
-  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    dragged.current = false;
-    if (e.pointerType === "mouse") return;
-    pointers.current.add(e.pointerId);
-    if (pointers.current.size > 1 || isZoomed()) {
-      drag.current = null;
-      resetDrag();
-      return;
-    }
-    drag.current = {
-      x: e.clientX,
-      y: e.clientY,
-      t: Date.now(),
-      id: e.pointerId,
-    };
+  const onPointerDown = (e: PointerEv) => {
+    if (track.down(e) === "reset") resetDrag();
   };
-  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const d = drag.current;
-    if (!d || d.id !== e.pointerId) return;
-    const dx = e.clientX - d.x;
-    const dy = e.clientY - d.y;
-    if (Math.hypot(dx, dy) > DRAG_SLOP && !dragged.current) {
-      // Capture only once it is a drag, so a plain tap still clicks its target.
-      dragged.current = true;
-      e.currentTarget.setPointerCapture?.(e.pointerId);
-    }
-    if (Math.abs(dx) > Math.abs(dy)) {
-      const blocked = (dx > 0 && !hasPrev) || (dx < 0 && !hasNext);
-      setDragX(blocked ? dx / 4 : dx);
-      setDragY(0);
-    } else {
-      // Vertical wins: only a pull down moves the photo.
-      setDragX(0);
-      if (dragged.current) setDragY(Math.max(0, dy));
-    }
+  const onPointerMove = (e: PointerEv) => {
+    const m = track.move(e);
+    if (!m) return;
+    const off = dragOffsets(m.dx, m.dy, m.dragged, hasPrev, hasNext);
+    setDragX(off.x);
+    if (off.y !== null) setDragY(off.y);
   };
-  const endDrag = (e: ReactPointerEvent<HTMLDivElement>, cancelled = false) => {
-    pointers.current.delete(e.pointerId);
-    const d = drag.current;
-    if (!d || d.id !== e.pointerId) return;
-    drag.current = null;
+  const endDrag = (e: PointerEv, cancelled = false) => {
+    const t = track.end(e);
+    if (!t) return;
     resetDrag();
     if (cancelled || isZoomed()) return;
-    const dx = e.clientX - d.x;
-    const dy = e.clientY - d.y;
-    const dt = Math.max(1, Date.now() - d.t);
-    if (Math.abs(dx) > Math.abs(dy)) {
-      const fast =
-        Math.abs(dx) >= SWIPE_MIN_FAST && Math.abs(dx) / dt > SWIPE_VELOCITY;
-      if (Math.abs(dx) >= SWIPE_DISTANCE || fast) {
-        if (dx < 0) next();
-        else prev();
-      }
-    } else if (
-      dy >= CLOSE_DISTANCE ||
-      (dy >= SWIPE_MIN_FAST * 2 && dy / dt > SWIPE_VELOCITY)
-    ) {
-      onClose(Math.max(0, dy));
-    }
-  };
-  const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => endDrag(e);
-  const onPointerCancel = (e: ReactPointerEvent<HTMLDivElement>) =>
-    endDrag(e, true);
-  // The click that ends a touch swipe must not hit what was under it.
-  const onClickCapture = (e: ReactMouseEvent<HTMLDivElement>) => {
-    if (dragged.current) {
-      dragged.current = false;
-      e.stopPropagation();
-      e.preventDefault();
-    }
+    const outcome = swipeOutcome(t.dx, t.dy, t.dt);
+    if (outcome === "next") next();
+    else if (outcome === "prev") prev();
+    else if (outcome === "close") onClose(Math.max(0, t.dy));
   };
 
   return {
@@ -126,9 +134,9 @@ export function useSwipe({
     handlers: {
       onPointerDown,
       onPointerMove,
-      onPointerUp,
-      onPointerCancel,
-      onClickCapture,
+      onPointerUp: (e: PointerEv) => endDrag(e),
+      onPointerCancel: (e: PointerEv) => endDrag(e, true),
+      onClickCapture: track.swallowClick,
     },
   };
 }
