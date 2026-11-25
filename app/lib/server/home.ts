@@ -92,21 +92,14 @@ export function listedOnClientPage(
   );
 }
 
-async function loadTiles(
-  env: Env,
-  scope: Scope,
-): Promise<{
-  tiles: ClientTile[];
-  client?: { clientName: string; clientSlug: string };
-}> {
+type Db = ReturnType<typeof getDb>;
+type TileRow = Awaited<ReturnType<typeof queryTileRows>>[number];
+
+/** Candidate albums of a scope, newest event first (cover rule in `homeCoverIdSql`). */
+async function queryTileRows(db: Db, scope: Scope) {
   const g = schema.galleries;
-  const db = getDb(env);
   const c = schema.clients;
-  const home = scope.kind === "home";
-  // Cover: chosen photo when visible (and servable), else the first one, in the
-  // same order as the gallery page.
-  const cover = homeCoverIdSql();
-  const rows = await db
+  return db
     .select({
       slug: g.slug,
       title: g.title,
@@ -115,7 +108,9 @@ async function loadTiles(
       mode: g.mode,
       focusX: g.coverFocusX,
       focusY: g.coverFocusY,
-      coverId: cover,
+      // Cover: chosen photo when visible (and servable), else the first one,
+      // in the same order as the gallery page.
+      coverId: homeCoverIdSql(),
       pinned: sql<number>`${g.pinHash} IS NOT NULL`,
       clientSlug: c.slug,
       clientName: c.name,
@@ -123,7 +118,7 @@ async function loadTiles(
     .from(g)
     .leftJoin(c, eq(g.clientId, c.id))
     .where(
-      home
+      scope.kind === "home"
         ? sql`${g.showOnHome} = 1 AND ${g.status} = 'published' AND ${g.pinHash} IS NULL`
         : // A client's page lists all its published albums, whatever show_on_home
           // says (that flag is only for the studio home); PIN albums show locked.
@@ -134,6 +129,59 @@ async function loadTiles(
       sql`${g.createdAt} DESC`,
       sql`${g.id}`,
     );
+}
+
+/** The cover photos of the unlocked tiles, by id (one query, none when nothing to fetch). */
+async function loadCoverPhotos(db: Db, shown: TileRow[]) {
+  const covered = shown.filter((r) => !r.pinned);
+  if (!covered.length)
+    return new Map<string, typeof schema.photos.$inferSelect>();
+  const photos = await db
+    .select()
+    .from(schema.photos)
+    .where(
+      inArray(
+        schema.photos.id,
+        covered.map((r) => r.coverId as string),
+      ),
+    );
+  return new Map(photos.map((p) => [p.id, p]));
+}
+
+async function buildTile(
+  env: Env,
+  r: TileRow,
+  p: typeof schema.photos.$inferSelect | undefined,
+): Promise<ClientTile> {
+  const v = p && (await imageVersionToken(env, p, r.mode === "proofing"));
+  return {
+    slug: r.slug,
+    ...(r.clientSlug ? { clientSlug: r.clientSlug } : {}),
+    title: r.title,
+    // the PIN gate hides the event date; a locked tile must not reveal more
+    eventDate: r.pinned ? null : r.eventDate,
+    cover: p
+      ? {
+          id: p.id,
+          ...(v ? { v } : {}),
+          focus: focusOf(r.focusX, r.focusY),
+          aspect: p.width && p.height ? p.width / p.height : null,
+        }
+      : null,
+    ...(r.pinned ? { locked: true as const } : {}),
+  };
+}
+
+async function loadTiles(
+  env: Env,
+  scope: Scope,
+): Promise<{
+  tiles: ClientTile[];
+  client?: { clientName: string; clientSlug: string };
+}> {
+  const db = getDb(env);
+  const home = scope.kind === "home";
+  const rows = await queryTileRows(db, scope);
   const now = Date.now();
   const shown = rows
     .filter(
@@ -145,40 +193,12 @@ async function loadTiles(
   const client = shown[0]
     ? { clientName: shown[0].clientName!, clientSlug: shown[0].clientSlug! }
     : undefined;
-  const covered = shown.filter((r) => !r.pinned);
-  const photos = covered.length
-    ? await db
-        .select()
-        .from(schema.photos)
-        .where(
-          inArray(
-            schema.photos.id,
-            covered.map((r) => r.coverId as string),
-          ),
-        )
-    : [];
-  const byId = new Map(photos.map((p) => [p.id, p]));
+  const byId = await loadCoverPhotos(db, shown);
   const tiles: ClientTile[] = [];
   for (const r of shown) {
     const p = r.pinned ? undefined : byId.get(r.coverId as string);
     if (!r.pinned && !p) continue;
-    const v = p && (await imageVersionToken(env, p, r.mode === "proofing"));
-    tiles.push({
-      slug: r.slug,
-      ...(r.clientSlug ? { clientSlug: r.clientSlug } : {}),
-      title: r.title,
-      // the PIN gate hides the event date; a locked tile must not reveal more
-      eventDate: r.pinned ? null : r.eventDate,
-      cover: p
-        ? {
-            id: p.id,
-            ...(v ? { v } : {}),
-            focus: focusOf(r.focusX, r.focusY),
-            aspect: p.width && p.height ? p.width / p.height : null,
-          }
-        : null,
-      ...(r.pinned ? { locked: true as const } : {}),
-    });
+    tiles.push(await buildTile(env, r, p));
   }
   return { tiles, client };
 }
