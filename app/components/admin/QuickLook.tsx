@@ -42,6 +42,29 @@ export function placeLook(
   return { id, left, top, width, height };
 }
 
+const CANCEL_EVENTS = [
+  "keydown",
+  "scroll",
+  "dragstart",
+  "pointerdown",
+  "wheel",
+];
+
+/** Calls `stop` on any scroll, wheel, drag, press or Escape; returns the function that unbinds it. */
+function cancelOnInteraction(stop: () => void) {
+  const cancel = (ev: Event) => {
+    if (ev.type === "keydown" && (ev as KeyboardEvent).key !== "Escape") return;
+    stop();
+  };
+  for (const e of CANCEL_EVENTS) document.addEventListener(e, cancel, true);
+  window.addEventListener("scroll", cancel, true);
+  return () => {
+    for (const e of CANCEL_EVENTS)
+      document.removeEventListener(e, cancel, true);
+    window.removeEventListener("scroll", cancel, true);
+  };
+}
+
 /**
  * Hover/focus preview of a whole picture. One shared popover, nothing loaded
  * until the delay passes; pointer-capable devices only. Any scroll, drag,
@@ -63,18 +86,7 @@ export function useQuickLook() {
   function start(id: string, el: HTMLElement) {
     stop();
     if (!canHover()) return;
-    const cancel = (ev: Event) => {
-      if (ev.type === "keydown" && (ev as KeyboardEvent).key !== "Escape")
-        return;
-      stop();
-    };
-    const events = ["keydown", "scroll", "dragstart", "pointerdown", "wheel"];
-    for (const e of events) document.addEventListener(e, cancel, true);
-    window.addEventListener("scroll", cancel, true);
-    cleanup.current = () => {
-      for (const e of events) document.removeEventListener(e, cancel, true);
-      window.removeEventListener("scroll", cancel, true);
-    };
+    cleanup.current = cancelOnInteraction(stop);
     timer.current = window.setTimeout(() => {
       setLook(
         placeLook(id, el.getBoundingClientRect(), innerWidth, innerHeight),
