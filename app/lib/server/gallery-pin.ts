@@ -10,7 +10,7 @@ import {
   isSecure,
   openGallery,
 } from "./access";
-import type { AccessEnv } from "./access";
+import type { AccessEnv, PinStep } from "./access";
 import { updateSession } from "./auth";
 import { clientUnlockCookie } from "./client-unlock";
 import { verifyPin } from "./crypto";
@@ -48,7 +48,8 @@ const DUMMY_HASH = `pbkdf2$100000$${"A".repeat(22)}$${"A".repeat(43)}`;
 export type UnlockResult =
   | { status: 303; location: string; setCookie: string }
   | { status: 303; location: string; setCookie?: undefined }
-  | { status: 400 | 403 | 404 | 429 };
+  | { status: 400; step: PinStep }
+  | { status: 403 | 404 | 429 };
 
 export async function unlockGallery(
   request: Request,
@@ -100,7 +101,7 @@ export async function unlockGallery(
   if (!(await pinLimit(scopeId, ipHash))) return { status: 429 };
   if (!(await hit(env, PIN_GALLERY_RATE, scopeId))) return { status: 429 };
   const ok = await verifyPin(pin, stored);
-  if (!ok || !pin) return { status: 400 };
+  if (!ok || !pin) return { status: 400, step: forClient ? "client" : "album" };
 
   await resetRateLimit(env, PIN_RATE.scope, `${ipHash}:${scopeId}`);
   // Only wrong guesses consume the gallery-wide budget: refund just this

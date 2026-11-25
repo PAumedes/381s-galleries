@@ -46,7 +46,7 @@ export function GalleryRoutePage({
   actionData,
 }: {
   loaderData: GalleryRouteData;
-  actionData?: { error?: string };
+  actionData?: { error?: string; attempt?: number };
 }) {
   const backToClient = useKeptBackLink(loaderData);
   switch (loaderData.state) {
@@ -65,7 +65,10 @@ export function GalleryRoutePage({
         <PinScreen
           title={loaderData.title}
           palette={loaderData.palette}
+          step={loaderData.step}
+          clientAccepted={loaderData.clientAccepted}
           error={actionData?.error}
+          attempt={actionData?.attempt}
         />
       );
     default:

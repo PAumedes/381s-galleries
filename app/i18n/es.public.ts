@@ -18,7 +18,13 @@ export const esPublic = {
 
   "pin.placeholder": "PIN",
   "pin.submit": "Entrar",
-  "pin.wrong": "PIN incorrecto",
+  "pin.label.client": "PIN del cliente",
+  "pin.label.album": "PIN de la galería",
+  "pin.accepted":
+    "PIN del cliente aceptado. Ahora ingresá el PIN de la galería.",
+  "pin.wrong.client": "PIN del cliente incorrecto (intento {n})",
+  "pin.wrong.album": "PIN de la galería incorrecto (intento {n})",
+  "pin.checking": "Verificando…",
   "pin.tooManyAttempts": "Demasiados intentos. Probá de nuevo en unos minutos.",
   "pin.forbidden": "Solicitud no permitida.",
 

@@ -1,9 +1,6 @@
 import { data, redirect, type RouterContextProvider } from "react-router";
 
-import { enPublic } from "../../i18n/en.public";
-import { esPublic } from "../../i18n/es.public";
 import { getLang, langCookie } from "../../i18n/lang";
-import { makeT } from "../../i18n/t";
 import { executionContext } from "./context";
 import { getDrive } from "./drive-factory";
 import { loadGallery, unlockGallery, type GalleryData } from "./gallery";
@@ -16,6 +13,7 @@ import {
 } from "./client-page";
 import { backToClient, type BackToClient } from "./back-to-client";
 import { PAGE_PARAM } from "../page-param";
+import { pinFeedback, postedAttempt } from "./pin-feedback";
 import { NOSNIFF, PRIVATE_NO_STORE } from "./http";
 import { publicOrigin } from "./public-url";
 
@@ -116,22 +114,16 @@ export async function galleryAction(
   env: RouteEnv,
 ) {
   const headers = baseHeaders(request);
+  const posted = await postedAttempt(request);
   const result = await unlockGallery(request, target.album, env, target.client);
   if (result.status === 303) {
     if (result.setCookie) headers.append("Set-Cookie", result.setCookie);
     return redirect(result.location, { status: 303, headers });
   }
-  const lang = getLang(request);
-  const t = makeT(lang, lang === "en" ? enPublic : esPublic);
-  const error =
-    result.status === 429
-      ? t("pin.tooManyAttempts")
-      : result.status === 403
-        ? t("pin.forbidden")
-        : result.status === 404
-          ? t("unavailable.message")
-          : t("pin.wrong");
-  return data({ error }, { status: result.status, headers });
+  return data(pinFeedback(request, result, posted), {
+    status: result.status,
+    headers,
+  });
 }
 
 /** The routes' `headers` export: security headers plus every Set-Cookie. */

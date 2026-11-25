@@ -190,6 +190,25 @@ export async function clientGateClosed(
   ));
 }
 
+/** Which PIN the gate asks for now: the client's first, then the album's own. */
+export type PinStep = "client" | "album";
+
+/**
+ * The step of a gate that is closed (T6.54): "client" until the client PIN was
+ * entered; then "album", flagged `clientAccepted` when a client PIN was part
+ * of the way here, so the page can say the first step went through.
+ */
+export async function pinStep(
+  request: Request,
+  gallery: AccessRow,
+  env: AccessEnv,
+): Promise<{ step: PinStep; clientAccepted?: true }> {
+  if (await clientGateClosed(request, gallery, env)) return { step: "client" };
+  return gallery.clientPinHash
+    ? { step: "album", clientAccepted: true }
+    : { step: "album" };
+}
+
 /**
  * The gate every client route shares: the gallery is available, the client PIN
  * (when its client has one) was entered, and, when the album has its own PIN,

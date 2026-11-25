@@ -257,6 +257,34 @@ html:has([data-page][data-theme="gris"]) {
   }
 }
 
+/* PIN gate (T6.54): a refused PIN shakes the field once. Under reduced motion
+   it does not move at all; the field's static error style (thicker border,
+   tint) and the announced message carry the feedback. */
+@keyframes pin-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15%,
+  45%,
+  75% {
+    transform: translateX(-8px);
+  }
+  30%,
+  60%,
+  90% {
+    transform: translateX(8px);
+  }
+}
+.pin-shake {
+  animation: pin-shake 400ms var(--ease-out-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pin-shake {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
