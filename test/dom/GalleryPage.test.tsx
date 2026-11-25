@@ -92,7 +92,7 @@ describe("PinScreen", () => {
     expect(
       await screen.findByRole("heading", { name: "Boda Ana" }),
     ).toBeTruthy();
-    const input = screen.getByPlaceholderText("PIN") as HTMLInputElement;
+    const input = screen.getByLabelText("Gallery PIN") as HTMLInputElement;
     expect(input.type).toBe("password");
     expect(input.name).toBe("pin");
     expect(input.getAttribute("autocomplete")).toBe("off");

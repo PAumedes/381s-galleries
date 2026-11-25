@@ -18,7 +18,6 @@ export const enPublic = {
   "gallery.backToClient": "Back to {name}",
   "gallery.linkCopied": "Link copied",
 
-  "pin.placeholder": "PIN",
   "pin.submit": "Enter",
   "pin.label.client": "Client PIN",
   "pin.label.album": "Gallery PIN",

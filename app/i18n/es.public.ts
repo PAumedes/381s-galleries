@@ -16,7 +16,6 @@ export const esPublic = {
   "gallery.backToClient": "Volver a {name}",
   "gallery.linkCopied": "Enlace copiado",
 
-  "pin.placeholder": "PIN",
   "pin.submit": "Entrar",
   "pin.label.client": "PIN del cliente",
   "pin.label.album": "PIN de la galería",
