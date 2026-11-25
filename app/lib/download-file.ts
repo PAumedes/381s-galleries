@@ -44,6 +44,23 @@ function createSharedPause(waiter: Waiter) {
 }
 
 /**
+ * Asks for a fresh token for a photo whose queued token expired. Deliberately
+ * not `async`: it returns the request's own promise, so awaiting it costs the
+ * same microtask ticks as the inline call (the bulk golden pins the workers'
+ * interleaving).
+ */
+const requestFreshToken = (run: FileFetchRun, bulkId: string, token: Token) =>
+  requestTokens(
+    run.opts.slug,
+    [token.photoId],
+    run.opts.variant,
+    bulkId,
+    run.opts.deps,
+    run.opts.signal,
+    run.waiter,
+  );
+
+/**
  * One file with the run's retry policy: network/5xx retried with backoff, a
  * 410 refreshed once per photo, a 429 waited out (one shared pause for all
  * workers), 403/404 final. `res` is null when the file failed or aborted.
@@ -75,15 +92,7 @@ export function createFileFetcher(
           // The queued token expired: ask for a fresh one, once per photo.
           refreshed.add(token.photoId);
           try {
-            const r = await requestTokens(
-              run.opts.slug,
-              [token.photoId],
-              run.opts.variant,
-              bulkId,
-              run.opts.deps,
-              signal,
-              run.waiter,
-            );
+            const r = await requestFreshToken(run, bulkId, token);
             const fresh = r.tokens.find((t) => t.photoId === token.photoId);
             if (fresh) {
               token = fresh;
