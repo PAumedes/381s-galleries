@@ -5,6 +5,40 @@ import { PhotoReorder } from "../PhotoReorder";
 import type { EditGallery, GalleryEditData } from "./types";
 import { Feedback, Section } from "./ui";
 
+/** The sync issues, grouped by kind, with the count of those not listed. */
+function IssueGroups({ issues }: { issues: GalleryEditData["issues"] }) {
+  const t = useT();
+  return (
+    <div className="flex flex-col gap-4">
+      {issues.groups.map((grp) => (
+        <div key={grp.type}>
+          <h3 className="text-small font-medium">
+            {Object.hasOwn(ISSUE_KEYS, grp.type)
+              ? t(ISSUE_KEYS[grp.type]!)
+              : t("admin.issue.other")}{" "}
+            ({grp.items.length})
+          </h3>
+          <ul className="text-small text-grey-700 mt-1 list-disc pl-5">
+            {grp.items.map((it, i) => (
+              <li key={i}>
+                {it.set ? `${it.set} / ` : ""}
+                {it.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      {issues.truncated > 0 && (
+        <p className="text-small text-grey-600">
+          {t("admin.edit.issues.more", {
+            count: issues.truncated,
+          })}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /** Fotos tab: the reorderable grid with cover actions, and the sync issues. */
 export function PhotosTab({
   data,
@@ -46,33 +80,7 @@ export function PhotosTab({
             {t("admin.edit.issues.none")}
           </p>
         ) : (
-          <div className="flex flex-col gap-4">
-            {data.issues.groups.map((grp) => (
-              <div key={grp.type}>
-                <h3 className="text-small font-medium">
-                  {Object.hasOwn(ISSUE_KEYS, grp.type)
-                    ? t(ISSUE_KEYS[grp.type]!)
-                    : t("admin.issue.other")}{" "}
-                  ({grp.items.length})
-                </h3>
-                <ul className="text-small text-grey-700 mt-1 list-disc pl-5">
-                  {grp.items.map((it, i) => (
-                    <li key={i}>
-                      {it.set ? `${it.set} / ` : ""}
-                      {it.name}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-            {data.issues.truncated > 0 && (
-              <p className="text-small text-grey-600">
-                {t("admin.edit.issues.more", {
-                  count: data.issues.truncated,
-                })}
-              </p>
-            )}
-          </div>
+          <IssueGroups issues={data.issues} />
         )}
       </Section>
     </div>
