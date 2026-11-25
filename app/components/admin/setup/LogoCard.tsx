@@ -94,19 +94,14 @@ function Swatch({
   );
 }
 
-export function LogoCard({
-  logo,
-  actionData,
-  busy,
-}: {
-  logo: NonNullable<SetupViewData["logo"]>;
-  actionData: SetupActionData | undefined;
-  busy: boolean;
-}) {
-  const t = useT();
+type LogoData = NonNullable<SetupViewData["logo"]>;
+
+/**
+ * Local blob previews of the files just picked. Each is revoked when its own
+ * slot is replaced (never while still shown) and all of them on unmount.
+ */
+function usePendingPreviews() {
   const [pending, setPending] = useState<Pending>({});
-  // Local blob: previews only. Each is revoked when its own slot is replaced
-  // (never while still shown) and all of them on unmount.
   const [urls] = useState<Pending>(() => ({}));
   useEffect(() => {
     return () => {
@@ -119,7 +114,11 @@ export function LogoCard({
     urls[key] = file ? URL.createObjectURL(file) : undefined;
     setPending({ ...urls });
   };
-  const custom = Boolean(logo.onLight || logo.onDark);
+  return { pending, pick };
+}
+
+/** What each swatch shows: the picked file, else (dark) the picked light logo inverted, else the saved one. */
+function swatchSources(logo: LogoData, pending: Pending) {
   const onLight = pending.onLight
     ? { src: pending.onLight, invert: false }
     : (logoSource("dark", logo) ?? NO_LOGO);
@@ -128,6 +127,41 @@ export function LogoCard({
     : pending.onLight && !logo.onDark
       ? { src: pending.onLight, invert: true }
       : (logoSource("light", logo) ?? NO_LOGO);
+  return { onLight, onDark };
+}
+
+/** Back to the bundled logo, after a confirmation. */
+function LogoResetForm({ custom, busy }: { custom: boolean; busy: boolean }) {
+  const t = useT();
+  return (
+    <Form
+      method="post"
+      onSubmit={(ev) => {
+        if (!window.confirm(t("admin.setup.logo.resetConfirm")))
+          ev.preventDefault();
+      }}
+    >
+      <input type="hidden" name="intent" value="logoReset" />
+      <button type="submit" className={btn} disabled={busy || !custom}>
+        {t("admin.setup.logo.reset")}
+      </button>
+    </Form>
+  );
+}
+
+export function LogoCard({
+  logo,
+  actionData,
+  busy,
+}: {
+  logo: LogoData;
+  actionData: SetupActionData | undefined;
+  busy: boolean;
+}) {
+  const t = useT();
+  const { pending, pick } = usePendingPreviews();
+  const custom = Boolean(logo.onLight || logo.onDark);
+  const { onLight, onDark } = swatchSources(logo, pending);
   return (
     <section className="border-grey-200 flex min-w-0 flex-col gap-4 border p-5">
       <h2 className="text-micro uppercase text-grey-700">
@@ -166,18 +200,7 @@ export function LogoCard({
         />
       </div>
       <Feedback data={actionData} intent="logo" />
-      <Form
-        method="post"
-        onSubmit={(ev) => {
-          if (!window.confirm(t("admin.setup.logo.resetConfirm")))
-            ev.preventDefault();
-        }}
-      >
-        <input type="hidden" name="intent" value="logoReset" />
-        <button type="submit" className={btn} disabled={busy || !custom}>
-          {t("admin.setup.logo.reset")}
-        </button>
-      </Form>
+      <LogoResetForm custom={custom} busy={busy} />
       <Feedback data={actionData} intent="logoReset" />
     </section>
   );
