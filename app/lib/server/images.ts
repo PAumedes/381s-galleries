@@ -1,7 +1,12 @@
 import { IMAGE_VARIANTS, type ImageVariant } from "../constants";
 import { and, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
-import { clientIpHash, openGallery } from "./access";
+import {
+  accessSelect,
+  clientIpHash,
+  openGallery,
+  withClientPin,
+} from "./access";
 import {
   isValidHit,
   pendingFill,
@@ -121,15 +126,16 @@ function resolveVariant(
 
 async function loadVisiblePhoto(env: Env, photoId: string) {
   const rows = await getDb(env)
-    .select({ photo: schema.photos, gallery: schema.galleries })
+    .select({ photo: schema.photos, ...accessSelect })
     .from(schema.photos)
     .innerJoin(
       schema.galleries,
       eq(schema.galleries.id, schema.photos.galleryId),
     )
+    .leftJoin(schema.clients, eq(schema.galleries.clientId, schema.clients.id))
     .where(and(eq(schema.photos.id, photoId), photoVisible))
     .limit(1);
-  return rows[0];
+  return rows[0] && { photo: rows[0].photo, gallery: withClientPin(rows[0]) };
 }
 
 type PhotoRow = typeof schema.photos.$inferSelect;

@@ -9,6 +9,7 @@ const ALBUM_COUNT_SQL =
 const UPDATE_SQL = `UPDATE galleries SET mode = c.default_mode,
   show_on_home = CASE WHEN c.default_show_on_home = 1
     AND galleries.status = 'published' AND galleries.pin_hash IS NULL
+    AND c.pin_hash IS NULL
     AND (galleries.expires_at IS NULL OR galleries.expires_at = '' OR unixepoch(galleries.expires_at, 'subsec') * 1000 > ?2)
     THEN 1 ELSE 0 END
   FROM clients AS c WHERE c.id = ?1 AND galleries.client_id = c.id`;
@@ -22,7 +23,7 @@ const NO_WM_COUNT_SQL = `SELECT COUNT(*) AS n FROM galleries g
 /**
  * One UPDATE: the client's saved mode and show-on-home go to all its albums.
  * The stored home flag stays honest (as the `home` intent): on only for a
- * published, PIN-less, unexpired album. Prueba only warns about missing
+ * published, unexpired album with no PIN of its own or of its client. Prueba only warns about missing
  * preview-wm (T6.19), it never blocks.
  */
 export async function applyDefaultsIntent(

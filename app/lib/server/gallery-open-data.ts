@@ -2,10 +2,14 @@
 import { and, asc, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
 import type { GalleryPhoto, OpenGallery } from "../../components/types";
+import { isPinned } from "./access";
 import { focusOf, resolveCover } from "./cover";
 import { imageVersionToken } from "./images";
 
-type GalleryRow = typeof schema.galleries.$inferSelect;
+type GalleryRow = typeof schema.galleries.$inferSelect & {
+  /** The client's PIN hash when known (T6.52); the admin preview has none. */
+  clientPinHash?: string | null;
+};
 
 export const OG_LONG_EDGE = 1200;
 
@@ -55,9 +59,9 @@ function setsOf(rows: Row[]): { name: string; count: number }[] {
   return sets;
 }
 
-/** Open Graph data: null for PIN galleries; else the cover scaled to a 1200px long edge. */
+/** Open Graph data: null for PIN galleries (own or client PIN); else the cover scaled to a 1200px long edge. */
 function ogOf(g: GalleryRow, ogCover: Row | undefined): OpenData["og"] {
-  if (g.pinHash) return null;
+  if (isPinned(g)) return null;
   const long = Math.max(ogCover?.width ?? 0, ogCover?.height ?? 0);
   const scale = long > 0 ? OG_LONG_EDGE / long : 0;
   return {

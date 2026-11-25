@@ -10,6 +10,7 @@ import {
 } from "react-router";
 import { describe, expect, it } from "vitest";
 import { ClientFolderField } from "../../app/components/admin/gallery-edit/ClientFolderField.tsx";
+import { en } from "../../app/i18n/en.ts";
 import { es } from "../../app/i18n/es.ts";
 import { launchChrome } from "../support/chrome.mjs";
 import { css } from "../support/tailwind-css.mjs";
@@ -20,15 +21,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const clients = [
   { id: "a", name: "Acme", slug: "acme" },
-  { id: "b", name: "Ñandú ".repeat(30), slug: "x".repeat(60) },
+  { id: "b", name: "Ñandú ".repeat(30), slug: "x".repeat(60), hasPin: true },
 ];
 
-async function page() {
+async function page(lang = "es") {
   const routes = [
     {
       id: "root",
       path: "/",
-      loader: () => ({ lang: "es", messages: es }),
+      loader: () => ({ lang, messages: lang === "es" ? es : en }),
       children: [
         {
           path: "admin",
@@ -50,7 +51,7 @@ async function page() {
   return `<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><style>${await css(cls)}</style><body data-admin style="margin:0;padding:16px">${inner}`;
 }
 
-async function run(html, width, expr) {
+async function run(html, width, expr, dir = "ltr") {
   const { ch, list } = await launchChrome();
   try {
     const ws = new WebSocket(
@@ -87,6 +88,9 @@ async function run(html, width, expr) {
       if (r?.result?.value) break;
       await sleep(50);
     }
+    await send("Runtime.evaluate", {
+      expression: `document.documentElement.dir='${dir}'`,
+    });
     return (
       await send("Runtime.evaluate", { returnByValue: true, expression: expr })
     ).result.value;
@@ -98,7 +102,10 @@ async function run(html, width, expr) {
 const MEASURE = `(() => {
   const sel = document.querySelector('select[name=clientId]');
   const r = sel.getBoundingClientRect();
-  return { h: r.height, right: r.right, fs: parseFloat(getComputedStyle(sel).fontSize), iw: innerWidth, over: document.documentElement.scrollWidth > innerWidth };
+  const n = document.querySelector('[role=note]');
+  const nr = n && n.getBoundingClientRect();
+  const wide = [...document.querySelectorAll('body *')].filter((e) => { const b = e.getBoundingClientRect(); return b.right > innerWidth + 0.5 || b.left < -0.5; }).length;
+  return { note: !!n, noteRight: nr && nr.right, noteLeft: nr && nr.left, noteClip: n && n.scrollWidth > n.clientWidth + 1, wide, h: r.height, right: r.right, fs: parseFloat(getComputedStyle(sel).fontSize), iw: innerWidth, over: document.documentElement.scrollWidth > innerWidth };
 })()`;
 
 describe.skipIf(!HAS_CHROME)(
@@ -113,5 +120,19 @@ describe.skipIf(!HAS_CHROME)(
         expect(m.over).toBe(false);
       }, 60000);
     }
+
+    for (const lang of ["es", "en"])
+      for (const dir of ["ltr", "rtl"])
+        for (const w of [320, 360, 412]) {
+          it(`${lang} ${w}px ${dir}: the client-PIN warning is visible, wraps and stays inside the viewport`, async () => {
+            const m = await run(await page(lang), w, MEASURE, dir);
+            expect(m.note).toBe(true);
+            expect(m.noteLeft).toBeGreaterThanOrEqual(0);
+            expect(m.noteRight).toBeLessThanOrEqual(m.iw);
+            expect(m.noteClip).toBe(false);
+            expect(m.wide).toBe(0);
+            expect(m.over).toBe(false);
+          }, 60000);
+        }
   },
 );

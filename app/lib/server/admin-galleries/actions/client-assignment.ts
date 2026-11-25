@@ -63,7 +63,10 @@ export async function planClientChange(
   if (g.clientId) return { set, note, assignId: id };
 
   const eligible =
-    g.status === "published" && !g.pinHash && !isExpired(expiresAt, Date.now());
+    g.status === "published" &&
+    !g.pinHash &&
+    client.pinHash === null &&
+    !isExpired(expiresAt, Date.now());
   const showOnHome = client.defaultShowOnHome && eligible;
   const copied: string[] = [];
   if (client.defaultMode !== g.mode) {

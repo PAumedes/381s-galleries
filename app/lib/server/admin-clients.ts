@@ -7,6 +7,7 @@ import { applyDefaultsIntent } from "./admin-clients/apply-defaults";
 import { createIntent } from "./admin-clients/create";
 import { deleteIntent } from "./admin-clients/delete";
 import type { ClientActionResult } from "./admin-clients/errors";
+import { removePinIntent, setPinIntent } from "./admin-clients/pin";
 import { saveIntent } from "./admin-clients/save";
 import { requireAdmin } from "./auth";
 import { getClient, listClients } from "./clients";
@@ -56,7 +57,12 @@ export async function clientEditData(request: Request, env: Env, id: string) {
     .where(eq(g.clientId, id))
     .orderBy(asc(g.title), asc(g.slug));
   const now = Date.now();
-  const { listed, capped } = listClientAlbums(rows, now);
+  // A client PIN locks every album tile on the client page (T6.52).
+  const clientPinned = c.pinHash !== null;
+  const { listed, capped } = listClientAlbums(
+    rows.map((r) => ({ ...r, pinned: clientPinned || !!r.pinned })),
+    now,
+  );
   const visible = listed.length;
   const albums = rows.map(({ id, title, slug, status, mode }) => ({
     id,
@@ -82,6 +88,8 @@ export async function clientEditData(request: Request, env: Env, id: string) {
       pageEnabled: c.pageEnabled,
       defaultMode: c.defaultMode,
       defaultShowOnHome: c.defaultShowOnHome,
+      /** Whether a PIN is set; the hash never leaves the server. */
+      hasPin: clientPinned,
     },
     albums,
   };
@@ -107,7 +115,7 @@ export async function createClientAction(
   return createIntent(env, form, t);
 }
 
-/** POST /admin/clients/:id: save | applyDefaults | delete. */
+/** POST /admin/clients/:id: save | applyDefaults | pinSet | pinRemove | delete. */
 export async function clientAction(
   request: Request,
   env: Env,
@@ -123,6 +131,10 @@ export async function clientAction(
       return saveIntent(env, id, form, t);
     case "applyDefaults":
       return applyDefaultsIntent(env, id, form, t);
+    case "pinSet":
+      return setPinIntent(env, id, form, t);
+    case "pinRemove":
+      return removePinIntent(env, id, t);
     case "delete":
       return deleteIntent(env, id, form, t);
     default:

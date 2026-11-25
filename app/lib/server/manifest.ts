@@ -1,6 +1,6 @@
 import { buildManifest } from "../pwa";
 import { getStudioName } from "./admin";
-import { isAvailable, type AccessEnv } from "./access";
+import { isAvailable, isPinned, type AccessEnv } from "./access";
 import { findGalleryWithClient } from "./gallery-resolve";
 import { NOSNIFF } from "./http";
 
@@ -31,7 +31,7 @@ export async function handleManifest(
     ? {
         slug: g.slug,
         clientSlug: hit!.clientSlug,
-        title: g.pinHash ? undefined : g.title,
+        title: isPinned(g) ? undefined : g.title,
         palette: g.palette,
       }
     : undefined;

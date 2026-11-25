@@ -423,4 +423,128 @@ describe("T6.40f client folders end to end", () => {
       (await open("/acme/boda", `${ORIGIN}/acme`)).data,
     ).not.toHaveProperty("backToClient");
   });
+
+  it("T6.52 client PIN: admin sets it -> gate on every album -> unlock once -> client page locked -> remove", async () => {
+    const created = await redirectTarget(
+      createClientAction(
+        post("/admin/clients", { name: "ACME Corp", slug: "acme" }),
+        e,
+      ),
+    );
+    const clientId = created.headers.get("Location")!.split("/").pop()!;
+    await addAlbum("boda");
+    await addAlbum("fiesta");
+    await addAlbum("vip", { pinHash: await hashPin("own-pin-123") });
+    await env.DB.prepare("UPDATE galleries SET client_id = ?1")
+      .bind(clientId)
+      .run();
+    const setPin = await clientAction(
+      post(`/admin/clients/${clientId}`, {
+        intent: "pinSet",
+        pin: "client-pin-1",
+      }),
+      e,
+      clientId,
+    );
+    expect(setPin.ok).toBe(true);
+
+    // every album asks for the PIN; the payload is the gate and nothing else
+    for (const slug of ["boda", "fiesta", "vip"]) {
+      const r = await viaClient("acme", slug);
+      expect(r.status).toBe(200);
+      expect(r.data!.state).toBe("locked");
+      expect(JSON.stringify(r.data)).not.toMatch(/SECRET|pbkdf2|ACME/);
+    }
+    // the client page keeps listing all three, locked, no cover
+    const page = await viaSlug("acme");
+    expect(page.data!.items!.map((i) => i.slug).sort()).toEqual([
+      "boda",
+      "fiesta",
+      "vip",
+    ]);
+    expect(page.data!.items!.every((i) => i.locked && !i.cover)).toBe(true);
+
+    // unlock once through the route action: 303 to the canonical URL + cookie
+    const res = (await clientRoute.action({
+      request: new Request(`${ORIGIN}/acme/boda`, {
+        method: "POST",
+        headers: {
+          "CF-Connecting-IP": "203.0.113.9",
+          "Sec-Fetch-Site": "same-origin",
+        },
+        body: new URLSearchParams({ pin: "client-pin-1" }),
+      }),
+      params: { client: "acme", album: "boda" },
+      context: ctx(),
+    } as never)) as Response;
+    expect(res.status).toBe(303);
+    expect(res.headers.get("Location")).toBe("/acme/boda");
+    const cookie = res.headers.getSetCookie()[0]!.split(";")[0]!;
+    const withCookie = (client: string, album: string) =>
+      settle(
+        clientRoute.loader({
+          request: new Request(`${ORIGIN}/${client}/${album}`, {
+            headers: { Cookie: cookie, "Sec-Fetch-Mode": "navigate" },
+          }),
+          params: { client, album },
+          context: ctx(),
+        } as never) as Promise<unknown>,
+      );
+    expect((await withCookie("acme", "boda")).data!.state).toBe("open");
+    expect((await withCookie("acme", "fiesta")).data!.state).toBe("open");
+    // its own PIN still applies
+    expect((await withCookie("acme", "vip")).data!.state).toBe("locked");
+
+    // D1 stays within the loader budget while locked and while open
+    const count = async (headers: Record<string, string>) => {
+      const c = countingEnv(e);
+      await galleryLoader(
+        {
+          request: new Request(`${ORIGIN}/acme/boda`, {
+            headers: { ...headers, "Sec-Fetch-Mode": "navigate" },
+          }),
+          context: ctx(),
+        } as never,
+        { client: "acme", album: "boda" },
+        c.e,
+      );
+      return c.count();
+    };
+    expect(await count({})).toBeLessThanOrEqual(SLUG_LOADER_D1_QUERIES);
+    expect(await count({ Cookie: cookie })).toBeLessThanOrEqual(
+      SLUG_LOADER_D1_QUERIES,
+    );
+
+    // removing the PIN opens the albums for everyone
+    await clientAction(
+      post(`/admin/clients/${clientId}`, { intent: "pinRemove" }),
+      e,
+      clientId,
+    );
+    expect((await viaClient("acme", "fiesta")).data!.state).toBe("open");
+    expect((await viaClient("acme", "vip")).data!.state).toBe("locked");
+    // deleting a client with a PIN leaves no PIN anywhere
+    await clientAction(
+      post(`/admin/clients/${clientId}`, {
+        intent: "pinSet",
+        pin: "client-pin-2",
+      }),
+      e,
+      clientId,
+    );
+    await redirectTarget(
+      clientAction(
+        post(`/admin/clients/${clientId}`, { intent: "delete", slug: "acme" }),
+        e,
+        clientId,
+      ),
+    );
+    expect(await rowsReferencing(clientId)).toBe(0);
+    expect(
+      (await env.DB.prepare("SELECT count(*) AS n FROM clients").first<{
+        n: number;
+      }>())!.n,
+    ).toBe(0);
+    expect((await viaSlug("fiesta")).data!.state).toBe("open");
+  });
 });

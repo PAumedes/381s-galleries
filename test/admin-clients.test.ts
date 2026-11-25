@@ -127,6 +127,7 @@ describe("T6.40b admin clients: loaders", () => {
       pageEnabled: true,
       defaultMode: "proofing",
       defaultShowOnHome: false,
+      hasPin: false, // T6.52: a boolean only, never the hash
     });
     expect(d.albums.map((g) => g.id)).toEqual(["g1"]);
     expect(Object.keys(d.albums[0]!).sort()).toEqual([

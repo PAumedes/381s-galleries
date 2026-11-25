@@ -1,6 +1,7 @@
 import { Form } from "react-router";
 
 import { useT } from "../../../i18n/use-t";
+import { PIN_MAX, PIN_MIN } from "../../../lib/pin-rules";
 import type { GalleryActionResult } from "../../../lib/server/admin-galleries";
 import type { FieldErrors } from "./types";
 import { btn, btnPrimary, Feedback, Field, inputCls, Section } from "./ui";
@@ -38,8 +39,8 @@ export function PinSection({
               type="password"
               name="pin"
               required
-              minLength={6}
-              maxLength={32}
+              minLength={PIN_MIN}
+              maxLength={PIN_MAX}
               autoComplete="new-password"
               className={inputCls}
             />
