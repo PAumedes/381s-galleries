@@ -130,14 +130,16 @@ export function GalleryList(props: GalleryListProps) {
     return <EmptyLibrary rootName={rootName} />;
   return (
     <div className="flex flex-col gap-4">
-      <SearchForm filter={filter} q={q} clientFilter={clientFilter} />
-      {(clients.length > 0 || clientFilter) && (
-        <ClientFilter
-          clients={clients}
-          value={clientFilter}
-          hrefFor={(c) => filterHref(filter, q, c)}
-        />
-      )}
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <SearchForm filter={filter} q={q} clientFilter={clientFilter} />
+        {(clients.length > 0 || clientFilter) && (
+          <ClientFilter
+            clients={clients}
+            value={clientFilter}
+            hrefFor={(c) => filterHref(filter, q, c)}
+          />
+        )}
+      </div>
       <FilterChips filter={filter} q={q} clientFilter={clientFilter} />
       {galleries.length === 0 ? (
         <p className="text-body text-grey-600">
