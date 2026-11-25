@@ -13,6 +13,42 @@ export class EmailRequiredError extends Error {
   }
 }
 
+type GateAction = () => void | Promise<void>;
+
+/** Runs `action` now, or parks it behind the gate; an `EmailRequiredError` from it re-opens the gate. */
+async function runBehindGate(
+  needsGate: boolean,
+  openGate: (action: GateAction) => void,
+  action: GateAction,
+) {
+  if (needsGate) return openGate(action);
+  try {
+    await action();
+  } catch (err) {
+    if (err instanceof EmailRequiredError) return openGate(action);
+    throw err;
+  }
+}
+
+/** Saves the visitor's email (and name) for this gallery; "invalid" when the server rejects the email. */
+async function postVisitor(
+  base: string,
+  email: string,
+  name: string,
+): Promise<"ok" | "invalid" | "error"> {
+  try {
+    const res = await fetch(`${base}/visitor`, {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify(name ? { email, name } : { email }),
+    });
+    if (res.status === 400) return "invalid";
+    return res.ok ? "ok" : "error";
+  } catch {
+    return "error";
+  }
+}
+
 /**
  * The email gate for one gallery. `ensure(action)` runs `action` right away
  * when no email is needed (or one is already known); otherwise it parks the
@@ -25,7 +61,7 @@ export function useVisitor(slug: string, requireEmail: boolean) {
   const [visitor, setVisitorState] = useState<Visitor>(null);
   const [gateOpen, setGateOpen] = useState(false);
   const known = useRef(false);
-  const pending = useRef<(() => void | Promise<void>) | null>(null);
+  const pending = useRef<GateAction | null>(null);
 
   const setVisitor = useCallback((v: Visitor) => {
     setVisitorState(v);
@@ -36,40 +72,24 @@ export function useVisitor(slug: string, requireEmail: boolean) {
     known.current = true;
   }, []);
 
-  const openGate = useCallback((action: () => void | Promise<void>) => {
+  const openGate = useCallback((action: GateAction) => {
     pending.current = action;
     setGateOpen(true);
   }, []);
 
   const ensure = useCallback(
-    async (action: () => void | Promise<void>) => {
-      if (requireEmail && !known.current) return openGate(action);
-      try {
-        await action();
-      } catch (err) {
-        if (err instanceof EmailRequiredError) return openGate(action);
-        throw err;
-      }
-    },
+    (action: GateAction) =>
+      runBehindGate(requireEmail && !known.current, openGate, action),
     [requireEmail, openGate],
   );
 
   const submitGate = useCallback(
     async (email: string, name: string): Promise<GateResult> => {
-      try {
-        const res = await fetch(`${base}/visitor`, {
-          method: "POST",
-          headers: JSON_HEADERS,
-          body: JSON.stringify(name ? { email, name } : { email }),
-        });
-        if (res.status === 400) return "invalid";
-        if (!res.ok) return "error";
-        // The server never echoes stored data; show what was just typed.
-        setVisitor({ email, name: name || null });
-        known.current = true;
-      } catch {
-        return "error";
-      }
+      const sent = await postVisitor(base, email, name);
+      if (sent !== "ok") return sent;
+      // The server never echoes stored data; show what was just typed.
+      setVisitor({ email, name: name || null });
+      known.current = true;
       setGateOpen(false);
       const action = pending.current;
       pending.current = null;
