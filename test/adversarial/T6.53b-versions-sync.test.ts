@@ -1,7 +1,7 @@
 import { migrateDb } from "../support/d1";
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { asc, eq } from "drizzle-orm";
+import { asc } from "drizzle-orm";
 import { getDb, schema } from "../../app/db";
 import { createMockDrive } from "../../app/lib/server/drive-mock";
 import { FOLDER_MIME } from "../../app/lib/server/drive-types";
