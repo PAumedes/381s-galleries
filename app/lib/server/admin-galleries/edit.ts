@@ -130,7 +130,7 @@ function editIssues(
   extra("version_wm_fallback", fellBack);
   extra("tiff_no_preview", noPreview, false);
   // Every photo is TIFF-only without a preview: no cover, so the album is left
-  // off the studio home and the client page (a JPEG web version fixes it).
+  // off the studio home; the client page lists it title-only (T6.53d2).
   if (noPreview.length > 0 && noPreview.length === photoCount)
     extra("tiff_album_unlisted", [{ set: "", name: g.title }], false);
   return issues;

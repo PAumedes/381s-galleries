@@ -92,9 +92,16 @@ export async function galleryLoader(
       : await backLink(
           request,
           res.hit,
-          result.data.state === "open"
-            ? result.data.gallery.coverPhotoId
-            : null,
+          {
+            coverId:
+              result.data.state === "open"
+                ? result.data.gallery.coverPhotoId
+                : null,
+            tiffOnly:
+              result.data.state === "open" &&
+              result.data.photos.length > 0 &&
+              result.data.photos.every((p) => p.noPreview),
+          },
           env,
         );
   if (back.setCookie) headers.append("Set-Cookie", back.setCookie);

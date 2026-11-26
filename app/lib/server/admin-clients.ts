@@ -11,7 +11,7 @@ import { removePinIntent, setPinIntent } from "./admin-clients/pin";
 import { saveIntent } from "./admin-clients/save";
 import { requireAdmin } from "./auth";
 import { getClient, listClients } from "./clients";
-import { homeCoverIdSql } from "./cover";
+import { allTiffNoPreviewSql, homeCoverIdSql } from "./cover";
 import { listClientAlbums } from "./home";
 
 export type { ClientActionResult } from "./admin-clients/errors";
@@ -52,6 +52,7 @@ export async function clientEditData(request: Request, env: Env, id: string) {
       expiresAt: g.expiresAt,
       coverId: homeCoverIdSql(),
       pinned: sql<number>`${g.pinHash} IS NOT NULL`,
+      tiffOnly: allTiffNoPreviewSql(),
     })
     .from(g)
     .where(eq(g.clientId, id))

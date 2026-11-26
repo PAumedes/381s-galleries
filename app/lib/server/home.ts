@@ -1,6 +1,6 @@
 import { eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "../../db";
-import { focusOf, homeCoverIdSql } from "./cover";
+import { allTiffNoPreviewSql, focusOf, homeCoverIdSql } from "./cover";
 import { imageVersionToken } from "./images";
 import { isExpired } from "./time";
 
@@ -61,6 +61,8 @@ export async function loadHome(env: Env): Promise<{ items: HomeItem[] }> {
 export type ClientTile = Omit<HomeItem, "cover"> & {
   cover: HomeItem["cover"] | null;
   locked?: true;
+  /** Every photo is a TIFF with nothing to show (T6.53d2): title-only tile, no cover. */
+  tiffOnly?: true;
 };
 
 /**
@@ -89,7 +91,9 @@ export async function loadClientTiles(
 
 /**
  * The client-page rule on one album (T6.46): published, not expired, and a
- * cover or a PIN (locked tile). Used by the page and the admin status line.
+ * cover, a PIN (locked tile) or only TIFF photos with no image (T6.53d2:
+ * title-only tile). Used by the page, the admin status line and the album's
+ * back-to-client link.
  */
 export function listedOnClientPage(
   r: {
@@ -97,12 +101,13 @@ export function listedOnClientPage(
     expiresAt: string | null;
     coverId: string | null;
     pinned: boolean | number;
+    tiffOnly?: boolean | number;
   },
   now: number,
 ): boolean {
   return (
     r.status === "published" &&
-    (r.coverId !== null || !!r.pinned) &&
+    (r.coverId !== null || !!r.pinned || !!r.tiffOnly) &&
     !isExpired(r.expiresAt, now)
   );
 }
@@ -145,6 +150,8 @@ async function queryTileRows(db: Db, scope: Scope) {
       // Locked tile: the album's own PIN or its client's (a client PIN also
       // protects the covers, which /img refuses without the unlock).
       pinned: sql<number>`(${g.pinHash} IS NOT NULL OR ${c.pinHash} IS NOT NULL)`,
+      // No cover because every photo is a TIFF with no image (T6.53d2).
+      tiffOnly: allTiffNoPreviewSql(),
       clientSlug: c.slug,
       clientName: c.name,
     })
@@ -166,7 +173,7 @@ async function queryTileRows(db: Db, scope: Scope) {
 
 /** The cover photos of the unlocked tiles, by id (one query, none when nothing to fetch). */
 async function loadCoverPhotos(db: Db, shown: TileRow[]) {
-  const covered = shown.filter((r) => !r.pinned);
+  const covered = shown.filter((r) => !r.pinned && r.coverId !== null);
   if (!covered.length)
     return new Map<string, typeof schema.photos.$inferSelect>();
   const photos = await db
@@ -202,6 +209,7 @@ async function buildTile(
         }
       : null,
     ...(r.pinned ? { locked: true as const } : {}),
+    ...(!r.pinned && !p ? { tiffOnly: true as const } : {}),
   };
 }
 
@@ -230,8 +238,8 @@ async function loadTiles(
   const byId = await loadCoverPhotos(db, shown);
   const tiles: ClientTile[] = [];
   for (const r of shown) {
-    const p = r.pinned ? undefined : byId.get(r.coverId as string);
-    if (!r.pinned && !p) continue;
+    const p = r.coverId && !r.pinned ? byId.get(r.coverId) : undefined;
+    if (!r.pinned && !p && !r.tiffOnly) continue;
     tiles.push(await buildTile(env, r, p));
   }
   return { tiles, client, pageCount };

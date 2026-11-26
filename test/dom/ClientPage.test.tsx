@@ -48,6 +48,39 @@ function stub(lang: "en" | "es" = "es", p: ClientPageData = page) {
   return render(<Stub initialEntries={["/"]} />);
 }
 
+const tiffPage: ClientPageData = {
+  ...page,
+  items: [
+    {
+      slug: "final",
+      clientSlug: "acme",
+      title: "Entrega final",
+      eventDate: "2026-03-14",
+      cover: null,
+      tiffOnly: true,
+    },
+  ],
+};
+
+describe("T6.53d2 TIFF delivery tile", () => {
+  it("shows the title, the date and the caption, no image and no lock, linking into the album", async () => {
+    stub("es", tiffPage);
+    const link = await screen.findByRole("link", { name: /Entrega final/ });
+    expect(link.getAttribute("href")).toBe("/acme/final");
+    expect(link.querySelector("img")).toBeNull();
+    expect(link.querySelector("svg")).toBeNull();
+    expect(link.textContent).toContain("Entrega en TIFF");
+    expect(link.textContent).toContain("Entrega final");
+    expect(link.textContent?.toLowerCase()).toContain("marzo");
+  });
+
+  it("is translated to English", async () => {
+    stub("en", tiffPage);
+    const link = await screen.findByRole("link", { name: /Entrega final/ });
+    expect(link.textContent).toContain("TIFF delivery");
+  });
+});
+
 describe("T6.40e ClientPage", () => {
   it("shows the client name and links every album under /<client>/<album>", async () => {
     stub();

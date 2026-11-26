@@ -108,6 +108,18 @@ function coverSql(ok: string): SQL<string | null> {
 }
 
 /**
+ * SQL twin of `noPreview.length === photoCount` (T6.53d2): the album has
+ * visible photos and every one is TIFF-only with nothing to show (no web JPEG
+ * in delivery, no preview-wm in Prueba, as `hasPreview`). Such an album has no
+ * cover; the client page lists it as a title-only tile.
+ */
+export const allTiffNoPreviewSql = (): SQL<number> => {
+  const visible = `p.gallery_id = galleries.id AND p.missing_since IS NULL`;
+  const noImage = `COALESCE(p.drive_tiff_id = p.drive_highres_id, 0) AND NULLIF(CASE WHEN galleries.mode = 'delivery' THEN p.drive_web_id ELSE p.drive_wm_id END, '') IS NULL`;
+  return sql<number>`(EXISTS (SELECT 1 FROM photos p WHERE ${sql.raw(visible)}) AND NOT EXISTS (SELECT 1 FROM photos p WHERE ${sql.raw(visible)} AND NOT (${sql.raw(noImage)})))`;
+};
+
+/**
  * SQL twin of `resolveCover(...).cover` for list queries (`galleries` is the
  * outer table). Public home: in Prueba only photos with a preview-wm count, so
  * a gallery without any has no cover (null) and is left off the home.
