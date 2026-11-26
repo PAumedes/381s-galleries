@@ -68,6 +68,7 @@ export const esAdmin = {
   "admin.edit.section.status": "Estado",
   "admin.edit.section.pin": "PIN de acceso",
   "admin.edit.section.home": "Portada pública",
+  "admin.edit.section.versions": "Versiones",
   "admin.edit.section.options": "Opciones",
   "admin.edit.section.photos": "Fotos",
   "admin.edit.section.issues": "Avisos de sincronización",
@@ -109,6 +110,10 @@ export const esAdmin = {
   "admin.edit.home.hint":
     "Aparece en la página de inicio con su portada. Con PIN o sin publicar se oculta sola.",
   "admin.edit.home.save": "Guardar portada pública",
+  "admin.edit.versions.label": "Versiones de retoque",
+  "admin.edit.versions.hint":
+    "Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.",
+  "admin.edit.versions.save": "Guardar versiones",
   "admin.edit.mode.legend": "Modo",
   "admin.edit.mode.deliveryNote":
     "Fotos sin marca de agua y con las descargas habilitadas.",
@@ -358,6 +363,9 @@ export const esAdmin = {
     "Solo las galerías publicadas pueden estar en la portada.",
   "admin.msg.homeOn": "Visible en la portada.",
   "admin.msg.homeOff": "Fuera de la portada.",
+  "admin.msg.versionsOn":
+    "Versiones activadas: se leen en la próxima sincronización.",
+  "admin.msg.versionsOff": "Versiones desactivadas.",
   "admin.msg.paletteInvalid": "Paleta inválida.",
   "admin.msg.coverLayoutInvalid": "Diseño de portada inválido.",
   "admin.msg.gridStyleInvalid": "Estilo de grilla inválido.",

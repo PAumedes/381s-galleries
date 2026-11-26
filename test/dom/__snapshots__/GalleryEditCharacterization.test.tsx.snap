@@ -114,6 +114,23 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper" disabled="">Guardar versiones</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
@@ -700,6 +717,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
@@ -961,6 +995,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper" disabled="">Guardar portada pública</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
 </div>
 </form>
 </section>
@@ -1231,6 +1282,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
@@ -1497,6 +1565,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
@@ -1758,6 +1843,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper" disabled="">Save public home</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versions</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Retouch versions</label>
+<p id="versioning-hint" class="text-small text-grey-600">Names like IMG_v2 become versions of IMG (and v2/ folders, rounds); the first sync after switching this on re-reads the versions.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Save versions</button>
 </div>
 </form>
 </section>
@@ -2031,6 +2133,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
@@ -2296,6 +2415,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
@@ -2557,6 +2693,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper" disabled="">Guardar portada pública</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
 </div>
 </form>
 </section>
@@ -2828,6 +2981,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
@@ -3089,6 +3259,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper" disabled="">Guardar portada pública</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
 </div>
 </form>
 </section>
@@ -3367,6 +3554,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
@@ -3637,6 +3841,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper" disabled="">Guardar portada pública</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
 </div>
 </form>
 </section>
@@ -3914,6 +4135,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
@@ -4187,6 +4425,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
@@ -4448,6 +4703,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar portada pública</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
 </div>
 </form>
 </section>
@@ -4718,6 +4990,23 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper" disabled="">Guardar portada pública</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
 </div>
 </form>
 </section>
@@ -7070,6 +7359,23 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 </div>
 <div>
 <button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper" disabled="">Guardar portada pública</button>
+</div>
+</form>
+</section>
+<section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<form method="post" action="/admin/g/g1?tab=nope" class="flex flex-col gap-3" data-discover="true">
+<input type="hidden" value="versioning" name="intent">
+<input type="hidden" value="0" name="versioning">
+<div class="flex items-start gap-2">
+<input id="versioning" aria-describedby="versioning-hint" class="mt-2.5 size-6 md:mt-1 md:size-4" type="checkbox" value="1" name="versioning">
+<div>
+<label for="versioning" class="text-small flex min-h-tap items-center md:min-h-0">Versiones de retoque</label>
+<p id="versioning-hint" class="text-small text-grey-600">Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.</p>
+</div>
+</div>
+<div>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar versiones</button>
 </div>
 </form>
 </section>

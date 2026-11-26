@@ -70,6 +70,7 @@ export const enAdmin = {
   "admin.edit.section.status": "Status",
   "admin.edit.section.pin": "Access PIN",
   "admin.edit.section.home": "Public home",
+  "admin.edit.section.versions": "Versions",
   "admin.edit.section.options": "Options",
   "admin.edit.section.photos": "Photos",
   "admin.edit.section.issues": "Sync notices",
@@ -111,6 +112,10 @@ export const enAdmin = {
   "admin.edit.home.hint":
     "Shown on the home page with its cover. It hides itself if it has a PIN or isn't published.",
   "admin.edit.home.save": "Save public home",
+  "admin.edit.versions.label": "Retouch versions",
+  "admin.edit.versions.hint":
+    "Names like IMG_v2 become versions of IMG (and v2/ folders, rounds); the first sync after switching this on re-reads the versions.",
+  "admin.edit.versions.save": "Save versions",
   "admin.edit.mode.legend": "Mode",
   "admin.edit.mode.deliveryNote":
     "Photos without a watermark and with downloads enabled.",
@@ -359,6 +364,8 @@ export const enAdmin = {
     "Only published galleries can be on the home page.",
   "admin.msg.homeOn": "Shown on the home page.",
   "admin.msg.homeOff": "Hidden from the home page.",
+  "admin.msg.versionsOn": "Versions on: they are read at the next sync.",
+  "admin.msg.versionsOff": "Versions off.",
   "admin.msg.paletteInvalid": "Invalid palette.",
   "admin.msg.coverLayoutInvalid": "Invalid cover layout.",
   "admin.msg.gridStyleInvalid": "Invalid grid style.",

@@ -106,6 +106,7 @@ function editGallery(
     gridGap: g.gridGap,
     hasPin: g.pinHash !== null,
     showOnHome: g.showOnHome,
+    versioning: g.versioning,
     coverPhotoId: cover.editCover,
     coverFocus: focusOf(g.coverFocusX, g.coverFocusY),
     // Optional mobile cover: only while that photo is visible.

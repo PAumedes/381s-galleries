@@ -8,6 +8,7 @@ import { saveDetails } from "./admin-galleries/actions/details";
 import { saveDesign } from "./admin-galleries/actions/design";
 import { saveFlags } from "./admin-galleries/actions/flags";
 import { saveHome } from "./admin-galleries/actions/home";
+import { saveVersioning } from "./admin-galleries/actions/versioning";
 import { changeStatus } from "./admin-galleries/actions/status";
 import { savePin } from "./admin-galleries/actions/pin";
 import { saveCover } from "./admin-galleries/actions/cover";
@@ -70,6 +71,8 @@ export async function galleryAction(
       return saveFlags(env, g, form, t);
     case "home":
       return saveHome(env, g, form, t);
+    case "versioning":
+      return saveVersioning(env, g, form, t);
     case "status":
       return changeStatus(env, g, str(form, "to"), t, deps);
     case "pin":
