@@ -19,6 +19,7 @@ import { OPEN_WARM_D1_BUDGET, PUBLISH_WARM_D1_BUDGET } from "./d1-limits";
 import { isAvailable } from "./access";
 import type { DriveClient } from "./drive-types";
 import type { Variant } from "./images";
+import { latestOf } from "./photo-versions";
 import { hit, type RateRule } from "./rate-limit";
 import { SETTINGS_KEYS, getSetting } from "./settings";
 import {
@@ -149,11 +150,12 @@ async function warmCovers(
       result.stopped = "budget";
       return false;
     }
-    const [row] = await db
+    const [stored] = await db
       .select(ROW_COLUMNS)
       .from(P)
       .where(and(eq(P.id, id), eq(P.galleryId, g.id), photoVisible));
-    if (!row) continue;
+    if (!stored) continue;
+    const [row] = await latestOf(env, g, [stored]);
     const step = await fillRow(
       env,
       drive,

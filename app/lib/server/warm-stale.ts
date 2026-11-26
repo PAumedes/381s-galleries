@@ -3,6 +3,8 @@ import { and, asc, desc, eq, isNull, lte, ne, or, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { getDb, nowIso, photoVisible, schema } from "../../db";
 import type { SourcePhoto } from "./images";
+import { D1_IN_CHUNK } from "./d1-limits";
+import { atLatestVersion, loadVersionsOf } from "./photo-versions";
 import { expectedWarmKey } from "./warm-key";
 
 type Photo = SourcePhoto;
@@ -33,6 +35,7 @@ function selectStale(db: ReturnType<typeof getDb>) {
       expected: P.cacheExpectedKey,
       fails: P.cacheWarmFailCount,
       mode: G.mode,
+      versioning: G.versioning,
     })
     .from(P)
     .innerJoin(G, eq(G.id, P.galleryId))
@@ -68,24 +71,39 @@ export async function staleRows(
   maxRows = Infinity,
 ): Promise<{
   rows: StaleRow[];
+  /** D1 operations beyond the select: key writes and version lookups. */
   writes: number;
   /** Stopped at `maxRows` with rows left unexamined (the next run continues). */
   more: boolean;
 }> {
   const db = getDb(env);
   const found = await selectStale(db);
+  // Versioned albums: the photo is warmed at the version its gallery shows
+  // (T6.53c). Their version rows cost D1 queries (one per D1_IN_CHUNK photos,
+  // only for rows this run can reach), which come out of `maxRows`.
+  const reachable = found.slice(0, Math.min(found.length, maxRows * 2));
+  const versionedIds = reachable
+    .filter((r) => r.versioning)
+    .map((r) => r.photo.id);
+  const lookups = Math.ceil(versionedIds.length / D1_IN_CHUNK);
+  const live = await loadVersionsOf(env, versionedIds);
+  const limit = Math.max(0, maxRows - lookups);
   const rows: StaleRow[] = [];
-  let writes = 0;
+  let writes = lookups;
   let more = false;
   for (const r of found) {
-    // Each row costs a key write and an outcome write: `maxRows` bounds D1.
-    if (rows.length >= maxRows || writes >= maxRows) {
+    // Each row costs a key write and an outcome write: `limit` bounds D1.
+    if (rows.length >= limit || writes - lookups >= limit) {
       more = true;
       break;
     }
+    const wm = r.mode === "proofing";
+    const photo = r.versioning
+      ? atLatestVersion(r.photo, live.get(r.photo.id), wm)
+      : r.photo;
     let key = r.expected;
     if (key === null) {
-      key = await expectedWarmKey(r.photo, r.mode === "proofing");
+      key = await expectedWarmKey(photo, wm);
       writes++;
       await db
         .update(P)
@@ -93,12 +111,7 @@ export async function staleRows(
         .where(and(eq(P.id, r.photo.id), isNull(P.cacheExpectedKey)));
       if (r.warmKey === key) continue;
     }
-    rows.push({
-      photo: r.photo,
-      wm: r.mode === "proofing",
-      key,
-      fails: r.fails,
-    });
+    rows.push({ photo, wm, key, fails: r.fails });
   }
   return { rows, writes, more };
 }

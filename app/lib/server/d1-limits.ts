@@ -46,6 +46,13 @@ export const AFTER_SYNC_WARM_D1_BUDGET = 30;
  * the other paths; the bound is asserted by test/warm-d1-budget.test.ts).
  */
 export const SLUG_LOADER_D1_QUERIES = 8;
+/**
+ * Extra D1 queries the gallery open path makes for an album with
+ * `galleries.versioning = 1` (T6.53c): one join of its version rows with their
+ * round numbers. Unversioned albums make none, so they keep SLUG_LOADER_D1_QUERIES
+ * as it was (3 measured + this = 4, inside the padded 8; test/photo-versions-public.test.ts).
+ */
+export const VERSIONED_OPEN_D1_QUERIES = 1;
 /** D1 queries a client homepage `/:client` makes (T6.40e): album lookup that finds nothing, albums + client in one join, covers; asserted by test/client-page.test.ts. */
 export const CLIENT_PAGE_D1_QUERIES = 3;
 /** D1 queries the admin `status` action makes itself (gallery, deleting check, compare-and-set; 3 measured, padded; asserted by the same test). */

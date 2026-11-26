@@ -1,7 +1,7 @@
 import { IMAGE_VARIANTS } from "../constants";
 import type { ImageVariant as Variant } from "../constants";
 import type { DriveClient } from "./drive-types";
-import { resolveSource } from "./image-source";
+import { cacheKey, resolveSource } from "./image-source";
 import type { Source, SourcePhoto } from "./image-source";
 
 /** R2 cache of served images: validation, store, sibling copy, shared (de-duplicated) fills. */
@@ -58,24 +58,24 @@ export async function storeInCache(
   ]);
 }
 
-/** Copies the R2 object of another variant of `photoId` that is the same source file/version. */
+/** Copies the R2 object of another variant of `photo` (same version) that is the same source file/version. */
 async function copyFromSibling(
   env: Pick<Env, "CACHE">,
-  photoId: string,
+  photo: SourcePhoto,
   variant: Variant,
   src: Source,
 ): Promise<boolean> {
   for (const other of IMAGE_VARIANTS) {
     if (other === variant) continue;
-    const head = await env.CACHE.head(`${photoId}/${other}`);
+    const head = await env.CACHE.head(cacheKey(photo, other));
     if (!head || !isValidHit(head, src)) continue;
-    const obj = await env.CACHE.get(`${photoId}/${other}`);
+    const obj = await env.CACHE.get(cacheKey(photo, other));
     if (!obj) continue;
     if (!isValidHit(obj, src)) {
       await obj.body.cancel();
       continue;
     }
-    await env.CACHE.put(`${photoId}/${variant}`, obj.body, {
+    await env.CACHE.put(cacheKey(photo, variant), obj.body, {
       httpMetadata: { contentType: safeType(obj.httpMetadata?.contentType) },
       customMetadata: {
         fileId: src.fileId,
@@ -104,12 +104,12 @@ export async function fillCache(
 ): Promise<FillResult> {
   const src = resolveSource(photo, photo.proofing, variant);
   if (!src || !src.version) return "skipped";
-  const key = `${photo.id}/${variant}`;
+  const key = cacheKey(photo, variant);
   const head = await env.CACHE.head(key);
   if (head && isValidHit(head, src)) return "cached";
   // Another variant of this photo may already hold these very bytes (Prueba:
   // thumb, view-sm and view-lg are one preview-wm file): copy, don't refetch.
-  if (await copyFromSibling(env, photo.id, variant, src)) return "filled";
+  if (await copyFromSibling(env, photo, variant, src)) return "filled";
   const upstream = await drive.streamFile(src.fileId);
   const rawLength = upstream.headers.get("Content-Length")?.trim();
   const length = rawLength ? Number(rawLength) : Number.NaN;
@@ -160,7 +160,7 @@ export function fillCacheShared(
   variant: Variant,
   drive: DriveClient,
 ): Promise<FillResult> {
-  const key = `${photo.id}/${variant}`;
+  const key = cacheKey(photo, variant);
   const id = fillId(key, resolveSource(photo, photo.proofing, variant));
   const running = inFlight.get(id);
   if (running) return running;

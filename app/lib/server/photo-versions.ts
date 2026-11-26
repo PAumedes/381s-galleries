@@ -4,6 +4,11 @@
  * modified time); a version whose file left Drive also carries `missingSince`
  * until the sync's grace period deletes the row. Readers must ignore such rows.
  */
+import { and, eq, inArray } from "drizzle-orm";
+import { getDb, schema } from "../../db";
+import { D1_IN_CHUNK } from "./d1-limits";
+import type { SourcePhoto } from "./image-source";
+
 export const parseVersions = (json: string | null): Record<string, unknown> => {
   try {
     const v: unknown = JSON.parse(json ?? "{}");
@@ -20,3 +25,166 @@ export const missingSinceOf = (json: string | null): string | null => {
 
 export const markMissing = (json: string | null, since: string) =>
   JSON.stringify({ ...parseVersions(json), missingSince: since });
+
+/** Versions are 1..999 (the sync's range). */
+const VERSION_PARAM = /^[1-9]\d{0,2}$/;
+
+/** The `ver` query parameter of an image URL: absent (null), a version number, or malformed ("bad"). */
+export function askedVersion(url: URL): number | null | "bad" {
+  const raw = url.searchParams.get("ver");
+  if (raw === null) return null;
+  return VERSION_PARAM.test(raw) ? Number(raw) : "bad";
+}
+
+const PV = schema.photoVersions;
+const R = schema.deliveryRounds;
+
+const versionColumns = {
+  photoId: PV.photoId,
+  version: PV.version,
+  roundNumber: R.number,
+  firstSeenAt: PV.firstSeenAt,
+  driveHighresId: PV.driveHighresId,
+  driveWebId: PV.driveWebId,
+  driveIgId: PV.driveIgId,
+  driveThumbId: PV.driveThumbId,
+  driveWmId: PV.driveWmId,
+  driveThumbWmId: PV.driveThumbWmId,
+  driveVersions: PV.driveVersions,
+  width: PV.width,
+  height: PV.height,
+};
+
+/** One version of a photo as the readers see it. Server-only: it holds Drive ids. */
+export type VersionRow = Pick<
+  typeof PV.$inferSelect,
+  | "photoId"
+  | "version"
+  | "firstSeenAt"
+  | "driveHighresId"
+  | "driveWebId"
+  | "driveIgId"
+  | "driveThumbId"
+  | "driveWmId"
+  | "driveThumbWmId"
+  | "driveVersions"
+  | "width"
+  | "height"
+> & { roundNumber: number | null };
+
+/** The live (file still in Drive) rows per photo, versions ascending. */
+function livePerPhoto(rows: VersionRow[]): Map<string, VersionRow[]> {
+  const by = new Map<string, VersionRow[]>();
+  for (const r of rows) {
+    if (missingSinceOf(r.driveVersions) !== null) continue;
+    by.set(r.photoId, [...(by.get(r.photoId) ?? []), r]);
+  }
+  for (const list of by.values()) list.sort((a, b) => a.version - b.version);
+  return by;
+}
+
+/**
+ * Every live version of every photo of a versioned gallery, with its round
+ * number: ONE query (`VERSIONED_OPEN_D1_QUERIES`), through `photos` so the
+ * lookup uses the (photo_id, version) key and the gallery index.
+ */
+export async function loadGalleryVersions(
+  env: Env,
+  galleryId: string,
+): Promise<Map<string, VersionRow[]>> {
+  const rows = await getDb(env)
+    .select(versionColumns)
+    .from(schema.photos)
+    .innerJoin(
+      PV,
+      and(
+        eq(PV.photoId, schema.photos.id),
+        eq(PV.galleryId, schema.photos.galleryId),
+      ),
+    )
+    .leftJoin(R, eq(R.id, PV.roundId))
+    .where(eq(schema.photos.galleryId, galleryId));
+  return livePerPhoto(rows);
+}
+
+/** The live versions of these photos (one query per `D1_IN_CHUNK` ids; none for an empty list). */
+export async function loadVersionsOf(
+  env: Env,
+  photoIds: readonly string[],
+): Promise<Map<string, VersionRow[]>> {
+  const rows: VersionRow[] = [];
+  for (let i = 0; i < photoIds.length; i += D1_IN_CHUNK)
+    rows.push(
+      ...(await getDb(env)
+        .select(versionColumns)
+        .from(PV)
+        .leftJoin(R, eq(R.id, PV.roundId))
+        .where(inArray(PV.photoId, photoIds.slice(i, i + D1_IN_CHUNK)))),
+    );
+  return livePerPhoto(rows);
+}
+
+/** Can a visitor be shown this version? Prueba needs its own preview-wm; Entrega always can. */
+export const servable = (r: VersionRow, proofing: boolean): boolean =>
+  !proofing || !!r.driveWmId;
+
+/**
+ * The version a gallery shows for a photo: the newest live one a visitor can
+ * be shown (Prueba: with its own preview-wm), else the newest live one (the
+ * photo then behaves as a photo without preview-wm, like before). undefined
+ * when there are no live rows: the photo's own columns stand (v1).
+ */
+export function chooseVersion(
+  live: readonly VersionRow[],
+  proofing: boolean,
+): VersionRow | undefined {
+  return [...live].reverse().find((r) => servable(r, proofing)) ?? live.at(-1);
+}
+
+/** `photo` with the columns of version `row` (files, modified times, size, version number). */
+export function atVersion<P extends SourcePhoto>(
+  photo: P,
+  row: VersionRow,
+): P & { version: number; width: number | null; height: number | null } {
+  return {
+    ...photo,
+    driveHighresId: row.driveHighresId,
+    driveWebId: row.driveWebId,
+    driveIgId: row.driveIgId,
+    driveThumbId: row.driveThumbId,
+    driveWmId: row.driveWmId,
+    driveThumbWmId: row.driveThumbWmId,
+    variantVersions: row.driveVersions,
+    width: row.width,
+    height: row.height,
+    version: row.version,
+  };
+}
+
+/** `photo` at the version its gallery shows (see `chooseVersion`); unchanged without live rows. */
+export function atLatestVersion<P extends SourcePhoto>(
+  photo: P,
+  live: readonly VersionRow[] | undefined,
+  proofing: boolean,
+): P {
+  const row = chooseVersion(live ?? [], proofing);
+  return row ? atVersion(photo, row) : photo;
+}
+
+/**
+ * `rows` of a gallery at their shown versions: no query at all unless the
+ * gallery is versioned, then one per `D1_IN_CHUNK` photos.
+ */
+export async function latestOf<P extends SourcePhoto>(
+  env: Env,
+  gallery: { versioning: boolean; mode: string },
+  rows: readonly P[],
+): Promise<P[]> {
+  if (!gallery.versioning || rows.length === 0) return [...rows];
+  const live = await loadVersionsOf(
+    env,
+    rows.map((r) => r.id),
+  );
+  const proofing = gallery.mode === "proofing";
+  return rows.map((r) => atLatestVersion(r, live.get(r.id), proofing));
+}

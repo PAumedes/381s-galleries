@@ -1,10 +1,23 @@
 /** The client payload of an open gallery (cover, design, sets, photos, link-preview data). */
 import { and, asc, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
-import type { GalleryPhoto, OpenGallery } from "../../components/types";
+import type {
+  GalleryPhoto,
+  OpenGallery,
+  PhotoVersionInfo,
+} from "../../components/types";
 import { isPinned } from "./access";
 import { focusOf, resolveCover } from "./cover";
 import { imageVersionToken } from "./images";
+import type { SourcePhoto } from "./image-source";
+import {
+  atLatestVersion,
+  atVersion,
+  chooseVersion,
+  loadGalleryVersions,
+  servable,
+  type VersionRow,
+} from "./photo-versions";
 
 type GalleryRow = typeof schema.galleries.$inferSelect & {
   /** The client's PIN hash when known (T6.52); the admin preview has none. */
@@ -15,11 +28,49 @@ export const OG_LONG_EDGE = 1200;
 
 async function versionField(
   env: Env,
-  photo: typeof schema.photos.$inferSelect,
+  photo: SourcePhoto,
   wm: boolean,
 ): Promise<{ v?: string }> {
   const v = await imageVersionToken(env, photo, wm);
   return v ? { v } : {};
+}
+
+type Photo = typeof schema.photos.$inferSelect;
+
+/** What a photo of a versioned album adds to its payload (nothing for a photo with a single version). */
+interface VersionView {
+  ver?: number;
+  versions?: PhotoVersionInfo[];
+  /** Round number of the version shown (badge and header are decided across photos). */
+  round: number | null;
+}
+
+async function versionView(
+  env: Env,
+  photo: Photo,
+  live: readonly VersionRow[],
+  proofing: boolean,
+): Promise<VersionView> {
+  const shown = chooseVersion(live, proofing);
+  const visible = live.filter((r) => servable(r, proofing));
+  if (!shown || (shown.version < 2 && visible.length < 2))
+    return { round: null };
+  const history =
+    visible.length >= 2
+      ? await Promise.all(
+          visible.map(async (r) => ({
+            n: r.version,
+            round: r.roundNumber,
+            at: r.firstSeenAt,
+            ...(await versionField(env, atVersion(photo, r), proofing)),
+          })),
+        )
+      : undefined;
+  return {
+    ver: shown.version,
+    ...(history && { versions: history }),
+    round: shown.roundNumber,
+  };
 }
 
 export interface OpenData {
@@ -74,7 +125,7 @@ function ogOf(g: GalleryRow, ogCover: Row | undefined): OpenData["og"] {
 
 /** Visible photos in gallery order, trimmed to what the open-data payload needs. */
 async function loadOpenRows(env: Env, g: GalleryRow) {
-  const full = await getDb(env)
+  const stored = await getDb(env)
     .select()
     .from(schema.photos)
     .where(and(eq(schema.photos.galleryId, g.id), photoVisible))
@@ -83,6 +134,12 @@ async function loadOpenRows(env: Env, g: GalleryRow) {
       asc(schema.photos.sort),
       asc(schema.photos.baseName),
     );
+  // Versioned albums (and only those) show each photo at its latest version.
+  const live = g.versioning ? await loadGalleryVersions(env, g.id) : undefined;
+  const proofing = g.mode === "proofing";
+  const full = live
+    ? stored.map((p) => atLatestVersion(p, live.get(p.id), proofing))
+    : stored;
   const rows: Row[] = full.map((p) => ({
     id: p.id,
     width: p.width,
@@ -92,7 +149,25 @@ async function loadOpenRows(env: Env, g: GalleryRow) {
     driveIgId: p.driveIgId,
     driveWmId: p.driveWmId,
   }));
-  return { full, rows };
+  return { stored, full, rows, live };
+}
+
+/** The newest round among the versions shown (the album header's "Ronda N"); undefined when none has one. */
+function newestRound(views: readonly VersionView[]): number | undefined {
+  const rounds = views.flatMap((v) =>
+    v.ver && v.round !== null ? [v.round] : [],
+  );
+  return rounds.length ? Math.max(...rounds) : undefined;
+}
+
+/** The payload fields of one photo's versions; `isNew` when its version came with the newest round. */
+function versionFields(view: VersionView, newest: number | undefined) {
+  const { ver, versions, round } = view;
+  return {
+    ...(ver && { ver }),
+    ...(versions && { versions }),
+    ...(ver && round !== null && round === newest && { isNew: true as const }),
+  };
 }
 
 /** Gallery fields of the payload. Proofing: no downloads at all (the server refuses them too). */
@@ -138,7 +213,7 @@ export async function buildOpenData(
   env: Env,
   g: GalleryRow,
 ): Promise<OpenData> {
-  const { full, rows } = await loadOpenRows(env, g);
+  const { stored, full, rows, live } = await loadOpenRows(env, g);
   // In proofing, crawlers only get /view-sm of a photo that has a
   // preview-wm; otherwise the og:image URL would 404.
   const proofing = g.mode === "proofing";
@@ -150,15 +225,25 @@ export async function buildOpenData(
     ? rows.find((p) => p.id === cover.cover && p.driveWmId) ||
       rows.find((p) => p.driveWmId)
     : rows.find((p) => p.id === cover.cover);
+  const views = live
+    ? await Promise.all(
+        stored.map((p) => versionView(env, p, live.get(p.id) ?? [], proofing)),
+      )
+    : undefined;
+  const round = views && newestRound(views);
 
   return {
-    gallery: openGallery(g, rows, cover, proofing),
+    gallery: {
+      ...openGallery(g, rows, cover, proofing),
+      ...(round !== undefined && { round }),
+    },
     photos: await Promise.all(
       rows.map(async ({ driveWebId, driveIgId, driveWmId: _wm, ...p }, i) => ({
         ...p,
         variants: { web: !!driveWebId, ig: !!driveIgId },
         // Opaque cache-busting token for the image URLs (never a Drive id).
         ...(await versionField(env, full[i], proofing)),
+        ...(views && versionFields(views[i], round)),
       })),
     ),
     og: ogOf(g, ogCover),

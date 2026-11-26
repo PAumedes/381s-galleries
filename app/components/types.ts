@@ -10,15 +10,43 @@ export type GalleryPhoto = {
   variants: { web: boolean; ig: boolean };
   /** Opaque version token for this photo's image URLs (`?v=`); enables 1-year browser caching. */
   v?: string;
+  /** Versioned albums (T6.53c): the version shown (>= 2, or a photo with a history); absent otherwise. */
+  ver?: number;
+  /** The shown version came with the newest round: the grid badge "Nuevo en esta ronda". */
+  isNew?: true;
+  /** Previews of every version a visitor may see, oldest first; only when there are at least two. */
+  versions?: PhotoVersionInfo[];
+};
+
+/** One entry of a photo's history (previews only; never a Drive id). */
+export type PhotoVersionInfo = {
+  n: number;
+  /** Delivery round number (null: the initial delivery or an unnamed round). */
+  round: number | null;
+  /** When the version first reached the album (UTC ISO). */
+  at: string;
+  /** Token of this version's image URLs (`?v=`). */
+  v?: string;
 };
 
 export type ImgVariant = ImageVariant;
 
 /** Builds an image URL; the admin preview swaps in `/admin/img` (see img-url.tsx). */
-export type ImgUrlFn = (id: string, variant: ImgVariant, v?: string) => string;
+export type ImgUrlFn = (
+  id: string,
+  variant: ImgVariant,
+  v?: string,
+  /** A history entry of a versioned album: that version's preview (`?ver=`). */
+  ver?: number,
+) => string;
 
-export const imgUrl: ImgUrlFn = (id, variant, v) =>
-  `/img/${encodeURIComponent(id)}/${variant}${v ? `?v=${encodeURIComponent(v)}` : ""}`;
+export const imgUrl: ImgUrlFn = (id, variant, v, ver) => {
+  const query = [
+    ver ? `ver=${ver}` : "",
+    v ? `v=${encodeURIComponent(v)}` : "",
+  ].filter(Boolean);
+  return `/img/${encodeURIComponent(id)}/${variant}${query.length ? `?${query.join("&")}` : ""}`;
+};
 
 /** Client-safe gallery summary (no Drive ids, no PIN hash). */
 export type OpenGallery = {
@@ -47,4 +75,6 @@ export type OpenGallery = {
   gridStyle: GridStyle;
   gridGap: GridGap;
   sets: { name: string; count: number }[];
+  /** Versioned albums (T6.53c): number of the newest delivery round shown ("Ronda N"); absent otherwise. */
+  round?: number;
 };

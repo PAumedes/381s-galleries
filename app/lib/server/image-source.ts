@@ -45,7 +45,25 @@ export type SourcePhoto = Pick<
 > & {
   /** Optional watermarked 600px thumb (`thumb-wm`); absent on older rows. */
   driveThumbWmId?: string | null;
+  /**
+   * Which version of a versioned album's photo these columns are (T6.53c);
+   * absent = v1. Only decides the R2 key (`cacheKey`).
+   */
+  version?: number;
 };
+
+/**
+ * R2 key of one variant of a photo: `<id>/<variant>` for v1 (every photo of an
+ * unversioned album, so nothing already cached is re-warmed), `<id>/v<N>/<variant>`
+ * from v2 on.
+ */
+export function cacheKey(
+  photo: Pick<SourcePhoto, "id" | "version">,
+  variant: Variant,
+): string {
+  const v = photo.version ?? 1;
+  return v >= 2 ? `${photo.id}/v${v}/${variant}` : `${photo.id}/${variant}`;
+}
 
 export interface Source {
   fileId: string;
