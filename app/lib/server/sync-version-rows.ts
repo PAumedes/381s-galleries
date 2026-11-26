@@ -8,6 +8,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { schema } from "../../db";
 import { D1_IN_CHUNK, VERSION_INSERT_ROWS } from "./d1-limits";
+import { markMissing, missingSinceOf } from "./photo-versions";
 import { graceElapsed } from "./sync-archive";
 import { chunk, photoFields } from "./sync-helpers";
 import type { PhotoDraft } from "./sync-helpers";
@@ -155,28 +156,6 @@ const updateVersion = (
         eq(schema.photoVersions.version, version),
       ),
     );
-
-/**
- * A version whose file left Drive is not deleted at once (Capture One
- * delete+rewrite, a transient listing): `drive_versions` gains
- * `missingSince`, and the row is deleted after the same grace as photos. A
- * file that returns rewrites the JSON (no marker) and keeps its round.
- * Readers (T6.53c) must ignore rows whose `drive_versions` has `missingSince`.
- */
-const parseVersions = (json: string | null): Record<string, unknown> => {
-  try {
-    const v: unknown = JSON.parse(json ?? "{}");
-    return v && typeof v === "object" ? (v as Record<string, unknown>) : {};
-  } catch {
-    return {};
-  }
-};
-const missingSinceOf = (json: string | null): string | null => {
-  const v = parseVersions(json).missingSince;
-  return typeof v === "string" ? v : null;
-};
-const markMissing = (json: string | null, since: string) =>
-  JSON.stringify({ ...parseVersions(json), missingSince: since });
 
 export interface VersionTarget {
   photoId: string;
