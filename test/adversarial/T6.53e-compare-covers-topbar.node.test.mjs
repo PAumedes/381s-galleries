@@ -25,17 +25,28 @@ describe.skipIf(!HAS_CHROME)("T6.53e compare stacking", () => {
         await cdp.send("Page.enable");
         await cdp.send("Page.navigate", { url: `file://${file}#es` });
         await until(
-          () => cdp.evaluate("!!document.querySelector('[data-testid=open-0]')"),
+          () =>
+            cdp.evaluate("!!document.querySelector('[data-testid=open-0]')"),
           "grid",
         );
-        await cdp.evaluate("document.querySelector('[data-testid=open-0]').click()");
+        await cdp.evaluate(
+          "document.querySelector('[data-testid=open-0]').click()",
+        );
         await until(
-          () => cdp.evaluate("!!document.querySelector('[data-testid=compare-open]')"),
+          () =>
+            cdp.evaluate(
+              "!!document.querySelector('[data-testid=compare-open]')",
+            ),
           "btn",
         );
-        await cdp.evaluate("document.querySelector('[data-testid=compare-open]').click()");
+        await cdp.evaluate(
+          "document.querySelector('[data-testid=compare-open]').click()",
+        );
         await until(
-          () => cdp.evaluate("!!document.querySelector('[data-testid=compare-frame]')"),
+          () =>
+            cdp.evaluate(
+              "!!document.querySelector('[data-testid=compare-frame]')",
+            ),
           "compare",
         );
         const hits = await cdp.evaluate(`(() => {
