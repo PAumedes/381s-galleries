@@ -9,6 +9,8 @@ export type LightboxProps = {
   onIndexChange: (index: number) => void;
   onFavorite?: (id: string) => void;
   onDownload?: (id: string) => void;
+  /** The placeholder card may offer the original's download (allow_highres). Default true. */
+  originalDownload?: boolean;
   isFavorite?: (id: string) => boolean;
   /** Proofing: block "Save image" (overlay above the photo, no context menu). */
   protect?: boolean;

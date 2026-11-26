@@ -52,6 +52,7 @@ export const ISSUE_KEYS: Record<string, MessageKey> = {
   missing_wm: "admin.issue.missing_wm",
   version_wm_fallback: "admin.issue.version_wm_fallback",
   tiff_no_preview: "admin.issue.tiff_no_preview",
+  tiff_album_unlisted: "admin.issue.tiff_album_unlisted",
 };
 
 /** Spanish default labels (the UI translates `type` through ISSUE_KEYS). */

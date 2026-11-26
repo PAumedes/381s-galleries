@@ -95,3 +95,47 @@ describe("T6.53d admin overview: 'sin vista previa'", () => {
     expect(en[key]).toMatch(/no preview/i);
   });
 });
+
+describe("T6.53d album made only of TIFF-only photos", () => {
+  it("warns that it has no cover and is left off the home / client page", async () => {
+    await db.insert(schema.galleries).values({
+      id: GID,
+      driveFolderId: "f",
+      slug: "g",
+      title: "Entrega final",
+      status: "published",
+    });
+    await db.insert(schema.photos).values([
+      {
+        id: "t1",
+        galleryId: GID,
+        baseName: "A",
+        sort: 0,
+        driveHighresId: "T1",
+        driveTiffId: "T1",
+      },
+      {
+        id: "t2",
+        galleryId: GID,
+        baseName: "B",
+        sort: 1,
+        driveHighresId: "T2",
+        driveTiffId: "T2",
+      },
+    ]);
+    const issues = (await loadGalleryEdit(e, GID))!.issues;
+    const g = issues.groups.find((x) => x.type === "tiff_album_unlisted");
+    expect(g?.items).toEqual([{ set: null, name: "Entrega final" }]);
+    expect(
+      issues.groups.find((x) => x.type === "tiff_no_preview")?.items,
+    ).toHaveLength(2);
+  });
+
+  it("not when at least one photo can be shown", async () => {
+    await seed("delivery");
+    const issues = (await loadGalleryEdit(e, GID))!.issues;
+    expect(
+      issues.groups.find((x) => x.type === "tiff_album_unlisted"),
+    ).toBeUndefined();
+  });
+});

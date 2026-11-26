@@ -55,9 +55,9 @@ export const enPublic = {
   "download.tiff": "TIFF original · {size}",
   "download.tiffNoSize": "TIFF original",
   "download.tiffSkipped.one":
-    "{n} TIFF file is not included in the ZIP: download it on its own.",
+    "{n} TIFF file (the original) is not in the high-res ZIP: download it on its own.",
   "download.tiffSkipped.other":
-    "{n} TIFF files are not included in the ZIP: download them one by one.",
+    "{n} TIFF files (the originals) are not in the high-res ZIP: download them one by one.",
   "download.approx": "approx. {size}",
   "download.start": "Download",
   "download.cancel": "Cancel",

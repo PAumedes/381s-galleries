@@ -131,7 +131,9 @@ function LightboxView(props: LightboxProps) {
         dragY={dragY}
         protect={protect}
         onClick={lb.onStageClick}
-        onDownload={props.onDownload}
+        onDownload={
+          props.originalDownload === false ? undefined : props.onDownload
+        }
       />
       <TopBar
         t={t}

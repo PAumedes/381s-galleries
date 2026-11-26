@@ -164,6 +164,8 @@ export const esAdmin = {
     "Última versión sin preview-wm: se muestra una versión anterior",
   "admin.issue.tiff_no_preview":
     "Solo TIFF, sin vista previa: la galería muestra “Vista previa no disponible” (agregá un JPEG web)",
+  "admin.issue.tiff_album_unlisted":
+    "Todas las fotos son solo TIFF: el álbum no tiene portada y no aparece en la home ni en la página del cliente (agregá JPEG web)",
   "admin.issue.other": "Otros avisos",
   "admin.share.link": "Enlace público",
   "admin.share.copy": "Copiar enlace",
@@ -390,6 +392,8 @@ export const esAdmin = {
   "admin.msg.pinSaved":
     "PIN guardado. Quien ya había ingresado deberá volver a ingresar el nuevo PIN y los enlaces de descarga enviados antes dejan de funcionar.",
   "admin.msg.coverAuto": "Portada automática (primera foto).",
+  "admin.msg.coverNoPreview":
+    "Esa foto es solo TIFF y no tiene vista previa: no puede ser la portada",
   "admin.msg.coverNotInGallery":
     "Esa foto no pertenece a la galería o no está visible.",
   "admin.preview.metaTitle": "Vista previa · Admin",

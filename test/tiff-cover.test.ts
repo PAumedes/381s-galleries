@@ -144,3 +144,22 @@ describe("T6.53d covers skip photos with nothing to show (all four views agree)"
     expect(await covers()).toMatchObject({ public: T1, home: T1, list: T1 });
   });
 });
+
+describe("T6.53d focal point of a mobile cover with no preview", () => {
+  it("saveFocus refuses it (the cover is not served)", async () => {
+    const { saveFocus } =
+      await import("../app/lib/server/admin-galleries/actions/focus");
+    await seed("delivery", [row(T1, 0, tiff(T1)), row(P3, 1, {})]);
+    await db
+      .update(schema.galleries)
+      .set({ coverPhotoIdMobile: T1 })
+      .where(eq(schema.galleries.id, GID));
+    const [g] = await db.select().from(schema.galleries);
+    const f = new FormData();
+    f.set("device", "mobile");
+    f.set("focusX", "10");
+    f.set("focusY", "10");
+    const r = await saveFocus(env, g, f, ((k: string) => k) as never);
+    expect(r.ok).toBe(false);
+  });
+});

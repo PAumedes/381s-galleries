@@ -166,6 +166,8 @@ export const enAdmin = {
     "Latest version without preview-wm: an earlier version is shown",
   "admin.issue.tiff_no_preview":
     "TIFF only, no preview: the gallery shows “Preview not available” (add a web JPEG)",
+  "admin.issue.tiff_album_unlisted":
+    "Every photo is TIFF only: the album has no cover and is left off the home and the client page (add web JPEGs)",
   "admin.issue.other": "Other notices",
   "admin.share.link": "Public link",
   "admin.share.copy": "Copy link",
@@ -390,6 +392,8 @@ export const enAdmin = {
   "admin.msg.pinSaved":
     "PIN saved. People who had already unlocked must enter the new PIN again and download links sent earlier stop working.",
   "admin.msg.coverAuto": "Automatic cover (first photo).",
+  "admin.msg.coverNoPreview":
+    "That photo is TIFF only and has no preview: it cannot be the cover",
   "admin.msg.coverNotInGallery":
     "That photo doesn't belong to the gallery or isn't visible.",
   "admin.preview.metaTitle": "Preview · Admin",

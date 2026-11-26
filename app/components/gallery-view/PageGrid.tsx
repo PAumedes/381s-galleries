@@ -50,6 +50,7 @@ export function PageGrid({
           onDownload={onDownload}
           isFavorite={isFavorite}
           protect={protect}
+          originalDownload={gallery.allowHighres}
           layout={gallery.gridStyle}
           gap={gap}
         />

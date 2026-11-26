@@ -41,6 +41,7 @@ export function PageOverlays({
           onDownload={view.openSingle}
           isFavorite={view.isFavorite}
           protect={view.proofing}
+          originalDownload={gallery.allowHighres}
         />
       )}
 

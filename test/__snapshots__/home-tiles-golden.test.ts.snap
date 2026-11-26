@@ -181,16 +181,6 @@ exports[`T6.48 home / client tiles (golden, pre-refactor) > home and client page
 {
   "items": [
     {
-      "cover": {
-        "aspect": null,
-        "focus": null,
-        "id": "p-n2",
-      },
-      "eventDate": null,
-      "slug": "n2",
-      "title": "T n2",
-    },
-    {
       "clientSlug": "off",
       "cover": {
         "aspect": null,
@@ -200,6 +190,16 @@ exports[`T6.48 home / client tiles (golden, pre-refactor) > home and client page
       "eventDate": null,
       "slug": "b1",
       "title": "T b1",
+    },
+    {
+      "cover": {
+        "aspect": null,
+        "focus": null,
+        "id": "p-n2",
+      },
+      "eventDate": null,
+      "slug": "n2",
+      "title": "T n2",
     },
     {
       "clientSlug": "acme",

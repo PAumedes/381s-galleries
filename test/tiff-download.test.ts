@@ -190,6 +190,7 @@ describe("T6.53d /dl streams the TIFF original", () => {
         "Content-Length": "3",
         "Content-Range": "bytes 2-4/300000000",
         "Accept-Ranges": "bytes",
+        ETag: '"v1"',
         "Content-Type": "image/tiff",
       },
       body: TIFF_HEAD.slice(2, 5),
@@ -201,6 +202,72 @@ describe("T6.53d /dl streams the TIFF original", () => {
     expect(res.status).toBe(206);
     expect(res.headers.get("Content-Range")).toBe("bytes 2-4/300000000");
     expect(res.headers.get("Accept-Ranges")).toBe("bytes");
+  });
+
+  it.each([
+    ["bytes=0-1,5-6", undefined],
+    ["bytes=0-1, 5-", undefined],
+    ["items=0-5", undefined],
+    ["bytes=", undefined],
+    ["bytes=5-2x", undefined],
+    ["bytes=10-", "bytes=10-"],
+    ["bytes=-500", "bytes=-500"],
+    ["bytes=0-99", "bytes=0-99"],
+  ])(
+    "Range %j reaches Drive as %j (a single range only)",
+    async (asked, sent) => {
+      const t = await issue(["t1"]);
+      const { drive, calls } = driveFor({ body: TIFF_HEAD.slice() });
+      const res = await dl(tokenOf(t.tokens[0].url), drive, {
+        headers: { ...IP, Range: asked },
+      });
+      expect(calls[0].range).toBe(sent);
+      if (!sent) expect(res.status).toBe(200);
+    },
+  );
+
+  it("forwards If-Range with a Range, mirrors ETag and Last-Modified", async () => {
+    const t = await issue(["t1"]);
+    const seen: (string | undefined)[] = [];
+    const drive = {
+      async streamFile(_id: string, o?: StreamOptions) {
+        seen.push(o?.ifRange);
+        return new Response(TIFF_HEAD.slice(0, 2), {
+          status: 206,
+          headers: {
+            "Content-Range": "bytes 0-1/8",
+            ETag: '"v9"',
+            "Last-Modified": "Wed, 01 Jan 2026 00:00:00 GMT",
+            "Accept-Ranges": "bytes",
+          },
+        });
+      },
+    } as unknown as DriveClient;
+    const res = await dl(tokenOf(t.tokens[0].url), drive, {
+      headers: { ...IP, Range: "bytes=0-1", "If-Range": '"v9"' },
+    });
+    expect(seen).toEqual(['"v9"']);
+    expect(res.headers.get("ETag")).toBe('"v9"');
+    expect(res.headers.get("Last-Modified")).toContain("2026");
+    expect(res.headers.get("Accept-Ranges")).toBe("bytes");
+  });
+
+  it("If-Range without a Range is not forwarded; without any validator from Drive no resumability is claimed", async () => {
+    const t = await issue(["t1"]);
+    const seen: (string | undefined)[] = [];
+    const drive = {
+      async streamFile(_id: string, o?: StreamOptions) {
+        seen.push(o?.ifRange);
+        return new Response(TIFF_HEAD.slice(), {
+          headers: { "Accept-Ranges": "bytes", "Content-Length": "8" },
+        });
+      },
+    } as unknown as DriveClient;
+    const res = await dl(tokenOf(t.tokens[0].url), drive, {
+      headers: { ...IP, "If-Range": '"v9"' },
+    });
+    expect(seen).toEqual([undefined]);
+    expect(res.headers.get("Accept-Ranges")).toBeNull();
   });
 
   it("is piped, not buffered: the response is returned before the body is read and pulls follow the reader", async () => {
@@ -357,12 +424,12 @@ describe("T6.53d Drive errors: generic message, a retry hint, no leakage", () =>
     await photos();
   });
   const SECRET = "TIF-t1 secret-detail";
-  const failing = (status: number) =>
-    driveFor(new DriveError(status, "Drive request failed", SECRET));
+  const failing = (status: number, reason?: string) =>
+    driveFor(new DriveError(status, "Drive request failed", SECRET, reason));
 
   it.each([
     [404, 410, null],
-    [403, 503, "300"],
+    [403, 410, null], // permission revoked / download not allowed: no retry
     [429, 503, "300"],
     [500, 502, "60"],
     [503, 502, "60"],
@@ -380,6 +447,34 @@ describe("T6.53d Drive errors: generic message, a retry hint, no leakage", () =>
     if (out !== 410) expect(text).toMatch(/Probá de nuevo[\s\S]*Try again/);
     else
       expect(text).toMatch(/ya no está disponible[\s\S]*no longer available/);
+  });
+
+  it.each([
+    "rateLimitExceeded",
+    "userRateLimitExceeded",
+    "downloadQuotaExceeded",
+    "dailyLimitExceeded",
+  ])(
+    "Drive 403 with the quota reason %s -> 503, Retry-After 300",
+    async (reason) => {
+      const t = await issue(["t1"]);
+      const res = await dl(
+        tokenOf(t.tokens[0].url),
+        failing(403, reason).drive,
+      );
+      expect(res.status).toBe(503);
+      expect(res.headers.get("Retry-After")).toBe("300");
+    },
+  );
+
+  it("Drive 403 with another reason (cannotDownloadFile) -> 410, no retry hint", async () => {
+    const t = await issue(["t1"]);
+    const res = await dl(
+      tokenOf(t.tokens[0].url),
+      failing(403, "cannotDownloadFile").drive,
+    );
+    expect(res.status).toBe(410);
+    expect(res.headers.get("Retry-After")).toBeNull();
   });
 
   it("416 stays a bare 416", async () => {
@@ -420,7 +515,11 @@ describe("T6.53d Drive errors: generic message, a retry hint, no leakage", () =>
       },
     });
     const { drive } = driveFor({
-      headers: { "Content-Type": "image/tiff", "Accept-Ranges": "bytes" },
+      headers: {
+        "Content-Type": "image/tiff",
+        "Accept-Ranges": "bytes",
+        ETag: '"v1"',
+      },
       body,
     });
     const res = await dl(tokenOf(t.tokens[0].url), drive);

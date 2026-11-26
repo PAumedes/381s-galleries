@@ -13,6 +13,11 @@ beforeEach(() => resetTables("photos", "galleries", "clients"));
 const past = "2000-01-01T00:00:00.000Z";
 const future = "2999-01-01T00:00:00.000Z";
 
+/** Distinct created_at per gallery, later inserted = older, after every event date (1 s resolution would tie and make the order depend on the engine). */
+let tick = 0;
+const nextCreatedAt = () =>
+  new Date(Date.UTC(2026, 10, 1, 0, 0, 59 - ++tick)).toISOString();
+
 type G = Partial<typeof schema.galleries.$inferInsert> & { id: string };
 async function gallery(
   g: G,
@@ -24,6 +29,7 @@ async function gallery(
     title: `T ${g.id}`,
     status: "published",
     showOnHome: true,
+    createdAt: nextCreatedAt(),
     ...g,
   });
   if (photo)

@@ -53,9 +53,9 @@ export const esPublic = {
   "download.tiff": "Original TIFF · {size}",
   "download.tiffNoSize": "Original TIFF",
   "download.tiffSkipped.one":
-    "{n} archivo TIFF no entra en el ZIP: descargalo aparte.",
+    "{n} archivo TIFF (el original) no entra en el ZIP de alta resolución: descargalo aparte.",
   "download.tiffSkipped.other":
-    "{n} archivos TIFF no entran en el ZIP: descargalos de a uno.",
+    "{n} archivos TIFF (los originales) no entran en el ZIP de alta resolución: descargalos de a uno.",
   "download.approx": "aprox. {size}",
   "download.start": "Descargar",
   "download.cancel": "Cancelar",

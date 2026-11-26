@@ -433,3 +433,22 @@ describe("auth and retries", () => {
     expect(String(e2.message)).not.toContain("SECRET-TOKEN-xyz");
   });
 });
+
+describe("T6.53d streamFile: If-Range and the error reason", () => {
+  it("sends If-Range only together with a Range", async () => {
+    const { client, calls } = setup(() => new Response("x", { status: 206 }));
+    await client.streamFile("a", { range: "bytes=0-1", ifRange: '"e1"' });
+    await client.streamFile("a", { ifRange: '"e1"' });
+    expect(calls[0].headers.get("If-Range")).toBe('"e1"');
+    expect(calls[1].headers.get("If-Range")).toBeNull();
+    expect(calls[1].headers.get("Range")).toBeNull();
+  });
+
+  it("a non-quota 403 carries its Drive reason (log-side), a quota one too", async () => {
+    const { client } = setup(() => gerr(403, "nope", "cannotDownloadFile"));
+    await expect(client.streamFile("a")).rejects.toMatchObject({
+      status: 403,
+      reason: "cannotDownloadFile",
+    });
+  });
+});

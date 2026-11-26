@@ -280,3 +280,32 @@ describe("T6.53d download sheet and bulk", () => {
     expect(screen.queryByText(/TIFF/)).toBeNull();
   });
 });
+
+describe("T6.53d the card offers the download only when the gallery allows high-res", () => {
+  it("grid: originalDownload=false hides the card button, other tiles' actions stay", () => {
+    render(
+      <Grid
+        photos={mixed()}
+        t={t}
+        onOpen={() => {}}
+        onDownload={() => {}}
+        originalDownload={false}
+      />,
+    );
+    expect(
+      within(screen.getByTestId("tile-1")).queryByRole("button", {
+        name: "Download original",
+      }),
+    ).toBeNull();
+    expect(
+      within(screen.getByTestId("tile-0")).getAllByRole("button").length,
+    ).toBeGreaterThan(1);
+  });
+
+  it("lightbox: originalDownload=false hides the card button", () => {
+    lightbox(mixed(), 1, { onDownload: () => {}, originalDownload: false });
+    expect(
+      within(screen.getByTestId("lightbox-preview-card")).queryByRole("button"),
+    ).toBeNull();
+  });
+});

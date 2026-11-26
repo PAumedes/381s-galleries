@@ -152,7 +152,10 @@ export function createDriveClient(
 
     async streamFile(id, o?: StreamOptions) {
       const headers: Record<string, string> = {};
-      if (o?.range) headers.Range = o.range;
+      if (o?.range) {
+        headers.Range = o.range;
+        if (o.ifRange) headers["If-Range"] = o.ifRange;
+      }
       return request(
         `${BASE}/files/${encodeURIComponent(id)}?${qs({ alt: "media", supportsAllDrives: "true" })}`,
         headers,

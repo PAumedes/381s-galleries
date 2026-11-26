@@ -51,6 +51,22 @@ const TIFF_MESSAGES = {
   failed:
     "El archivo no se pudo descargar. Probá de nuevo en un minuto.\nThe file could not be downloaded. Try again in a minute.",
 };
+/** Drive's quota / rate-limit reasons: worth waiting for. Any other 403 (permission revoked, download not allowed) is final. */
+const QUOTA_REASONS = new Set([
+  "rateLimitExceeded",
+  "userRateLimitExceeded",
+  "dailyLimitExceeded",
+  "quotaExceeded",
+  "downloadQuotaExceeded",
+  "sharingRateLimitExceeded",
+]);
+function tiffFailureKind(err: unknown): keyof typeof TIFF_MESSAGES {
+  if (!(err instanceof DriveError)) return "failed";
+  if (err.status === 429) return "busy";
+  if (err.status === 403)
+    return err.reason && QUOTA_REASONS.has(err.reason) ? "busy" : "gone";
+  return "failed";
+}
 function tiffFailure(kind: keyof typeof TIFF_MESSAGES): Response {
   if (kind === "gone")
     return textResponse(TIFF_MESSAGES.gone, 410, BASE_HEADERS);
@@ -167,12 +183,15 @@ async function logDownload(
 async function fetchDownloadUpstream(
   drive: DriveClient,
   fileId: string,
-  range: string | null,
+  req: { range: string | null; ifRange: string | null },
   tiff: boolean,
 ): Promise<{ upstream: Response } | { error: Response }> {
   try {
     return {
-      upstream: await drive.streamFile(fileId, { range: range ?? undefined }),
+      upstream: await drive.streamFile(fileId, {
+        range: req.range ?? undefined,
+        ...(req.range && req.ifRange ? { ifRange: req.ifRange } : {}),
+      }),
     };
   } catch (err) {
     if (err instanceof DriveError && err.status === 404)
@@ -188,15 +207,25 @@ async function fetchDownloadUpstream(
     const status = err instanceof DriveError ? err.status : "error";
     console.error("dl: drive error", status);
     if (!tiff) return { error: badGateway() };
-    return {
-      error: tiffFailure(status === 403 || status === 429 ? "busy" : "failed"),
-    };
+    return { error: tiffFailure(tiffFailureKind(err)) };
   }
 }
 
-/** Drive answered HTML / JSON where the file's bytes belong. */
+/**
+ * The one byte range that is forwarded to Drive: `bytes=a-b`, `bytes=a-` or
+ * `bytes=-n`. Anything else (several ranges, other units, junk) is dropped, so
+ * the visitor simply gets the whole file (200): a multipart/byteranges answer
+ * would be saved as a corrupt file.
+ */
+const SINGLE_RANGE = /^bytes=(?:\d+-\d*|-\d+)$/;
+const singleRange = (raw: string | null): string | null => {
+  const r = raw?.trim() ?? "";
+  return SINGLE_RANGE.test(r) ? r : null;
+};
+
+/** Drive answered HTML / JSON / multipart where the file's bytes belong. */
 const isWebPage = (upstream: Response): boolean =>
-  /^(text\/html|application\/json)/i.test(
+  /^(text\/html|application\/json|multipart\/)/i.test(
     upstream.headers.get("Content-Type") ?? "",
   );
 
@@ -224,10 +253,19 @@ async function attachmentResponse(
       downloadFilename(photo.baseName, variant, tiff),
     ),
   });
-  for (const h of ["Content-Length", "Content-Range", "Accept-Ranges"]) {
+  for (const h of [
+    "Content-Length",
+    "Content-Range",
+    "Accept-Ranges",
+    "ETag",
+    "Last-Modified",
+  ]) {
     const v = upstream.headers.get(h);
     if (v) headers.set(h, v);
   }
+  // Resume (Range + If-Range) needs a validator: without one, never claim it.
+  if (tiff && !headers.has("ETag") && !headers.has("Last-Modified"))
+    headers.delete("Accept-Ranges");
   if (isHead) {
     await upstream.body?.cancel();
     return new Response(null, { status: upstream.status, headers });
@@ -275,7 +313,10 @@ export async function serveDownload(
   const fetched = await fetchDownloadUpstream(
     deps.drive,
     fileId,
-    request.headers.get("Range"),
+    {
+      range: singleRange(request.headers.get("Range")),
+      ifRange: request.headers.get("If-Range"),
+    },
     tiff,
   );
   if ("error" in fetched) return fetched.error;

@@ -34,6 +34,8 @@ export interface DriveChanges {
 export interface StreamOptions {
   /** Raw HTTP Range header value, passed through (e.g. "bytes=0-1023"). */
   range?: string;
+  /** Raw `If-Range` value (an ETag or a date), only meaningful together with `range`. */
+  ifRange?: string;
 }
 
 export interface DriveClient {
@@ -66,6 +68,8 @@ export class DriveError extends Error {
     message: string,
     /** Upstream detail (may contain ids); server-log-only, never sent to clients. Capped at 4 KB read. */
     public readonly detail?: string,
+    /** Drive's machine reason of the first error (`rateLimitExceeded`...); safe to branch on, never sent to clients. */
+    public readonly reason?: string,
   ) {
     super(message);
     this.name = "DriveError";

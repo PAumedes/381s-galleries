@@ -106,10 +106,15 @@ function editIssues(
   noWm: Named[],
   fellBack: Named[],
   noPreview: Named[],
+  photoCount: number,
 ) {
   const issues = groupIssues(g.syncIssuesJson);
   const extra = (
-    type: "missing_wm" | "version_wm_fallback" | "tiff_no_preview",
+    type:
+      | "missing_wm"
+      | "version_wm_fallback"
+      | "tiff_no_preview"
+      | "tiff_album_unlisted",
     list: Named[],
     onlyProofing = true,
   ) => {
@@ -117,13 +122,17 @@ function editIssues(
     issues.groups.push({
       type,
       label: ISSUE_LABELS[type],
-      items: list.map((p) => ({ set: p.set, name: p.name })),
+      items: list.map((p) => ({ set: p.set || null, name: p.name })),
     });
     issues.total += list.length;
   };
   extra("missing_wm", noWm);
   extra("version_wm_fallback", fellBack);
   extra("tiff_no_preview", noPreview, false);
+  // Every photo is TIFF-only without a preview: no cover, so the album is left
+  // off the studio home and the client page (a JPEG web version fixes it).
+  if (noPreview.length > 0 && noPreview.length === photoCount)
+    extra("tiff_album_unlisted", [{ set: "", name: g.title }], false);
   return issues;
 }
 
@@ -218,6 +227,6 @@ export async function loadGalleryEdit(env: Env, id: string) {
     hasThumbWmFiles: ps.some((p) => p.hasThumbWm),
     photos,
     version: await photoSetVersion(photos.map((p) => p.id)),
-    issues: editIssues(g, noWm, fellBack, noPreview),
+    issues: editIssues(g, noWm, fellBack, noPreview, ps.length),
   };
 }

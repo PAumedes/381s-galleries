@@ -33,6 +33,8 @@ export type GridProps = {
   layout?: GridStyle;
   /** Gutter in px (2 / 6 / 16). */
   gap?: number;
+  /** The gallery lets visitors download the original (high-res): the placeholder card's button needs it. Default true. */
+  originalDownload?: boolean;
   /** Proofing: block "Save image" (overlay above each photo, no context menu). */
   protect?: boolean;
 };
@@ -86,6 +88,7 @@ export function Grid({
   layout: style = "filas",
   gap = GAP,
   protect = false,
+  originalDownload = true,
 }: GridProps) {
   const { ref, width } = useElementWidth(initialWidth);
   // Every layout lists tiles in photo order and places them so that
@@ -117,6 +120,7 @@ export function Grid({
             onDownload={onDownload}
             favorite={isFavorite?.(photo.id) ?? false}
             protect={protect}
+            originalDownload={originalDownload}
           />
         );
       })}
@@ -134,6 +138,7 @@ type TileProps = {
   onDownload?: (id: string) => void;
   favorite: boolean;
   protect: boolean;
+  originalDownload: boolean;
 };
 
 /** Load / error / retry state of one tile's thumbnail. */
@@ -191,7 +196,7 @@ function Tile(props: TileProps) {
           t={t}
           photo={photo}
           onOpen={open}
-          onDownload={onDownload}
+          onDownload={props.originalDownload ? onDownload : undefined}
         />
       ) : (
         <TileImage

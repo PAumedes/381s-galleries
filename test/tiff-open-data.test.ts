@@ -126,6 +126,13 @@ describe("T6.53d public payload", () => {
     ]);
     expect(byId(d, "a").noPreview).toBe(true);
     expect(byId(d, "b").noPreview).toBeUndefined();
+    // Prueba never advertises an original on a normal tile (name, size).
+    expect(byId(d, "b").tiff).toBeUndefined();
+    expect(JSON.stringify(byId(d, "b"))).not.toMatch(/IMG_b\.tif|312000000/);
+    expect(byId(d, "a").tiff).toEqual({
+      name: "IMG_a.tif",
+      bytes: 312_000_000,
+    });
     expect(byId(d, "b").v).toEqual(expect.any(String));
     expect(d.gallery).toMatchObject({ allowHighres: false, allowBulk: false });
   });
@@ -140,5 +147,62 @@ describe("T6.53d public payload", () => {
   it("og cover never names a placeholder photo", async () => {
     const d = await open("delivery", [photo("a", 0, tiff("a"))]);
     expect(d.og).toEqual({ coverId: null, width: null, height: null });
+  });
+});
+
+describe("T6.53d versioned album: v1 JPEG then a TIFF-only v2", () => {
+  it("shows the card for v2 and lists only the versions that have an image", async () => {
+    await db.insert(schema.galleries).values({
+      id: GID,
+      driveFolderId: "f",
+      slug: "g",
+      title: "G",
+      status: "published",
+      versioning: true,
+    });
+    const vv = JSON.stringify({ highres: "h", web: "w", tiff: "t" });
+    await db
+      .insert(schema.photos)
+      .values(photo("a", 0, { ...tiff("a"), variantVersions: vv }));
+    await db.insert(schema.deliveryRounds).values({
+      id: "r2",
+      galleryId: GID,
+      number: 2,
+      startedAt: "2026-03-02T00:00:00.000Z",
+    });
+    await db.insert(schema.photoVersions).values([
+      {
+        photoId: "a",
+        galleryId: GID,
+        version: 1,
+        driveHighresId: "HI1",
+        driveWebId: "WEB1",
+        driveVersions: vv,
+        width: 3000,
+        height: 2000,
+        firstSeenAt: "2026-03-01T00:00:00.000Z",
+      },
+      {
+        photoId: "a",
+        galleryId: GID,
+        version: 2,
+        roundId: "r2",
+        driveHighresId: "TIF-a",
+        driveTiffId: "TIF-a",
+        highresBytes: 312_000_000,
+        driveVersions: vv,
+        firstSeenAt: "2026-03-02T00:00:00.000Z",
+      },
+    ]);
+    const [g] = await db
+      .select()
+      .from(schema.galleries)
+      .where(eq(schema.galleries.id, GID));
+    const a = (await buildOpenData(env, g)).photos[0];
+    expect(a.noPreview).toBe(true);
+    expect(a.ver).toBe(2);
+    expect(a.tiff).toEqual({ name: "IMG_a.tif", bytes: 312_000_000 });
+    expect(a.versions?.map((v) => v.n)).toEqual([1]);
+    expect(JSON.stringify(a)).not.toMatch(/TIF-|HI1|WEB1/);
   });
 });
