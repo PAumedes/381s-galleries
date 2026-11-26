@@ -24,7 +24,7 @@ describe("migration 0022_photo_versions snapshot (T6.53a)", () => {
     expect(s22.tables.galleries.columns.versioning).toMatchObject({
       type: "integer",
       notNull: true,
-      default: 0,
+      default: false, // schema.ts `.default(false)`, as show_on_home
     });
     const rest = { ...s22.tables.galleries.columns };
     delete rest.versioning;
@@ -44,7 +44,7 @@ describe("migration 0022_photo_versions snapshot (T6.53a)", () => {
     ).toEqual(
       expect.arrayContaining([
         ["photos", "cascade"],
-        ["delivery_rounds", "set null"],
+        ["delivery_rounds", "no action"],
       ]),
     );
   });

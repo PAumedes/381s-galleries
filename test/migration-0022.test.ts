@@ -40,13 +40,14 @@ describe("migration 0022_photo_versions (T6.53a)", () => {
     expect(await count("photo_versions")).toBe(3);
     expect(
       await rows(
-        `SELECT photo_id, version, round_id, drive_highres_id, drive_web_id, drive_ig_id, drive_thumb_id, drive_wm_id,
+        `SELECT photo_id, gallery_id, version, round_id, drive_highres_id, drive_web_id, drive_ig_id, drive_thumb_id, drive_wm_id,
                 drive_thumb_wm_id, drive_tiff_id, highres_bytes, drive_versions, width, height
          FROM photo_versions ORDER BY photo_id`,
       ),
     ).toEqual([
       {
         photo_id: "p1",
+        gallery_id: "g1",
         version: 1,
         round_id: null,
         drive_highres_id: "hr1",
@@ -86,12 +87,12 @@ describe("migration 0022_photo_versions (T6.53a)", () => {
   it("(photo_id, version) is the key; versioning and version are checked", async () => {
     await expect(
       run(
-        "INSERT INTO photo_versions (photo_id, version, drive_highres_id) VALUES ('p1', 1, 'again')",
+        "INSERT INTO photo_versions (photo_id, gallery_id, version, drive_highres_id) VALUES ('p1', 'g1', 1, 'again')",
       ),
     ).rejects.toThrow();
     await expect(
       run(
-        "INSERT INTO photo_versions (photo_id, version, drive_highres_id) VALUES ('p1', 0, 'z')",
+        "INSERT INTO photo_versions (photo_id, gallery_id, version, drive_highres_id) VALUES ('p1', 'g1', 0, 'z')",
       ),
     ).rejects.toThrow();
     await expect(
@@ -101,13 +102,35 @@ describe("migration 0022_photo_versions (T6.53a)", () => {
       run("UPDATE galleries SET versioning = NULL WHERE id = 'g1'"),
     ).rejects.toThrow();
     await run(
-      "INSERT INTO photo_versions (photo_id, version, drive_highres_id) VALUES ('p1', 2, 'hr1b')",
+      "INSERT INTO photo_versions (photo_id, gallery_id, version, drive_highres_id) VALUES ('p1', 'g1', 2, 'hr1b')",
     );
     await expect(
       run(
-        "INSERT INTO photo_versions (photo_id, version, drive_highres_id) VALUES ('nope', 1, 'z')",
+        "INSERT INTO photo_versions (photo_id, gallery_id, version, drive_highres_id) VALUES ('nope', 'g1', 1, 'z')",
       ),
     ).rejects.toThrow();
+  });
+
+  it("integrity: a version's round and photo belong to its own gallery; ids are integers", async () => {
+    await run(
+      "INSERT INTO delivery_rounds (id, gallery_id, number) VALUES ('rg2','g2',1)",
+    );
+    await expect(
+      run(
+        "INSERT INTO photo_versions (photo_id, gallery_id, version, round_id, drive_highres_id) VALUES ('p1','g1',3,'rg2','h')",
+      ),
+    ).rejects.toThrow();
+    await expect(
+      run(
+        "INSERT INTO photo_versions (photo_id, gallery_id, version, drive_highres_id) VALUES ('p1','g2',3,'h')",
+      ),
+    ).rejects.toThrow();
+    await expect(
+      run(
+        "INSERT INTO photo_versions (photo_id, gallery_id, version, drive_highres_id) VALUES ('p1','g1','2x','h')",
+      ),
+    ).rejects.toThrow();
+    await run("DELETE FROM delivery_rounds WHERE id = 'rg2'");
   });
 
   it("rounds: unique number per gallery; deleting a round keeps its versions (round_id NULL)", async () => {
@@ -128,6 +151,11 @@ describe("migration 0022_photo_versions (T6.53a)", () => {
         "SELECT round_id FROM photo_versions WHERE photo_id='p1' AND version=2",
       ),
     ).toEqual([{ round_id: null }]);
+    expect(
+      await rows(
+        "SELECT gallery_id FROM photo_versions WHERE photo_id='p1' AND version=2",
+      ),
+    ).toEqual([{ gallery_id: "g1" }]);
   });
 
   it("deleting a photo or a gallery removes its version and round rows (FK cascade)", async () => {

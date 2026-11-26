@@ -69,11 +69,12 @@ const SEED: Record<string, (g: string, tag: string) => D1PreparedStatement[]> =
         g,
       ),
     ],
-    photo_versions: (_g, tag) => [
+    photo_versions: (g, tag) => [
       sql(
-        "INSERT INTO photo_versions (photo_id, version, round_id, drive_highres_id) VALUES (?1, 1, NULL, 'hr'), (?1, 2, ?2, 'hr2')",
+        "INSERT INTO photo_versions (photo_id, gallery_id, version, round_id, drive_highres_id) VALUES (?1, ?3, 1, NULL, 'hr'), (?1, ?3, 2, ?2, 'hr2')",
         `ph-${tag}`,
         `r-${tag}`,
+        g,
       ),
     ],
     visitors: (g, tag) => [
@@ -187,6 +188,18 @@ describe("schema guard: every table tied to a gallery is deleted or exempt", () 
     expect(found.filter((t) => !known.has(t))).toEqual([]);
   });
 
+  it("T6.53a: versions and rounds are deleted by explicit statements, not only by FK cascade", () => {
+    expect(GALLERY_TABLES).toEqual(
+      expect.arrayContaining(["photo_versions", "delivery_rounds"]),
+    );
+    expect(GALLERY_TABLES.indexOf("photo_versions")).toBeLessThan(
+      GALLERY_TABLES.indexOf("photos"),
+    );
+    expect(GALLERY_TABLES.indexOf("delivery_rounds")).toBeLessThan(
+      GALLERY_TABLES.indexOf("galleries"),
+    );
+  });
+
   it("every exempt table states a reason, and none is also deleted", () => {
     for (const [t, why] of Object.entries(EXEMPT_TABLES)) {
       expect(why.length).toBeGreaterThan(10);
@@ -239,13 +252,12 @@ describe("deleteGallery", () => {
 
     for (const t of GALLERY_TABLES) {
       if (t === "rate_limits") continue;
-      // photo_versions carries only the photo id (`ph-<tag>`), 2 rows per photo
-      const [where, a, b, rows] =
-        t === "photo_versions"
-          ? ["photo_id = ?1", "ph-a", "ph-b", 2]
-          : [t === "galleries" ? "id = ?1" : "gallery_id = ?1", A, B, 1];
-      expect(await count(t, where, a), t).toBe(0);
-      expect(await count(t, where, b), t).toBe(rows);
+      const col = t === "galleries" ? "id" : "gallery_id";
+      // photo_versions: 2 rows per photo
+      expect(await count(t, `${col} = ?1`, A), t).toBe(0);
+      expect(await count(t, `${col} = ?1`, B), t).toBe(
+        t === "photo_versions" ? 2 : 1,
+      );
     }
     // rate limits: A's keys (any scope, including dlj: of its download tokens) are gone
     expect(await count("rate_limits", "instr(key, ?1) > 0", A)).toBe(0);

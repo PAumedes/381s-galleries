@@ -159,6 +159,14 @@
             "number"
           ],
           "isUnique": true
+        },
+        "delivery_rounds_id_gallery_id_unique": {
+          "name": "delivery_rounds_id_gallery_id_unique",
+          "columns": [
+            "id",
+            "gallery_id"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {
@@ -181,7 +189,7 @@
       "checkConstraints": {
         "delivery_rounds_number_check": {
           "name": "delivery_rounds_number_check",
-          "value": "\"delivery_rounds\".\"number\" >= 1"
+          "value": "typeof(\"delivery_rounds\".\"number\") = 'integer' AND \"delivery_rounds\".\"number\" >= 1"
         },
         "delivery_rounds_name_check": {
           "name": "delivery_rounds_name_check",
@@ -788,7 +796,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": 0
+          "default": false
         }
       },
       "indexes": {
@@ -1057,6 +1065,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "gallery_id": {
+          "name": "gallery_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "version": {
           "name": "version",
           "type": "integer",
@@ -1167,30 +1182,34 @@
         }
       },
       "foreignKeys": {
-        "photo_versions_photo_id_photos_id_fk": {
-          "name": "photo_versions_photo_id_photos_id_fk",
+        "photo_versions_gallery_id_photo_id_photos_gallery_id_id_fk": {
+          "name": "photo_versions_gallery_id_photo_id_photos_gallery_id_id_fk",
           "tableFrom": "photo_versions",
           "tableTo": "photos",
           "columnsFrom": [
+            "gallery_id",
             "photo_id"
           ],
           "columnsTo": [
+            "gallery_id",
             "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "photo_versions_round_id_delivery_rounds_id_fk": {
-          "name": "photo_versions_round_id_delivery_rounds_id_fk",
+        "photo_versions_round_id_gallery_id_delivery_rounds_id_gallery_id_fk": {
+          "name": "photo_versions_round_id_gallery_id_delivery_rounds_id_gallery_id_fk",
           "tableFrom": "photo_versions",
           "tableTo": "delivery_rounds",
           "columnsFrom": [
-            "round_id"
+            "round_id",
+            "gallery_id"
           ],
           "columnsTo": [
-            "id"
+            "id",
+            "gallery_id"
           ],
-          "onDelete": "set null",
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -1207,7 +1226,7 @@
       "checkConstraints": {
         "photo_versions_version_check": {
           "name": "photo_versions_version_check",
-          "value": "\"photo_versions\".\"version\" >= 1"
+          "value": "typeof(\"photo_versions\".\"version\") = 'integer' AND \"photo_versions\".\"version\" >= 1"
         }
       }
     },

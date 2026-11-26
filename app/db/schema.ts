@@ -264,7 +264,12 @@ export const deliveryRounds = sqliteTable(
       t.galleryId,
       t.number,
     ),
-    check("delivery_rounds_number_check", sql`${t.number} >= 1`),
+    // Target of photo_versions' composite FK (same-gallery guarantee).
+    uniqueIndex("delivery_rounds_id_gallery_id_unique").on(t.id, t.galleryId),
+    check(
+      "delivery_rounds_number_check",
+      sql`typeof(${t.number}) = 'integer' AND ${t.number} >= 1`,
+    ),
     check(
       "delivery_rounds_name_check",
       sql`${t.name} IS NULL OR length(${t.name}) BETWEEN 1 AND 120`,
@@ -279,13 +284,10 @@ export const deliveryRounds = sqliteTable(
 export const photoVersions = sqliteTable(
   "photo_versions",
   {
-    photoId: text("photo_id")
-      .notNull()
-      .references(() => photos.id, { onDelete: "cascade" }),
+    photoId: text("photo_id").notNull(),
+    galleryId: text("gallery_id").notNull(),
     version: integer("version").notNull(),
-    roundId: text("round_id").references(() => deliveryRounds.id, {
-      onDelete: "set null",
-    }),
+    roundId: text("round_id"),
     driveHighresId: text("drive_highres_id").notNull(),
     driveWebId: text("drive_web_id"),
     driveIgId: text("drive_ig_id"),
@@ -303,7 +305,21 @@ export const photoVersions = sqliteTable(
   (t) => [
     primaryKey({ columns: [t.photoId, t.version] }),
     index("photo_versions_round_id_idx").on(t.roundId),
-    check("photo_versions_version_check", sql`${t.version} >= 1`),
+    check(
+      "photo_versions_version_check",
+      sql`typeof(${t.version}) = 'integer' AND ${t.version} >= 1`,
+    ),
+    // Composite FKs: photo and round must both belong to gallery_id. The round
+    // FK is NO ACTION: a trigger in 0022 nulls round_id (only) when a round is
+    // deleted, since SET NULL would also null gallery_id.
+    foreignKey({
+      columns: [t.galleryId, t.photoId],
+      foreignColumns: [photos.galleryId, photos.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.roundId, t.galleryId],
+      foreignColumns: [deliveryRounds.id, deliveryRounds.galleryId],
+    }),
   ],
 );
 
