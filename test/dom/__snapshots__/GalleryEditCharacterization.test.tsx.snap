@@ -83,7 +83,7 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -91,10 +91,10 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper" disabled="">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto" disabled="">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -669,7 +669,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -677,10 +677,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -934,7 +934,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -942,10 +942,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -1200,7 +1200,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -1208,10 +1208,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -1466,7 +1466,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -1474,10 +1474,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -1731,7 +1731,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <h2 class="text-micro text-grey-700 uppercase">Access PIN</h2>
 <p class="text-body">No PIN</p>
 <p class="text-small text-grey-600">Changing or removing the PIN signs clients out and voids download links that were already issued.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -1739,10 +1739,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">6 to 32 characters.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Save PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Save PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Public home</h2>
@@ -2000,7 +2000,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -2008,10 +2008,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -2265,7 +2265,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -2273,10 +2273,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -2530,7 +2530,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -2538,10 +2538,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -2795,7 +2795,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -2804,10 +2804,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 <p id="ID6-err" role="alert" class="text-small text-ink font-medium">PIN corto</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 <p role="alert" class="border-ink border p-3 text-small">PIN corto</p>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
@@ -3062,7 +3062,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -3070,10 +3070,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -3336,7 +3336,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -3344,10 +3344,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -3610,7 +3610,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -3618,10 +3618,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -3883,7 +3883,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -3891,10 +3891,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -4156,7 +4156,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -4164,10 +4164,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -4421,7 +4421,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -4429,10 +4429,10 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -4686,7 +4686,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">PIN activo</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -4694,15 +4694,15 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Cambiar PIN</button>
-</div>
 </form>
-<form method="post" action="/admin/g/g1" data-discover="true">
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Cambiar PIN</button>
+<form method="post" action="/admin/g/g1" class="contents" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="remove" name="mode">
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10">Quitar PIN</button>
+<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 w-full sm:w-auto">Quitar PIN</button>
 </form>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
@@ -7043,7 +7043,7 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
-<form method="post" action="/admin/g/g1?tab=nope" class="flex flex-col gap-3" data-discover="true">
+<form method="post" action="/admin/g/g1?tab=nope" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="pin" name="intent">
 <input type="hidden" value="set" name="mode">
 <div class="flex flex-col gap-1">
@@ -7051,10 +7051,10 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <input id="ID6" aria-describedby="ID6-hint" required="" minlength="6" maxlength="32" autocomplete="new-password" class="border-grey-300 bg-white w-full border px-3 py-2 text-body aria-invalid:border-ink aria-invalid:border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" type="password" name="pin">
 <p id="ID6-hint" class="text-small text-grey-600">De 6 a 32 caracteres.</p>
 </div>
-<div>
-<button type="submit" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper">Guardar PIN</button>
-</div>
 </form>
+<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+<button type="submit" form="album-pin-set" class="text-micro uppercase border border-ink min-h-tap px-4 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-10 bg-ink text-paper w-full sm:w-auto">Guardar PIN</button>
+</div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>

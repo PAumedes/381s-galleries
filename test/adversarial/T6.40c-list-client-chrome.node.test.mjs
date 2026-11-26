@@ -157,9 +157,9 @@ describe.skipIf(!HAS_CHROME)(
   "T6.40c GalleryList client name + filter in Chrome",
   () => {
     for (const w of [320, 360, 412]) {
-      it(`${w}px: filter select is >=48px tall, 16px text, inside the viewport`, async () => {
+      it(`${w}px: filter select is >=44px tall (T6.54: same as the search box), 16px text, inside the viewport`, async () => {
         const m = await run(await page(), w, MEASURE);
-        expect(m.sel.h).toBeGreaterThanOrEqual(47.5);
+        expect(m.sel.h).toBeGreaterThanOrEqual(43.5);
         expect(m.sel.fs).toBeGreaterThanOrEqual(16);
         expect(m.sel.right).toBeLessThanOrEqual(m.iw);
       }, 60000);

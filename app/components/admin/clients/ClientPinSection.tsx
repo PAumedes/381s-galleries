@@ -7,6 +7,9 @@ import { Feedback, Field, Section } from "../gallery-edit/ui";
 import { SubmitButton } from "./SubmitButton";
 import { CLIENT_INPUT } from "./ui";
 
+const SET_FORM_ID = "client-pin-set";
+const PIN_BTN = "w-full sm:w-auto";
+
 /** Set / change / remove the client PIN (T6.52). The PIN and its hash are never rendered. */
 export function ClientPinSection({
   hasPin,
@@ -24,7 +27,7 @@ export function ClientPinSection({
         {hasPin ? t("admin.clients.pin.active") : t("admin.clients.pin.none")}
       </p>
       <p className="text-small text-grey-600">{t("admin.clients.pin.note")}</p>
-      <Form method="post" className="flex flex-col gap-3">
+      <Form id={SET_FORM_ID} method="post" className="flex flex-col gap-3">
         <input type="hidden" name="intent" value="pinSet" />
         <Field
           label={t("admin.clients.pin.new")}
@@ -45,40 +48,40 @@ export function ClientPinSection({
             />
           )}
         </Field>
-        <div>
-          <SubmitButton
-            intent="pinSet"
-            label={
-              hasPin
-                ? t("admin.clients.pin.change")
-                : t("admin.clients.pin.save")
-            }
-            pendingLabel={t("admin.clients.pin.pending")}
-          />
-        </div>
-        <Feedback data={set} intent="pinSet" />
       </Form>
-      {hasPin && (
-        <Form
-          method="post"
-          className="flex flex-col gap-3"
-          onSubmit={(ev) => {
-            if (!window.confirm(t("admin.clients.pin.removeConfirm")))
-              ev.preventDefault();
-          }}
-        >
-          <input type="hidden" name="intent" value="pinRemove" />
-          <div>
+      {/* Both buttons in one row from sm up, stacked full width on phones. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <SubmitButton
+          form={SET_FORM_ID}
+          className={PIN_BTN}
+          intent="pinSet"
+          label={
+            hasPin ? t("admin.clients.pin.change") : t("admin.clients.pin.save")
+          }
+          pendingLabel={t("admin.clients.pin.pending")}
+        />
+        {hasPin && (
+          <Form
+            method="post"
+            className="contents"
+            onSubmit={(ev) => {
+              if (!window.confirm(t("admin.clients.pin.removeConfirm")))
+                ev.preventDefault();
+            }}
+          >
+            <input type="hidden" name="intent" value="pinRemove" />
             <SubmitButton
               intent="pinRemove"
               primary={false}
+              className={PIN_BTN}
               label={t("admin.clients.pin.remove")}
               pendingLabel={t("admin.clients.pin.removePending")}
             />
-          </div>
-          <Feedback data={removed} intent="pinRemove" />
-        </Form>
-      )}
+          </Form>
+        )}
+      </div>
+      <Feedback data={set} intent="pinSet" />
+      <Feedback data={removed} intent="pinRemove" />
     </Section>
   );
 }

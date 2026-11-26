@@ -5,8 +5,9 @@ import {
   isAvailable,
   isSecure,
   openGallery,
+  pinStep,
 } from "./access";
-import type { AccessEnv, AccessRow } from "./access";
+import type { AccessEnv, AccessRow, PinStep } from "./access";
 import {
   buildOpenData,
   OG_LONG_EDGE,
@@ -30,7 +31,16 @@ export {
 
 export type GalleryData =
   | { state: "unavailable" }
-  | { state: "locked"; slug: string; title: string; palette: Palette }
+  | {
+      state: "locked";
+      slug: string;
+      title: string;
+      palette: Palette;
+      /** Which PIN the gate asks for (T6.54). */
+      step: PinStep;
+      /** The client PIN was entered; only the album's own is missing. */
+      clientAccepted?: true;
+    }
   | ({ state: "open" } & OpenData);
 
 export type LoadResult = {
@@ -66,6 +76,7 @@ export async function loadGallery(
         slug: g.slug,
         title: g.title,
         palette: g.palette,
+        ...(await pinStep(request, g, env)),
       },
     };
   }

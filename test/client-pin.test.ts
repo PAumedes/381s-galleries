@@ -112,6 +112,7 @@ describe("T6.52 client PIN gate", () => {
       slug: "boda",
       title: "Title boda",
       palette: expect.anything(),
+      step: "client",
     });
     const text = JSON.stringify(r);
     for (const secret of ["SECRET", "pbkdf2", "Name acme", "IMG_boda"])

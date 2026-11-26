@@ -18,9 +18,13 @@ export const enPublic = {
   "gallery.backToClient": "Back to {name}",
   "gallery.linkCopied": "Link copied",
 
-  "pin.placeholder": "PIN",
   "pin.submit": "Enter",
-  "pin.wrong": "Wrong PIN",
+  "pin.label.client": "Client PIN",
+  "pin.label.album": "Gallery PIN",
+  "pin.accepted": "Client PIN accepted. Now enter the gallery PIN.",
+  "pin.wrong.client": "Wrong client PIN (attempt {n})",
+  "pin.wrong.album": "Wrong gallery PIN (attempt {n})",
+  "pin.checking": "Checking…",
   "pin.tooManyAttempts":
     "Too many attempts. Please try again in a few minutes.",
   "pin.forbidden": "Request not allowed.",

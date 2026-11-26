@@ -76,6 +76,10 @@ export function GalleryListHead() {
   );
 }
 
+/** One look for every control of the list's filter row (search box, client filter). */
+export const LIST_FIELD_CLS =
+  "border-grey-300 bg-white h-tap w-full min-w-0 border px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:h-10";
+
 /** Server-side `?q=` search box (keeps the status filter). */
 export function SearchForm({
   filter,
@@ -92,7 +96,7 @@ export function SearchForm({
       method="get"
       action="/admin"
       role="search"
-      className="flex max-w-xl items-center gap-2"
+      className="flex w-full max-w-xl items-center gap-2 sm:flex-1"
     >
       {filter !== "todas" && (
         <input type="hidden" name="estado" value={filter} />
@@ -107,7 +111,7 @@ export function SearchForm({
         maxLength={100}
         placeholder={t("admin.list.search.placeholder")}
         aria-label={t("admin.list.search.label")}
-        className="border-grey-300 bg-white w-full border px-3 py-2 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className={LIST_FIELD_CLS}
       />
       <button
         type="submit"

@@ -114,6 +114,7 @@ describe("loadGallery: theme + og preview data", () => {
       slug: "boda-ana",
       title: "Boda Ana",
       palette: "oscuro",
+      step: "album",
     });
     const c = await gallerySessionCookie(
       { galleryId: G, unlocked: true, pf: await pinFingerprint(pinHash, env) },

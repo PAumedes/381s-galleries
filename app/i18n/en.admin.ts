@@ -369,11 +369,13 @@ export const enAdmin = {
   "admin.msg.stale":
     "That change isn't possible from the current state. Reload the page.",
   "admin.msg.pinRemoved":
-    "PIN removed. Earlier sessions and download links no longer work.",
+    "PIN removed. Download links sent earlier stop working.",
+  "admin.msg.pinRemovedOpen":
+    "PIN removed. The gallery is open to anyone with the link and download links sent earlier stop working.",
   "admin.msg.pinCheck": "Check the PIN.",
   "admin.msg.pinLength": "The PIN must be {min} to {max} characters.",
   "admin.msg.pinSaved":
-    "PIN saved. Earlier sessions and download links no longer work.",
+    "PIN saved. People who had already unlocked must enter the new PIN again and download links sent earlier stop working.",
   "admin.msg.coverAuto": "Automatic cover (first photo).",
   "admin.msg.coverNotInGallery":
     "That photo doesn't belong to the gallery or isn't visible.",
@@ -613,9 +615,9 @@ export const enAdmin = {
   "admin.clients.pin.pending": "Saving…",
   "admin.clients.pin.removePending": "Removing…",
   "admin.clients.msg.pinSaved":
-    "Client PIN saved. Earlier sessions and download links no longer work.",
+    "Client PIN saved. People who had already unlocked must enter the new PIN again and download links sent earlier stop working.",
   "admin.clients.msg.pinRemoved":
-    "Client PIN removed. Earlier sessions and download links no longer work.",
+    "Client PIN removed. The client's albums without their own PIN are open to anyone with the link and download links sent earlier stop working.",
   "admin.clients.msg.deleted":
     "Client deleted. Its albums still exist, without a client.",
   "admin.clients.msg.slugTaken":

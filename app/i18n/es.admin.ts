@@ -368,11 +368,13 @@ export const esAdmin = {
   "admin.msg.stale":
     "Ese cambio no es posible desde el estado actual. Recargá la página.",
   "admin.msg.pinRemoved":
-    "PIN eliminado. Las sesiones y enlaces de descarga anteriores quedaron sin efecto.",
+    "PIN eliminado. Los enlaces de descarga enviados antes dejan de funcionar.",
+  "admin.msg.pinRemovedOpen":
+    "PIN eliminado. La galería queda abierta para quien tenga el enlace y los enlaces de descarga enviados antes dejan de funcionar.",
   "admin.msg.pinCheck": "Revisá el PIN.",
   "admin.msg.pinLength": "El PIN debe tener entre {min} y {max} caracteres.",
   "admin.msg.pinSaved":
-    "PIN guardado. Las sesiones y enlaces de descarga anteriores quedaron sin efecto.",
+    "PIN guardado. Quien ya había ingresado deberá volver a ingresar el nuevo PIN y los enlaces de descarga enviados antes dejan de funcionar.",
   "admin.msg.coverAuto": "Portada automática (primera foto).",
   "admin.msg.coverNotInGallery":
     "Esa foto no pertenece a la galería o no está visible.",
@@ -617,9 +619,9 @@ export const esAdmin = {
   "admin.clients.pin.pending": "Guardando…",
   "admin.clients.pin.removePending": "Quitando…",
   "admin.clients.msg.pinSaved":
-    "PIN del cliente guardado. Las sesiones y enlaces de descarga anteriores quedaron sin efecto.",
+    "PIN del cliente guardado. Quien ya había ingresado deberá volver a ingresar el nuevo PIN y los enlaces de descarga enviados antes dejan de funcionar.",
   "admin.clients.msg.pinRemoved":
-    "PIN del cliente eliminado. Las sesiones y enlaces de descarga anteriores quedaron sin efecto.",
+    "PIN del cliente eliminado. Los álbumes del cliente sin PIN propio quedan abiertos para quien tenga el enlace y los enlaces de descarga enviados antes dejan de funcionar.",
   "admin.clients.msg.deleted":
     "Cliente eliminado. Sus álbumes siguen existiendo sin cliente.",
   "admin.clients.msg.slugTaken":

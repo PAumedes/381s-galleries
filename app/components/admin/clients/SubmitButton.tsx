@@ -14,11 +14,17 @@ export function SubmitButton({
   label,
   pendingLabel,
   primary = true,
+  form,
+  className = "",
 }: {
   intent: string;
   label: string;
   pendingLabel: string;
   primary?: boolean;
+  /** Id of the form this button submits when it sits outside it. */
+  form?: string;
+  /** Extra layout classes (width). */
+  className?: string;
 }) {
   const nav = useNavigation();
   const submitting = nav.state !== "idle" && nav.formData !== undefined;
@@ -27,10 +33,11 @@ export function SubmitButton({
   return (
     <button
       type="submit"
+      form={form}
       data-compact
       disabled={submitting}
       aria-busy={mine || undefined}
-      className={`${primary ? CLIENT_BTN_PRIMARY : CLIENT_BTN} inline-flex items-center gap-2`}
+      className={`${primary ? CLIENT_BTN_PRIMARY : CLIENT_BTN} inline-flex items-center justify-center gap-2 ${className}`}
     >
       {mine && (
         <span

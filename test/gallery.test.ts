@@ -123,6 +123,7 @@ describe("loadGallery: states", () => {
       slug: "boda-ana",
       title: "Boda Ana",
       palette: "claro",
+      step: "album",
     });
     expect(r.setCookie).toBeUndefined();
     expect(await db.select().from(schema.galleryViews)).toHaveLength(0);

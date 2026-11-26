@@ -228,6 +228,7 @@ describe("payloads", () => {
       slug: "diseno",
       title: "Diseno",
       palette: "arena",
+      step: "album",
     });
   });
   it("admin editor payload carries the four values", async () => {
