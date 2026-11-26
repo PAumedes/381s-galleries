@@ -22,11 +22,11 @@ import type {
   Waiter,
 } from "./download-net";
 import { createFileFetcher } from "./download-file";
+import { MB } from "./format-bytes";
 import type { FetchedFile } from "./download-file";
 import { bulkZipName, createZipPaths } from "./zip-names";
 
 export const LARGE_BYTES = 1.5 * 1024 * 1024 * 1024;
-export const MB = 1024 * 1024;
 const AVG_BYTES: Record<DlVariant, number> = {
   web: 1.2 * MB,
   highres: 3 * MB,

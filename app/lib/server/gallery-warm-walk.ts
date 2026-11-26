@@ -54,6 +54,7 @@ export const ROW_COLUMNS = {
   sort: P.sort,
   baseName: P.baseName,
   driveHighresId: P.driveHighresId,
+  driveTiffId: P.driveTiffId,
   driveWebId: P.driveWebId,
   driveIgId: P.driveIgId,
   driveThumbId: P.driveThumbId,

@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../../../db";
 import type { TFunction } from "../../../../i18n/t";
 import { DEVICE_FIELDS } from "../../cover";
+import { hasPreview } from "../../tiff";
 import { warmCoverPhoto } from "../../warm";
 import { deviceOf, done, fail } from "./shared";
 import type { GalleryActionDeps, GalleryRow } from "./shared";
@@ -35,7 +36,13 @@ export async function saveCover(
     );
   }
   const [p] = await db
-    .select({ id: schema.photos.id })
+    .select({
+      id: schema.photos.id,
+      driveHighresId: schema.photos.driveHighresId,
+      driveTiffId: schema.photos.driveTiffId,
+      driveWebId: schema.photos.driveWebId,
+      driveWmId: schema.photos.driveWmId,
+    })
     .from(schema.photos)
     .where(
       and(
@@ -45,6 +52,9 @@ export async function saveCover(
       ),
     );
   if (!p) return fail(intent, t("admin.msg.coverNotInGallery"));
+  // A TIFF-only photo with no image to show would never be served as a cover.
+  if (!hasPreview(p, g.mode === "proofing"))
+    return fail(intent, t("admin.msg.coverNoPreview"));
   // A new photo resets that device's focal point to the center.
   await db
     .update(schema.galleries)

@@ -65,7 +65,8 @@ export function usePhotoImage(
   const loaded = loadedId === photo.id || preloaded;
   const failed = failedId === photo.id;
   // Keep the last photo shown on screen while the new one loads.
-  if (loaded && shownId !== photo.id) setShownId(photo.id);
+  // A photo with no image (placeholder card) is "shown" at once.
+  if ((loaded || photo.noPreview) && shownId !== photo.id) setShownId(photo.id);
   const behind =
     !loaded && !failed && shownId !== null && shownId !== photo.id
       ? photos.find((p) => p.id === shownId)

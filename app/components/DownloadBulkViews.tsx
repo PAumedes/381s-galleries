@@ -214,6 +214,8 @@ type ChooseViewProps = {
   variant: DlVariant;
   setVariant: (v: DlVariant) => void;
   count: number;
+  /** TIFF originals in this scope that a high-res run leaves out of the ZIP. */
+  tiffSkipped?: number;
   warning: "ios" | "large" | null | undefined | false;
   error: boolean;
   startRef: RefObject<HTMLButtonElement | null>;
@@ -249,6 +251,7 @@ export function BulkChooseView(props: ChooseViewProps) {
       <ChooseNotes
         t={t}
         count={props.count}
+        tiffSkipped={props.tiffSkipped}
         variant={variant}
         warning={props.warning}
         error={props.error}
@@ -334,10 +337,14 @@ function Radio({
 function ChooseNotes({
   t,
   count,
+  tiffSkipped = 0,
   variant,
   warning,
   error,
-}: Pick<ChooseViewProps, "t" | "count" | "variant" | "warning" | "error">) {
+}: Pick<
+  ChooseViewProps,
+  "t" | "count" | "tiffSkipped" | "variant" | "warning" | "error"
+>) {
   return (
     <>
       <p className="text-small text-grey-600">
@@ -346,6 +353,11 @@ function ChooseNotes({
           size: formatBytes(estimateBytes(count, variant)),
         })}
       </p>
+      {tiffSkipped > 0 && (
+        <p role="note" className="text-small text-grey-700">
+          {t("download.tiffSkipped", { count: tiffSkipped, n: tiffSkipped })}
+        </p>
+      )}
       {warning && (
         <p role="note" className="text-small text-grey-700">
           {t(warning === "ios" ? "download.warnIos" : "download.warnLarge")}

@@ -8,6 +8,17 @@ export type GalleryPhoto = {
   set: string;
   /** Which downloadable sizes exist (high-res is always present). Downloads never fall back between sizes. */
   variants: { web: boolean; ig: boolean };
+  /**
+   * The original is a TIFF (T6.53d): browsers cannot show it, it is only
+   * downloaded (high-res size, one file at a time, never in the ZIP).
+   */
+  tiff?: { name: string; bytes: number | null };
+  /**
+   * No image can be shown (a TIFF-only photo without web JPEG, or without
+   * preview-wm in Prueba): the grid and the lightbox draw the placeholder
+   * card "Vista previa no disponible". `width`/`height` are null then.
+   */
+  noPreview?: true;
   /** Opaque version token for this photo's image URLs (`?v=`); enables 1-year browser caching. */
   v?: string;
   /** Versioned albums (T6.53c): the version shown (>= 2, or a photo with a history); absent otherwise. */

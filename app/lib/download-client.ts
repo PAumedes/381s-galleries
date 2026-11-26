@@ -1,6 +1,7 @@
 import { clickAnchor, DownloadError, requestTokens } from "./download-net";
 import type { DlVariant, DownloadDeps } from "./download-net";
-import { estimateBytes, LARGE_BYTES, MB } from "./download-bulk";
+import { estimateBytes, LARGE_BYTES } from "./download-bulk";
+import { formatBytes } from "./format-bytes";
 
 /** Public surface of the download code; the parts live in download-net, download-bulk and zip-names. */
 export * from "./download-net";
@@ -47,7 +48,4 @@ export function bulkWarning(o: {
     : null;
 }
 
-export function formatBytes(n: number): string {
-  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1)} GB`;
-  return `${Math.max(1, Math.round(n / MB))} MB`;
-}
+export { formatBytes };

@@ -18,12 +18,14 @@ import {
   DL_TOKEN_TTL_SECONDS,
   downloadFilename,
   fileIdFor,
+  isTiffDownload,
   isVariant,
   variantAllowed,
 } from "./download-shared";
 import type { DlEnv, DlToken, DlVariant, PhotoRow } from "./download-shared";
 import { NOSNIFF, PRIVATE_NO_STORE, textResponse } from "./http";
 import { hit, retryAfterFor, type RateRule } from "./rate-limit";
+import { TIFF_MIME } from "./tiff";
 import { rawUserAgent, visitorInfo } from "./visitor-info";
 
 // ------------------------------------------------------------------ /dl/:token
@@ -36,6 +38,43 @@ const BASE_HEADERS = {
 };
 const gone = () => textResponse("Gone", 410, BASE_HEADERS);
 const badGateway = () => textResponse("Bad gateway", 502, BASE_HEADERS);
+
+/**
+ * Failures of a TIFF download (T6.53d) answer in plain words, Spanish then
+ * English, with a retry hint and nothing about Drive (no ids, no upstream
+ * text). `busy` = Drive quota / rate limit (403, 429): worth waiting longer.
+ */
+const TIFF_RETRY_SECONDS = { busy: 300, failed: 60 };
+const TIFF_MESSAGES = {
+  gone: "Este archivo ya no está disponible.\nThis file is no longer available.",
+  busy: "El archivo no se pudo descargar ahora (demasiadas descargas). Probá de nuevo en unos minutos.\nThe file could not be downloaded right now (too many downloads). Try again in a few minutes.",
+  failed:
+    "El archivo no se pudo descargar. Probá de nuevo en un minuto.\nThe file could not be downloaded. Try again in a minute.",
+};
+/** Drive's quota / rate-limit reasons: worth waiting for. Any other 403 (permission revoked, download not allowed) is final. */
+const QUOTA_REASONS = new Set([
+  "rateLimitExceeded",
+  "userRateLimitExceeded",
+  "dailyLimitExceeded",
+  "quotaExceeded",
+  "downloadQuotaExceeded",
+  "sharingRateLimitExceeded",
+]);
+function tiffFailureKind(err: unknown): keyof typeof TIFF_MESSAGES {
+  if (!(err instanceof DriveError)) return "failed";
+  if (err.status === 429) return "busy";
+  if (err.status === 403)
+    return err.reason && QUOTA_REASONS.has(err.reason) ? "busy" : "gone";
+  return "failed";
+}
+function tiffFailure(kind: keyof typeof TIFF_MESSAGES): Response {
+  if (kind === "gone")
+    return textResponse(TIFF_MESSAGES.gone, 410, BASE_HEADERS);
+  return textResponse(TIFF_MESSAGES[kind], kind === "busy" ? 503 : 502, {
+    ...BASE_HEADERS,
+    "Retry-After": String(TIFF_RETRY_SECONDS[kind]),
+  });
+}
 
 export interface DownloadDeps {
   drive: DriveClient;
@@ -110,6 +149,8 @@ async function loadDownloadTarget(env: DlEnv, claims: DlToken) {
   if (claims.pf !== (await accessFingerprint(gallery, env))) return null;
   if (!variantAllowed(gallery, claims.v)) return null;
   if (claims.b && !gallery.allowBulk) return null;
+  // A TIFF is one file at a time, never part of a multi-photo / bulk run.
+  if (claims.b && isTiffDownload(photo, claims.v)) return null;
   const fileId = fileIdFor(photo, claims.v);
   return fileId ? { photo, gallery, fileId } : null;
 }
@@ -142,15 +183,19 @@ async function logDownload(
 async function fetchDownloadUpstream(
   drive: DriveClient,
   fileId: string,
-  range: string | null,
+  req: { range: string | null; ifRange: string | null },
+  tiff: boolean,
 ): Promise<{ upstream: Response } | { error: Response }> {
   try {
     return {
-      upstream: await drive.streamFile(fileId, { range: range ?? undefined }),
+      upstream: await drive.streamFile(fileId, {
+        range: req.range ?? undefined,
+        ...(req.range && req.ifRange ? { ifRange: req.ifRange } : {}),
+      }),
     };
   } catch (err) {
     if (err instanceof DriveError && err.status === 404)
-      return { error: gone() };
+      return { error: tiff ? tiffFailure("gone") : gone() };
     if (err instanceof DriveError && err.status === 416) {
       return {
         error: new Response(null, {
@@ -159,13 +204,30 @@ async function fetchDownloadUpstream(
         }),
       };
     }
-    console.error(
-      "dl: drive error",
-      err instanceof DriveError ? err.status : "error",
-    );
-    return { error: badGateway() };
+    const status = err instanceof DriveError ? err.status : "error";
+    console.error("dl: drive error", status);
+    if (!tiff) return { error: badGateway() };
+    return { error: tiffFailure(tiffFailureKind(err)) };
   }
 }
+
+/**
+ * The one byte range that is forwarded to Drive: `bytes=a-b`, `bytes=a-` or
+ * `bytes=-n`. Anything else (several ranges, other units, junk) is dropped, so
+ * the visitor simply gets the whole file (200): a multipart/byteranges answer
+ * would be saved as a corrupt file.
+ */
+const SINGLE_RANGE = /^bytes=(?:\d+-\d*|-\d+)$/;
+const singleRange = (raw: string | null): string | null => {
+  const r = raw?.trim() ?? "";
+  return SINGLE_RANGE.test(r) ? r : null;
+};
+
+/** Drive answered HTML / JSON / multipart where the file's bytes belong. */
+const isWebPage = (upstream: Response): boolean =>
+  /^(text\/html|application\/json|multipart\/)/i.test(
+    upstream.headers.get("Content-Type") ?? "",
+  );
 
 /** Attachment response mirroring the upstream status, length and range headers. */
 async function attachmentResponse(
@@ -174,21 +236,36 @@ async function attachmentResponse(
   variant: DlVariant,
   isHead: boolean,
 ): Promise<Response> {
+  const tiff = isTiffDownload(photo, variant);
   const type = (upstream.headers.get("Content-Type") ?? "")
     .split(";")[0]
     .trim()
     .toLowerCase();
   const headers = new Headers({
     ...BASE_HEADERS,
-    "Content-Type": IMAGE_TYPES.includes(type) ? type : "image/jpeg",
+    // Drive often labels a TIFF application/octet-stream: it is a TIFF.
+    "Content-Type": tiff
+      ? TIFF_MIME
+      : IMAGE_TYPES.includes(type)
+        ? type
+        : "image/jpeg",
     "Content-Disposition": contentDisposition(
-      downloadFilename(photo.baseName, variant),
+      downloadFilename(photo.baseName, variant, tiff),
     ),
   });
-  for (const h of ["Content-Length", "Content-Range", "Accept-Ranges"]) {
+  for (const h of [
+    "Content-Length",
+    "Content-Range",
+    "Accept-Ranges",
+    "ETag",
+    "Last-Modified",
+  ]) {
     const v = upstream.headers.get(h);
     if (v) headers.set(h, v);
   }
+  // Resume (Range + If-Range) needs a validator: without one, never claim it.
+  if (tiff && !headers.has("ETag") && !headers.has("Last-Modified"))
+    headers.delete("Accept-Ranges");
   if (isHead) {
     await upstream.body?.cancel();
     return new Response(null, { status: upstream.status, headers });
@@ -232,12 +309,23 @@ export async function serveDownload(
     });
   }
 
+  const tiff = isTiffDownload(photo, claims.v);
   const fetched = await fetchDownloadUpstream(
     deps.drive,
     fileId,
-    request.headers.get("Range"),
+    {
+      range: singleRange(request.headers.get("Range")),
+      ifRange: request.headers.get("If-Range"),
+    },
+    tiff,
   );
   if ("error" in fetched) return fetched.error;
+  if (tiff && isWebPage(fetched.upstream)) {
+    // A page instead of the file (e.g. Drive's "too large to scan" notice).
+    console.error("dl: drive answered a web page instead of the file");
+    await fetched.upstream.body?.cancel();
+    return tiffFailure("failed");
+  }
   await log();
   return attachmentResponse(fetched.upstream, photo, claims.v, isHead);
 }

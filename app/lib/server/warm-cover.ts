@@ -40,6 +40,7 @@ export async function warmCoverPhoto(
       photo: {
         id: P.id,
         driveHighresId: P.driveHighresId,
+        driveTiffId: P.driveTiffId,
         driveWebId: P.driveWebId,
         driveIgId: P.driveIgId,
         driveThumbId: P.driveThumbId,

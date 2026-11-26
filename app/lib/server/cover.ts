@@ -47,6 +47,8 @@ export interface CoverRow {
   id: string;
   /** Has a preview-wm file (the only thing Prueba can serve). */
   hasWm: boolean;
+  /** false = no image can be shown (TIFF-only without a preview, T6.53d): never a cover. Absent = true. */
+  hasPreview?: boolean;
 }
 
 export interface ResolvedCover {
@@ -64,9 +66,11 @@ export interface ResolvedCover {
 }
 
 export function resolveCover(
-  rows: readonly CoverRow[],
+  all: readonly CoverRow[],
   gallery: Pick<Row, "coverPhotoId" | "coverPhotoIdMobile" | "mode">,
 ): ResolvedCover {
+  // A photo with nothing to show counts like a hidden one (T6.53d).
+  const rows = all.filter((p) => p.hasPreview !== false);
   const proofing = gallery.mode === "proofing";
   const chosen = rows.find((p) => p.id === gallery.coverPhotoId);
   const base = chosen ?? rows[0];
@@ -91,7 +95,10 @@ const PHOTO_ORDER = "p.set_name, p.sort, p.base_name";
 export const hasWmSql = (col = "p.drive_wm_id"): SQL<number> =>
   sql<number>`(NULLIF(${sql.raw(col)}, '') IS NOT NULL)`;
 
-const SERVABLE = `p.missing_since IS NULL AND (galleries.mode = 'delivery' OR NULLIF(p.drive_wm_id, '') IS NOT NULL)`;
+/** SQL twin of `hasPreview` for a TIFF-only photo (T6.53d): its TIFF id fills drive_highres_id. */
+const TIFF_ONLY_NO_WEB = `COALESCE(p.drive_tiff_id = p.drive_highres_id, 0) AND NULLIF(p.drive_web_id, '') IS NULL`;
+
+const SERVABLE = `p.missing_since IS NULL AND (galleries.mode = 'delivery' AND NOT (${TIFF_ONLY_NO_WEB}) OR galleries.mode <> 'delivery' AND NULLIF(p.drive_wm_id, '') IS NOT NULL)`;
 
 function coverSql(ok: string): SQL<string | null> {
   const cond = sql.raw(ok);

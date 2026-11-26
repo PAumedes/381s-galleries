@@ -9,6 +9,7 @@ import type {
 import { isPinned } from "./access";
 import { focusOf, resolveCover } from "./cover";
 import { imageVersionToken } from "./images";
+import { hasPreview, hasTiffOriginal, tiffFilename } from "./tiff";
 import type { SourcePhoto } from "./image-source";
 import {
   atLatestVersion,
@@ -54,12 +55,17 @@ async function versionView(
 ): Promise<VersionView> {
   const shown = chooseVersion(live, proofing);
   const visible = live.filter((r) => servable(r, proofing));
+  // A version with no image (TIFF-only, no web JPEG / preview-wm) has nothing
+  // to preview: the history does not list it (T6.53d).
+  const listed = visible.filter((r) =>
+    hasPreview(atVersion(photo, r), proofing),
+  );
   if (!shown || (shown.version < 2 && visible.length < 2))
     return { round: null };
   const history =
     visible.length >= 2
       ? await Promise.all(
-          visible.map(async (r) => ({
+          listed.map(async (r) => ({
             n: r.version,
             round: r.roundNumber,
             at: r.firstSeenAt,
@@ -98,6 +104,8 @@ type Row = {
   driveWebId: string | null;
   driveIgId: string | null;
   driveWmId: string | null;
+  /** No image can be shown (TIFF-only without a preview): placeholder card, never a cover. */
+  noPreview: boolean;
 };
 
 /** Consecutive runs of the same set, in grid order. */
@@ -149,8 +157,23 @@ async function loadOpenRows(env: Env, g: GalleryRow) {
     driveWebId: p.driveWebId,
     driveIgId: p.driveIgId,
     driveWmId: p.driveWmId,
+    noPreview: !hasPreview(p, proofing),
   }));
   return { stored, full, rows, live };
+}
+
+/** What a photo with a TIFF original adds to its payload: name and size for the placeholder card, never an id. */
+function tiffFields(
+  photo: Pick<Photo, "baseName" | "driveTiffId" | "highresBytes">,
+  noPreview: boolean,
+  proofing: boolean,
+): Pick<GalleryPhoto, "tiff" | "noPreview"> {
+  // Prueba never advertises an original, except on the placeholder card itself.
+  if (!hasTiffOriginal(photo) || (proofing && !noPreview)) return {};
+  return {
+    tiff: { name: tiffFilename(photo.baseName), bytes: photo.highresBytes },
+    ...(noPreview && { noPreview: true as const }),
+  };
 }
 
 /** The newest round among the versions shown (the album header's "Ronda N"); undefined when none has one. */
@@ -219,7 +242,11 @@ export async function buildOpenData(
   // preview-wm; otherwise the og:image URL would 404.
   const proofing = g.mode === "proofing";
   const cover = resolveCover(
-    rows.map((p) => ({ id: p.id, hasWm: !!p.driveWmId })),
+    rows.map((p) => ({
+      id: p.id,
+      hasWm: !!p.driveWmId,
+      hasPreview: !p.noPreview,
+    })),
     g,
   );
   const ogCover = proofing
@@ -241,13 +268,20 @@ export async function buildOpenData(
       ...(round !== undefined && { round }),
     },
     photos: await Promise.all(
-      rows.map(async ({ driveWebId, driveIgId, driveWmId: _wm, ...p }, i) => ({
-        ...p,
-        variants: { web: !!driveWebId, ig: !!driveIgId },
-        // Opaque cache-busting token for the image URLs (never a Drive id).
-        ...(await versionField(env, full[i], proofing)),
-        ...(views && versionFields(views[i], round)),
-      })),
+      rows.map(
+        async (
+          { driveWebId, driveIgId, driveWmId: _wm, noPreview, ...p },
+          i,
+        ) => ({
+          ...p,
+          variants: { web: !!driveWebId, ig: !!driveIgId },
+          ...(noPreview && { width: null, height: null }),
+          ...tiffFields(full[i], noPreview, proofing),
+          // Opaque cache-busting token for the image URLs (never a Drive id).
+          ...(await versionField(env, full[i], proofing)),
+          ...(views && versionFields(views[i], round)),
+        }),
+      ),
     ),
     og: ogOf(g, ogCover),
   };

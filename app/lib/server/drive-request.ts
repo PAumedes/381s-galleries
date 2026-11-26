@@ -43,11 +43,16 @@ async function readCapped(res: Response, cap: number): Promise<string> {
 
 async function toError(res: Response, token: string): Promise<DriveError> {
   let detail: string | undefined;
+  let reason: string | undefined;
   try {
     const text = await readCapped(res, MAX_ERROR_BODY);
     try {
-      const j = JSON.parse(text) as { error?: { message?: string } };
+      const j = JSON.parse(text) as {
+        error?: { message?: string; errors?: { reason?: unknown }[] };
+      };
       if (typeof j?.error?.message === "string") detail = j.error.message;
+      const r = j?.error?.errors?.[0]?.reason;
+      if (typeof r === "string") reason = r.slice(0, 80);
     } catch {
       // non-JSON body: no detail
     }
@@ -59,6 +64,7 @@ async function toError(res: Response, token: string): Promise<DriveError> {
     res.status,
     `Drive request failed (${res.status})`,
     detail,
+    reason,
   );
 }
 

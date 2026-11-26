@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../../../db";
 import type { TFunction } from "../../../../i18n/t";
 import { DEVICE_FIELDS } from "../../cover";
+import { hasPreview } from "../../tiff";
 import { deviceOf, done, fail, str } from "./shared";
 import type { GalleryRow } from "./shared";
 
@@ -27,7 +28,13 @@ export async function saveFocus(
     // A mobile focal point only means something for a (visible) mobile cover.
     const [p] = g.coverPhotoIdMobile
       ? await getDb(env)
-          .select({ id: schema.photos.id })
+          .select({
+            id: schema.photos.id,
+            driveHighresId: schema.photos.driveHighresId,
+            driveTiffId: schema.photos.driveTiffId,
+            driveWebId: schema.photos.driveWebId,
+            driveWmId: schema.photos.driveWmId,
+          })
           .from(schema.photos)
           .where(
             and(
@@ -37,7 +44,8 @@ export async function saveFocus(
             ),
           )
       : [];
-    if (!p) return fail(intent, t("admin.msg.focusNoMobileCover"));
+    if (!p || !hasPreview(p, g.mode === "proofing"))
+      return fail(intent, t("admin.msg.focusNoMobileCover"));
   }
   const rx = str(form, "focusX").trim();
   const ry = str(form, "focusY").trim();

@@ -50,6 +50,8 @@ const versionColumns = {
   driveThumbId: PV.driveThumbId,
   driveWmId: PV.driveWmId,
   driveThumbWmId: PV.driveThumbWmId,
+  driveTiffId: PV.driveTiffId,
+  highresBytes: PV.highresBytes,
   driveVersions: PV.driveVersions,
   width: PV.width,
   height: PV.height,
@@ -67,6 +69,8 @@ export type VersionRow = Pick<
   | "driveThumbId"
   | "driveWmId"
   | "driveThumbWmId"
+  | "driveTiffId"
+  | "highresBytes"
   | "driveVersions"
   | "width"
   | "height"
@@ -161,6 +165,7 @@ export function trusted<P extends SourcePhoto>(
     r.driveThumbId === photo.driveThumbId &&
     r.driveWmId === photo.driveWmId &&
     (r.driveThumbWmId ?? null) === (photo.driveThumbWmId ?? null) &&
+    r.driveTiffId === (photo.driveTiffId ?? null) &&
     r.driveVersions === photo.variantVersions;
   return same ? live : [];
 }
@@ -169,7 +174,12 @@ export function trusted<P extends SourcePhoto>(
 export function atVersion<P extends SourcePhoto>(
   photo: P,
   row: VersionRow,
-): P & { version: number; width: number | null; height: number | null } {
+): P & {
+  version: number;
+  width: number | null;
+  height: number | null;
+  highresBytes: number | null;
+} {
   return {
     ...photo,
     driveHighresId: row.driveHighresId,
@@ -178,6 +188,8 @@ export function atVersion<P extends SourcePhoto>(
     driveThumbId: row.driveThumbId,
     driveWmId: row.driveWmId,
     driveThumbWmId: row.driveThumbWmId,
+    driveTiffId: row.driveTiffId,
+    highresBytes: row.highresBytes,
     variantVersions: row.driveVersions,
     width: row.width,
     height: row.height,
