@@ -112,7 +112,7 @@ export const esAdmin = {
   "admin.edit.home.save": "Guardar portada pública",
   "admin.edit.versions.label": "Versiones de retoque",
   "admin.edit.versions.hint":
-    "Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones.",
+    "Los nombres como IMG_v2 pasan a ser versiones de IMG (y las carpetas v2/, rondas); la primera sincronización después de activarlo vuelve a leer las versiones. Atención: en un álbum que ya estaba sincronizado, la foto IMG_v2 existente se reemplaza por la versión 2 de IMG y se pierden sus favoritas y su uso como portada.",
   "admin.edit.versions.save": "Guardar versiones",
   "admin.edit.mode.legend": "Modo",
   "admin.edit.mode.deliveryNote":

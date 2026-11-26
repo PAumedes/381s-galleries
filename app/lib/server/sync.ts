@@ -6,7 +6,7 @@
  * the desired state in memory, and only then writes (one D1 batch per
  * gallery). A budget overrun therefore aborts before any write.
  */
-import { and, eq, isNotNull, ne, sql } from "drizzle-orm";
+import { and, eq, isNotNull, ne, or, sql } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../db";
 import { parsePending } from "./sync-helpers";
 import type { AlbumDraft } from "./sync-helpers";
@@ -70,11 +70,19 @@ async function hasMaturingMissing({ db }: SyncRun): Promise<boolean> {
       eq(schema.photos.galleryId, schema.galleries.id),
     )
     .where(
-      and(
-        isNotNull(schema.photos.missingSince),
-        ne(schema.galleries.status, "archived"),
-        sql`${schema.galleries.folderMissingSince} is null`,
-        sql`coalesce(${schema.galleries.syncIssuesJson}, '') not like '%"highres_empty"%'`,
+      or(
+        and(
+          isNotNull(schema.photos.missingSince),
+          ne(schema.galleries.status, "archived"),
+          sql`${schema.galleries.folderMissingSince} is null`,
+          sql`coalesce(${schema.galleries.syncIssuesJson}, '') not like '%"highres_empty"%'`,
+        ),
+        // A version row marked missing (T6.53b) matures like a photo. Folded
+        // into this query (the join always has rows when versions exist), so
+        // no album without versioning pays an extra query.
+        // Versioning switched on in the database: photos still without a version row need a read.
+        sql`exists (select 1 from ${schema.photos} vp join ${schema.galleries} vg on vg.id = vp.gallery_id where vg.versioning = 1 and vg.status != 'archived' and vg.folder_missing_since is null and coalesce(vg.sync_issues_json, '') not like '%"highres_empty"%' and not exists (select 1 from ${schema.photoVersions} pv where pv.photo_id = vp.id))`,
+        sql`exists (select 1 from ${schema.photoVersions} pv join ${schema.galleries} vg on vg.id = pv.gallery_id where vg.versioning = 1 and vg.status != 'archived' and vg.folder_missing_since is null and pv.drive_versions like '%"missingSince"%')`,
       ),
     )
     .limit(1);

@@ -114,7 +114,7 @@ export const enAdmin = {
   "admin.edit.home.save": "Save public home",
   "admin.edit.versions.label": "Retouch versions",
   "admin.edit.versions.hint":
-    "Names like IMG_v2 become versions of IMG (and v2/ folders, rounds); the first sync after switching this on re-reads the versions.",
+    "Names like IMG_v2 become versions of IMG (and v2/ folders, rounds); the first sync after switching this on re-reads the versions. Warning: in an album that was already synced, the existing IMG_v2 photo is replaced by version 2 of IMG, and its favorites and cover use are lost.",
   "admin.edit.versions.save": "Save versions",
   "admin.edit.mode.legend": "Mode",
   "admin.edit.mode.deliveryNote":

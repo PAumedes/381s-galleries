@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "../../../../db";
 import type { TFunction } from "../../../../i18n/t";
+import { deleteSetting, SETTINGS_KEYS } from "../../settings";
 import { done, fail } from "./shared";
 import type { GalleryRow } from "./shared";
 
@@ -16,7 +17,8 @@ export async function saveVersioning(
   t: TFunction,
 ) {
   const intent = "versioning";
-  const raw = f.get("versioning");
+  // The form posts a hidden 0 first and the checkbox 1 after it: the last wins.
+  const raw = f.getAll("versioning").at(-1);
   if (raw !== "1" && raw !== "0")
     return fail(intent, t("admin.msg.checkFields"), {
       versioning: t("admin.msg.valueInvalid"),
@@ -26,6 +28,9 @@ export async function saveVersioning(
     .update(schema.galleries)
     .set({ versioning: on })
     .where(eq(schema.galleries.id, g.id));
+  // Drive may report no change after the switch: forget the changes token so
+  // the next sync rescans and reads (or drops) the versions.
+  await deleteSetting(env, SETTINGS_KEYS.driveChangesToken);
   return done(
     intent,
     on ? t("admin.msg.versionsOn") : t("admin.msg.versionsOff"),

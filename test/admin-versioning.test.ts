@@ -4,6 +4,11 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "../app/db";
 import {
+  SETTINGS_KEYS,
+  getSetting,
+  putSetting,
+} from "../app/lib/server/settings";
+import {
   galleryAction,
   loadGalleryEdit,
 } from "../app/lib/server/admin-galleries";
@@ -68,5 +73,43 @@ describe("T6.53b2 versioning toggle", () => {
     await act({ intent: "versioning", versioning: "1" });
     const [g] = await db.select().from(schema.galleries);
     expect(g).toMatchObject({ versioning: true, status: "archived" });
+  });
+
+  it("the exact entries a checked box posts (hidden 0, then 1) turn it ON; an unchecked box (only 0) turns it OFF", async () => {
+    const post = (...values: string[]) => {
+      const body = new FormData();
+      body.append("intent", "versioning");
+      for (const v of values) body.append("versioning", v);
+      return galleryAction(
+        new Request(`http://localhost/admin/g/${GID}`, {
+          method: "POST",
+          body,
+        }),
+        e,
+        GID,
+      );
+    };
+    expect(await post("0", "1")).toMatchObject({ ok: true });
+    expect(await flag()).toBe(true);
+    expect(await post("0")).toMatchObject({ ok: true });
+    expect(await flag()).toBe(false);
+  });
+
+  it("switching it forgets the Drive changes token so the next sync rescans", async () => {
+    await putSetting(e, SETTINGS_KEYS.driveChangesToken, "tok");
+    await act({ intent: "versioning", versioning: "1" });
+    expect(
+      await getSetting(e, SETTINGS_KEYS.driveChangesToken),
+    ).toBeUndefined();
+    await putSetting(e, SETTINGS_KEYS.driveChangesToken, "tok");
+    await act({ intent: "versioning", versioning: "0" });
+    expect(
+      await getSetting(e, SETTINGS_KEYS.driveChangesToken),
+    ).toBeUndefined();
+  });
+  it("a refused value keeps the token", async () => {
+    await putSetting(e, SETTINGS_KEYS.driveChangesToken, "tok");
+    await act({ intent: "versioning", versioning: "2" });
+    expect(await getSetting(e, SETTINGS_KEYS.driveChangesToken)).toBe("tok");
   });
 });

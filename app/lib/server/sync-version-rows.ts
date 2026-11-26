@@ -66,14 +66,19 @@ function versionFields(d: PhotoDraft) {
 }
 
 /**
- * Delivery rounds of one gallery during one sync: a `v<N>/` folder is round N
- * exactly; suffix deliveries share the latest round while it is still within
- * the quiet window, else open the next number (never below 2: v1 is the
- * initial delivery and has no round).
+ * Delivery rounds of one gallery during one sync. A `v<N>/` folder owns one
+ * round (`folder_round = N`, the number N when free, else the next free one);
+ * suffix deliveries share the latest suffix round (`folder_round` NULL) while
+ * it is within the quiet window, else open the next free number (never below
+ * 2: v1 is the initial delivery and has no round). The two kinds never share a
+ * row, whatever happens to the folder later.
  */
 class RoundPlan {
   readonly inserts: BatchItem[] = [];
-  private readonly rounds = new Map<number, { id: string; lastSeen: string }>();
+  private readonly rounds = new Map<
+    number,
+    { id: string; lastSeen: string; folderRound: number | null }
+  >();
   private windowId: string | undefined;
 
   constructor(
@@ -81,11 +86,13 @@ class RoundPlan {
     private readonly galleryId: string,
     private readonly syncedAt: string,
     state: VersionState,
-    /** Numbers of the `v<N>/` folders in this scan: those rounds hold only their folder's files. */
-    private readonly folderNumbers: ReadonlySet<number>,
   ) {
     for (const r of state.rounds)
-      this.rounds.set(r.number, { id: r.id, lastSeen: r.startedAt });
+      this.rounds.set(r.number, {
+        id: r.id,
+        lastSeen: r.startedAt,
+        folderRound: r.folderRound,
+      });
     const byId = new Map([...this.rounds.values()].map((r) => [r.id, r]));
     for (const v of state.versions) {
       const r = v.roundId ? byId.get(v.roundId) : undefined;
@@ -93,33 +100,42 @@ class RoundPlan {
     }
   }
 
-  private open(number: number): string {
+  private nextNumber(): number {
+    return Math.max(1, ...this.rounds.keys()) + 1;
+  }
+
+  private open(number: number, folderRound: number | null): string {
     const id = crypto.randomUUID();
-    this.rounds.set(number, { id, lastSeen: this.syncedAt });
+    this.rounds.set(number, { id, lastSeen: this.syncedAt, folderRound });
     this.inserts.push(
       this.db.insert(schema.deliveryRounds).values({
         id,
         galleryId: this.galleryId,
         number,
+        folderRound,
         startedAt: this.syncedAt,
       }),
     );
     return id;
   }
 
-  forFolder(number: number): string {
-    return this.rounds.get(number)?.id ?? this.open(number);
+  forFolder(folder: number): string {
+    const own = [...this.rounds.values()].find((r) => r.folderRound === folder);
+    if (own) return own.id;
+    return this.open(
+      this.rounds.has(folder) ? this.nextNumber() : folder,
+      folder,
+    );
   }
 
   forWindow(): string {
     if (this.windowId) return this.windowId;
-    const numbers = [...this.rounds.keys(), ...this.folderNumbers];
-    const open = [...this.rounds].filter(([n]) => !this.folderNumbers.has(n));
-    const [, last] = open.sort(([x], [y]) => y - x)[0] ?? [];
+    const suffix = [...this.rounds].filter(([, r]) => r.folderRound === null);
+    const [, last] = suffix.sort(([x], [y]) => y - x)[0] ?? [];
     const joins =
       last !== undefined &&
       Date.parse(this.syncedAt) - Date.parse(last.lastSeen) <= ROUND_WINDOW_MS;
-    this.windowId = joins ? last.id : this.open(Math.max(1, ...numbers) + 1);
+    this.windowId = joins ? last.id : this.open(this.nextNumber(), null);
     return this.windowId;
   }
 }
@@ -181,14 +197,7 @@ export function versionStatements(
   targets: VersionTarget[],
   state: VersionState,
 ): { before: BatchItem[]; after: BatchItem[] } {
-  const folderNumbers = new Set(
-    targets.flatMap((t) =>
-      (t.draft.versions ?? []).flatMap((v) =>
-        v.draft.round === undefined ? [] : [v.draft.round],
-      ),
-    ),
-  );
-  const plan = new RoundPlan(db, galleryId, syncedAt, state, folderNumbers);
+  const plan = new RoundPlan(db, galleryId, syncedAt, state);
   const have = new Map<string, Map<number, VersionState["versions"][number]>>();
   for (const v of state.versions) {
     const m = have.get(v.photoId) ?? new Map();
