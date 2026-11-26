@@ -150,8 +150,9 @@ async function queryTileRows(db: Db, scope: Scope) {
       // Locked tile: the album's own PIN or its client's (a client PIN also
       // protects the covers, which /img refuses without the unlock).
       pinned: sql<number>`(${g.pinHash} IS NOT NULL OR ${c.pinHash} IS NOT NULL)`,
-      // No cover because every photo is a TIFF with no image (T6.53d2).
-      tiffOnly: allTiffNoPreviewSql(),
+      // Client page only: no cover because every photo is a TIFF with no
+      // image (T6.53d2). The studio home query is unchanged.
+      ...(scope.kind === "client" ? { tiffOnly: allTiffNoPreviewSql() } : {}),
       clientSlug: c.slug,
       clientName: c.name,
     })
@@ -232,8 +233,10 @@ async function loadTiles(
   const size = home ? HOME_CAP : CLIENT_PAGE_SIZE;
   const pageCount = home ? 1 : Math.ceil(listed.length / size);
   const shown = listed.slice((page - 1) * size, page * size);
-  const client = shown[0]
-    ? { clientName: shown[0].clientName!, clientSlug: shown[0].clientSlug! }
+  // From the first candidate, not the first listed: an enabled client whose
+  // albums are all unlisted is still a client (the caller adds the 404).
+  const client = rows[0]
+    ? { clientName: rows[0].clientName!, clientSlug: rows[0].clientSlug! }
     : undefined;
   const byId = await loadCoverPhotos(db, shown);
   const tiles: ClientTile[] = [];

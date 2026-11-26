@@ -11,6 +11,7 @@ import {
   parsePageParam,
   type ClientPageData,
 } from "./client-page";
+import { tiffTileApplies } from "./cover";
 import { backLink, type BackToClient } from "./back-to-client";
 import { PAGE_PARAM } from "../page-param";
 import { pinFeedback } from "./pin-feedback";
@@ -99,6 +100,8 @@ export async function galleryLoader(
                 : null,
             tiffOnly:
               result.data.state === "open" &&
+              !!res.hit &&
+              tiffTileApplies(res.hit.gallery) &&
               result.data.photos.length > 0 &&
               result.data.photos.every((p) => p.noPreview),
           },
