@@ -295,7 +295,7 @@ describe("T6.53b sync: suffix versions", () => {
     ]);
   });
 
-  it("a version that disappears from Drive is removed and photos falls back to the previous one", async () => {
+  it("a version that disappears keeps its row marked missing for the grace period; photos mirrors the latest PRESENT version; after the grace it is deleted", async () => {
     await sync(
       [
         ["hr", "A.jpg"],
@@ -304,8 +304,18 @@ describe("T6.53b sync: suffix versions", () => {
       T0,
     );
     await sync([["hr", "A.jpg"]], after(30));
-    expect((await versions()).map((v) => v.version)).toEqual([1]);
     expect((await photos())[0].driveHighresId).toBe("hr/A.jpg");
+    const rows = await versions();
+    expect(rows.map((v) => v.version)).toEqual([1, 2]);
+    expect(JSON.parse(rows[1].driveVersions!).missingSince).toBe(
+      nowIso(after(30)),
+    );
+    await sync([["hr", "A.jpg"]], after(60)); // marker kept, not renewed
+    expect(JSON.parse((await versions())[1].driveVersions!).missingSince).toBe(
+      nowIso(after(30)),
+    );
+    await sync([["hr", "A.jpg"]], after(30 + 90));
+    expect((await versions()).map((v) => v.version)).toEqual([1]);
   });
 
   it("removing a photo after the grace period deletes its versions (FK cascade)", async () => {

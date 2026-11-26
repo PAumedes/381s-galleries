@@ -8,6 +8,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { schema } from "../../db";
 import { D1_IN_CHUNK, VERSION_INSERT_ROWS } from "./d1-limits";
+import { graceElapsed } from "./sync-archive";
 import { chunk, photoFields } from "./sync-helpers";
 import type { PhotoDraft } from "./sync-helpers";
 import type { BatchItem, Db, SyncRun } from "./sync-types";
@@ -80,6 +81,8 @@ class RoundPlan {
     private readonly galleryId: string,
     private readonly syncedAt: string,
     state: VersionState,
+    /** Numbers of the `v<N>/` folders in this scan: those rounds hold only their folder's files. */
+    private readonly folderNumbers: ReadonlySet<number>,
   ) {
     for (const r of state.rounds)
       this.rounds.set(r.number, { id: r.id, lastSeen: r.startedAt });
@@ -110,16 +113,54 @@ class RoundPlan {
 
   forWindow(): string {
     if (this.windowId) return this.windowId;
-    const numbers = [...this.rounds.keys()];
-    const latest = numbers.length ? Math.max(...numbers) : undefined;
-    const last = latest === undefined ? undefined : this.rounds.get(latest)!;
+    const numbers = [...this.rounds.keys(), ...this.folderNumbers];
+    const open = [...this.rounds].filter(([n]) => !this.folderNumbers.has(n));
+    const [, last] = open.sort(([x], [y]) => y - x)[0] ?? [];
     const joins =
       last !== undefined &&
       Date.parse(this.syncedAt) - Date.parse(last.lastSeen) <= ROUND_WINDOW_MS;
-    this.windowId = joins ? last.id : this.open(Math.max(latest ?? 1, 1) + 1);
+    this.windowId = joins ? last.id : this.open(Math.max(1, ...numbers) + 1);
     return this.windowId;
   }
 }
+
+const updateVersion = (
+  db: Db,
+  photoId: string,
+  version: number,
+  set: Partial<typeof schema.photoVersions.$inferInsert>,
+) =>
+  db
+    .update(schema.photoVersions)
+    .set(set)
+    .where(
+      and(
+        eq(schema.photoVersions.photoId, photoId),
+        eq(schema.photoVersions.version, version),
+      ),
+    );
+
+/**
+ * A version whose file left Drive is not deleted at once (Capture One
+ * delete+rewrite, a transient listing): `drive_versions` gains
+ * `missingSince`, and the row is deleted after the same grace as photos. A
+ * file that returns rewrites the JSON (no marker) and keeps its round.
+ * Readers (T6.53c) must ignore rows whose `drive_versions` has `missingSince`.
+ */
+const parseVersions = (json: string | null): Record<string, unknown> => {
+  try {
+    const v: unknown = JSON.parse(json ?? "{}");
+    return v && typeof v === "object" ? (v as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+};
+const missingSinceOf = (json: string | null): string | null => {
+  const v = parseVersions(json).missingSince;
+  return typeof v === "string" ? v : null;
+};
+const markMissing = (json: string | null, since: string) =>
+  JSON.stringify({ ...parseVersions(json), missingSince: since });
 
 export interface VersionTarget {
   photoId: string;
@@ -134,13 +175,20 @@ export interface VersionTarget {
  * (album synced before versioning was switched on) is re-derived here.
  */
 export function versionStatements(
-  { db }: SyncRun,
+  { db, now }: SyncRun,
   galleryId: string,
   syncedAt: string,
   targets: VersionTarget[],
   state: VersionState,
 ): { before: BatchItem[]; after: BatchItem[] } {
-  const plan = new RoundPlan(db, galleryId, syncedAt, state);
+  const folderNumbers = new Set(
+    targets.flatMap((t) =>
+      (t.draft.versions ?? []).flatMap((v) =>
+        v.draft.round === undefined ? [] : [v.draft.round],
+      ),
+    ),
+  );
+  const plan = new RoundPlan(db, galleryId, syncedAt, state, folderNumbers);
   const have = new Map<string, Map<number, VersionState["versions"][number]>>();
   for (const v of state.versions) {
     const m = have.get(v.photoId) ?? new Map();
@@ -173,22 +221,21 @@ export function versionStatements(
       else if (
         (Object.keys(f) as (keyof typeof f)[]).some((c) => row[c] !== f[c])
       )
-        changes.push(
-          db
-            .update(schema.photoVersions)
-            .set(f)
-            .where(
-              and(
-                eq(schema.photoVersions.photoId, photoId),
-                eq(schema.photoVersions.version, version),
-              ),
-            ),
-        );
+        changes.push(updateVersion(db, photoId, version, f));
     }
-    for (const gone of chunk(
-      [...rows.keys()].filter((v) => !wanted.has(v)),
-      D1_IN_CHUNK,
-    ))
+    const absent = [...rows.values()].filter((r) => !wanted.has(r.version));
+    const expired: number[] = [];
+    for (const row of absent) {
+      const since = missingSinceOf(row.driveVersions);
+      if (since === null)
+        changes.push(
+          updateVersion(db, photoId, row.version, {
+            driveVersions: markMissing(row.driveVersions, syncedAt),
+          }),
+        );
+      else if (graceElapsed(now, since)) expired.push(row.version);
+    }
+    for (const gone of chunk(expired, D1_IN_CHUNK))
       changes.push(
         db
           .delete(schema.photoVersions)

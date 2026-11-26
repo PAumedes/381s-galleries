@@ -127,7 +127,7 @@ describe("T6.53b version parsing: suffix `<base>_v<N>.<ext>` (versioned albums o
     expect(a.issues).toContainEqual({
       type: "missing_highres",
       set: "Highlights",
-      name: "A",
+      name: "A_v3",
     });
   });
 

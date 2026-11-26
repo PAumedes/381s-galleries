@@ -114,6 +114,8 @@ export interface Located {
   round?: number;
   /** Base name override: the name without its `_v<N>` suffix (versioned albums only). */
   base?: string;
+  /** Name shown in issues: the file's own stem (versioned albums: `IMG_v3`, not `IMG`). */
+  label?: string;
 }
 
 type Winner = Located & { base: string };
@@ -145,7 +147,11 @@ function pickWinners(located: Located[], issues: SyncIssue[]): ByRecipe {
     );
     const w = g[0];
     if (g.length > 1)
-      issues.push({ type: "duplicate", set: w.set, name: w.base });
+      issues.push({
+        type: "duplicate",
+        set: w.set,
+        name: w.label ?? w.base,
+      });
     const m = byRecipe.get(w.recipe) ?? new Map();
     m.set(`${w.set.toLowerCase()}\0${w.base.toLowerCase()}`, w);
     byRecipe.set(w.recipe, m);
@@ -178,8 +184,18 @@ function draftPhoto(
   const thumb = pick("thumb");
   const wm = pick("preview-wm");
   const thumbWm = pick("thumb-wm");
-  if (!web) issues.push({ type: "missing_web", set: h.set, name: h.base });
-  if (!thumb) issues.push({ type: "missing_thumb", set: h.set, name: h.base });
+  if (!web)
+    issues.push({
+      type: "missing_web",
+      set: h.set,
+      name: h.label ?? h.base,
+    });
+  if (!thumb)
+    issues.push({
+      type: "missing_thumb",
+      set: h.set,
+      name: h.label ?? h.base,
+    });
   return {
     setName: h.set,
     baseName: h.base,
@@ -226,7 +242,11 @@ export function draftPhotos(
     if (r === "high-res") continue;
     for (const [key, v] of byRecipe.get(r) ?? [])
       if (!hi.has(key))
-        issues.push({ type: "missing_highres", set: v.set, name: v.base });
+        issues.push({
+          type: "missing_highres",
+          set: v.set,
+          name: v.label ?? v.base,
+        });
   }
   return photos;
 }

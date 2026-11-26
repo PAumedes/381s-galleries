@@ -40,6 +40,7 @@ type Layer = "suffix" | "folder" | "plain";
 interface Parsed {
   located: Located;
   base: string;
+  stem: string;
   version: number;
   layer: Layer;
 }
@@ -52,6 +53,7 @@ function parse(l: Located, issues: SyncIssue[]): Parsed {
     return {
       located: l,
       base: stem,
+      stem,
       version: l.round ?? 1,
       layer: l.round === undefined ? "plain" : "folder",
     };
@@ -66,6 +68,7 @@ function parse(l: Located, issues: SyncIssue[]): Parsed {
   return {
     located: round === undefined ? rest : { ...rest, round },
     base: m[1],
+    stem,
     version,
     layer: "suffix",
   };
@@ -116,7 +119,7 @@ export function buildVersionedAlbum(
   const partitions = new Map<number, Located[]>();
   for (const p of parsed) {
     const part = partitions.get(p.version) ?? [];
-    part.push({ ...p.located, base: p.base });
+    part.push({ ...p.located, base: p.base, label: p.stem });
     partitions.set(p.version, part);
   }
   const byVersion = new Map<number, PhotoDraft[]>();
