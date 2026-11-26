@@ -80,6 +80,17 @@ export const esPublic = {
   "gate.invalid": "Ingresá un email válido",
 
   "grid.photo": "Foto {n}",
+  "grid.newInRound": "Nuevo en esta ronda",
+
+  "gallery.round": "Ronda {n}",
+
+  "versions.label": "Versión {n}",
+  "versions.history": "Historial ({n})",
+  "versions.title": "Historial de versiones",
+  "versions.close": "Cerrar historial",
+  "versions.current": "Actual",
+  "versions.initial": "Entrega inicial",
+  "versions.preview": "Vista previa de la versión {n}",
 
   "lightbox.close": "Cerrar",
   "lightbox.previous": "Anterior",

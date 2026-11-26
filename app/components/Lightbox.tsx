@@ -11,6 +11,7 @@ import { NavZone } from "./lightbox/NavZone";
 import { PhotoStage } from "./lightbox/PhotoStage";
 import { SwipeHint } from "./lightbox/SwipeHint";
 import { TopBar } from "./lightbox/TopBar";
+import { VersionHistory } from "./lightbox/VersionHistory";
 
 export type { LightboxProps };
 
@@ -143,6 +144,7 @@ function LightboxView(props: LightboxProps) {
         onFavorite={props.onFavorite}
         onDownload={props.onDownload}
       />
+      <VersionHistory key={photo.id} t={t} photo={photo} chrome={chrome} />
       <SwipeHint t={t} hasPrev={lb.hasPrev} hasNext={lb.hasNext} />
       <NavZones
         t={t}

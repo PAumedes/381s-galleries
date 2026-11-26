@@ -6,6 +6,7 @@ import { adminImageToken } from "../images";
 import { warmProgress } from "../warm";
 import { hasWmSql, focusOf, resolveCover } from "../cover";
 import { isDeleting } from "../gallery-delete";
+import { atLatestVersion, loadGalleryVersions } from "../photo-versions";
 import { listClientChoices } from "./client-choices";
 
 /** Hash of the visible photo ids (order independent): changes when the photo set changes. */
@@ -64,17 +65,55 @@ function editPhotoRows(db: ReturnType<typeof getDb>, galleryId: string) {
     );
 }
 
+type EditRow = Awaited<ReturnType<typeof editPhotoRows>>[number];
+
+/**
+ * A versioned album shows each photo at its latest version a visitor can be
+ * shown (T6.53c), so the editor reads the same columns: one more query, only
+ * for such albums. `fellBack` = the photos shown at an older version because
+ * the newest has no preview-wm (Prueba).
+ */
+async function atShownVersions(env: Env, g: GalleryRow, rows: EditRow[]) {
+  if (!g.versioning) return { rows, fellBack: [] };
+  const live = await loadGalleryVersions(env, g.id);
+  const proofing = g.mode === "proofing";
+  const fellBack: EditRow[] = [];
+  const shown = rows.map((p) => {
+    const at = atLatestVersion(p, live.get(p.id), proofing);
+    const row = {
+      ...at,
+      hasWm: Number(!!at.driveWmId),
+      hasThumbWm: Number(!!at.driveThumbWmId),
+    };
+    const newest = live.get(p.id)?.at(-1);
+    if (proofing && at.driveWmId && newest && !newest.driveWmId)
+      fellBack.push(row);
+    return row;
+  });
+  return { rows: shown, fellBack };
+}
+
 /** Sync issues, plus (proofing only) the photos without preview-wm, which 404 for clients. */
-function editIssues(g: GalleryRow, noWm: { set: string; name: string }[]) {
+function editIssues(
+  g: GalleryRow,
+  noWm: { set: string; name: string }[],
+  fellBack: { set: string; name: string }[],
+) {
   const issues = groupIssues(g.syncIssuesJson);
-  if (g.mode === "proofing" && noWm.length > 0) {
+  const extra = (
+    type: "missing_wm" | "version_wm_fallback",
+    list: { set: string; name: string }[],
+  ) => {
+    if (g.mode !== "proofing" || list.length === 0) return;
     issues.groups.push({
-      type: "missing_wm",
-      label: ISSUE_LABELS.missing_wm,
-      items: noWm.map((p) => ({ set: p.set, name: p.name })),
+      type,
+      label: ISSUE_LABELS[type],
+      items: list.map((p) => ({ set: p.set, name: p.name })),
     });
-    issues.total += noWm.length;
-  }
+    issues.total += list.length;
+  };
+  extra("missing_wm", noWm);
+  extra("version_wm_fallback", fellBack);
   return issues;
 }
 
@@ -126,7 +165,11 @@ export async function loadGalleryEdit(env: Env, id: string) {
     .where(eq(schema.galleries.id, id));
   if (!g) return null;
   const clients = await listClientChoices(env, g.clientId);
-  const ps = await editPhotoRows(db, id);
+  const { rows: ps, fellBack } = await atShownVersions(
+    env,
+    g,
+    await editPhotoRows(db, id),
+  );
   const photos: EditPhoto[] = await Promise.all(
     ps.map(async (p) => ({
       id: p.id,
@@ -160,6 +203,6 @@ export async function loadGalleryEdit(env: Env, id: string) {
     hasThumbWmFiles: ps.some((p) => p.hasThumbWm),
     photos,
     version: await photoSetVersion(photos.map((p) => p.id)),
-    issues: editIssues(g, noWm),
+    issues: editIssues(g, noWm, fellBack),
   };
 }

@@ -50,6 +50,7 @@ export const ISSUE_KEYS: Record<string, MessageKey> = {
   highres_empty: "admin.issue.highres_empty",
   version_conflict: "admin.issue.version_conflict",
   missing_wm: "admin.issue.missing_wm",
+  version_wm_fallback: "admin.issue.version_wm_fallback",
 };
 
 /** Spanish default labels (the UI translates `type` through ISSUE_KEYS). */

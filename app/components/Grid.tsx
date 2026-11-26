@@ -195,6 +195,14 @@ function Tile(props: TileProps) {
         onError={img.onError}
         imgRef={img.imgRef}
       />
+      {photo.isNew && (
+        <span
+          data-testid={`new-${index}`}
+          className="pointer-events-none absolute top-1 left-1 bg-black/60 px-2 py-1 text-micro uppercase text-white"
+        >
+          {t("grid.newInRound")}
+        </span>
+      )}
       {img.failed && (
         <RetryButton
           index={index}

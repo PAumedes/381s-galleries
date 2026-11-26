@@ -34,6 +34,8 @@ type CoverHeroProps = {
   aspect?: number | null;
   scrollLabel: string;
   onScroll?: () => void;
+  /** Versioned albums: "Ronda N" under the date (T6.53c). */
+  round?: string | null;
   embedded?: boolean;
   headerRef?: Ref<HTMLElement>;
   /** Cover layout (T6.5). Default: Completa (full-bleed photo). */
@@ -67,6 +69,7 @@ export function CoverHero({
   aspect = null,
   scrollLabel,
   onScroll,
+  round = null,
   embedded = false,
   headerRef,
   layout = "completa",
@@ -102,7 +105,10 @@ export function CoverHero({
       />
     ),
     titleBlock: (
-      <TitleBlock Title={embedded ? "p" : "h1"} {...{ title, date, studio }} />
+      <TitleBlock
+        Title={embedded ? "p" : "h1"}
+        {...{ title, date, studio, round }}
+      />
     ),
   };
   if (layout === "dividida") return <DividedaCover {...parts} />;
@@ -127,17 +133,24 @@ function TitleBlock({
   title,
   date,
   studio,
+  round,
 }: {
   Title: "p" | "h1";
   title: string;
   date: string | null;
   studio: string;
+  round: string | null;
 }) {
   return (
     <>
       <Title className="text-display font-light uppercase">{title}</Title>
       {date && (
         <p className="text-body -mt-3 font-light tracking-wide">{date}</p>
+      )}
+      {round && (
+        <p data-testid="cover-round" className="text-micro-label uppercase">
+          {round}
+        </p>
       )}
       <p className="text-micro-label uppercase">{studio}</p>
     </>

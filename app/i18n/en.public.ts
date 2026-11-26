@@ -81,6 +81,17 @@ export const enPublic = {
   "gate.invalid": "Enter a valid email",
 
   "grid.photo": "Photo {n}",
+  "grid.newInRound": "New in this round",
+
+  "gallery.round": "Round {n}",
+
+  "versions.label": "Version {n}",
+  "versions.history": "History ({n})",
+  "versions.title": "Version history",
+  "versions.close": "Close history",
+  "versions.current": "Current",
+  "versions.initial": "Initial delivery",
+  "versions.preview": "Preview of version {n}",
 
   "lightbox.close": "Close",
   "lightbox.previous": "Previous",
