@@ -30,6 +30,7 @@ import {
 } from "./sync-state";
 import { archiveAbsent, loadPhotoRows } from "./sync-archive";
 import { syncAlbum } from "./sync-album";
+import { loadVersionState } from "./sync-version-rows";
 import type { AlbumPass } from "./sync-album";
 import type {
   GalleryRow,
@@ -162,12 +163,16 @@ async function loadLibrary(
 ): Promise<Library> {
   op();
   const ignored = await ignoredFolderIds(env as Env);
-  const albums = (await scan(rootId, drive, guard)).filter(
-    (a) => !ignored.has(a.folder.id),
-  );
   op();
   const allRows = await db.select().from(schema.galleries);
   const existing = allRows.filter((g) => !ignored.has(g.driveFolderId));
+  // Only albums with galleries.versioning = 1 parse versions (T6.53b).
+  const versioned = new Set(
+    existing.filter((g) => g.versioning).map((g) => g.driveFolderId),
+  );
+  const albums = (await scan(rootId, drive, guard, versioned)).filter(
+    (a) => !ignored.has(a.folder.id),
+  );
   return { albums, allRows, existing };
 }
 
@@ -193,8 +198,16 @@ async function applyLibrary(
       ...(await (op(), clientSlugs(run.env as Env))),
     ]),
     pendingIds: pending,
+    versions: new Map(),
   };
   const rowsByGallery = await loadPhotoRows(run, albums, byFolder);
+  pass.versions = await loadVersionState(
+    run,
+    albums.flatMap((a) => {
+      const g = byFolder.get(a.folder.id);
+      return g?.versioning ? [g.id] : [];
+    }),
+  );
   for (const a of albums) {
     const ex = byFolder.get(a.folder.id);
     const rows = ex ? (rowsByGallery.get(ex.id) ?? []) : [];

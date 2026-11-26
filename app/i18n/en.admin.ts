@@ -154,6 +154,8 @@ export const enAdmin = {
   "admin.issue.missing_web": "Missing web version",
   "admin.issue.missing_thumb": "Missing thumbnail (thumb)",
   "admin.issue.highres_empty": "The high-res folder is empty or missing",
+  "admin.issue.version_conflict":
+    "Version conflict: the same file arrived by suffix (_v2) and by folder (v2/); the suffix wins",
   "admin.issue.missing_wm": "Missing preview-wm",
   "admin.issue.other": "Other notices",
   "admin.share.link": "Public link",

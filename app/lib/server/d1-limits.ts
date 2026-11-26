@@ -20,6 +20,8 @@ export const D1_PAID_QUERIES_PER_INVOCATION = 1000;
 export const D1_IN_CHUNK = 90;
 /** Rows per multi-row photo INSERT: ~18 bound columns each, 5 * 18 = 90 <= 100. */
 export const PHOTO_INSERT_ROWS = 5;
+/** Rows per multi-row photo_versions INSERT: 15 bound columns each, 6 * 15 = 90 <= 100. */
+export const VERSION_INSERT_ROWS = 6;
 /** Statements per db.batch() call (one D1 round trip). */
 export const D1_BATCH_MAX = 100;
 

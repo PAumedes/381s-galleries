@@ -18,8 +18,11 @@ import {
   keyOf,
   nfc,
   parseFolderDate,
+  photoFields,
 } from "./sync-helpers";
 import type { AlbumDraft, PhotoDraft } from "./sync-helpers";
+import { versionStatements } from "./sync-version-rows";
+import type { VersionState, VersionTarget } from "./sync-version-rows";
 import type {
   BatchItem,
   Db,
@@ -30,29 +33,6 @@ import type {
 } from "./sync-types";
 
 /** Per-album reconcile: gallery row and photo statements from the scanned state. */
-const photoFields = (p: PhotoDraft) => ({
-  setName: p.setName,
-  baseName: p.baseName,
-  driveHighresId: p.highres.id,
-  driveWebId: p.web?.id ?? null,
-  driveIgId: p.ig?.id ?? null,
-  driveThumbId: p.thumb?.id ?? null,
-  driveWmId: p.wm?.id ?? null,
-  driveThumbWmId: p.thumbWm?.id ?? null,
-  highresBytes: p.highres.size ?? null,
-  variantVersions: JSON.stringify({
-    highres: p.highres.modifiedTime,
-    web: p.web?.modifiedTime ?? null,
-    ig: p.ig?.modifiedTime ?? null,
-    thumb: p.thumb?.modifiedTime ?? null,
-    wm: p.wm?.modifiedTime ?? null,
-    thumbWm: p.thumbWm?.modifiedTime ?? null,
-  }),
-  width: p.width,
-  height: p.height,
-  takenAt: p.highres.takenAt ?? null,
-});
-
 /** Count of ops against the Cloudflare-services subrequest pool (D1/R2). */
 
 /** State shared by the per-album steps of one reconcile pass. */
@@ -62,6 +42,8 @@ export interface AlbumPass {
   takenSlugs: Set<string>;
   /** Removed photo ids whose R2 keys still need deleting (persisted with the row deletes). */
   pendingIds: string[];
+  /** Rounds and version rows of the versioned galleries of this run (T6.53b). */
+  versions: Map<string, VersionState>;
 }
 
 /** The status an existing gallery returns to: only galleries sync itself archived come back; an admin-archived one stays archived. */
@@ -247,6 +229,7 @@ function insertPhotoStmts(
   galleryId: string,
   fresh: PhotoDraft[],
   rows: Row[],
+  idOf: (p: PhotoDraft) => string,
 ): BatchItem[] {
   fresh.sort(freshOrder);
   let sort = rows.reduce((m, r) => Math.max(m, r.sort), -1) + 1;
@@ -254,13 +237,29 @@ function insertPhotoStmts(
   return chunk(fresh, PHOTO_INSERT_ROWS).map((part) =>
     db.insert(schema.photos).values(
       part.map((p) => ({
-        id: crypto.randomUUID(),
+        id: idOf(p),
         galleryId,
         ...photoFields(p),
         sort: sort++,
       })),
     ),
   );
+}
+
+/** The album's photos with their row ids (existing rows by name, new ones from `freshIds`). */
+function versionTargets(
+  a: AlbumDraft,
+  rows: Row[],
+  freshIds: Map<PhotoDraft, string>,
+): VersionTarget[] {
+  const idByKey = new Map(
+    rows.map((r) => [keyOf(r.setName, r.baseName), r.id]),
+  );
+  return a.photos.map((draft) => ({
+    draft,
+    photoId:
+      freshIds.get(draft) ?? idByKey.get(keyOf(draft.setName, draft.baseName))!,
+  }));
 }
 
 /**
@@ -273,6 +272,7 @@ function photoStatements(
   a: AlbumDraft,
   rows: Row[],
   galleryId: string,
+  vstate: VersionState | undefined,
 ): BatchItem[] {
   const { db } = run;
   const { result, syncedAt } = pass;
@@ -300,9 +300,22 @@ function photoStatements(
         .set({ missingSince: syncedAt })
         .where(inArray(schema.photos.id, ids)),
     );
-  stmts.push(...updates);
+  const freshIds = new Map(fresh.map((p) => [p, crypto.randomUUID()]));
+  const versions = vstate
+    ? versionStatements(
+        run,
+        galleryId,
+        syncedAt,
+        versionTargets(a, rows, freshIds),
+        vstate,
+      )
+    : { before: [], after: [] };
+  stmts.push(...versions.before, ...updates);
   if (fresh.length || changed) stmts.push(warmMarker(db, galleryId, syncedAt));
-  stmts.push(...insertPhotoStmts(db, galleryId, fresh, rows));
+  stmts.push(
+    ...insertPhotoStmts(db, galleryId, fresh, rows, (p) => freshIds.get(p)!),
+    ...versions.after,
+  );
   return stmts;
 }
 
@@ -316,6 +329,8 @@ export function isSlugTakenError(err: unknown): boolean {
     )
   );
 }
+
+const EMPTY: VersionState = { rounds: [], versions: [] };
 
 /** Writes one album: gallery row first, then (unless high-res is empty) its photo diff. */
 export async function syncAlbum(
@@ -360,6 +375,15 @@ async function writeAlbum(
   pass.result.issues += a.issues.length;
   const stmts = galleryStatements(run, pass, a, ex, galleryId, issuesJson);
   if (!highresEmpty)
-    stmts.push(...photoStatements(run, pass, a, rows, galleryId));
+    stmts.push(
+      ...photoStatements(
+        run,
+        pass,
+        a,
+        rows,
+        galleryId,
+        ex?.versioning ? (pass.versions.get(galleryId) ?? EMPTY) : undefined,
+      ),
+    );
   await flushBatches(run, stmts);
 }

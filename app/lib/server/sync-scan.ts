@@ -15,6 +15,7 @@ import {
   recipeOf,
 } from "./sync-helpers";
 import type { AlbumDraft, Located, Recipe, SyncIssue } from "./sync-helpers";
+import { buildVersionedAlbum, roundFolderNumber } from "./sync-versions";
 import { DriveError } from "./drive-types";
 import type { DriveClient, DriveFile } from "./drive-types";
 
@@ -76,8 +77,18 @@ async function listAlbums(
     .sort((a, b) => cmp(nfc(a.name), nfc(b.name)) || cmp(a.id, b.id));
 }
 
-type RecipeFolder = { album: string; recipe: Recipe; id: string };
+/** `round` is set for folders inside a `v<N>/` round folder (versioned albums). */
+type RecipeFolder = {
+  album: string;
+  recipe: Recipe;
+  id: string;
+  round?: number;
+};
 type SetFolder = RecipeFolder & { set: string };
+type RoundFolder = { album: string; round: number; id: string };
+
+const withRound = (f: { round?: number }) =>
+  f.round === undefined ? {} : { round: f.round };
 
 /** What the walk learns per album id. */
 type ScanState = {
@@ -86,13 +97,18 @@ type ScanState = {
   hasWm: Map<string, boolean>;
 };
 
-/** Level 2: album children -> recipe folders; stray files and unknown folders become issues. */
+/**
+ * Level 2: album children -> recipe folders (and, in versioned albums,
+ * `v<N>/` round folders); stray files and unknown folders become issues.
+ */
 function classifyAlbumChildren(
   albums: DriveFile[],
   kids: Map<string, DriveFile[]>,
   state: ScanState,
-): RecipeFolder[] {
+  versioned: ReadonlySet<string>,
+): { recipeFolders: RecipeFolder[]; roundFolders: RoundFolder[] } {
   const recipeFolders: RecipeFolder[] = [];
+  const roundFolders: RoundFolder[] = [];
   for (const a of albums) {
     const list: SyncIssue[] = [];
     state.issues.set(a.id, list);
@@ -100,13 +116,46 @@ function classifyAlbumChildren(
       if (!isLive(c)) continue;
       if (isFolder(c)) {
         const r = recipeOf(c.name);
+        const round = versioned.has(a.id)
+          ? roundFolderNumber(c.name)
+          : undefined;
         if (r) {
           recipeFolders.push({ album: a.id, recipe: r, id: c.id });
           if (r === "preview-wm") state.hasWm.set(a.id, true);
-        } else list.push({ type: "unknown_folder", set: null, name: c.name });
+        } else if (round !== undefined)
+          roundFolders.push({ album: a.id, round, id: c.id });
+        else list.push({ type: "unknown_folder", set: null, name: c.name });
       } else list.push({ type: "stray_file", set: null, name: c.name });
     }
   }
+  return { recipeFolders, roundFolders };
+}
+
+/** Round folders' children -> the recipe folders inside (same layout as the album); anything else is an issue. */
+function classifyRoundChildren(
+  roundFolders: RoundFolder[],
+  kids: Map<string, DriveFile[]>,
+  state: ScanState,
+): RecipeFolder[] {
+  const recipeFolders: RecipeFolder[] = [];
+  for (const rf of roundFolders)
+    for (const c of kids.get(rf.id) ?? []) {
+      if (!isLive(c)) continue;
+      const r = isFolder(c) ? recipeOf(c.name) : undefined;
+      if (r)
+        recipeFolders.push({
+          album: rf.album,
+          recipe: r,
+          id: c.id,
+          round: rf.round,
+        });
+      else
+        state.issues.get(rf.album)!.push({
+          type: isFolder(c) ? "unknown_folder" : "stray_file",
+          set: null,
+          name: c.name,
+        });
+    }
   return recipeFolders;
 }
 
@@ -128,8 +177,15 @@ function collectRecipeFiles(
           recipe: rf.recipe,
           set: nfc(c.name) || DEFAULT_SET,
           id: c.id,
+          ...withRound(rf),
         });
-      else out.push({ recipe: rf.recipe, set: DEFAULT_SET, file: c });
+      else
+        out.push({
+          recipe: rf.recipe,
+          set: DEFAULT_SET,
+          file: c,
+          ...withRound(rf),
+        });
     }
   }
   return setFolders;
@@ -150,15 +206,26 @@ function collectSetFiles(
         state.issues
           .get(sf.album)!
           .push({ type: "unknown_folder", set: sf.set, name: c.name });
-      else out.push({ recipe: sf.recipe, set: sf.set, file: c });
+      else
+        out.push({
+          recipe: sf.recipe,
+          set: sf.set,
+          file: c,
+          ...withRound(sf),
+        });
     }
   }
 }
 
+/**
+ * `versioned`: drive ids of the albums with `galleries.versioning = 1`; only
+ * those read `v<N>/` round folders and parse `_v<N>` suffixes (T6.53b).
+ */
 export async function scan(
   rootId: string,
   drive: DriveClient,
   guard: Guard,
+  versioned: ReadonlySet<string> = new Set(),
 ): Promise<AlbumDraft[]> {
   const many = listLevel(drive, guard);
   const state: ScanState = {
@@ -167,20 +234,24 @@ export async function scan(
     hasWm: new Map(),
   };
   const albums = await listAlbums(rootId, drive, guard, many);
-  const recipeFolders = classifyAlbumChildren(
+  const { recipeFolders, roundFolders } = classifyAlbumChildren(
     albums,
     await many(albums.map((a) => a.id)),
     state,
+    versioned,
   );
-  const setFolders = collectRecipeFiles(
-    recipeFolders,
-    await many(recipeFolders.map((r) => r.id)),
-    state,
+  const level3 = await many(
+    [...recipeFolders, ...roundFolders].map((r) => r.id),
   );
-  collectSetFiles(setFolders, await many(setFolders.map((s) => s.id)), state);
+  const setFolders = collectRecipeFiles(recipeFolders, level3, state);
+  const roundRecipes = classifyRoundChildren(roundFolders, level3, state);
+  const level4 = await many([...setFolders, ...roundRecipes].map((s) => s.id));
+  collectSetFiles(setFolders, level4, state);
+  const roundSets = collectRecipeFiles(roundRecipes, level4, state);
+  collectSetFiles(roundSets, await many(roundSets.map((s) => s.id)), state);
 
   return albums.map((a) =>
-    buildAlbum(
+    (versioned.has(a.id) ? buildVersionedAlbum : buildAlbum)(
       a,
       state.located.get(a.id) ?? [],
       state.issues.get(a.id) ?? [],

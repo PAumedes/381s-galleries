@@ -152,6 +152,8 @@ export const esAdmin = {
   "admin.issue.missing_web": "Falta la versión web",
   "admin.issue.missing_thumb": "Falta la miniatura (thumb)",
   "admin.issue.highres_empty": "La carpeta high-res está vacía o no existe",
+  "admin.issue.version_conflict":
+    "Versión en conflicto: el mismo archivo llegó por sufijo (_v2) y por carpeta (v2/); gana el sufijo",
   "admin.issue.missing_wm": "Falta preview-wm",
   "admin.issue.other": "Otros avisos",
   "admin.share.link": "Enlace público",

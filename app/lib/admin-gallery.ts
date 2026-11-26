@@ -48,6 +48,7 @@ export const ISSUE_KEYS: Record<string, MessageKey> = {
   missing_web: "admin.issue.missing_web",
   missing_thumb: "admin.issue.missing_thumb",
   highres_empty: "admin.issue.highres_empty",
+  version_conflict: "admin.issue.version_conflict",
   missing_wm: "admin.issue.missing_wm",
 };
 
