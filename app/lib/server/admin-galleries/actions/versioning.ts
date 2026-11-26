@@ -24,6 +24,12 @@ export async function saveVersioning(
       versioning: t("admin.msg.valueInvalid"),
     });
   const on = raw === "1";
+  // Nothing to re-read when the value is the one already stored.
+  if (g.versioning === on)
+    return done(
+      intent,
+      on ? t("admin.msg.versionsOn") : t("admin.msg.versionsOff"),
+    );
   await getDb(env)
     .update(schema.galleries)
     .set({ versioning: on })

@@ -107,6 +107,18 @@ describe("T6.53b2 versioning toggle", () => {
       await getSetting(e, SETTINGS_KEYS.driveChangesToken),
     ).toBeUndefined();
   });
+  it("saving the value it already has keeps the token (no needless full rescan)", async () => {
+    await putSetting(e, SETTINGS_KEYS.driveChangesToken, "tok");
+    await act({ intent: "versioning", versioning: "0" }); // already off
+    expect(await getSetting(e, SETTINGS_KEYS.driveChangesToken)).toBe("tok");
+    await act({ intent: "versioning", versioning: "1" }); // changes: forgotten
+    expect(
+      await getSetting(e, SETTINGS_KEYS.driveChangesToken),
+    ).toBeUndefined();
+    await putSetting(e, SETTINGS_KEYS.driveChangesToken, "tok");
+    await act({ intent: "versioning", versioning: "1" }); // already on
+    expect(await getSetting(e, SETTINGS_KEYS.driveChangesToken)).toBe("tok");
+  });
   it("a refused value keeps the token", async () => {
     await putSetting(e, SETTINGS_KEYS.driveChangesToken, "tok");
     await act({ intent: "versioning", versioning: "2" });
