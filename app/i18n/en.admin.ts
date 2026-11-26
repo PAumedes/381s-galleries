@@ -162,6 +162,8 @@ export const enAdmin = {
   "admin.issue.version_conflict":
     "Version conflict: the same file arrived by suffix (_v2) and by folder (v2/); the suffix wins",
   "admin.issue.missing_wm": "Missing preview-wm",
+  "admin.issue.version_wm_fallback":
+    "Latest version without preview-wm: an earlier version is shown",
   "admin.issue.other": "Other notices",
   "admin.share.link": "Public link",
   "admin.share.copy": "Copy link",

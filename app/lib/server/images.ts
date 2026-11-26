@@ -17,10 +17,12 @@ import {
 import {
   adminImageToken,
   IMMUTABLE_CACHE_CONTROL,
+  cacheKey,
   imageVersionToken,
   resolveSource,
 } from "./image-source";
 import type { Source } from "./image-source";
+import { servedPhoto } from "./photo-versions";
 import { hit as rateHit, retryAfterFor, type RateRule } from "./rate-limit";
 import { mockImageUrl } from "./drive-mock";
 import type { MockVariant } from "./drive-mock";
@@ -139,7 +141,6 @@ async function loadVisiblePhoto(env: Env, photoId: string) {
 }
 
 type PhotoRow = typeof schema.photos.$inferSelect;
-
 function mockRedirect(photo: PhotoRow, src: Source, v: Variant): Response {
   return new Response(null, {
     status: 302,
@@ -346,8 +347,10 @@ export async function serveImage(
 
   const row = await loadVisiblePhoto(env, photoId);
   if (!row) return notFound();
-  const { photo, gallery } = row;
+  const { gallery } = row;
   if (!admin && !(await openGallery(request, gallery, env))) return notFound();
+  const photo = await servedPhoto(request, env, row.photo, gallery);
+  if (!photo) return notFound();
 
   const proofing = gallery.mode === "proofing";
   const src = resolveSource(photo, adminWm || (proofing && !admin), v);
@@ -359,7 +362,7 @@ export async function serveImage(
   // they bypass the cache. A watermarked file in Prueba is exactly what the
   // public gets: it reads (validated by isValidHit) and fills the same key.
   const adminClean = admin && (src.watermark ? !proofing : proofing);
-  const key = `${photo.id}/${v}`;
+  const key = cacheKey(photo, v);
   const cacheControl = await cacheControlFor(
     request,
     env,

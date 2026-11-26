@@ -23,9 +23,9 @@ export function useImgUrl(): ImgUrlFn {
  * admin images are `no-store`.
  */
 export function adminImgUrl(proofing: boolean, versions?: Versions): ImgUrlFn {
-  return (id, variant) => {
+  return (id, variant, _v, ver) => {
     const base = variant === "thumb" ? "thumb" : "view-sm";
-    return adminImgSrc(id, proofing ? `${base}-wm` : base, versions?.[id]);
+    return adminImgSrc(id, proofing ? `${base}-wm` : base, versions?.[id], ver);
   };
 }
 
@@ -42,8 +42,11 @@ export function adminImgSrc(
   id: string,
   variant: AdminVariant,
   v?: string | null,
+  /** A history entry of a versioned album: that version's preview (`?ver=`, T6.53c). */
+  ver?: number,
 ): string {
   const url = `/admin/img/${encodeURIComponent(id)}/${variant}`;
+  if (ver) return `${url}?ver=${ver}`;
   return v ? `${url}?v=${encodeURIComponent(v)}` : url;
 }
 

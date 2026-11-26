@@ -21,6 +21,7 @@ import {
   photoFields,
 } from "./sync-helpers";
 import type { AlbumDraft, PhotoDraft } from "./sync-helpers";
+import { cacheEntry } from "./image-source";
 import { versionStatements } from "./sync-version-rows";
 import type { VersionState, VersionTarget } from "./sync-version-rows";
 import type {
@@ -262,6 +263,18 @@ function versionTargets(
   }));
 }
 
+/** R2 entries of the versions >= 2 of removed photos (read now: the rows cascade away with them). */
+function goneVersionEntries(
+  vstate: VersionState | undefined,
+  goneIds: string[],
+): string[] {
+  if (!vstate || goneIds.length === 0) return [];
+  const gone = new Set(goneIds);
+  return vstate.versions
+    .filter((v) => gone.has(v.photoId) && v.version >= 2)
+    .map((v) => cacheEntry(v.photoId, v.version));
+}
+
 /**
  * The photo statements for one album, in the order that keeps every committed
  * prefix consistent: pending-R2 ids, deletes, marks, updates, inserts.
@@ -286,8 +299,25 @@ function photoStatements(
   result.photos.removed += goneIds.length;
   result.photos.added += fresh.length;
   const stmts: BatchItem[] = [];
+  const freshIds = new Map(fresh.map((p) => [p, crypto.randomUUID()]));
+  const versions = vstate
+    ? versionStatements(
+        run,
+        galleryId,
+        syncedAt,
+        versionTargets(a, rows, freshIds),
+        vstate,
+      )
+    : { before: [], after: [], goneEntries: [] };
+  // R2 keys to delete: the removed photos' (and, in versioned albums, every
+  // version's: `<id>/v<N>/...`) plus those of version rows deleted after their grace.
+  const goneEntries = [
+    ...goneIds,
+    ...goneVersionEntries(vstate, goneIds),
+    ...versions.goneEntries,
+  ];
 
-  if (goneIds.length) stmts.push(pendingDeletesStmt(db, pass, goneIds));
+  if (goneEntries.length) stmts.push(pendingDeletesStmt(db, pass, goneEntries));
   for (const ids of chunk(goneIds, D1_IN_CHUNK))
     stmts.push(db.delete(schema.photos).where(inArray(schema.photos.id, ids)));
   for (const ids of chunk(
@@ -300,16 +330,6 @@ function photoStatements(
         .set({ missingSince: syncedAt })
         .where(inArray(schema.photos.id, ids)),
     );
-  const freshIds = new Map(fresh.map((p) => [p, crypto.randomUUID()]));
-  const versions = vstate
-    ? versionStatements(
-        run,
-        galleryId,
-        syncedAt,
-        versionTargets(a, rows, freshIds),
-        vstate,
-      )
-    : { before: [], after: [] };
   stmts.push(...versions.before, ...updates);
   if (fresh.length || changed) stmts.push(warmMarker(db, galleryId, syncedAt));
   stmts.push(

@@ -18,8 +18,15 @@ export interface Allowance {
   d1?: D1Allowance;
 }
 
+/** D1 queries one more page of a versioned album costs beyond the page select: its version rows (T6.53c). */
+export const VERSIONED_PAGE_D1_QUERIES = 1;
+
+/** `VERSIONED_PAGE_D1_QUERIES` for a versioned gallery, 0 otherwise. */
+export const versionedExtra = (g: { versioning: boolean }): number =>
+  g.versioning ? VERSIONED_PAGE_D1_QUERIES : 0;
+
 /** Worst case of D1 queries for one photo: a gate check per Drive call (2) + the marker (1) + the next page select (1). */
-const PHOTO_D1_RESERVE = 4;
+export const PHOTO_D1_RESERVE = 4;
 /** D1 queries kept for ending the run: the cursor save and the marker clear. */
 const FINISH_D1_RESERVE = 2;
 

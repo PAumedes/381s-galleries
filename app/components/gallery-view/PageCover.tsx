@@ -50,6 +50,7 @@ export function PageCover({
             }
           : null
       }
+      round={gallery.round ? t("gallery.round", { n: gallery.round }) : null}
       scrollLabel={t("gallery.view")}
       onScroll={onScroll}
       layout={gallery.coverLayout}

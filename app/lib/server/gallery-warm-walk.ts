@@ -18,8 +18,11 @@ import {
 import {
   CALL_RESERVE,
   OPEN_WARM_BUDGET,
+  PHOTO_D1_RESERVE,
   d1Exhausted,
+  versionedExtra,
 } from "./gallery-warm-budget";
+import { latestOf } from "./photo-versions";
 import type { Allowance } from "./gallery-warm-budget";
 import { markWarmed } from "./warm";
 import { GalleryGone, gated, stillAvailable } from "./warm-gate";
@@ -157,7 +160,7 @@ async function fillPage(
       result.stopped = "scan";
       return "stop";
     }
-    if (d1Exhausted(span)) {
+    if (d1Exhausted(span, PHOTO_D1_RESERVE + versionedExtra(g))) {
       result.stopped = "budget";
       return "stop";
     }
@@ -200,7 +203,7 @@ export async function walkGrid(
 
   const st: WalkState = { ...cursor, scanned: 0 };
   while (st.phase < PHASES.length) {
-    if (d1Exhausted(span, 1)) {
+    if (d1Exhausted(span, 1 + versionedExtra(g))) {
       result.stopped = "budget";
       break;
     }
@@ -208,7 +211,11 @@ export async function walkGrid(
       result.stopped = "error";
       return result;
     }
-    const rows: WarmRow[] = await gridPage(env, g.id, st.after);
+    const rows: WarmRow[] = await latestOf(
+      env,
+      g,
+      await gridPage(env, g.id, st.after),
+    );
     if (rows.length === 0) {
       st.phase++;
       st.after = null;

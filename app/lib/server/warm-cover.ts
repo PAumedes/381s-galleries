@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { getDb, photoVisible, schema } from "../../db";
 import type { DriveClient } from "./drive-types";
+import { latestOf } from "./photo-versions";
 import { fillCacheShared } from "./image-cache";
 import type { Variant } from "./images";
 
@@ -47,12 +48,14 @@ export async function warmCoverPhoto(
         variantVersions: P.variantVersions,
       },
       mode: G.mode,
+      versioning: G.versioning,
     })
     .from(P)
     .innerJoin(G, eq(G.id, P.galleryId))
     .where(and(eq(P.id, photoId), eq(P.galleryId, galleryId), photoVisible));
   if (!row) return;
-  const photo = { ...row.photo, proofing: row.mode === "proofing" };
+  const [latest] = await latestOf(env, row, [row.photo]);
+  const photo = { ...latest, proofing: row.mode === "proofing" };
   const start = drive.subrequests();
   for (const variant of COVER_WARM_VARIANTS) {
     if (drive.subrequests() - start + COVER_CALL_RESERVE > COVER_WARM_BUDGET)

@@ -8,6 +8,8 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { schema } from "../../db";
 import { D1_IN_CHUNK, VERSION_INSERT_ROWS } from "./d1-limits";
+import { cacheEntry } from "./image-source";
+import { markMissing, missingSinceOf } from "./photo-versions";
 import { graceElapsed } from "./sync-archive";
 import { chunk, photoFields } from "./sync-helpers";
 import type { PhotoDraft } from "./sync-helpers";
@@ -156,28 +158,6 @@ const updateVersion = (
       ),
     );
 
-/**
- * A version whose file left Drive is not deleted at once (Capture One
- * delete+rewrite, a transient listing): `drive_versions` gains
- * `missingSince`, and the row is deleted after the same grace as photos. A
- * file that returns rewrites the JSON (no marker) and keeps its round.
- * Readers (T6.53c) must ignore rows whose `drive_versions` has `missingSince`.
- */
-const parseVersions = (json: string | null): Record<string, unknown> => {
-  try {
-    const v: unknown = JSON.parse(json ?? "{}");
-    return v && typeof v === "object" ? (v as Record<string, unknown>) : {};
-  } catch {
-    return {};
-  }
-};
-const missingSinceOf = (json: string | null): string | null => {
-  const v = parseVersions(json).missingSince;
-  return typeof v === "string" ? v : null;
-};
-const markMissing = (json: string | null, since: string) =>
-  JSON.stringify({ ...parseVersions(json), missingSince: since });
-
 export interface VersionTarget {
   photoId: string;
   draft: PhotoDraft;
@@ -196,7 +176,7 @@ export function versionStatements(
   syncedAt: string,
   targets: VersionTarget[],
   state: VersionState,
-): { before: BatchItem[]; after: BatchItem[] } {
+): { before: BatchItem[]; after: BatchItem[]; goneEntries: string[] } {
   const plan = new RoundPlan(db, galleryId, syncedAt, state);
   const have = new Map<string, Map<number, VersionState["versions"][number]>>();
   for (const v of state.versions) {
@@ -205,6 +185,7 @@ export function versionStatements(
     have.set(v.photoId, m);
   }
   const changes: BatchItem[] = [];
+  const goneEntries: string[] = [];
   const fresh: (typeof schema.photoVersions.$inferInsert)[] = [];
   for (const { photoId, draft } of targets) {
     const rows = have.get(photoId) ?? new Map();
@@ -244,6 +225,7 @@ export function versionStatements(
         );
       else if (graceElapsed(now, since)) expired.push(row.version);
     }
+    goneEntries.push(...expired.map((n) => cacheEntry(photoId, n)));
     for (const gone of chunk(expired, D1_IN_CHUNK))
       changes.push(
         db
@@ -257,6 +239,7 @@ export function versionStatements(
       );
   }
   return {
+    goneEntries,
     before: [...plan.inserts, ...changes],
     after: chunk(fresh, VERSION_INSERT_ROWS).map((part) =>
       db.insert(schema.photoVersions).values(part),

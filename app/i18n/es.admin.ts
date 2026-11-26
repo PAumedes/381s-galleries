@@ -160,6 +160,8 @@ export const esAdmin = {
   "admin.issue.version_conflict":
     "Versión en conflicto: el mismo archivo llegó por sufijo (_v2) y por carpeta (v2/); gana el sufijo",
   "admin.issue.missing_wm": "Falta preview-wm",
+  "admin.issue.version_wm_fallback":
+    "Última versión sin preview-wm: se muestra una versión anterior",
   "admin.issue.other": "Otros avisos",
   "admin.share.link": "Enlace público",
   "admin.share.copy": "Copiar enlace",

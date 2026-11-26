@@ -29,9 +29,10 @@
  * Drive is never touched (the app only reads it) and neither is the studio logo.
  */
 import { IMAGE_VARIANTS } from "../constants";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../db";
 import { safeEqual } from "./auth";
+import { cacheEntry } from "./image-source";
 import { shortMac } from "./crypto";
 import {
   deleteSetting,
@@ -180,6 +181,39 @@ async function drainPendingR2(env: Env, calls: number): Promise<number | null> {
 }
 
 /**
+ * Versioned albums: deletes the R2 objects of every version >= 2 (`<id>/v<N>/...`,
+ * read from `photo_versions` before the rows cascade away), in the same batches
+ * and call budget as the photo keys. Progress is the version rows already
+ * cleaned, which are dropped, so a resumed run does not repeat them. Returns
+ * the calls left, or null when the budget ran out first.
+ */
+async function purgeVersionCaches(
+  env: Env,
+  galleryId: string,
+  calls: number,
+): Promise<number | null> {
+  const V = schema.photoVersions;
+  const entries = (
+    await getDb(env)
+      .select({ id: V.photoId, version: V.version })
+      .from(V)
+      .where(and(eq(V.galleryId, galleryId), gte(V.version, 2)))
+      .orderBy(V.photoId, V.version)
+  ).map((r) => cacheEntry(r.id, r.version));
+  const parts = chunk(entries, PHOTOS_PER_R2_CALL);
+  const now = parts.slice(0, calls);
+  for (const part of now) await env.CACHE.delete(r2Keys(part));
+  const cleaned = now.reduce((n, p) => n + p.length, 0);
+  if (cleaned > 0)
+    await env.DB.prepare(
+      "DELETE FROM photo_versions WHERE rowid IN (SELECT rowid FROM photo_versions WHERE gallery_id = ?1 AND version >= 2 ORDER BY photo_id, version LIMIT ?2)",
+    )
+      .bind(galleryId, cleaned)
+      .run();
+  return now.length < parts.length ? null : calls - now.length;
+}
+
+/**
  * Deletes the gallery's cached R2 objects, within the call budget. Returns
  * false when some remain (the photo rows already cleaned are dropped as progress).
  */
@@ -231,14 +265,21 @@ async function deleteLocked(
   { r2CallsMax = R2_CALLS_PER_REQUEST }: DeleteOptions,
 ): Promise<DeleteOutcome> {
   const [g] = await getDb(env)
-    .select({ folder: schema.galleries.driveFolderId })
+    .select({
+      folder: schema.galleries.driveFolderId,
+      versioning: schema.galleries.versioning,
+    })
     .from(schema.galleries)
     .where(eq(schema.galleries.id, galleryId));
   if (!g) return "not_found";
   await archiveAndTombstone(env, galleryId, g.folder);
 
-  const calls = await drainPendingR2(env, Math.max(0, r2CallsMax));
+  let calls = await drainPendingR2(env, Math.max(0, r2CallsMax));
   if (calls === null) return "continue";
+  if (g.versioning) {
+    calls = await purgeVersionCaches(env, galleryId, calls);
+    if (calls === null) return "continue";
+  }
   if (!(await purgePhotoCaches(env, galleryId, calls))) return "continue";
   await deleteGalleryRows(env, galleryId);
   return "deleted";
