@@ -23,7 +23,7 @@ export function usePreloadNeighbours(
     }
     const wanted = preloadOrder(index, photos.length, last.current.dir)
       .map((i) => photos[i])
-      .filter(Boolean);
+      .filter((p) => p && !p.noPreview);
     cache.warm(imgUrl, wanted);
   }, [cache, photos, index, imgUrl]);
 

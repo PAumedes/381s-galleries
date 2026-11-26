@@ -42,6 +42,7 @@ function selectStale(db: ReturnType<typeof getDb>) {
       photo: {
         id: P.id,
         driveHighresId: P.driveHighresId,
+        driveTiffId: P.driveTiffId,
         driveWebId: P.driveWebId,
         driveIgId: P.driveIgId,
         driveThumbId: P.driveThumbId,

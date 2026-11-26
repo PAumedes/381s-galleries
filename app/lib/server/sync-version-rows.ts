@@ -60,6 +60,7 @@ function versionFields(d: PhotoDraft) {
     driveThumbId: f.driveThumbId,
     driveWmId: f.driveWmId,
     driveThumbWmId: f.driveThumbWmId,
+    driveTiffId: f.driveTiffId,
     highresBytes: f.highresBytes,
     driveVersions: f.variantVersions,
     width: f.width,

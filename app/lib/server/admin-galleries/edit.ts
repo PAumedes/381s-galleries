@@ -5,6 +5,7 @@ import { groupIssues, ISSUE_LABELS, utcIsoToLocal } from "../../admin-gallery";
 import { adminImageToken } from "../images";
 import { warmProgress } from "../warm";
 import { hasWmSql, focusOf, resolveCover } from "../cover";
+import { hasPreview } from "../tiff";
 import { isDeleting } from "../gallery-delete";
 import { atLatestVersion, loadGalleryVersions } from "../photo-versions";
 import { listClientChoices } from "./client-choices";
@@ -49,6 +50,7 @@ function editPhotoRows(db: ReturnType<typeof getDb>, galleryId: string) {
       hasWm: hasWmSql("photos.drive_wm_id"),
       hasThumbWm: sql<number>`(${schema.photos.driveThumbWmId} IS NOT NULL)`,
       driveHighresId: schema.photos.driveHighresId,
+      driveTiffId: schema.photos.driveTiffId,
       driveWebId: schema.photos.driveWebId,
       driveIgId: schema.photos.driveIgId,
       driveThumbId: schema.photos.driveThumbId,
@@ -93,18 +95,25 @@ async function atShownVersions(env: Env, g: GalleryRow, rows: EditRow[]) {
   return { rows: shown, fellBack };
 }
 
-/** Sync issues, plus (proofing only) the photos without preview-wm, which 404 for clients. */
+type Named = { set: string; name: string };
+
+/**
+ * Sync issues, plus (proofing only) the photos without preview-wm, which 404
+ * for clients, and (any mode) the TIFF-only photos with no image to show.
+ */
 function editIssues(
   g: GalleryRow,
-  noWm: { set: string; name: string }[],
-  fellBack: { set: string; name: string }[],
+  noWm: Named[],
+  fellBack: Named[],
+  noPreview: Named[],
 ) {
   const issues = groupIssues(g.syncIssuesJson);
   const extra = (
-    type: "missing_wm" | "version_wm_fallback",
-    list: { set: string; name: string }[],
+    type: "missing_wm" | "version_wm_fallback" | "tiff_no_preview",
+    list: Named[],
+    onlyProofing = true,
   ) => {
-    if (g.mode !== "proofing" || list.length === 0) return;
+    if ((onlyProofing && g.mode !== "proofing") || list.length === 0) return;
     issues.groups.push({
       type,
       label: ISSUE_LABELS[type],
@@ -114,6 +123,7 @@ function editIssues(
   };
   extra("missing_wm", noWm);
   extra("version_wm_fallback", fellBack);
+  extra("tiff_no_preview", noPreview, false);
   return issues;
 }
 
@@ -183,8 +193,13 @@ export async function loadGalleryEdit(env: Env, id: string) {
     })),
   );
   const noWm = ps.filter((p) => !p.hasWm);
+  const noPreview = ps.filter((p) => !hasPreview(p, g.mode === "proofing"));
   const cover = resolveCover(
-    ps.map((p) => ({ id: p.id, hasWm: !!p.hasWm })),
+    ps.map((p) => ({
+      id: p.id,
+      hasWm: !!p.hasWm,
+      hasPreview: hasPreview(p, g.mode === "proofing"),
+    })),
     g,
   );
   return {
@@ -203,6 +218,6 @@ export async function loadGalleryEdit(env: Env, id: string) {
     hasThumbWmFiles: ps.some((p) => p.hasThumbWm),
     photos,
     version: await photoSetVersion(photos.map((p) => p.id)),
-    issues: editIssues(g, noWm, fellBack),
+    issues: editIssues(g, noWm, fellBack, noPreview),
   };
 }

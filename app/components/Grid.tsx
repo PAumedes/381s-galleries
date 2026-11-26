@@ -13,6 +13,7 @@ import { justify } from "../lib/justify";
 import type { TFunction } from "../i18n/t";
 import { Download, Heart, HeartFilled, Retry } from "./icons";
 import { useImgUrl } from "./img-url";
+import { PreviewCardText, PreviewDownload } from "./PreviewCard";
 import type { GalleryPhoto } from "./types";
 
 /** Width used for server rendering and before the first measurement. */
@@ -183,18 +184,29 @@ function Tile(props: TileProps) {
         height: `${box.height}px`,
       }}
     >
-      <TileImage
-        index={index}
-        label={label}
-        src={thumb}
-        retry={img.retry}
-        loaded={img.loaded}
-        protect={props.protect}
-        onOpen={open}
-        onLoad={img.onLoad}
-        onError={img.onError}
-        imgRef={img.imgRef}
-      />
+      {photo.noPreview ? (
+        <PlaceholderBody
+          index={index}
+          label={label}
+          t={t}
+          photo={photo}
+          onOpen={open}
+          onDownload={onDownload}
+        />
+      ) : (
+        <TileImage
+          index={index}
+          label={label}
+          src={thumb}
+          retry={img.retry}
+          loaded={img.loaded}
+          protect={props.protect}
+          onOpen={open}
+          onLoad={img.onLoad}
+          onError={img.onError}
+          imgRef={img.imgRef}
+        />
+      )}
       {photo.isNew && (
         <span
           data-testid={`new-${index}`}
@@ -203,7 +215,7 @@ function Tile(props: TileProps) {
           {t("grid.newInRound")}
         </span>
       )}
-      {img.failed && (
+      {img.failed && !photo.noPreview && (
         <RetryButton
           index={index}
           label={t("lightbox.retry")}
@@ -216,10 +228,51 @@ function Tile(props: TileProps) {
           photoId={photo.id}
           favorite={props.favorite}
           onFavorite={onFavorite}
-          onDownload={onDownload}
+          // The placeholder has its own, always visible, download button.
+          onDownload={photo.noPreview ? undefined : onDownload}
         />
       )}
     </div>
+  );
+}
+
+/** The tile of a photo with no image (T6.53d): the card text opens the lightbox, a download button sits under it. */
+function PlaceholderBody({
+  index,
+  label,
+  t,
+  photo,
+  onOpen,
+  onDownload,
+}: {
+  index: number;
+  label: string;
+  t: TFunction;
+  photo: GalleryPhoto;
+  onOpen: (e: MouseEvent<HTMLButtonElement>) => void;
+  onDownload?: (id: string) => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        data-testid={`open-${index}`}
+        aria-label={label}
+        onClick={onOpen}
+        className="text-grey-700 absolute inset-0 flex size-full cursor-zoom-in items-center justify-center overflow-hidden pb-11"
+      >
+        <PreviewCardText t={t} photo={photo} compact />
+      </button>
+      {onDownload && (
+        <PreviewDownload
+          t={t}
+          photoId={photo.id}
+          onDownload={onDownload}
+          iconOnly
+          className="text-grey-700 hover:text-ink absolute right-0 bottom-0 flex size-11 cursor-pointer items-center justify-center"
+        />
+      )}
+    </>
   );
 }
 

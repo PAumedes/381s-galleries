@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 
 import type { TFunction } from "../../i18n/t";
 import { Retry } from "../icons";
+import { PreviewCardText, PreviewDownload } from "../PreviewCard";
 import { useImgUrl } from "../img-url";
 import type { GalleryPhoto } from "../types";
 import { dragTransform } from "./motion";
@@ -23,6 +24,7 @@ type PhotoStageProps = {
   dragY: number;
   protect: boolean;
   onClick: React.MouseEventHandler<HTMLDivElement>;
+  onDownload?: (id: string) => void;
 };
 
 type ImgProps = { src: string; srcSet?: string; sizes?: string };
@@ -211,6 +213,39 @@ function GhostLayers({
   );
 }
 
+/**
+ * The current photo when it has no image to show (T6.53d, a TIFF-only photo):
+ * the placeholder card with the original's name and size and, where downloads
+ * are on, its download button. Nothing is requested from `/img`.
+ */
+function PreviewCard({
+  t,
+  photo,
+  onDownload,
+}: {
+  t: TFunction;
+  photo: GalleryPhoto;
+  onDownload?: (id: string) => void;
+}) {
+  return (
+    <div
+      data-testid="lightbox-preview-card"
+      data-lb-photo
+      className="col-start-1 row-start-1 flex w-72 max-w-[80vw] flex-col items-center gap-4 border border-white/20 px-4 py-10 text-white"
+    >
+      <PreviewCardText t={t} photo={photo} />
+      {onDownload && (
+        <PreviewDownload
+          t={t}
+          photoId={photo.id}
+          onDownload={onDownload}
+          className="flex min-h-11 cursor-pointer items-center gap-2 border border-white/40 px-4 text-small hover:bg-white/10"
+        />
+      )}
+    </div>
+  );
+}
+
 /** The photo (with the previous one behind it), its error state and the proofing shield. */
 export function PhotoStage({
   stageRef,
@@ -223,10 +258,15 @@ export function PhotoStage({
   dragY,
   protect,
   onClick,
+  onDownload,
 }: PhotoStageProps) {
   const image = usePhotoImage(photos, photo, isReady);
-  const leaving = useSlide(stageRef, photos, index, dragX);
-  const neighbour = dragX ? photos[index + (dragX < 0 ? 1 : -1)] : undefined;
+  // Photos without an image never get an <img> layer (it would 404).
+  const drawn = (p: GalleryPhoto | undefined) => (p?.noPreview ? undefined : p);
+  const leaving = drawn(useSlide(stageRef, photos, index, dragX));
+  const neighbour = drawn(
+    dragX ? photos[index + (dragX < 0 ? 1 : -1)] : undefined,
+  );
   return (
     <div
       ref={stageRef}
@@ -234,12 +274,14 @@ export function PhotoStage({
       className="absolute inset-0 grid place-items-center overflow-hidden select-none"
       onClick={onClick}
     >
-      {image.failed ? (
+      {photo.noPreview ? (
+        <PreviewCard t={t} photo={photo} onDownload={onDownload} />
+      ) : image.failed ? (
         <LoadError t={t} onRetry={image.onRetry} />
       ) : (
         <>
           <GhostLayers
-            behind={image.behind}
+            behind={drawn(image.behind)}
             neighbour={neighbour}
             leaving={leaving}
             dragX={dragX}

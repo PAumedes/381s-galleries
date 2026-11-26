@@ -10,3 +10,21 @@ export function wellFormed(s: string): string {
     "\uFFFD",
   );
 }
+
+/**
+ * A file name stem that is safe in a download header: no path separators or
+ * control characters (unicode kept), at most 200 code points, `photo` if
+ * nothing is left.
+ */
+export function safeFileBase(name: string): string {
+  return (
+    wellFormed(name)
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u001f\u007f-\u009f/\\]/g, "")
+      .trim()
+      // Truncate by code point so an astral character is never split.
+      .match(/[\s\S]/gu)
+      ?.slice(0, 200)
+      .join("") || "photo"
+  );
+}

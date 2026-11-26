@@ -52,6 +52,12 @@ export const enPublic = {
   "download.size": "Size",
   "download.count.one": "{n} photo",
   "download.count.other": "{n} photos",
+  "download.tiff": "TIFF original · {size}",
+  "download.tiffNoSize": "TIFF original",
+  "download.tiffSkipped.one":
+    "{n} TIFF file is not included in the ZIP: download it on its own.",
+  "download.tiffSkipped.other":
+    "{n} TIFF files are not included in the ZIP: download them one by one.",
   "download.approx": "approx. {size}",
   "download.start": "Download",
   "download.cancel": "Cancel",
@@ -82,6 +88,10 @@ export const enPublic = {
 
   "grid.photo": "Photo {n}",
   "grid.newInRound": "New in this round",
+
+  "preview.unavailable": "Preview not available",
+  "preview.tiff": "TIFF file",
+  "preview.download": "Download original",
 
   "gallery.round": "Round {n}",
 

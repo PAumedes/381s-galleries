@@ -164,6 +164,8 @@ export const enAdmin = {
   "admin.issue.missing_wm": "Missing preview-wm",
   "admin.issue.version_wm_fallback":
     "Latest version without preview-wm: an earlier version is shown",
+  "admin.issue.tiff_no_preview":
+    "TIFF only, no preview: the gallery shows “Preview not available” (add a web JPEG)",
   "admin.issue.other": "Other notices",
   "admin.share.link": "Public link",
   "admin.share.copy": "Copy link",

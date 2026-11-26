@@ -216,6 +216,9 @@ export const photos = sqliteTable(
     driveWmId: text("drive_wm_id"),
     // Optional 600px watermarked thumb (recipe `thumb-wm`): proofing grid.
     driveThumbWmId: text("drive_thumb_wm_id"),
+    // TIFF original (T6.53d, migration 0024). A TIFF-only photo holds the same
+    // id in drive_highres_id (NOT NULL) and here; see `app/lib/server/tiff.ts`.
+    driveTiffId: text("drive_tiff_id"),
     highresBytes: integer("highres_bytes"),
     // JSON {highres,web,ig,thumb,wm,thumbWm}: each variant's Drive modifiedTime (cache validation).
     variantVersions: text("variant_versions"),

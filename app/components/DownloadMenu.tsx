@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import type { TKey } from "../i18n/t";
 import type { RefObject } from "react";
 
 import { downloadSingle, type DlVariant } from "../lib/download-client";
+import { formatBytes } from "../lib/format-bytes";
 import { FOCUSABLE, restoreFocus, trapTab, useLatest } from "./dialog-keys";
 import { BulkBody } from "./DownloadBulkBody";
 import { ROW } from "./DownloadBulkViews";
@@ -106,6 +108,18 @@ export function DownloadMenu(props: DownloadMenuProps) {
   );
 }
 
+/** The row label of a size; the high-res of a TIFF original says so (and how big it is). */
+function sizeLabel(
+  t: DownloadMenuProps["t"],
+  size: { variant: DlVariant; key: TKey },
+  photo: GalleryPhoto,
+) {
+  if (size.variant !== "highres" || !photo.tiff) return t(size.key);
+  return photo.tiff.bytes
+    ? t("download.tiff", { size: formatBytes(photo.tiff.bytes) })
+    : t("download.tiffNoSize");
+}
+
 function SingleBody({
   gallery,
   t,
@@ -132,7 +146,7 @@ function SingleBody({
             onClick={() => pick(s.variant)}
             className={`${ROW} hover:bg-grey-50`}
           >
-            {t(s.key)}
+            {sizeLabel(t, s, photo)}
           </button>
         </li>
       ))}

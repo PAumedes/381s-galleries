@@ -1,5 +1,6 @@
 import { DOWNLOAD_SIZES, type DownloadSize } from "../constants";
-import { wellFormed } from "../text";
+import { safeFileBase, wellFormed } from "../text";
+import { hasTiffOriginal, tiffFilename } from "./tiff";
 import type { schema } from "../../db";
 import type { AccessEnv, GalleryRow } from "./access";
 import type { RateRule } from "./rate-limit";
@@ -60,28 +61,33 @@ export function variantAllowed(g: GalleryRow, v: DlVariant): boolean {
       : g.allowIg;
 }
 
+/**
+ * The download is a TIFF (T6.53d): the high-res size of a photo with a TIFF
+ * original. Streamed one file at a time: never zipped, never cached.
+ */
+export const isTiffDownload = (
+  p: Pick<PhotoRow, "driveTiffId">,
+  v: DlVariant,
+): boolean => v === "highres" && hasTiffOriginal(p);
+
 export function fileIdFor(p: PhotoRow, v: DlVariant): string | null {
   return (
     (v === "highres"
-      ? p.driveHighresId
+      ? p.driveTiffId || p.driveHighresId
       : v === "web"
         ? p.driveWebId
         : p.driveIgId) || null
   );
 }
 
-/** Download file name: no path separators / control chars (unicode kept). */
-export function downloadFilename(baseName: string, v: DlVariant): string {
-  const base =
-    wellFormed(baseName)
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\u0000-\u001f\u007f-\u009f/\\]/g, "")
-      .trim()
-      // Truncate by code point so an astral character is never split.
-      .match(/[\s\S]/gu)
-      ?.slice(0, 200)
-      .join("") || "photo";
-  return `${base}${v === "highres" ? "" : `-${v}`}.jpg`;
+/** Download file name: no path separators / control chars (unicode kept); a TIFF original is `.tif`. */
+export function downloadFilename(
+  baseName: string,
+  v: DlVariant,
+  tiff = false,
+): string {
+  if (tiff && v === "highres") return tiffFilename(baseName);
+  return `${safeFileBase(baseName)}${v === "highres" ? "" : `-${v}`}.jpg`;
 }
 
 export function contentDisposition(filename: string): string {

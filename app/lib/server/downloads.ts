@@ -26,6 +26,7 @@ import {
   DL_TOKEN_TTL_SECONDS,
   downloadFilename,
   fileIdFor,
+  isTiffDownload,
   isVariant,
   variantAllowed,
 } from "./download-shared";
@@ -203,7 +204,7 @@ async function issueToken(env: DlEnv, c: TokenContext, p: PhotoRow) {
   return {
     photoId: p.id,
     url: `/dl/${token}`,
-    filename: downloadFilename(p.baseName, c.variant),
+    filename: downloadFilename(p.baseName, c.variant, !!p.driveTiffId),
   };
 }
 
@@ -244,6 +245,8 @@ export async function handleDownloadTokens(
     const p = byId.get(id);
     if (!p) missing.push(id);
     else if (!fileIdFor(p, variant)) unavailable.push(id);
+    // A TIFF is one file at a time: never part of a multi-photo / bulk run.
+    else if (ctx.bulkTag && isTiffDownload(p, variant)) unavailable.push(id);
     else tokens.push(await issueToken(env, ctx, p));
   }
   return reply({ tokens, missing, unavailable }, 200, cookie);
@@ -257,14 +260,18 @@ const isBulkScope = (b: Record<string, unknown>) =>
     b.set.length > 0 &&
     b.set.length <= 200);
 
-/** The visible photos of the requested scope that have a file for `variant`, in gallery order. */
+/**
+ * The visible photos of the requested scope that have a file for `variant`, in
+ * gallery order; the TIFF originals of a high-res run are left out (counted in
+ * `skippedTiff`: they are downloaded one by one, never zipped in the browser).
+ */
 async function bulkPhotos(
   env: DlEnv,
   g: GalleryRow,
   visitor: VisitorRow,
   variant: DlVariant,
   body: Record<string, unknown>,
-): Promise<PhotoRow[]> {
+): Promise<{ photos: PhotoRow[]; skippedTiff: number }> {
   const db = getDb(env as Env);
   const conds = [eq(schema.photos.galleryId, g.id), photoVisible];
   if (body.scope === "set")
@@ -284,7 +291,9 @@ async function bulkPhotos(
     );
     photos = photos.filter((p) => favs.has(p.id));
   }
-  return photos.filter((p) => fileIdFor(p, variant));
+  const withFile = photos.filter((p) => fileIdFor(p, variant));
+  const zippable = withFile.filter((p) => !isTiffDownload(p, variant));
+  return { photos: zippable, skippedTiff: withFile.length - zippable.length };
 }
 
 export async function handleBulk(
@@ -300,9 +309,16 @@ export async function handleBulk(
   const { g, visitor, cookie, variant, body } = r;
   const scope = body.scope as string;
 
-  const photos = await bulkPhotos(env, g, visitor, variant, body);
+  const { photos, skippedTiff } = await bulkPhotos(
+    env,
+    g,
+    visitor,
+    variant,
+    body,
+  );
+  const skipped = skippedTiff > 0 ? { skippedTiff } : {};
   if (photos.length === 0) {
-    return reply({ bulkId: null, photoIds: [] }, 200, cookie);
+    return reply({ bulkId: null, photoIds: [], ...skipped }, 200, cookie);
   }
 
   const bulkId = newId();
@@ -330,6 +346,7 @@ export async function handleBulk(
     {
       bulkId,
       photoIds: photos.map((p) => p.id),
+      ...skipped,
       ...(totalBytes !== undefined ? { totalBytes } : {}),
     },
     200,

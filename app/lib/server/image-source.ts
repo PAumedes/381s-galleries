@@ -1,5 +1,6 @@
 import { schema } from "../../db";
 import { shortMac } from "./crypto";
+import { highresImageId } from "./tiff";
 import { IMAGE_VARIANTS } from "../constants";
 import type { ImageVariant } from "../constants";
 
@@ -37,6 +38,7 @@ export type SourcePhoto = Pick<
   Photo,
   | "id"
   | "driveHighresId"
+  | "driveTiffId"
   | "driveWebId"
   | "driveIgId"
   | "driveThumbId"
@@ -92,15 +94,17 @@ export function resolveSource(
   proofing: boolean,
   variant: Variant,
 ): Source | null {
+  // A TIFF is never an image: a TIFF-only photo falls back to its web JPEG.
+  const highres = highresImageId(photo) ?? photo.driveWebId;
   const fileId = proofing
     ? variant === "thumb"
       ? (photo.driveThumbWmId ?? photo.driveWmId)
       : photo.driveWmId
     : variant === "thumb"
-      ? (photo.driveThumbId ?? photo.driveWebId ?? photo.driveHighresId)
+      ? (photo.driveThumbId ?? photo.driveWebId ?? highres)
       : variant === "view-sm"
-        ? (photo.driveWebId ?? photo.driveHighresId)
-        : photo.driveHighresId;
+        ? (photo.driveWebId ?? highres)
+        : highres;
   if (!fileId) return null;
   return { fileId, watermark: proofing, version: sourceVersion(photo, fileId) };
 }

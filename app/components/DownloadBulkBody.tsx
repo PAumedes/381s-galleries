@@ -11,6 +11,7 @@ import type { DownloadMenuProps, DownloadMode } from "./download-menu-types";
 import { enabledSizes, hasVariant } from "./download-sizes";
 import { useBulkFocus } from "./use-bulk-focus";
 import { useBulkRun } from "./use-bulk-run";
+import type { GalleryPhoto } from "./types";
 
 type BulkBodyProps = DownloadMenuProps & {
   mode: Extract<DownloadMode, { kind: "bulk" }>;
@@ -36,7 +37,11 @@ function scopeOptions(t: DownloadMenuProps["t"], mode: BulkMode) {
   return scopes;
 }
 
-/** Photos that have a file in `variant` within `scope`. */
+/**
+ * Photos that have a file in `variant` within `scope`, and how many TIFF
+ * originals of a high-res run are left out of the ZIP (T6.53d: one file at a
+ * time, never zipped in the browser).
+ */
 function countInScope(
   photos: BulkMode["photos"],
   activeSet: string | null,
@@ -44,12 +49,17 @@ function countInScope(
   variant: DlVariant,
   scope: BulkScope,
 ) {
-  return photos.filter(
+  const inScope = photos.filter(
     (p) =>
       hasVariant(p, variant) &&
       (scope === "all" ||
         (scope === "set" ? p.set === activeSet : favoriteIds.has(p.id))),
-  ).length;
+  );
+  const tiff = (p: GalleryPhoto) => variant === "highres" && !!p.tiff;
+  return {
+    count: inScope.filter((p) => !tiff(p)).length,
+    tiffSkipped: inScope.filter(tiff).length,
+  };
 }
 
 /** What the visitor picks before downloading (scope, size) and what that means (count, warning). */
@@ -60,7 +70,7 @@ function useBulkChoices({ gallery, t, mode }: BulkBodyProps) {
     sizes[0]?.variant ?? "highres",
   );
   const { photos, activeSet, favoriteIds } = mode;
-  const count = useMemo(
+  const { count, tiffSkipped } = useMemo(
     () => countInScope(photos, activeSet, favoriteIds, variant, scope),
     [photos, variant, scope, activeSet, favoriteIds],
   );
@@ -77,6 +87,7 @@ function useBulkChoices({ gallery, t, mode }: BulkBodyProps) {
     setVariant,
     scopes: scopeOptions(t, mode),
     count,
+    tiffSkipped,
     warning,
   };
 }
@@ -131,6 +142,7 @@ export function BulkBody(props: BulkBodyProps) {
       variant={c.variant}
       setVariant={c.setVariant}
       count={c.count}
+      tiffSkipped={c.tiffSkipped}
       warning={c.warning}
       error={run.error}
       startRef={startRef}

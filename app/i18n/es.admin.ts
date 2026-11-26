@@ -162,6 +162,8 @@ export const esAdmin = {
   "admin.issue.missing_wm": "Falta preview-wm",
   "admin.issue.version_wm_fallback":
     "Última versión sin preview-wm: se muestra una versión anterior",
+  "admin.issue.tiff_no_preview":
+    "Solo TIFF, sin vista previa: la galería muestra “Vista previa no disponible” (agregá un JPEG web)",
   "admin.issue.other": "Otros avisos",
   "admin.share.link": "Enlace público",
   "admin.share.copy": "Copiar enlace",

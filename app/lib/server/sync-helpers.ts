@@ -14,6 +14,7 @@ export const RECIPES = [
   "thumb",
   "preview-wm",
   "thumb-wm",
+  "tiff",
 ] as const;
 export type Recipe = (typeof RECIPES)[number];
 export const ISSUES_CAP = 200;
@@ -67,6 +68,10 @@ export const isLive = (f: DriveFile) =>
 export const isJpeg = (f: DriveFile) =>
   f.mimeType === "image/jpeg" || /\.jpe?g$/i.test(f.name);
 
+/** A TIFF file (T6.53d): by MIME type or by extension, whatever the case. */
+export const isTiff = (f: DriveFile) =>
+  f.mimeType === "image/tiff" || /\.tiff?$/i.test(f.name);
+
 export function baseNameOf(filename: string): string {
   const dot = filename.lastIndexOf(".");
   return nfc(dot > 0 ? filename.slice(0, dot) : filename);
@@ -79,7 +84,10 @@ export const recipeOf = (name: string): Recipe | undefined =>
 export interface PhotoDraft {
   setName: string;
   baseName: string;
+  /** The photo's original: the JPEG high-res, or the TIFF of a TIFF-only photo. */
   highres: DriveFile;
+  /** TIFF original (T6.53d); when there is no JPEG high-res it is also `highres`. */
+  tiff?: DriveFile;
   web?: DriveFile;
   ig?: DriveFile;
   thumb?: DriveFile;
@@ -122,6 +130,18 @@ type Winner = Located & { base: string };
 type ByRecipe = Map<Recipe, Map<string, Winner>>;
 
 /**
+ * The recipe a located file counts as, or null when it is not an image we
+ * accept there. TIFFs are accepted in `tiff/` and `high-res/` (by extension or
+ * MIME type) and count as `tiff`; everything else must be a JPEG, and `tiff/`
+ * holds TIFFs only.
+ */
+function acceptedRecipe(l: Located): Recipe | null {
+  if (isTiff(l.file) && (l.recipe === "tiff" || l.recipe === "high-res"))
+    return "tiff";
+  return l.recipe !== "tiff" && isJpeg(l.file) ? l.recipe : null;
+}
+
+/**
  * Winning file per recipe and (set, base name): the newest modifiedTime, then
  * the lowest id. Non-JPEG files and duplicates are reported into `issues`.
  */
@@ -129,14 +149,15 @@ function pickWinners(located: Located[], issues: SyncIssue[]): ByRecipe {
   const byRecipe: ByRecipe = new Map();
   const groups = new Map<string, Winner[]>();
   for (const l of located) {
-    if (!isJpeg(l.file)) {
+    const recipe = acceptedRecipe(l);
+    if (!recipe) {
       issues.push({ type: "not_jpeg", set: l.set, name: l.file.name });
       continue;
     }
     const base = l.base ?? baseNameOf(l.file.name);
-    const k = `${l.recipe}\0${l.set.toLowerCase()}\0${base.toLowerCase()}`;
+    const k = `${recipe}\0${l.set.toLowerCase()}\0${base.toLowerCase()}`;
     const g = groups.get(k) ?? [];
-    g.push({ ...l, base });
+    g.push({ ...l, recipe, base });
     groups.set(k, g);
   }
   for (const g of groups.values()) {
@@ -159,9 +180,16 @@ function pickWinners(located: Located[], issues: SyncIssue[]): ByRecipe {
   return byRecipe;
 }
 
-/** Pixel size of a photo: the high-res's, else scaled from the first sibling that has one. */
-function sizeOfPhoto(h: DriveFile, siblings: (DriveFile | undefined)[]) {
-  if (h.width && h.height) return { width: h.width, height: h.height };
+/**
+ * Pixel size of a photo: the high-res's, else scaled from the first sibling
+ * that has one. `h` is undefined for a TIFF-only photo: browsers cannot show
+ * a TIFF, so its size is never used (no preview = no dimensions).
+ */
+function sizeOfPhoto(
+  h: DriveFile | undefined,
+  siblings: (DriveFile | undefined)[],
+) {
+  if (h?.width && h?.height) return { width: h.width, height: h.height };
   const alt = siblings.find((f) => f?.width && f?.height);
   if (!alt) return { width: null, height: null };
   const k = 2048 / Math.max(alt.width!, alt.height!);
@@ -179,6 +207,7 @@ function draftPhoto(
   issues: SyncIssue[],
 ): PhotoDraft {
   const pick = (r: Recipe) => byRecipe.get(r)?.get(key)?.file;
+  const tiff = pick("tiff");
   const web = pick("web");
   const ig = pick("ig");
   const thumb = pick("thumb");
@@ -200,12 +229,19 @@ function draftPhoto(
     setName: h.set,
     baseName: h.base,
     highres: h.file,
+    ...(tiff ? { tiff } : {}),
     web,
     ig,
     thumb,
     wm,
     thumbWm,
-    ...sizeOfPhoto(h.file, [web, ig, thumb, wm, thumbWm]),
+    ...sizeOfPhoto(h.file === tiff ? undefined : h.file, [
+      web,
+      ig,
+      thumb,
+      wm,
+      thumbWm,
+    ]),
     ...(h.round !== undefined ? { round: h.round } : {}),
   };
 }
@@ -235,13 +271,16 @@ export function draftPhotos(
 ): PhotoDraft[] {
   const byRecipe = pickWinners(located, issues);
   const hi = byRecipe.get("high-res") ?? new Map();
-  const photos = [...hi].map(([key, h]) =>
-    draftPhoto(h, key, byRecipe, issues),
+  const tiff = byRecipe.get("tiff") ?? new Map();
+  // A photo is a JPEG high-res, or a TIFF with no JPEG high-res (TIFF-only).
+  const originals = new Map([...tiff, ...hi]);
+  const photos = [...hi, ...[...tiff].filter(([key]) => !hi.has(key))].map(
+    ([key]) => draftPhoto(originals.get(key)!, key, byRecipe, issues),
   );
   for (const r of RECIPES) {
-    if (r === "high-res") continue;
+    if (r === "high-res" || r === "tiff") continue;
     for (const [key, v] of byRecipe.get(r) ?? [])
-      if (!hi.has(key))
+      if (!originals.has(key))
         issues.push({
           type: "missing_highres",
           set: v.set,
@@ -271,7 +310,9 @@ export const photoFields = (p: PhotoDraft) => ({
   driveThumbId: p.thumb?.id ?? null,
   driveWmId: p.wm?.id ?? null,
   driveThumbWmId: p.thumbWm?.id ?? null,
-  highresBytes: p.highres.size ?? null,
+  driveTiffId: p.tiff?.id ?? null,
+  // What the high-res download serves: the TIFF when there is one.
+  highresBytes: (p.tiff ?? p.highres).size ?? null,
   variantVersions: JSON.stringify({
     highres: p.highres.modifiedTime,
     web: p.web?.modifiedTime ?? null,
@@ -279,6 +320,8 @@ export const photoFields = (p: PhotoDraft) => ({
     thumb: p.thumb?.modifiedTime ?? null,
     wm: p.wm?.modifiedTime ?? null,
     thumbWm: p.thumbWm?.modifiedTime ?? null,
+    // Only with a TIFF, so every other photo's JSON stays byte for byte.
+    ...(p.tiff ? { tiff: p.tiff.modifiedTime } : {}),
   }),
   width: p.width,
   height: p.height,

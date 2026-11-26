@@ -9,6 +9,7 @@ import type {
 import { isPinned } from "./access";
 import { focusOf, resolveCover } from "./cover";
 import { imageVersionToken } from "./images";
+import { hasPreview, hasTiffOriginal, tiffFilename } from "./tiff";
 import type { SourcePhoto } from "./image-source";
 import {
   atLatestVersion,
@@ -98,6 +99,8 @@ type Row = {
   driveWebId: string | null;
   driveIgId: string | null;
   driveWmId: string | null;
+  /** No image can be shown (TIFF-only without a preview): placeholder card, never a cover. */
+  noPreview: boolean;
 };
 
 /** Consecutive runs of the same set, in grid order. */
@@ -149,8 +152,21 @@ async function loadOpenRows(env: Env, g: GalleryRow) {
     driveWebId: p.driveWebId,
     driveIgId: p.driveIgId,
     driveWmId: p.driveWmId,
+    noPreview: !hasPreview(p, proofing),
   }));
   return { stored, full, rows, live };
+}
+
+/** What a photo with a TIFF original adds to its payload: name and size for the placeholder card, never an id. */
+function tiffFields(
+  photo: Pick<Photo, "baseName" | "driveTiffId" | "highresBytes">,
+  noPreview: boolean,
+): Pick<GalleryPhoto, "tiff" | "noPreview"> {
+  if (!hasTiffOriginal(photo)) return {};
+  return {
+    tiff: { name: tiffFilename(photo.baseName), bytes: photo.highresBytes },
+    ...(noPreview && { noPreview: true as const }),
+  };
 }
 
 /** The newest round among the versions shown (the album header's "Ronda N"); undefined when none has one. */
@@ -219,7 +235,11 @@ export async function buildOpenData(
   // preview-wm; otherwise the og:image URL would 404.
   const proofing = g.mode === "proofing";
   const cover = resolveCover(
-    rows.map((p) => ({ id: p.id, hasWm: !!p.driveWmId })),
+    rows.map((p) => ({
+      id: p.id,
+      hasWm: !!p.driveWmId,
+      hasPreview: !p.noPreview,
+    })),
     g,
   );
   const ogCover = proofing
@@ -241,13 +261,20 @@ export async function buildOpenData(
       ...(round !== undefined && { round }),
     },
     photos: await Promise.all(
-      rows.map(async ({ driveWebId, driveIgId, driveWmId: _wm, ...p }, i) => ({
-        ...p,
-        variants: { web: !!driveWebId, ig: !!driveIgId },
-        // Opaque cache-busting token for the image URLs (never a Drive id).
-        ...(await versionField(env, full[i], proofing)),
-        ...(views && versionFields(views[i], round)),
-      })),
+      rows.map(
+        async (
+          { driveWebId, driveIgId, driveWmId: _wm, noPreview, ...p },
+          i,
+        ) => ({
+          ...p,
+          variants: { web: !!driveWebId, ig: !!driveIgId },
+          ...(noPreview && { width: null, height: null }),
+          ...tiffFields(full[i], noPreview),
+          // Opaque cache-busting token for the image URLs (never a Drive id).
+          ...(await versionField(env, full[i], proofing)),
+          ...(views && versionFields(views[i], round)),
+        }),
+      ),
     ),
     og: ogOf(g, ogCover),
   };
