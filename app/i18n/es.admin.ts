@@ -165,7 +165,7 @@ export const esAdmin = {
   "admin.issue.tiff_no_preview":
     "Solo TIFF, sin vista previa: la galería muestra “Vista previa no disponible” (agregá un JPEG web)",
   "admin.issue.tiff_album_unlisted":
-    "Todas las fotos son solo TIFF: el álbum no tiene portada y no aparece en la home ni en la página del cliente (agregá JPEG web)",
+    "Todas las fotos son solo TIFF: el álbum no tiene portada y no aparece en la home; en la página del cliente se muestra solo con el título (agregá JPEG web)",
   "admin.issue.other": "Otros avisos",
   "admin.share.link": "Enlace público",
   "admin.share.copy": "Copiar enlace",

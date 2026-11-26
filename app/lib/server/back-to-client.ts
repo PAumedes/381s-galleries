@@ -52,10 +52,11 @@ export type BackLink = { link?: BackToClient; setCookie?: string };
 /**
  * The link back to the client page the visitor came from, plus the cookie to
  * set, or `{}`. Shown only for an album the client page lists
- * (`listedOnClientPage`: published, not expired, cover or PIN) of an enabled
+ * (`listedOnClientPage`: published, not expired, cover, PIN or all-TIFF) of an enabled
  * client page, so a forged Referer or cookie can never name a client whose
  * page is a 404. `coverId` is the album's resolved cover from the payload
- * already loaded (null when it has none).
+ * already loaded (null when it has none); `tiffOnly` = it has photos and none
+ * has an image (T6.53d2: the client page lists it as a title-only tile).
  *
  * The visitor proves they came from the page with the Referer: the same-site
  * `/<client>` URL of the client that owns THIS album (exact path, NOCASE,
@@ -67,7 +68,7 @@ export type BackLink = { link?: BackToClient; setCookie?: string };
 export async function backLink(
   request: Request,
   hit: GalleryHit | undefined,
-  coverId: string | null,
+  shown: { coverId: string | null; tiffOnly: boolean },
   env: Pick<Env, "SESSION_SECRET">,
 ): Promise<BackLink> {
   if (!hit?.clientSlug || !hit.clientName || !hit.clientPageEnabled) return {};
@@ -76,7 +77,8 @@ export async function backLink(
     {
       status: g.status,
       expiresAt: g.expiresAt,
-      coverId,
+      coverId: shown.coverId,
+      tiffOnly: shown.tiffOnly,
       pinned: isPinned(g),
     },
     Date.now(),

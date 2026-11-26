@@ -97,7 +97,7 @@ describe("T6.53d admin overview: 'sin vista previa'", () => {
 });
 
 describe("T6.53d album made only of TIFF-only photos", () => {
-  it("warns that it has no cover and is left off the home / client page", async () => {
+  it("warns that it has no cover and is left off the home (the client page lists it title-only)", async () => {
     await db.insert(schema.galleries).values({
       id: GID,
       driveFolderId: "f",
@@ -126,6 +126,15 @@ describe("T6.53d album made only of TIFF-only photos", () => {
     const issues = (await loadGalleryEdit(e, GID))!.issues;
     const g = issues.groups.find((x) => x.type === "tiff_album_unlisted");
     expect(g?.items).toEqual([{ set: null, name: "Entrega final" }]);
+    // T6.53d2: the client page DOES list it now, so the copy must not say it is left off there
+    for (const m of [es, en]) {
+      const copy = m["admin.issue.tiff_album_unlisted"];
+      expect(copy).toMatch(/home/);
+      expect(copy).not.toMatch(
+        /(left off|no aparece en)[^;]*(client page|página del cliente)/,
+      );
+      expect(copy).toMatch(/title only|solo con el título/);
+    }
     expect(
       issues.groups.find((x) => x.type === "tiff_no_preview")?.items,
     ).toHaveLength(2);

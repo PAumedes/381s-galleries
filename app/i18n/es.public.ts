@@ -124,6 +124,7 @@ export const esPublic = {
   "home.galleries": "Galerías",
   "client.albums": "Álbumes",
   "client.locked": "Con PIN",
+  "client.tiffDelivery": "Entrega en TIFF",
   "client.pager": "Páginas",
   "client.prev": "Anterior",
   "client.next": "Siguiente",

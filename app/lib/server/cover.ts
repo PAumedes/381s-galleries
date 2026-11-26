@@ -108,6 +108,32 @@ function coverSql(ok: string): SQL<string | null> {
 }
 
 /**
+ * A versioned Prueba album is never a TIFF title-only tile (T6.53d2): the
+ * photos mirror holds the NEWEST version, but the open payload shows the newest
+ * version WITH a preview-wm, so the two could disagree. Conservative rule used
+ * by the SQL twin and by the back-link flag.
+ */
+export const tiffTileApplies = (g: {
+  versioning: boolean;
+  mode: string;
+}): boolean => !(g.versioning && g.mode !== "delivery");
+
+/**
+ * SQL twin of `noPreview.length === photoCount` (T6.53d2): the album has
+ * visible photos and every one is TIFF-only with nothing to show (no web JPEG
+ * in delivery, no preview-wm in Prueba, as `hasPreview`). Such an album has no
+ * cover; the client page lists it as a title-only tile. Only evaluated for an
+ * album without its own PIN and not versioned-Prueba (`tiffTileApplies`); the
+ * "has an image" probe runs first, so an album with a cover stops at its first
+ * photo.
+ */
+export const allTiffNoPreviewSql = (): SQL<number> => {
+  const visible = `p.gallery_id = galleries.id AND p.missing_since IS NULL`;
+  const noImage = `COALESCE(p.drive_tiff_id = p.drive_highres_id, 0) AND NULLIF(CASE WHEN galleries.mode = 'delivery' THEN p.drive_web_id ELSE p.drive_wm_id END, '') IS NULL`;
+  return sql<number>`(CASE WHEN galleries.pin_hash IS NULL AND NOT (galleries.versioning = 1 AND galleries.mode <> 'delivery') THEN (NOT EXISTS (SELECT 1 FROM photos p WHERE ${sql.raw(visible)} AND NOT (${sql.raw(noImage)})) AND EXISTS (SELECT 1 FROM photos p WHERE ${sql.raw(visible)})) ELSE 0 END)`;
+};
+
+/**
  * SQL twin of `resolveCover(...).cover` for list queries (`galleries` is the
  * outer table). Public home: in Prueba only photos with a preview-wm count, so
  * a gallery without any has no cover (null) and is left off the home.

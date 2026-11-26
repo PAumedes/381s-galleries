@@ -167,7 +167,7 @@ export const enAdmin = {
   "admin.issue.tiff_no_preview":
     "TIFF only, no preview: the gallery shows “Preview not available” (add a web JPEG)",
   "admin.issue.tiff_album_unlisted":
-    "Every photo is TIFF only: the album has no cover and is left off the home and the client page (add web JPEGs)",
+    "Every photo is TIFF only: the album has no cover and is left off the home; the client page shows it with its title only (add web JPEGs)",
   "admin.issue.other": "Other notices",
   "admin.share.link": "Public link",
   "admin.share.copy": "Copy link",

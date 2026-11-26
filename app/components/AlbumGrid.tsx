@@ -11,7 +11,7 @@ const FRAME = { w: 4, h: 3 };
 
 /**
  * Grid of album tiles shared by the public home and the client homepage. A tile
- * without a cover (PIN album on a client page) shows a lock instead of a photo.
+ * without a cover shows a lock (PIN album) or the "TIFF delivery" caption.
  */
 export function AlbumGrid({
   items,
@@ -46,6 +46,10 @@ function AlbumTile({ item: it }: { item: ClientTile }) {
       <span className="bg-grey-100 text-grey-600 flex aspect-[4/3] w-full items-center justify-center overflow-hidden">
         {it.cover ? (
           <TileImage title={it.title} cover={it.cover} />
+        ) : it.tiffOnly ? (
+          <span className="text-micro-label px-4 text-center uppercase">
+            {t("client.tiffDelivery")}
+          </span>
         ) : (
           <Lock title={t("client.locked")} width={40} height={40} />
         )}

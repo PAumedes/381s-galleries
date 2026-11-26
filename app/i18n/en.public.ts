@@ -125,6 +125,7 @@ export const enPublic = {
   "home.galleries": "Galleries",
   "client.albums": "Albums",
   "client.locked": "PIN protected",
+  "client.tiffDelivery": "TIFF delivery",
   "client.pager": "Pages",
   "client.prev": "Previous",
   "client.next": "Next",
