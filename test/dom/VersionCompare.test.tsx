@@ -384,6 +384,98 @@ describe("T6.53e errors and navigation", () => {
   });
 });
 
+describe("T6.53e pair change, focus and grab offset", () => {
+  it("a new preview pair starts at loading again", async () => {
+    const user = userEvent.setup();
+    const list = [versioned(), versioned({ id: "B" })];
+    const Stub = createRoutesStub([
+      {
+        id: "root",
+        path: "/",
+        loader: () => ({ lang: "en", messages: en, studioName: "381 Studios" }),
+        Component: function C() {
+          const [i, setI] = useState(0);
+          const [ver3, setVer3] = useState(false);
+          const photo = ver3
+            ? versioned({ ver: 3, versions: [ver(1), ver(2), ver(3)] })
+            : list[i];
+          return (
+            <>
+              <button onClick={() => setVer3(true)}>more</button>
+              <Lightbox
+                photos={[photo]}
+                index={0}
+                t={t}
+                onClose={vi.fn()}
+                onIndexChange={setI}
+              />
+            </>
+          );
+        },
+      },
+    ]);
+    render(<Stub initialEntries={["/"]} />);
+    await screen.findByRole("dialog");
+    await user.click(compareBtn()!);
+    loadBoth();
+    expect(screen.queryByTestId("compare-loading")).toBeNull();
+    fireEvent.click(screen.getByText("more"));
+    expect(imgs().a.getAttribute("src")).toContain("ver=3");
+    expect(screen.getByTestId("compare-loading")).toBeTruthy();
+  });
+  it("after an error the Retry button has the focus, and after Retry the picture does", async () => {
+    const user = userEvent.setup();
+    await open([versioned()]);
+    await user.click(compareBtn()!);
+    fireEvent.error(imgs().b);
+    const retry = screen.getByRole("button", { name: "Retry" });
+    expect(document.activeElement).toBe(retry);
+    await user.click(retry);
+    expect(document.activeElement).toBe(screen.getByTestId("compare-flip"));
+  });
+  it("pressing on the handle keeps the grab offset (no jump)", async () => {
+    const user = userEvent.setup();
+    await open([versioned()]);
+    await user.click(compareBtn()!);
+    await user.click(screen.getByTestId("compare-mode-slide"));
+    const frame = screen.getByTestId("compare-frame");
+    frame.getBoundingClientRect = () =>
+      ({
+        left: 100,
+        width: 200,
+        top: 0,
+        right: 300,
+        bottom: 100,
+        height: 100,
+      }) as DOMRect;
+    frame.setPointerCapture = vi.fn();
+    const handle = screen.getByRole("slider");
+    handle.getBoundingClientRect = () =>
+      ({
+        left: 178,
+        width: 44,
+        top: 0,
+        right: 222,
+        bottom: 100,
+        height: 100,
+      }) as DOMRect;
+    // Centre 200; the press is 10 px right of it.
+    fireEvent.pointerDown(handle, {
+      clientX: 210,
+      pointerId: 1,
+      pointerType: "mouse",
+      button: 0,
+    });
+    expect(handle.getAttribute("aria-valuenow")).toBe("50");
+    fireEvent.pointerMove(frame, {
+      clientX: 260,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    expect(handle.getAttribute("aria-valuenow")).toBe("75");
+  });
+});
+
 describe("T6.53e motion and copy", () => {
   it("no animated transitions in the comparison (reduced motion needs none)", async () => {
     const user = userEvent.setup();

@@ -34,11 +34,28 @@ type FrameProps = {
 export function CompareFrame(p: FrameProps) {
   const [pct, setPct] = useState(50);
   const dragging = useRef<number | null>(null);
+  // Where the press landed on the handle (px from its centre): no jump.
+  const grab = useRef(0);
   const slide = p.mode === "slide";
   const frame = useRef<HTMLDivElement>(null);
   const moveTo = (clientX: number) => {
     const r = frame.current?.getBoundingClientRect();
-    if (r) setPct(pointerPct(clientX, r.left, r.width, p.rtl));
+    if (r) setPct(pointerPct(clientX - grab.current, r.left, r.width, p.rtl));
+  };
+  const press = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    // One drag at a time (a second finger is ignored); only the main button (isPrimary is not checked: jsdom reports false for every synthetic press; the active-drag guard covers a second finger).
+    if (dragging.current !== null || e.button !== 0) return;
+    const h = (e.target as Element).closest?.('[role="slider"]');
+    const box = h?.getBoundingClientRect();
+    grab.current = box ? e.clientX - (box.left + box.width / 2) : 0;
+    dragging.current = e.pointerId;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    moveTo(e.clientX);
+  };
+  const release = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (dragging.current === e.pointerId) dragging.current = null;
   };
   const images = (
     <>
@@ -76,24 +93,13 @@ export function CompareFrame(p: FrameProps) {
       className={`relative size-full overflow-hidden ${slide ? "touch-pan-y touch-pinch-zoom" : ""}`}
       style={{ opacity: p.ready ? 1 : 0 }}
       {...(slide && {
-        onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
-          e.stopPropagation();
-          dragging.current = e.pointerId;
-          e.currentTarget.setPointerCapture?.(e.pointerId);
-          moveTo(e.clientX);
-        },
+        onPointerDown: press,
         onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
           e.stopPropagation();
           if (dragging.current === e.pointerId) moveTo(e.clientX);
         },
-        onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => {
-          e.stopPropagation();
-          dragging.current = null;
-        },
-        onPointerCancel: (e: React.PointerEvent<HTMLDivElement>) => {
-          e.stopPropagation();
-          dragging.current = null;
-        },
+        onPointerUp: release,
+        onPointerCancel: release,
       })}
     >
       {images}
