@@ -65,6 +65,11 @@ const DELETE_STATEMENTS = {
   downloads: "DELETE FROM downloads WHERE gallery_id = ?1",
   gallery_views: "DELETE FROM gallery_views WHERE gallery_id = ?1",
   visitors: "DELETE FROM visitors WHERE gallery_id = ?1",
+  // Versions and rounds (T6.53a): also reached by the FK cascades, deleted
+  // explicitly so the data rule never rests on the cascade alone.
+  photo_versions:
+    "DELETE FROM photo_versions WHERE photo_id IN (SELECT id FROM photos WHERE gallery_id = ?1)",
+  delivery_rounds: "DELETE FROM delivery_rounds WHERE gallery_id = ?1",
   photos: "DELETE FROM photos WHERE gallery_id = ?1",
   galleries: "DELETE FROM galleries WHERE id = ?1",
 } as const;

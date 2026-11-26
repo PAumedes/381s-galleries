@@ -27,6 +27,8 @@ beforeEach(async () => {
     "downloads",
     "gallery_views",
     "visitors",
+    "photo_versions",
+    "delivery_rounds",
     "photos",
     "galleries",
     "rate_limits",
@@ -58,6 +60,20 @@ const SEED: Record<string, (g: string, tag: string) => D1PreparedStatement[]> =
         "INSERT INTO photos (id, gallery_id, base_name, drive_highres_id) VALUES (?1, ?2, 'IMG', 'hr')",
         `ph-${tag}`,
         g,
+      ),
+    ],
+    delivery_rounds: (g, tag) => [
+      sql(
+        "INSERT INTO delivery_rounds (id, gallery_id, number) VALUES (?1, ?2, 1)",
+        `r-${tag}`,
+        g,
+      ),
+    ],
+    photo_versions: (_g, tag) => [
+      sql(
+        "INSERT INTO photo_versions (photo_id, version, round_id, drive_highres_id) VALUES (?1, 1, NULL, 'hr'), (?1, 2, ?2, 'hr2')",
+        `ph-${tag}`,
+        `r-${tag}`,
       ),
     ],
     visitors: (g, tag) => [
@@ -115,6 +131,8 @@ async function seed(g: string, tag: string) {
   const order = [
     "galleries",
     "photos",
+    "delivery_rounds",
+    "photo_versions",
     "visitors",
     "favorites",
     "downloads",
@@ -220,10 +238,14 @@ describe("deleteGallery", () => {
     expect(await count("settings", "key = ?1", `warm_cursor:${B}`)).toBe(1);
 
     for (const t of GALLERY_TABLES) {
-      const col = t === "galleries" ? "id" : "gallery_id";
       if (t === "rate_limits") continue;
-      expect(await count(t, `${col} = ?1`, A), t).toBe(0);
-      expect(await count(t, `${col} = ?1`, B), t).toBe(1);
+      // photo_versions carries only the photo id (`ph-<tag>`), 2 rows per photo
+      const [where, a, b, rows] =
+        t === "photo_versions"
+          ? ["photo_id = ?1", "ph-a", "ph-b", 2]
+          : [t === "galleries" ? "id = ?1" : "gallery_id = ?1", A, B, 1];
+      expect(await count(t, where, a), t).toBe(0);
+      expect(await count(t, where, b), t).toBe(rows);
     }
     // rate limits: A's keys (any scope, including dlj: of its download tokens) are gone
     expect(await count("rate_limits", "instr(key, ?1) > 0", A)).toBe(0);

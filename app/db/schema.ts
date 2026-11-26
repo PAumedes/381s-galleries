@@ -30,8 +30,8 @@ const id = () =>
   text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID());
-const createdAt = () =>
-  text("created_at")
+const createdAt = (column = "created_at") =>
+  text(column)
     .notNull()
     .default(sql`(strftime('%Y-%m-%dT%H:%M:%SZ','now'))`);
 
@@ -167,6 +167,11 @@ export const galleries = sqliteTable(
     clientId: text("client_id").references(() => clients.id, {
       onDelete: "set null",
     }),
+    // Photo versions (T6.53a): opt-in per album; off = `_v2` names keep their
+    // plain meaning. Nothing reads it before the sync parser (T6.53b).
+    versioning: integer("versioning", { mode: "boolean" })
+      .notNull()
+      .default(false),
     createdAt: createdAt(),
   },
   (t) => [
@@ -184,6 +189,7 @@ export const galleries = sqliteTable(
         ["allow_bulk", t.allowBulk],
         ["require_email", t.requireEmail],
         ["use_watermark_preview", t.useWatermarkPreview],
+        ["versioning", t.versioning],
       ] as const
     ).map(([n, c]) => check(`galleries_${n}_bool_check`, sql`${c} IN (0,1)`)),
     check("galleries_mode_check", sql`${t.mode} IN ('proofing','delivery')`),
@@ -238,6 +244,66 @@ export const photos = sqliteTable(
       t.baseName,
     ),
     index("photos_gallery_set_sort_idx").on(t.galleryId, t.setName, t.sort),
+  ],
+);
+
+// Retouch rounds of a versioned album (T6.53a). Deleting the album deletes them.
+export const deliveryRounds = sqliteTable(
+  "delivery_rounds",
+  {
+    id: id(),
+    galleryId: text("gallery_id")
+      .notNull()
+      .references(() => galleries.id, { onDelete: "cascade" }),
+    number: integer("number").notNull(),
+    name: text("name"),
+    startedAt: createdAt("started_at"),
+  },
+  (t) => [
+    uniqueIndex("delivery_rounds_gallery_number_unique").on(
+      t.galleryId,
+      t.number,
+    ),
+    check("delivery_rounds_number_check", sql`${t.number} >= 1`),
+    check(
+      "delivery_rounds_name_check",
+      sql`${t.name} IS NULL OR length(${t.name}) BETWEEN 1 AND 120`,
+    ),
+  ],
+);
+
+// One row per (photo, version). `photos` stays the logical row and mirrors the
+// LATEST version's columns; v1 rows of pre-0022 photos come from the 0022
+// backfill, later rows from the sync parser (T6.53b). Server-only: the Drive
+// ids never reach a client.
+export const photoVersions = sqliteTable(
+  "photo_versions",
+  {
+    photoId: text("photo_id")
+      .notNull()
+      .references(() => photos.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    roundId: text("round_id").references(() => deliveryRounds.id, {
+      onDelete: "set null",
+    }),
+    driveHighresId: text("drive_highres_id").notNull(),
+    driveWebId: text("drive_web_id"),
+    driveIgId: text("drive_ig_id"),
+    driveThumbId: text("drive_thumb_id"),
+    driveWmId: text("drive_wm_id"),
+    driveThumbWmId: text("drive_thumb_wm_id"),
+    driveTiffId: text("drive_tiff_id"),
+    highresBytes: integer("highres_bytes"),
+    // Same JSON as photos.variant_versions (each variant's Drive modifiedTime).
+    driveVersions: text("drive_versions"),
+    width: integer("width"),
+    height: integer("height"),
+    firstSeenAt: createdAt("first_seen_at"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.photoId, t.version] }),
+    index("photo_versions_round_id_idx").on(t.roundId),
+    check("photo_versions_version_check", sql`${t.version} >= 1`),
   ],
 );
 
@@ -387,6 +453,8 @@ export type Gallery = typeof galleries.$inferSelect;
 export type NewGallery = typeof galleries.$inferInsert;
 export type Photo = typeof photos.$inferSelect;
 export type NewPhoto = typeof photos.$inferInsert;
+export type PhotoVersion = typeof photoVersions.$inferSelect;
+export type DeliveryRound = typeof deliveryRounds.$inferSelect;
 export type Visitor = typeof visitors.$inferSelect;
 export type NewVisitor = typeof visitors.$inferInsert;
 export type Favorite = typeof favorites.$inferSelect;
