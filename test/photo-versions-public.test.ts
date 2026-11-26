@@ -4,7 +4,11 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { getDb, schema } from "../app/db";
 import { imageVersionToken } from "../app/lib/server/images";
 import { buildOpenData } from "../app/lib/server/gallery-open-data";
-import { VERSIONED_OPEN_D1_QUERIES } from "../app/lib/server/d1-limits";
+import {
+  SLUG_LOADER_D1_QUERIES,
+  VERSIONED_OPEN_D1_QUERIES,
+} from "../app/lib/server/d1-limits";
+import { loadGallery } from "../app/lib/server/gallery";
 import { migrateDb, resetTables } from "./support/d1";
 import { countingEnv, noRatePrune } from "./support/warm";
 import { files, modified, seedVersioned } from "./support/versions";
@@ -207,5 +211,24 @@ describe("T6.53c D1 budget of the gallery open path", () => {
     expect(VERSIONED_OPEN_D1_QUERIES).toBe(1);
     expect(on.count() - off.count()).toBe(VERSIONED_OPEN_D1_QUERIES);
     expect(off.count()).toBe(1);
+  });
+
+  it("the slug loader of a versioned album stays inside SLUG_LOADER_D1_QUERIES", async () => {
+    await addGallery({});
+    for (let i = 0; i < 6; i++)
+      await seedVersioned(G, `P${i}`, [{ n: 1 }, { n: 2 }], { sort: i });
+    const loader = countingEnv(env);
+    const res = await loadGallery(
+      new Request("http://x.test/retoque", {
+        headers: {
+          "CF-Connecting-IP": "203.0.113.9",
+          "Sec-Fetch-Mode": "navigate",
+        },
+      }),
+      "retoque",
+      loader.e,
+    );
+    expect(res.data.state).toBe("open");
+    expect(loader.count()).toBeLessThanOrEqual(SLUG_LOADER_D1_QUERIES);
   });
 });
