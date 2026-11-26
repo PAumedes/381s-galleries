@@ -27,6 +27,8 @@ beforeEach(async () => {
     "downloads",
     "gallery_views",
     "visitors",
+    "photo_versions",
+    "delivery_rounds",
     "photos",
     "galleries",
     "rate_limits",
@@ -57,6 +59,21 @@ const SEED: Record<string, (g: string, tag: string) => D1PreparedStatement[]> =
       sql(
         "INSERT INTO photos (id, gallery_id, base_name, drive_highres_id) VALUES (?1, ?2, 'IMG', 'hr')",
         `ph-${tag}`,
+        g,
+      ),
+    ],
+    delivery_rounds: (g, tag) => [
+      sql(
+        "INSERT INTO delivery_rounds (id, gallery_id, number) VALUES (?1, ?2, 1)",
+        `r-${tag}`,
+        g,
+      ),
+    ],
+    photo_versions: (g, tag) => [
+      sql(
+        "INSERT INTO photo_versions (photo_id, gallery_id, version, round_id, drive_highres_id) VALUES (?1, ?3, 1, NULL, 'hr'), (?1, ?3, 2, ?2, 'hr2')",
+        `ph-${tag}`,
+        `r-${tag}`,
         g,
       ),
     ],
@@ -115,6 +132,8 @@ async function seed(g: string, tag: string) {
   const order = [
     "galleries",
     "photos",
+    "delivery_rounds",
+    "photo_versions",
     "visitors",
     "favorites",
     "downloads",
@@ -169,6 +188,18 @@ describe("schema guard: every table tied to a gallery is deleted or exempt", () 
     expect(found.filter((t) => !known.has(t))).toEqual([]);
   });
 
+  it("T6.53a: versions and rounds are deleted by explicit statements, not only by FK cascade", () => {
+    expect(GALLERY_TABLES).toEqual(
+      expect.arrayContaining(["photo_versions", "delivery_rounds"]),
+    );
+    expect(GALLERY_TABLES.indexOf("photo_versions")).toBeLessThan(
+      GALLERY_TABLES.indexOf("photos"),
+    );
+    expect(GALLERY_TABLES.indexOf("delivery_rounds")).toBeLessThan(
+      GALLERY_TABLES.indexOf("galleries"),
+    );
+  });
+
   it("every exempt table states a reason, and none is also deleted", () => {
     for (const [t, why] of Object.entries(EXEMPT_TABLES)) {
       expect(why.length).toBeGreaterThan(10);
@@ -220,10 +251,13 @@ describe("deleteGallery", () => {
     expect(await count("settings", "key = ?1", `warm_cursor:${B}`)).toBe(1);
 
     for (const t of GALLERY_TABLES) {
-      const col = t === "galleries" ? "id" : "gallery_id";
       if (t === "rate_limits") continue;
+      const col = t === "galleries" ? "id" : "gallery_id";
+      // photo_versions: 2 rows per photo
       expect(await count(t, `${col} = ?1`, A), t).toBe(0);
-      expect(await count(t, `${col} = ?1`, B), t).toBe(1);
+      expect(await count(t, `${col} = ?1`, B), t).toBe(
+        t === "photo_versions" ? 2 : 1,
+      );
     }
     // rate limits: A's keys (any scope, including dlj: of its download tokens) are gone
     expect(await count("rate_limits", "instr(key, ?1) > 0", A)).toBe(0);

@@ -45,8 +45,8 @@ describe("migration 0021_client_pin snapshot (T6.52)", () => {
     });
   });
 
-  it("is the last journal entry", () => {
-    expect(read("_journal.json").entries.at(-1)).toMatchObject({
+  it("is in the journal at idx 21", () => {
+    expect(read("_journal.json").entries[21]).toMatchObject({
       idx: 21,
       tag: "0021_client_pin",
       breakpoints: true,
