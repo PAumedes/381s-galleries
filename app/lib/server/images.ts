@@ -22,12 +22,7 @@ import {
   resolveSource,
 } from "./image-source";
 import type { Source } from "./image-source";
-import {
-  askedVersion,
-  atLatestVersion,
-  atVersion,
-  loadVersionsOf,
-} from "./photo-versions";
+import { servedPhoto } from "./photo-versions";
 import { hit as rateHit, retryAfterFor, type RateRule } from "./rate-limit";
 import { mockImageUrl } from "./drive-mock";
 import type { MockVariant } from "./drive-mock";
@@ -146,32 +141,7 @@ async function loadVisiblePhoto(env: Env, photoId: string) {
 }
 
 type PhotoRow = typeof schema.photos.$inferSelect;
-/** A photo row at the version a request is about (T6.53c): `version` decides its R2 key. */
-type ServedPhoto = PhotoRow & { version?: number };
-
-/**
- * The photo as this request sees it. An album with versioning off is the
- * `photos` row as before (and has no `ver`). A versioned one serves the
- * version asked with `?ver=N` (live rows only, so never one whose file left
- * Drive), else the version its gallery shows. null = 404.
- */
-async function servedPhoto(
-  request: Request,
-  env: Env,
-  photo: PhotoRow,
-  gallery: { versioning: boolean; mode: string },
-): Promise<ServedPhoto | null> {
-  const asked = askedVersion(new URL(request.url));
-  if (asked === "bad") return null;
-  if (!gallery.versioning) return asked === null ? photo : null;
-  const live = (await loadVersionsOf(env, [photo.id])).get(photo.id) ?? [];
-  if (asked === null)
-    return atLatestVersion(photo, live, gallery.mode === "proofing");
-  const row = live.find((r) => r.version === asked);
-  return row ? atVersion(photo, row) : null;
-}
-
-function mockRedirect(photo: ServedPhoto, src: Source, v: Variant): Response {
+function mockRedirect(photo: PhotoRow, src: Source, v: Variant): Response {
   return new Response(null, {
     status: 302,
     headers: {
@@ -197,7 +167,7 @@ function mockRedirect(photo: ServedPhoto, src: Source, v: Variant): Response {
 async function cacheControlFor(
   request: Request,
   env: Env,
-  photo: ServedPhoto,
+  photo: PhotoRow,
   proofing: boolean,
   admin: boolean,
 ): Promise<string> {

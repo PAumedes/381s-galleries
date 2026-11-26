@@ -188,3 +188,25 @@ export async function latestOf<P extends SourcePhoto>(
   const proofing = gallery.mode === "proofing";
   return rows.map((r) => atLatestVersion(r, live.get(r.id), proofing));
 }
+
+/**
+ * The photo as an image request sees it. An album with versioning off is the
+ * `photos` row as before (and has no `ver`). A versioned one serves the
+ * version asked with `?ver=N` (live rows only, so never one whose file left
+ * Drive), else the version its gallery shows. null = 404.
+ */
+export async function servedPhoto<P extends SourcePhoto>(
+  request: Request,
+  env: Env,
+  photo: P,
+  gallery: { versioning: boolean; mode: string },
+): Promise<P | null> {
+  const asked = askedVersion(new URL(request.url));
+  if (asked === "bad") return null;
+  if (!gallery.versioning) return asked === null ? photo : null;
+  const live = (await loadVersionsOf(env, [photo.id])).get(photo.id) ?? [];
+  if (asked === null)
+    return atLatestVersion(photo, live, gallery.mode === "proofing");
+  const row = live.find((r) => r.version === asked);
+  return row ? atVersion(photo, row) : null;
+}
