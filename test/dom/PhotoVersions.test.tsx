@@ -92,13 +92,13 @@ describe("T6.53c album header", () => {
   });
 });
 
-async function lightbox(photo: GalleryPhoto) {
+async function lightbox(photo: GalleryPhoto, onClose = vi.fn()) {
   await inRouter(
     <Lightbox
       photos={[photo]}
       index={0}
       t={t}
-      onClose={vi.fn()}
+      onClose={onClose}
       onIndexChange={vi.fn()}
     />,
   );
@@ -150,5 +150,34 @@ describe("T6.53c lightbox history", () => {
     await lightbox(photos(1)[0]);
     await screen.findByTestId("lightbox-img");
     expect(screen.queryByTestId("lightbox-versions")).toBeNull();
+  });
+
+  it("Escape closes the open history first and the lightbox only on the next press; the toggle points at the panel", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    await lightbox(versioned(), onClose);
+    const toggle = await screen.findByTestId("versions-toggle");
+    expect(toggle.getAttribute("aria-controls")).toBeNull();
+    await user.click(toggle);
+    const panel = screen.getByTestId("versions-panel");
+    expect(toggle.getAttribute("aria-controls")).toBe(panel.id);
+    expect(panel.id).not.toBe("");
+    await user.keyboard("{Escape}");
+    expect(screen.queryByTestId("versions-panel")).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    await user.keyboard("{Escape}");
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it("Escape also closes the history when the focus is elsewhere in the dialog", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    await lightbox(versioned(), onClose);
+    await user.click(await screen.findByTestId("versions-toggle"));
+    screen.getByRole("button", { name: "Close" }).focus();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByTestId("versions-panel")).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

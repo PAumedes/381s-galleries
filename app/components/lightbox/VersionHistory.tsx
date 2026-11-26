@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { useFormat } from "../../i18n/use-format";
 import type { TFunction } from "../../i18n/t";
@@ -25,7 +25,21 @@ const keepHere = (e: React.SyntheticEvent) => e.stopPropagation();
  */
 export function VersionHistory({ t, photo, chrome }: Props) {
   const [open, setOpen] = useState(false);
+  const panelId = useId();
   const versions = photo.versions;
+  // While the panel is open Escape closes it first, wherever the focus is: the
+  // capture phase runs before the lightbox's own Escape (which closes it all).
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(false);
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [open]);
   if (!photo.ver) return null;
   const shown = versions?.find((v) => v.n === photo.ver);
   return (
@@ -39,6 +53,7 @@ export function VersionHistory({ t, photo, chrome }: Props) {
     >
       {open && versions && (
         <HistoryPanel
+          id={panelId}
           t={t}
           photoId={photo.id}
           versions={versions}
@@ -60,6 +75,7 @@ export function VersionHistory({ t, photo, chrome }: Props) {
             data-testid="versions-toggle"
             className={`${BTN} w-auto min-w-11 px-2 text-micro uppercase underline`}
             aria-expanded={open}
+            aria-controls={open ? panelId : undefined}
             onClick={() => setOpen((o) => !o)}
           >
             {open
@@ -86,11 +102,13 @@ function useWhen() {
 }
 
 function HistoryPanel({
+  id,
   t,
   photoId,
   versions,
   current,
 }: {
+  id: string;
   t: TFunction;
   photoId: string;
   versions: PhotoVersionInfo[];
@@ -103,6 +121,7 @@ function HistoryPanel({
     versions.find((v) => v.n === picked) ?? versions[versions.length - 1];
   return (
     <section
+      id={id}
       aria-label={t("versions.title")}
       data-testid="versions-panel"
       className="w-[min(22rem,calc(100vw-2rem))] max-h-[60dvh] overflow-y-auto bg-night/90 p-3 text-white"

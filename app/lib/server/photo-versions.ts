@@ -141,6 +141,30 @@ export function chooseVersion(
   return [...live].reverse().find((r) => servable(r, proofing)) ?? live.at(-1);
 }
 
+/**
+ * The live versions of `photo` that can be trusted. Sync only writes
+ * `photo_versions` for albums with versioning on, so a lone row left from the
+ * unversioned era (the v1 backfill) goes stale while `photos` keeps being
+ * updated; right after versioning is switched on and before the next sync
+ * re-derives it, such a row that differs from the `photos` mirror loses.
+ */
+export function trusted<P extends SourcePhoto>(
+  photo: P,
+  live: readonly VersionRow[] | undefined,
+): readonly VersionRow[] {
+  if (!live || live.length !== 1) return live ?? [];
+  const r = live[0];
+  const same =
+    r.driveHighresId === photo.driveHighresId &&
+    r.driveWebId === photo.driveWebId &&
+    r.driveIgId === photo.driveIgId &&
+    r.driveThumbId === photo.driveThumbId &&
+    r.driveWmId === photo.driveWmId &&
+    (r.driveThumbWmId ?? null) === (photo.driveThumbWmId ?? null) &&
+    r.driveVersions === photo.variantVersions;
+  return same ? live : [];
+}
+
 /** `photo` with the columns of version `row` (files, modified times, size, version number). */
 export function atVersion<P extends SourcePhoto>(
   photo: P,
@@ -167,7 +191,7 @@ export function atLatestVersion<P extends SourcePhoto>(
   live: readonly VersionRow[] | undefined,
   proofing: boolean,
 ): P {
-  const row = chooseVersion(live ?? [], proofing);
+  const row = chooseVersion(trusted(photo, live), proofing);
   return row ? atVersion(photo, row) : photo;
 }
 
@@ -204,7 +228,10 @@ export async function servedPhoto<P extends SourcePhoto>(
   const asked = askedVersion(new URL(request.url));
   if (asked === "bad") return null;
   if (!gallery.versioning) return asked === null ? photo : null;
-  const live = (await loadVersionsOf(env, [photo.id])).get(photo.id) ?? [];
+  const live = trusted(
+    photo,
+    (await loadVersionsOf(env, [photo.id])).get(photo.id),
+  );
   if (asked === null)
     return atLatestVersion(photo, live, gallery.mode === "proofing");
   const row = live.find((r) => r.version === asked);

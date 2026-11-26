@@ -9,6 +9,7 @@ import {
   warmBatch,
   warmCoverPhoto,
 } from "../app/lib/server/warm";
+import { staleRows } from "../app/lib/server/warm-stale";
 import { clearCache } from "./support/cache";
 import { migrateDb, resetTables } from "./support/d1";
 import { countingEnv, fakeWarmDrive, noRatePrune } from "./support/warm";
@@ -146,5 +147,15 @@ describe("T6.53c the cron warm and the cover warm are version-aware", () => {
     await warmCoverPhoto(e, drive, G, "A");
     expect(calls.sort()).toEqual(["TH-A-v2", "WEB-A-v2"]);
     expect(await keys()).toEqual(["A/v2/thumb", "A/v2/view-sm"]);
+  });
+});
+
+describe("T6.53c stale scan version lookups", () => {
+  it("no allowance, no version lookup; a minimal one still returns a row", async () => {
+    await seedVersioned(G, "A", [{ n: 1 }, { n: 2 }]);
+    const none = countingEnv(e);
+    expect((await staleRows(none.e, 0)).rows).toEqual([]);
+    expect(none.count()).toBe(1); // the select only
+    expect((await staleRows(e, 1)).rows).toHaveLength(1);
   });
 });

@@ -17,6 +17,24 @@ export const eligible = and(ne(G.status, "archived"), photoVisible);
 
 type StaleRow = { photo: Photo; wm: boolean; key: string; fails: number };
 
+const isMarkedStale = or(
+  isNull(P.cacheExpectedKey),
+  sql`${P.cacheWarmKey} IS NOT ${P.cacheExpectedKey}`,
+)!;
+
+/**
+ * Prueba photos of a versioned album whose mirrored version has no
+ * preview-wm are shown at an older version (T6.53c): when THAT version's
+ * files change only its `photo_versions` row does, so no photo trigger marks
+ * it. They are re-checked every scan against the key of the shown version
+ * (a rare population; nothing is added for any other album).
+ */
+const shownMayDiffer = and(
+  eq(G.versioning, true),
+  eq(G.mode, "proofing"),
+  sql`NULLIF(${P.driveWmId}, '') IS NULL`,
+)!;
+
 /** The stale, retry-eligible photos (newest gallery first, never-failed first), with only the columns warming needs. */
 function selectStale(db: ReturnType<typeof getDb>) {
   return db
@@ -42,14 +60,13 @@ function selectStale(db: ReturnType<typeof getDb>) {
     .where(
       and(
         eligible,
-        or(
-          isNull(P.cacheExpectedKey),
-          sql`${P.cacheWarmKey} IS NOT ${P.cacheExpectedKey}`,
-        ),
+        or(isMarkedStale, shownMayDiffer),
         or(isNull(P.cacheWarmRetryAt), lte(P.cacheWarmRetryAt, nowIso())),
       ),
     )
     .orderBy(
+      // Marked-stale photos first; the few photos only re-checked come last.
+      sql`CASE WHEN ${isMarkedStale} THEN 0 ELSE 1 END`,
       sql`${P.cacheWarmFailCount} > 0`,
       desc(G.createdAt),
       asc(G.id),
@@ -80,18 +97,19 @@ export async function staleRows(
   const found = await selectStale(db);
   // Versioned albums: the photo is warmed at the version its gallery shows
   // (T6.53c). Their version rows cost D1 queries (one per D1_IN_CHUNK photos,
-  // only for rows this run can reach), which come out of `maxRows`.
+  // only for rows this run can reach), charged against `maxRows` but never
+  // below one row, so a tiny allowance still makes progress (none: no lookup).
   const reachable = found.slice(0, Math.min(found.length, maxRows * 2));
   const versionedIds = reachable
     .filter((r) => r.versioning)
     .map((r) => r.photo.id);
   const lookups = Math.ceil(versionedIds.length / D1_IN_CHUNK);
   const live = await loadVersionsOf(env, versionedIds);
-  const limit = Math.max(0, maxRows - lookups);
+  const limit = maxRows < 1 ? 0 : Math.max(1, maxRows - lookups);
   const rows: StaleRow[] = [];
   let writes = lookups;
-  let more = false;
-  for (const r of found) {
+  let more = reachable.length < found.length;
+  for (const r of reachable) {
     // Each row costs a key write and an outcome write: `limit` bounds D1.
     if (rows.length >= limit || writes - lookups >= limit) {
       more = true;
@@ -102,13 +120,24 @@ export async function staleRows(
       ? atLatestVersion(r.photo, live.get(r.photo.id), wm)
       : r.photo;
     let key = r.expected;
-    if (key === null) {
-      key = await expectedWarmKey(photo, wm);
-      writes++;
-      await db
-        .update(P)
-        .set({ cacheExpectedKey: key })
-        .where(and(eq(P.id, r.photo.id), isNull(P.cacheExpectedKey)));
+    // Unknown key, or a versioned photo whose shown version may have moved on.
+    if (key === null || r.versioning) {
+      const computed = await expectedWarmKey(photo, wm);
+      if (computed !== key) {
+        writes++;
+        await db
+          .update(P)
+          .set({ cacheExpectedKey: computed })
+          .where(
+            and(
+              eq(P.id, r.photo.id),
+              key === null
+                ? isNull(P.cacheExpectedKey)
+                : eq(P.cacheExpectedKey, key),
+            ),
+          );
+        key = computed;
+      }
       if (r.warmKey === key) continue;
     }
     rows.push({ photo, wm, key, fails: r.fails });

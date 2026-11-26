@@ -232,3 +232,17 @@ describe("T6.53c D1 budget of the gallery open path", () => {
     expect(loader.count()).toBeLessThanOrEqual(SLUG_LOADER_D1_QUERIES);
   });
 });
+
+describe("T6.53c a stale v1 row from the unversioned era", () => {
+  it("open data uses the up-to-date photos columns until the sync re-derives the row", async () => {
+    await addGallery({});
+    await seedVersioned(G, "A", [{ n: 1 }]);
+    await db
+      .update(schema.photos)
+      .set({ driveThumbId: "TH-NEW", variantVersions: modified(5) });
+    const [row] = await db.select().from(schema.photos);
+    const p = (await open()).photos[0];
+    expect(p.v).toBe(await imageVersionToken(env, row, false));
+    expect(p).not.toHaveProperty("ver");
+  });
+});

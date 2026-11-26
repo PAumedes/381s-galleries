@@ -61,9 +61,15 @@ export function cacheKey(
   photo: Pick<SourcePhoto, "id" | "version">,
   variant: Variant,
 ): string {
-  const v = photo.version ?? 1;
-  return v >= 2 ? `${photo.id}/v${v}/${variant}` : `${photo.id}/${variant}`;
+  return `${cacheEntry(photo.id, photo.version ?? 1)}/${variant}`;
 }
+
+/**
+ * The R2 prefix of one version of a photo (`<id>` for v1, `<id>/v<N>` from
+ * v2): what the cleanup lists keep (pending deletes) and expand per variant.
+ */
+export const cacheEntry = (photoId: string, version: number): string =>
+  version >= 2 ? `${photoId}/v${version}` : photoId;
 
 export interface Source {
   fileId: string;

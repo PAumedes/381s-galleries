@@ -16,6 +16,7 @@ import {
   chooseVersion,
   loadGalleryVersions,
   servable,
+  trusted,
   type VersionRow,
 } from "./photo-versions";
 
@@ -227,7 +228,9 @@ export async function buildOpenData(
     : rows.find((p) => p.id === cover.cover);
   const views = live
     ? await Promise.all(
-        stored.map((p) => versionView(env, p, live.get(p.id) ?? [], proofing)),
+        stored.map((p) =>
+          versionView(env, p, trusted(p, live.get(p.id)), proofing),
+        ),
       )
     : undefined;
   const round = views && newestRound(views);
