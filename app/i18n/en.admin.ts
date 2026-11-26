@@ -70,6 +70,7 @@ export const enAdmin = {
   "admin.edit.section.status": "Status",
   "admin.edit.section.pin": "Access PIN",
   "admin.edit.section.home": "Public home",
+  "admin.edit.section.versions": "Versions",
   "admin.edit.section.options": "Options",
   "admin.edit.section.photos": "Photos",
   "admin.edit.section.issues": "Sync notices",
@@ -111,6 +112,10 @@ export const enAdmin = {
   "admin.edit.home.hint":
     "Shown on the home page with its cover. It hides itself if it has a PIN or isn't published.",
   "admin.edit.home.save": "Save public home",
+  "admin.edit.versions.label": "Retouch versions",
+  "admin.edit.versions.hint":
+    "Names like IMG_v2 become versions of IMG (and v2/ folders, rounds); the first sync after switching this on re-reads the versions. Warning: in an album that was already synced, the existing IMG_v2 photo is replaced by version 2 of IMG, and its favorites and cover use are lost.",
+  "admin.edit.versions.save": "Save versions",
   "admin.edit.mode.legend": "Mode",
   "admin.edit.mode.deliveryNote":
     "Photos without a watermark and with downloads enabled.",
@@ -154,6 +159,8 @@ export const enAdmin = {
   "admin.issue.missing_web": "Missing web version",
   "admin.issue.missing_thumb": "Missing thumbnail (thumb)",
   "admin.issue.highres_empty": "The high-res folder is empty or missing",
+  "admin.issue.version_conflict":
+    "Version conflict: the same file arrived by suffix (_v2) and by folder (v2/); the suffix wins",
   "admin.issue.missing_wm": "Missing preview-wm",
   "admin.issue.other": "Other notices",
   "admin.share.link": "Public link",
@@ -357,6 +364,8 @@ export const enAdmin = {
     "Only published galleries can be on the home page.",
   "admin.msg.homeOn": "Shown on the home page.",
   "admin.msg.homeOff": "Hidden from the home page.",
+  "admin.msg.versionsOn": "Versions on: they are read at the next sync.",
+  "admin.msg.versionsOff": "Versions off.",
   "admin.msg.paletteInvalid": "Invalid palette.",
   "admin.msg.coverLayoutInvalid": "Invalid cover layout.",
   "admin.msg.gridStyleInvalid": "Invalid grid style.",

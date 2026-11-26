@@ -49,8 +49,8 @@ describe("migration 0022_photo_versions snapshot (T6.53a)", () => {
     );
   });
 
-  it("is the last journal entry", () => {
-    expect(read("_journal.json").entries.at(-1)).toMatchObject({
+  it("is journal entry 22", () => {
+    expect(read("_journal.json").entries[22]).toMatchObject({
       idx: 22,
       tag: "0022_photo_versions",
       breakpoints: true,

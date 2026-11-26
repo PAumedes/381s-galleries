@@ -3,6 +3,7 @@ import type { GalleryActionResult } from "../../../lib/server/admin-galleries";
 import { DangerSection } from "./DangerSection";
 import { DetailsSection } from "./DetailsSection";
 import { HomeSection } from "./HomeSection";
+import { VersioningSection } from "./VersioningSection";
 import { OptionsSection } from "./OptionsSection";
 import { PinSection } from "./PinSection";
 import { StatusSection } from "./StatusSection";
@@ -51,6 +52,7 @@ export function DatosSections(p: DatosSectionsProps) {
         actionData={actionData}
       />
       <HomeSection g={g} busy={busy} actionData={actionData} />
+      <VersioningSection g={g} busy={busy} actionData={actionData} />
       <OptionsSection
         g={g}
         data={data}

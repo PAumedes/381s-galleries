@@ -6,7 +6,7 @@
  * the desired state in memory, and only then writes (one D1 batch per
  * gallery). A budget overrun therefore aborts before any write.
  */
-import { and, eq, isNotNull, ne, sql } from "drizzle-orm";
+import { and, eq, isNotNull, ne, or, sql } from "drizzle-orm";
 import { getDb, nowIso, schema } from "../../db";
 import { parsePending } from "./sync-helpers";
 import type { AlbumDraft } from "./sync-helpers";
@@ -30,6 +30,7 @@ import {
 } from "./sync-state";
 import { archiveAbsent, loadPhotoRows } from "./sync-archive";
 import { syncAlbum } from "./sync-album";
+import { loadVersionState } from "./sync-version-rows";
 import type { AlbumPass } from "./sync-album";
 import type {
   GalleryRow,
@@ -69,11 +70,19 @@ async function hasMaturingMissing({ db }: SyncRun): Promise<boolean> {
       eq(schema.photos.galleryId, schema.galleries.id),
     )
     .where(
-      and(
-        isNotNull(schema.photos.missingSince),
-        ne(schema.galleries.status, "archived"),
-        sql`${schema.galleries.folderMissingSince} is null`,
-        sql`coalesce(${schema.galleries.syncIssuesJson}, '') not like '%"highres_empty"%'`,
+      or(
+        and(
+          isNotNull(schema.photos.missingSince),
+          ne(schema.galleries.status, "archived"),
+          sql`${schema.galleries.folderMissingSince} is null`,
+          sql`coalesce(${schema.galleries.syncIssuesJson}, '') not like '%"highres_empty"%'`,
+        ),
+        // A version row marked missing (T6.53b) matures like a photo. Folded
+        // into this query (the join always has rows when versions exist), so
+        // no album without versioning pays an extra query.
+        // Versioning switched on in the database: photos still without a version row need a read.
+        sql`exists (select 1 from ${schema.photos} vp join ${schema.galleries} vg on vg.id = vp.gallery_id where vg.versioning = 1 and vg.status != 'archived' and vg.folder_missing_since is null and coalesce(vg.sync_issues_json, '') not like '%"highres_empty"%' and not exists (select 1 from ${schema.photoVersions} pv where pv.photo_id = vp.id))`,
+        sql`exists (select 1 from ${schema.photoVersions} pv join ${schema.galleries} vg on vg.id = pv.gallery_id where vg.versioning = 1 and vg.status != 'archived' and vg.folder_missing_since is null and pv.drive_versions like '%"missingSince"%')`,
       ),
     )
     .limit(1);
@@ -162,12 +171,16 @@ async function loadLibrary(
 ): Promise<Library> {
   op();
   const ignored = await ignoredFolderIds(env as Env);
-  const albums = (await scan(rootId, drive, guard)).filter(
-    (a) => !ignored.has(a.folder.id),
-  );
   op();
   const allRows = await db.select().from(schema.galleries);
   const existing = allRows.filter((g) => !ignored.has(g.driveFolderId));
+  // Only albums with galleries.versioning = 1 parse versions (T6.53b).
+  const versioned = new Set(
+    existing.filter((g) => g.versioning).map((g) => g.driveFolderId),
+  );
+  const albums = (await scan(rootId, drive, guard, versioned)).filter(
+    (a) => !ignored.has(a.folder.id),
+  );
   return { albums, allRows, existing };
 }
 
@@ -193,8 +206,16 @@ async function applyLibrary(
       ...(await (op(), clientSlugs(run.env as Env))),
     ]),
     pendingIds: pending,
+    versions: new Map(),
   };
   const rowsByGallery = await loadPhotoRows(run, albums, byFolder);
+  pass.versions = await loadVersionState(
+    run,
+    albums.flatMap((a) => {
+      const g = byFolder.get(a.folder.id);
+      return g?.versioning ? [g.id] : [];
+    }),
+  );
   for (const a of albums) {
     const ex = byFolder.get(a.folder.id);
     const rows = ex ? (rowsByGallery.get(ex.id) ?? []) : [];

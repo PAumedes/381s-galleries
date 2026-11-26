@@ -543,6 +543,44 @@ describe("gallery editor characterization: pin", () => {
   });
 });
 
+describe("gallery editor: versions toggle (T6.53b2)", () => {
+  const box = () =>
+    screen.getByRole("checkbox", {
+      name: /versiones/i,
+    }) as HTMLInputElement;
+  const save = () =>
+    screen
+      .getAllByRole("button", { name: /^Guardar/ })
+      .find((b) =>
+        b.closest("form")?.querySelector("[name=intent][value=versioning]"),
+      )!;
+
+  it("unchecked by default with a hint about IMG_v2 and the next sync; posts versioning 0 then 1", async () => {
+    const user = userEvent.setup();
+    show();
+    await ready();
+    expect(box().checked).toBe(false);
+    expect(
+      document.getElementById(box().getAttribute("aria-describedby")!)
+        ?.textContent,
+    ).toMatch(/IMG_v2[\s\S]*sincroniz/i);
+    await user.click(box());
+    await user.click(save());
+    await waitFor(() => expect(posted.length).toBe(1));
+    expect(posted[0]).toEqual([
+      ["intent", "versioning"],
+      ["versioning", "0"],
+      ["versioning", "1"],
+    ]);
+  });
+
+  it("checked when the album is versioned", async () => {
+    show({ gallery: { versioning: true } });
+    await ready();
+    expect(box().checked).toBe(true);
+  });
+});
+
 describe("gallery editor characterization: home toggle", () => {
   const box = () =>
     screen.getByRole("checkbox", {

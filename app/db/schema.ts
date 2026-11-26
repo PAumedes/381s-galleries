@@ -256,6 +256,10 @@ export const deliveryRounds = sqliteTable(
       .notNull()
       .references(() => galleries.id, { onDelete: "cascade" }),
     number: integer("number").notNull(),
+    // N of the `v<N>/` folder that delivered this round (T6.53b); NULL = a
+    // suffix delivery. Folder and suffix rounds never share a row, and a
+    // deleted folder's round never becomes a suffix round.
+    folderRound: integer("folder_round"),
     name: text("name"),
     startedAt: createdAt("started_at"),
   },
@@ -263,6 +267,14 @@ export const deliveryRounds = sqliteTable(
     uniqueIndex("delivery_rounds_gallery_number_unique").on(
       t.galleryId,
       t.number,
+    ),
+    uniqueIndex("delivery_rounds_gallery_folder_unique").on(
+      t.galleryId,
+      t.folderRound,
+    ),
+    check(
+      "delivery_rounds_folder_round_check",
+      sql`${t.folderRound} IS NULL OR (typeof(${t.folderRound}) = 'integer' AND ${t.folderRound} >= 1)`,
     ),
     // Target of photo_versions' composite FK (same-gallery guarantee).
     uniqueIndex("delivery_rounds_id_gallery_id_unique").on(t.id, t.galleryId),

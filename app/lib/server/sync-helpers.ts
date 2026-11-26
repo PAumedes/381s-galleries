@@ -25,7 +25,8 @@ export type IssueType =
   | "missing_highres"
   | "missing_web"
   | "missing_thumb"
-  | "highres_empty";
+  | "highres_empty"
+  | "version_conflict";
 export interface SyncIssue {
   type: IssueType;
   set: string | null;
@@ -86,6 +87,16 @@ export interface PhotoDraft {
   thumbWm?: DriveFile;
   width: number | null;
   height: number | null;
+  /** Versioned albums (T6.53b): the `v<N>/` round folder this version came from. */
+  round?: number;
+  /** Versioned albums: every version, ascending; the fields above are the latest's. */
+  versions?: VersionDraft[];
+}
+
+/** One version of a photo in a versioned album (a PhotoDraft without `versions`). */
+export interface VersionDraft {
+  version: number;
+  draft: PhotoDraft;
 }
 
 export interface AlbumDraft {
@@ -99,6 +110,12 @@ export interface Located {
   recipe: Recipe;
   set: string;
   file: DriveFile;
+  /** `v<N>/` round folder the file was found in (versioned albums only). */
+  round?: number;
+  /** Base name override: the name without its `_v<N>` suffix (versioned albums only). */
+  base?: string;
+  /** Name shown in issues: the file's own stem (versioned albums: `IMG_v3`, not `IMG`). */
+  label?: string;
 }
 
 type Winner = Located & { base: string };
@@ -116,7 +133,7 @@ function pickWinners(located: Located[], issues: SyncIssue[]): ByRecipe {
       issues.push({ type: "not_jpeg", set: l.set, name: l.file.name });
       continue;
     }
-    const base = baseNameOf(l.file.name);
+    const base = l.base ?? baseNameOf(l.file.name);
     const k = `${l.recipe}\0${l.set.toLowerCase()}\0${base.toLowerCase()}`;
     const g = groups.get(k) ?? [];
     g.push({ ...l, base });
@@ -130,7 +147,11 @@ function pickWinners(located: Located[], issues: SyncIssue[]): ByRecipe {
     );
     const w = g[0];
     if (g.length > 1)
-      issues.push({ type: "duplicate", set: w.set, name: w.base });
+      issues.push({
+        type: "duplicate",
+        set: w.set,
+        name: w.label ?? w.base,
+      });
     const m = byRecipe.get(w.recipe) ?? new Map();
     m.set(`${w.set.toLowerCase()}\0${w.base.toLowerCase()}`, w);
     byRecipe.set(w.recipe, m);
@@ -163,8 +184,18 @@ function draftPhoto(
   const thumb = pick("thumb");
   const wm = pick("preview-wm");
   const thumbWm = pick("thumb-wm");
-  if (!web) issues.push({ type: "missing_web", set: h.set, name: h.base });
-  if (!thumb) issues.push({ type: "missing_thumb", set: h.set, name: h.base });
+  if (!web)
+    issues.push({
+      type: "missing_web",
+      set: h.set,
+      name: h.label ?? h.base,
+    });
+  if (!thumb)
+    issues.push({
+      type: "missing_thumb",
+      set: h.set,
+      name: h.label ?? h.base,
+    });
   return {
     setName: h.set,
     baseName: h.base,
@@ -175,11 +206,12 @@ function draftPhoto(
     wm,
     thumbWm,
     ...sizeOfPhoto(h.file, [web, ig, thumb, wm, thumbWm]),
+    ...(h.round !== undefined ? { round: h.round } : {}),
   };
 }
 
 /** Each issue once, sorted by type, set, name. */
-function uniqueSortedIssues(issues: SyncIssue[]): SyncIssue[] {
+export function uniqueSortedIssues(issues: SyncIssue[]): SyncIssue[] {
   const seen = new Set<string>();
   return issues
     .filter((i) => {
@@ -196,12 +228,11 @@ function uniqueSortedIssues(issues: SyncIssue[]): SyncIssue[] {
     );
 }
 
-export function buildAlbum(
-  folder: DriveFile,
+/** The photos of one set of located files (one version in versioned albums): high-res winners and their siblings; orphans become issues. */
+export function draftPhotos(
   located: Located[],
   issues: SyncIssue[],
-  hasWm: boolean,
-): AlbumDraft {
+): PhotoDraft[] {
   const byRecipe = pickWinners(located, issues);
   const hi = byRecipe.get("high-res") ?? new Map();
   const photos = [...hi].map(([key, h]) =>
@@ -211,10 +242,48 @@ export function buildAlbum(
     if (r === "high-res") continue;
     for (const [key, v] of byRecipe.get(r) ?? [])
       if (!hi.has(key))
-        issues.push({ type: "missing_highres", set: v.set, name: v.base });
+        issues.push({
+          type: "missing_highres",
+          set: v.set,
+          name: v.label ?? v.base,
+        });
   }
+  return photos;
+}
+
+export function buildAlbum(
+  folder: DriveFile,
+  located: Located[],
+  issues: SyncIssue[],
+  hasWm: boolean,
+): AlbumDraft {
+  const photos = draftPhotos(located, issues);
   return { folder, hasWm, photos, issues: uniqueSortedIssues(issues) };
 }
+
+/** The `photos` columns one scanned photo (its latest version) writes. */
+export const photoFields = (p: PhotoDraft) => ({
+  setName: p.setName,
+  baseName: p.baseName,
+  driveHighresId: p.highres.id,
+  driveWebId: p.web?.id ?? null,
+  driveIgId: p.ig?.id ?? null,
+  driveThumbId: p.thumb?.id ?? null,
+  driveWmId: p.wm?.id ?? null,
+  driveThumbWmId: p.thumbWm?.id ?? null,
+  highresBytes: p.highres.size ?? null,
+  variantVersions: JSON.stringify({
+    highres: p.highres.modifiedTime,
+    web: p.web?.modifiedTime ?? null,
+    ig: p.ig?.modifiedTime ?? null,
+    thumb: p.thumb?.modifiedTime ?? null,
+    wm: p.wm?.modifiedTime ?? null,
+    thumbWm: p.thumbWm?.modifiedTime ?? null,
+  }),
+  width: p.width,
+  height: p.height,
+  takenAt: p.highres.takenAt ?? null,
+});
 
 export const keyOf = (set: string, base: string) =>
   `${set.toLowerCase()}\0${base.toLowerCase()}`;
