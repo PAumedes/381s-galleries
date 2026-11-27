@@ -51,7 +51,7 @@ EXEC select "drive_folder_id" from "ignored_folders" <- []
 EXEC select "id", "drive_folder_id", "slug", "title", "client_name", "event_date", "pin_hash", "expires_at", "status", "cover_photo_id", "cover_focus_x", "cover_focus_y", "cover_photo_id_mobile", "cover_focus_mobile_x", "cover_focus_mobile_y", "allow_highres", "allow_web", "allow_ig", "allow_bulk", "require_email", "use_watermark_preview", "mode", "theme", "palette", "cover_layout", "grid_style", "grid_gap", "drive_modified_at", "last_synced_at", "sync_issues_json", "folder_missing_since", "archived_prev_status", "archived_by_sync", "show_on_home", "client_id", "versioning", "created_at" from "galleries" <- []
 EXEC select "slug" from "clients" <- []
 EXEC select "id", "gallery_id", "set_name", "base_name", "drive_highres_id", "drive_web_id", "drive_ig_id", "drive_thumb_id", "drive_wm_id", "drive_thumb_wm_id", "drive_tiff_id", "highres_bytes", "variant_versions", "width", "height", "taken_at", "sort", "missing_since", "cache_warm_key", "cache_expected_key", "cache_warm_fail_count", "cache_warm_retry_at" from "photos" where "photos"."gallery_id" in (?) <- ["<uuid2>"]
-EXEC select "photo_id", "version" from "photo_versions" where ("photo_versions"."photo_id" in (?, ?) and "photo_versions"."version" >= ?) <- ["<uuid4>","<uuid5>",2]
+EXEC select "photo_id", "version" from "photo_versions" where ("photo_versions"."gallery_id" = ? and "photo_versions"."version" >= ?) <- ["<uuid2>",2]
 BATCH 2
   insert into "settings" ("key", "value") values (?, ?) on conflict ("settings"."key") do update set "value" = ? <- ["r2_pending_deletes","[\\"<uuid4>\\",\\"<uuid5>\\"]","[\\"<uuid4>\\",\\"<uuid5>\\"]"]
   delete from "photos" where "photos"."id" in (?, ?) <- ["<uuid4>","<uuid5>"]

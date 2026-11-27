@@ -52,6 +52,26 @@ export async function flushR2(
 ): Promise<string[]> {
   const ids = [...new Set(pending)];
   if (ids.length === 0) return [];
+  const done = await deleteEntriesFromR2(env, op, ids);
+  if (done < ids.length) {
+    const rest = ids.slice(done);
+    await putSetting(env, PENDING_DELETES_KEY, JSON.stringify(rest), op);
+    return rest;
+  }
+  await dropSetting(env, PENDING_DELETES_KEY, op);
+  return [];
+}
+
+/**
+ * Deletes the variants of each entry (`<id>` or `<id>/v<N>`) in calls of <=1000
+ * keys, in order, never throwing. Returns how many leading entries are gone:
+ * all of them on success, else those before the failed call.
+ */
+export async function deleteEntriesFromR2(
+  env: SyncEnv,
+  op: Op,
+  ids: string[],
+): Promise<number> {
   const perCall = Math.floor(R2_DELETE_MAX / IMAGE_VARIANTS.length);
   let done = 0;
   try {
@@ -65,12 +85,9 @@ export async function flushR2(
     }
   } catch {
     console.error("sync: cache cleanup failed");
-    const rest = ids.slice(done);
-    await putSetting(env, PENDING_DELETES_KEY, JSON.stringify(rest), op);
-    return rest;
+    return done;
   }
-  await dropSetting(env, PENDING_DELETES_KEY, op);
-  return [];
+  return ids.length;
 }
 
 /**

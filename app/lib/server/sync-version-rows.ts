@@ -209,6 +209,8 @@ export function versionStatements(
   syncedAt: string,
   targets: VersionTarget[],
   state: VersionState,
+  /** Leave the rows past their grace in place (their R2 cleanup could not be queued). */
+  deferExpiry = false,
 ): { before: BatchItem[]; after: BatchItem[]; goneEntries: string[] } {
   const plan = new RoundPlan(db, galleryId, syncedAt, state);
   const have = new Map<string, Map<number, VersionState["versions"][number]>>();
@@ -269,7 +271,8 @@ export function versionStatements(
             driveVersions: markMissing(row.driveVersions, syncedAt),
           }),
         );
-      else if (graceElapsed(now, since)) expired.push(row.version);
+      else if (!deferExpiry && graceElapsed(now, since))
+        expired.push(row.version);
     }
     goneEntries.push(...expired.map((n) => cacheEntry(photoId, n)));
     for (const gone of chunk(expired, D1_IN_CHUNK))
