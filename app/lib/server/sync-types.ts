@@ -2,6 +2,9 @@ import type { getDb, schema } from "../../db";
 import type { DriveClient } from "./drive-types";
 import type { Guard } from "./sync-scan";
 
+/** How often the cron checks Drive (every 15 minutes in wrangler.jsonc); the wizard and help say it. */
+export const SYNC_INTERVAL_MINUTES = 15;
+
 /** A photo/folder must be missing for longer than this before it is deleted/archived. */
 export const SYNC_DELETE_GRACE_MS = 60 * 60_000;
 

@@ -143,3 +143,19 @@ export async function countGalleries(env: Env): Promise<number> {
     .from(schema.galleries);
   return r?.n ?? 0;
 }
+
+/**
+ * Both counts in one query: every gallery (the list's empty state) and the
+ * not archived ones (what the first-steps wizard counts, T6.58).
+ */
+export async function countGalleryTotals(
+  env: Env,
+): Promise<{ all: number; active: number }> {
+  const [r] = await getDb(env)
+    .select({
+      all: sql<number>`count(*)`,
+      active: sql<number>`coalesce(sum(${schema.galleries.status} != 'archived'), 0)`,
+    })
+    .from(schema.galleries);
+  return { all: r?.all ?? 0, active: r?.active ?? 0 };
+}

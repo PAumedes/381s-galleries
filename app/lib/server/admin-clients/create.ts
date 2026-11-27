@@ -5,11 +5,15 @@ import { createClient } from "../clients";
 import { clientFail } from "./errors";
 import type { ClientActionResult } from "./errors";
 
-/** Name + optional slug (empty = generated from the name); success opens the edit page. */
+/**
+ * Name + optional slug (empty = generated from the name); success opens the
+ * edit page, or where `after` says (the first-steps wizard goes back to itself).
+ */
 export async function createIntent(
   env: Env,
   f: FormData,
   t: TFunction,
+  after: (id: string) => string = (id) => `/admin/clients/${id}`,
 ): Promise<ClientActionResult> {
   const slug = str(f, "slug").trim();
   let id: string;
@@ -23,5 +27,5 @@ export async function createIntent(
   } catch (err) {
     return clientFail("create", err, t);
   }
-  throw redirect(`/admin/clients/${id}`, 303);
+  throw redirect(after(id), 303);
 }

@@ -22,6 +22,8 @@ export default [
     route("setup", "routes/admin.setup.tsx"),
     // T6.57 help for the studio owner
     route("ayuda", "routes/admin.ayuda.tsx"),
+    // T6.58 first-steps wizard
+    route("empezar", "routes/admin.empezar.tsx"),
     route("g/:id", "routes/admin.g.$id.tsx"),
     route("g/:id/activity", "routes/admin.g.$id.activity.tsx"),
     route("g/:id/favorites", "routes/admin.g.$id.favorites.tsx"),

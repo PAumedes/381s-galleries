@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 
 import { useT } from "../../../i18n/use-t";
 import { HELP_SECTIONS, helpSectionKey } from "../../../lib/help";
+import { WIZARD_PATH } from "../../../lib/wizard";
 import { helpMatches, resolveHelpItem } from "../../../lib/help-text";
 import { HelpItemView } from "./HelpItemView";
 import { useHelpAnchor } from "./use-help-anchor";
@@ -65,6 +66,12 @@ export function HelpView() {
         <p className="text-ink text-base leading-relaxed">
           {t("admin.help.intro")}
         </p>
+        <a
+          href={WIZARD_PATH}
+          className="text-ink focus-visible:outline-ink inline-flex min-h-12 items-center text-base underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2"
+        >
+          {t("admin.wizard.helpLink")}
+        </a>
         <form
           role="search"
           method="get"
