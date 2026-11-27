@@ -23,7 +23,7 @@ export function DesignSection({
 }) {
   const t = useT();
   return (
-    <Section title={t("admin.edit.section.design")}>
+    <Section title={t("admin.edit.section.design")} help="albums-design">
       <Form
         id={formId}
         data-design-form=""

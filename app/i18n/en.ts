@@ -1,9 +1,11 @@
 import type { es } from "./es";
 import { enAdmin } from "./en.admin";
+import { enHelp } from "./en.help";
 import { enPublic } from "./en.public";
 
 /** Every message, admin included. Public client code must import enPublic instead. */
-export const en = { ...enPublic, ...enAdmin } as const satisfies Record<
-  keyof typeof es,
-  string
->;
+export const en = {
+  ...enPublic,
+  ...enAdmin,
+  ...enHelp,
+} as const satisfies Record<keyof typeof es, string>;

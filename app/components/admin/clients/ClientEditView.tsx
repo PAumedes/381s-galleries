@@ -125,17 +125,17 @@ export function ClientEditView({
       </Link>
       <h1 className={`${WRAP} text-title text-ink`}>{client.name}</h1>
       <PublicPageStatus slug={client.slug} status={publicPage} />
-      <Section title={t("admin.clients.section.details")}>
+      <Section title={t("admin.clients.section.details")} help="clients-page">
         <ClientDetailsForm client={client} data={actionData} />
       </Section>
       <ClientPinSection hasPin={client.hasPin} data={actionData} />
-      <Section title={t("admin.clients.section.apply")}>
+      <Section title={t("admin.clients.section.apply")} help="clients-defaults">
         <ApplyDefaultsForm data={actionData} />
       </Section>
       <Section title={t("admin.clients.section.albums")}>
         <Albums albums={albums} clientSlug={client.slug} />
       </Section>
-      <Section title={t("admin.clients.section.danger")}>
+      <Section title={t("admin.clients.section.danger")} help="clients-delete">
         <DeleteClientForm
           slug={client.slug}
           hasPin={client.hasPin}

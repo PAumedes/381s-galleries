@@ -22,7 +22,7 @@ export function ClientPinSection({
   const set = data?.intent === "pinSet" ? data : undefined;
   const removed = data?.intent === "pinRemove" ? data : undefined;
   return (
-    <Section title={t("admin.clients.section.pin")}>
+    <Section title={t("admin.clients.section.pin")} help="access-pin-client">
       <p className="text-body">
         {hasPin ? t("admin.clients.pin.active") : t("admin.clients.pin.none")}
       </p>

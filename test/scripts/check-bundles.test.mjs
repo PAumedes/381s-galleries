@@ -148,6 +148,12 @@ describe("adminDictionaryKeys", () => {
     expect(values).toContain("Administración");
     expect(keys.length).toBeGreaterThan(300);
   });
+  it("T6.57: also guards the help texts (own dictionary file)", () => {
+    const { keys, values } = adminDictionaryKeys(path.resolve("app/i18n"));
+    expect(keys).toContain("admin.help.title");
+    expect(keys).toContain("admin.help.albums-publish.q");
+    expect(values).toContain("¿Cómo publico una galería?");
+  });
 });
 
 describe("calibrate", () => {

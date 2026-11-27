@@ -21,7 +21,7 @@ export function StatusSection({
   const t = useT();
 
   return (
-    <Section title={t("admin.edit.section.status")}>
+    <Section title={t("admin.edit.section.status")} help="albums-publish">
       <p className="text-small text-grey-700">{t("admin.edit.statusNote")}</p>
       {status === "published" && cacheProgress && cacheProgress.total > 0 && (
         <p data-testid="photos-ready" className="text-small text-grey-700">

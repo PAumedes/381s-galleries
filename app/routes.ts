@@ -20,6 +20,8 @@ export default [
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
     route("setup", "routes/admin.setup.tsx"),
+    // T6.57 help for the studio owner
+    route("ayuda", "routes/admin.ayuda.tsx"),
     route("g/:id", "routes/admin.g.$id.tsx"),
     route("g/:id/activity", "routes/admin.g.$id.activity.tsx"),
     route("g/:id/favorites", "routes/admin.g.$id.favorites.tsx"),

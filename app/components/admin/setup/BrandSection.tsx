@@ -15,7 +15,7 @@ export function BrandSection({
 }) {
   const t = useT();
   return (
-    <Section title={t("admin.setup.section.brand")}>
+    <Section title={t("admin.setup.section.brand")} help="start-brand">
       <Form method="post" className="flex flex-col gap-3">
         <input type="hidden" name="intent" value="studio" />
         <label className="text-small flex flex-col gap-1">

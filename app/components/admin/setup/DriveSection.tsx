@@ -15,7 +15,7 @@ export function DriveSection({
 }) {
   const t = useT();
   return (
-    <Section title={t("admin.setup.section.drive")}>
+    <Section title={t("admin.setup.section.drive")} help="drive-connect">
       <p className="text-body">
         {data.mock
           ? t("admin.setup.drive.demo")

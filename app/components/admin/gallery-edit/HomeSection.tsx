@@ -19,7 +19,7 @@ export function HomeSection({
   const homeBlocked = g.hasPin || g.status !== "published";
 
   return (
-    <Section title={t("admin.edit.section.home")}>
+    <Section title={t("admin.edit.section.home")} help="albums-home">
       <Form method="post" className="flex flex-col gap-3">
         <input type="hidden" name="intent" value="home" />
         {/* A checkbox submits nothing when off: the hidden 0 comes first. */}

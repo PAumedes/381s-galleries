@@ -29,7 +29,12 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -64,7 +69,12 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -80,7 +90,12 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -97,7 +112,12 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -114,7 +134,12 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -131,7 +156,12 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -178,7 +208,12 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -311,7 +346,12 @@ exports[`gallery editor characterization: snapshots per state > renders comparti
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Compartir</h2>
+<a href="/admin/ayuda#albums-share" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo comparto la galería con mi cliente?" title="Ayuda: ¿Cómo comparto la galería con mi cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <div class="flex flex-col gap-3">
 <div class="flex flex-col gap-1">
 <label for="ID1" class="text-small">Enlace público</label>
@@ -474,7 +514,12 @@ exports[`gallery editor characterization: snapshots per state > renders comparti
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Share</h2>
+<a href="/admin/ayuda#albums-share" target="_blank" rel="noopener" aria-label="Help: How do I share the gallery with my client?" title="Help: How do I share the gallery with my client?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <div class="flex flex-col gap-3">
 <div class="flex flex-col gap-1">
 <label for="ID1" class="text-small">Public link</label>
@@ -637,7 +682,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -672,7 +722,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -683,7 +738,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -700,7 +760,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -717,7 +782,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -734,7 +804,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -781,7 +856,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -914,7 +994,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -949,7 +1034,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -965,7 +1055,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -982,7 +1077,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -999,7 +1099,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -1016,7 +1121,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -1063,7 +1173,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -1197,7 +1312,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -1232,7 +1352,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -1248,7 +1373,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -1265,7 +1395,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -1282,7 +1417,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -1299,7 +1439,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -1346,7 +1491,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -1480,7 +1630,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -1515,7 +1670,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -1531,7 +1691,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -1548,7 +1713,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -1565,7 +1735,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -1582,7 +1757,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -1629,7 +1809,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -1762,7 +1947,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Details</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Help: How do I change the title, date or web address?" title="Help: How do I change the title, date or web address?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -1797,7 +1987,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Status</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Help: How do I publish a gallery?" title="Help: How do I publish a gallery?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Only published galleries that haven't expired are visible to clients.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -1813,7 +2008,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Access PIN</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Help: How do I put a PIN on a gallery?" title="Help: How do I put a PIN on a gallery?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">No PIN</p>
 <p class="text-small text-grey-600">Changing or removing the PIN signs clients out and voids download links that were already issued.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -1830,7 +2030,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Public home</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Help: How do I show a gallery on the home page?" title="Help: How do I show a gallery on the home page?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -1847,7 +2052,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versions</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Help: How do I turn on versions in a gallery?" title="Help: How do I turn on versions in a gallery?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -1864,7 +2074,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Options</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Help: Which sizes can the client download?" title="Help: Which sizes can the client download?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -1911,7 +2126,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Delete gallery</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Help: How do I delete a gallery?" title="Help: How do I delete a gallery?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Deletes the gallery and everything associated with it: the photo index, favorites, visits, downloads, cached images, and PIN and visitor data. This cannot be undone. It does not touch the Google Drive files. The folder is not re-created by sync (you can include it again in Settings).</p>
@@ -2044,7 +2264,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -2083,7 +2308,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -2099,7 +2329,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -2116,7 +2351,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -2133,7 +2373,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -2150,7 +2395,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -2197,7 +2447,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -2330,7 +2585,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -2365,7 +2625,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -2381,7 +2646,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -2398,7 +2668,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -2415,7 +2690,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -2432,7 +2712,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -2479,7 +2764,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -2611,7 +2901,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -2646,7 +2941,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -2663,7 +2963,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <p class="text-small text-grey-700">Publicada</p>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -2680,7 +2985,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -2697,7 +3007,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -2714,7 +3029,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -2761,7 +3081,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -2894,7 +3219,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -2929,7 +3259,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -2945,7 +3280,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -2964,7 +3304,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <p role="alert" class="border-ink border p-3 text-small">PIN corto</p>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -2981,7 +3326,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -2998,7 +3348,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -3045,7 +3400,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -3178,7 +3538,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -3213,7 +3578,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -3229,7 +3599,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -3246,7 +3621,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -3263,7 +3643,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -3280,7 +3665,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -3330,7 +3720,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -3469,7 +3864,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -3504,7 +3904,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -3520,7 +3925,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -3537,7 +3947,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -3554,7 +3969,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -3571,7 +3991,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -3621,7 +4046,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -3760,7 +4190,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -3795,7 +4230,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -3811,7 +4251,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -3828,7 +4273,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -3845,7 +4295,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -3862,7 +4317,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -3911,7 +4371,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -4050,7 +4515,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -4085,7 +4555,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -4101,7 +4576,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -4118,7 +4598,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -4135,7 +4620,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -4152,7 +4642,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -4201,7 +4696,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -4340,7 +4840,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -4375,7 +4880,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -4391,7 +4901,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -4408,7 +4923,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -4425,7 +4945,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -4442,7 +4967,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -4489,7 +5019,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -4622,7 +5157,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -4657,7 +5197,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -4673,7 +5218,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -4690,7 +5240,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -4707,7 +5262,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -4724,7 +5284,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -4771,7 +5336,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -4904,7 +5474,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -4939,7 +5514,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1" data-discover="true">
@@ -4955,7 +5535,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">PIN activo</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -4977,7 +5562,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -4994,7 +5584,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -5011,7 +5606,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -5058,7 +5658,12 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>
@@ -5191,7 +5796,12 @@ exports[`gallery editor characterization: snapshots per state > renders diseno e
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Design</h2>
+<a href="/admin/ayuda#albums-design" target="_blank" rel="noopener" aria-label="Help: How do I change the colors and design of the gallery?" title="Help: How do I change the colors and design of the gallery?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1?tab=diseno" id="ID1" data-design-form="" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="design" name="intent">
 <div class="flex flex-col gap-5">
@@ -5580,7 +6190,12 @@ exports[`gallery editor characterization: snapshots per state > renders diseno e
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Diseño</h2>
+<a href="/admin/ayuda#albums-design" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio los colores y el diseño de la galería?" title="Ayuda: ¿Cómo cambio los colores y el diseño de la galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1?tab=diseno" id="ID1" data-design-form="" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="design" name="intent">
 <div class="flex flex-col gap-5">
@@ -5969,7 +6584,12 @@ exports[`gallery editor characterization: snapshots per state > renders diseno f
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Diseño</h2>
+<a href="/admin/ayuda#albums-design" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio los colores y el diseño de la galería?" title="Ayuda: ¿Cómo cambio los colores y el diseño de la galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1?tab=diseno" id="ID1" data-design-form="" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="design" name="intent">
 <div class="flex flex-col gap-5">
@@ -6359,11 +6979,21 @@ exports[`gallery editor characterization: snapshots per state > renders fotos em
 </nav>
 <div class="flex flex-col gap-10">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Fotos</h2>
+<a href="/admin/ayuda#photos-order" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el orden de las fotos?" title="Ayuda: ¿Cómo cambio el orden de las fotos?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-600">Esta galería todavía no tiene fotos visibles.</p>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Avisos de sincronización</h2>
+<a href="/admin/ayuda#updates-issues" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué son los avisos de sincronización?" title="Ayuda: ¿Qué son los avisos de sincronización?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-600">Sin avisos.</p>
 </section>
 </div>
@@ -6399,7 +7029,12 @@ exports[`gallery editor characterization: snapshots per state > renders fotos en
 </nav>
 <div class="flex flex-col gap-10">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Photos</h2>
+<a href="/admin/ayuda#photos-order" target="_blank" rel="noopener" aria-label="Help: How do I change the order of the photos?" title="Help: How do I change the order of the photos?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <div class="flex flex-col gap-8">
 <p class="text-small text-grey-600 max-w-prose">Drag the thumbnails, or pick one (click, Enter or Space) and move it with the arrow keys, Home/End or the “Move earlier/later” buttons. Escape clears the selection. Changes apply when you save.</p>
 <p role="status" class="sr-only">
@@ -6609,7 +7244,12 @@ exports[`gallery editor characterization: snapshots per state > renders fotos en
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Sync notices</h2>
+<a href="/admin/ayuda#updates-issues" target="_blank" rel="noopener" aria-label="Help: What are the notices about files?" title="Help: What are the notices about files?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <div class="flex flex-col gap-4">
 <div>
 <h3 class="text-small font-medium">Missing web version (1)</h3>
@@ -6653,7 +7293,12 @@ exports[`gallery editor characterization: snapshots per state > renders fotos es
 </nav>
 <div class="flex flex-col gap-10">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Fotos</h2>
+<a href="/admin/ayuda#photos-order" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el orden de las fotos?" title="Ayuda: ¿Cómo cambio el orden de las fotos?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <div class="flex flex-col gap-8">
 <p class="text-small text-grey-600 max-w-prose">Arrastrá las miniaturas, o elegí una (clic, Enter o Espacio) y movela con las flechas, Inicio/Fin o los botones “Mover antes/después”. Escape quita la selección. Los cambios se aplican al guardar.</p>
 <p role="status" class="sr-only">
@@ -6863,7 +7508,12 @@ exports[`gallery editor characterization: snapshots per state > renders fotos es
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Avisos de sincronización</h2>
+<a href="/admin/ayuda#updates-issues" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué son los avisos de sincronización?" title="Ayuda: ¿Qué son los avisos de sincronización?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <div class="flex flex-col gap-4">
 <div>
 <h3 class="text-small font-medium">Falta la versión web (1)</h3>
@@ -7278,7 +7928,12 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <div data-editor-grid="" class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 2xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 <div class="flex min-w-0 flex-col gap-8">
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1?tab=nope" class="flex flex-col gap-4" data-discover="true">
 <input type="hidden" value="details" name="intent">
 <div class="flex flex-col gap-1">
@@ -7313,7 +7968,12 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-small text-grey-700">Solo las galerías publicadas y sin vencer son visibles para los clientes.</p>
 <div class="flex flex-wrap gap-2">
 <form method="post" action="/admin/g/g1?tab=nope" data-discover="true">
@@ -7329,7 +7989,12 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <p class="text-body">Sin PIN</p>
 <p class="text-small text-grey-600">Cambiar o quitar el PIN cierra las sesiones de los clientes y anula los enlaces de descarga ya emitidos.</p>
 <form method="post" action="/admin/g/g1?tab=nope" id="album-pin-set" class="flex flex-col gap-3" data-discover="true">
@@ -7346,7 +8011,12 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 </div>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1?tab=nope" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="home" name="intent">
 <input type="hidden" value="0" name="showOnHome">
@@ -7363,7 +8033,12 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1?tab=nope" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="versioning" name="intent">
 <input type="hidden" value="0" name="versioning">
@@ -7380,7 +8055,12 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1?tab=nope" class="flex flex-col gap-3" data-discover="true">
 <input type="hidden" value="flags" name="intent">
 <fieldset class="flex flex-col gap-2">
@@ -7427,7 +8107,12 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 </form>
 </section>
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
+<div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
+</a>
+</div>
 <form method="post" action="/admin/g/g1?tab=nope" class="border-ink flex flex-col gap-3 border-2 p-4" data-discover="true">
 <input type="hidden" value="delete" name="intent">
 <p class="text-small text-grey-700">Elimina la galería y todo lo asociado: el índice de fotos, favoritas, visitas, descargas, imágenes en caché y datos de PIN y visitantes. No se puede deshacer. No toca los archivos de Google Drive. La carpeta no se vuelve a crear en la sincronización (podés volver a incluirla en Ajustes).</p>

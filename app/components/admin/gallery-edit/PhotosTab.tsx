@@ -55,7 +55,7 @@ export function PhotosTab({
   const t = useT();
   return (
     <div className="flex flex-col gap-10">
-      <Section title={t("admin.edit.section.photos")}>
+      <Section title={t("admin.edit.section.photos")} help="photos-order">
         {data.photos.length === 0 ? (
           <p className="text-small text-grey-600">
             {t("admin.edit.photos.empty")}
@@ -76,7 +76,7 @@ export function PhotosTab({
         )}
       </Section>
       {data.approvals && <ApprovalsSection summary={data.approvals} />}
-      <Section title={t("admin.edit.section.issues")}>
+      <Section title={t("admin.edit.section.issues")} help="updates-issues">
         {data.issues.total === 0 ? (
           <p className="text-small text-grey-600">
             {t("admin.edit.issues.none")}

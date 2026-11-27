@@ -15,7 +15,7 @@ export function RootSection({
 }) {
   const t = useT();
   return (
-    <Section title={t("admin.setup.section.root")}>
+    <Section title={t("admin.setup.section.root")} help="drive-root">
       <p className="text-body">
         {data.rootName ? (
           <>
