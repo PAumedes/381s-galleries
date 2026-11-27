@@ -7,6 +7,7 @@ import { PHONE_DISC } from "./lightbox/styles";
 import type { LightboxProps } from "./lightbox/types";
 import { useLightbox } from "./lightbox/useLightbox";
 import { useZoomed } from "./lightbox/useZoomed";
+import { ApproveButton } from "./lightbox/ApproveButton";
 import { NavZone } from "./lightbox/NavZone";
 import { PhotoStage } from "./lightbox/PhotoStage";
 import { SwipeHint } from "./lightbox/SwipeHint";
@@ -148,6 +149,15 @@ function LightboxView(props: LightboxProps) {
         onDownload={props.onDownload}
       />
       <VersionTools key={photo.id} t={t} photo={photo} chrome={chrome} />
+      {props.approvals?.enabled && (
+        <ApproveButton
+          key={photo.id}
+          t={t}
+          photo={photo}
+          chrome={chrome}
+          approvals={props.approvals}
+        />
+      )}
       <SwipeHint t={t} hasPrev={lb.hasPrev} hasNext={lb.hasNext} />
       <NavZones
         t={t}

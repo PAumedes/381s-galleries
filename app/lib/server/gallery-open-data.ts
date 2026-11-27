@@ -266,6 +266,7 @@ export async function buildOpenData(
     gallery: {
       ...openGallery(g, rows, cover, proofing),
       ...(round !== undefined && { round }),
+      ...(views && { approvals: true as const }),
     },
     photos: await Promise.all(
       rows.map(

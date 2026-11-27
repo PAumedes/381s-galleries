@@ -8,6 +8,7 @@ import { hasWmSql, focusOf, resolveCover } from "../cover";
 import { hasPreview } from "../tiff";
 import { isDeleting } from "../gallery-delete";
 import { atLatestVersion, loadGalleryVersions } from "../photo-versions";
+import { approvalsSummary } from "./approvals-summary";
 import { listClientChoices } from "./client-choices";
 
 /** Hash of the visible photo ids (order independent): changes when the photo set changes. */
@@ -76,12 +77,14 @@ type EditRow = Awaited<ReturnType<typeof editPhotoRows>>[number];
  * the newest has no preview-wm (Prueba).
  */
 async function atShownVersions(env: Env, g: GalleryRow, rows: EditRow[]) {
-  if (!g.versioning) return { rows, fellBack: [] };
+  if (!g.versioning) return { rows, fellBack: [], shown: undefined };
   const live = await loadGalleryVersions(env, g.id);
   const proofing = g.mode === "proofing";
   const fellBack: EditRow[] = [];
+  const shownVersions = new Map<string, number>();
   const shown = rows.map((p) => {
     const at = atLatestVersion(p, live.get(p.id), proofing);
+    shownVersions.set(p.id, (at as { version?: number }).version ?? 1);
     const row = {
       ...at,
       hasWm: Number(!!at.driveWmId),
@@ -92,7 +95,7 @@ async function atShownVersions(env: Env, g: GalleryRow, rows: EditRow[]) {
       fellBack.push(row);
     return row;
   });
-  return { rows: shown, fellBack };
+  return { rows: shown, fellBack, shown: shownVersions };
 }
 
 type Named = { set: string; name: string };
@@ -184,11 +187,11 @@ export async function loadGalleryEdit(env: Env, id: string) {
     .where(eq(schema.galleries.id, id));
   if (!g) return null;
   const clients = await listClientChoices(env, g.clientId);
-  const { rows: ps, fellBack } = await atShownVersions(
-    env,
-    g,
-    await editPhotoRows(db, id),
-  );
+  const {
+    rows: ps,
+    fellBack,
+    shown,
+  } = await atShownVersions(env, g, await editPhotoRows(db, id));
   const photos: EditPhoto[] = await Promise.all(
     ps.map(async (p) => ({
       id: p.id,
@@ -228,5 +231,7 @@ export async function loadGalleryEdit(env: Env, id: string) {
     photos,
     version: await photoSetVersion(photos.map((p) => p.id)),
     issues: editIssues(g, noWm, fellBack, noPreview, ps.length),
+    // Versioned albums only (T6.53f): one aggregate query; absent otherwise.
+    ...(shown && { approvals: await approvalsSummary(env, g.id, shown) }),
   };
 }

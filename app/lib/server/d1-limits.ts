@@ -53,6 +53,15 @@ export const SLUG_LOADER_D1_QUERIES = 8;
  * as it was (3 measured + this = 4, inside the padded 8; test/photo-versions-public.test.ts).
  */
 export const VERSIONED_OPEN_D1_QUERIES = 1;
+/**
+ * Extra D1 queries the visitor's favorites list makes for an album with
+ * `galleries.versioning = 1` (T6.53f): one read of the visitor's own approvals
+ * (served by `photo_approvals_gallery_visitor_idx`). Unversioned albums make
+ * none and their response is byte-identical (no `approvals` key). The open
+ * payload itself stays cacheable and unchanged: approvals are per visitor, so
+ * they ride on the per-visitor favorites call, never on the page.
+ */
+export const VERSIONED_APPROVALS_D1_QUERIES = 1;
 /** D1 queries a client homepage `/:client` makes (T6.40e): album lookup that finds nothing, albums + client in one join, covers; asserted by test/client-page.test.ts. */
 export const CLIENT_PAGE_D1_QUERIES = 3;
 /** D1 queries the admin `status` action makes itself (gallery, deleting check, compare-and-set; 3 measured, padded; asserted by the same test). */

@@ -6,6 +6,9 @@ const JSON_HEADERS = { "Content-Type": "application/json" };
 
 type SendResult = "ok" | "email" | "fail";
 
+/** The visitor's own approvals, as the favorites list delivers them (versioned albums only; T6.53f). */
+export type ServerApprovals = { id: string; ver: number }[] | null;
+
 /** A copy of `cur` with `id` present (`on`) or absent. */
 function withMember(cur: ReadonlySet<string>, id: string, on: boolean) {
   const next = new Set(cur);
@@ -58,6 +61,7 @@ function useFavoriteIds(
   offline: boolean,
   setVisitor: (v: Visitor) => void,
   markKnown: () => void,
+  setApprovals: (list: ServerApprovals) => void,
 ) {
   const [ids, setIds] = useState<ReadonlySet<string>>(new Set());
   const touched = useRef(new Set<string>());
@@ -72,8 +76,10 @@ function useFavoriteIds(
         const body = (await res.json()) as {
           visitor: Visitor;
           favorites: string[];
+          approvals?: ServerApprovals;
         };
         setVisitor(body.visitor);
+        setApprovals(body.approvals ?? null);
         // Do not clobber toggles made while this request was in flight.
         setIds((cur) => {
           const next = new Set(body.favorites);
@@ -88,7 +94,7 @@ function useFavoriteIds(
       }
     })();
     return () => ctl.abort();
-  }, [base, setVisitor, offline]);
+  }, [base, setVisitor, setApprovals, offline]);
 
   const send = useCallback(
     (photoId: string, on: boolean): Promise<SendResult> => {
@@ -132,11 +138,13 @@ export function useFavorites(
     submitGate,
     closeGate,
   } = useVisitor(slug, requireEmail);
+  const [serverApprovals, setApprovals] = useState<ServerApprovals>(null);
   const { ids, setIds, send } = useFavoriteIds(
     base,
     offline,
     setVisitor,
     markKnown,
+    setApprovals,
   );
   const onErrorRef = useRef(onError);
   useEffect(() => {
@@ -160,5 +168,14 @@ export function useFavorites(
     [ids, ensure, send, flashError, offline, setIds],
   );
 
-  return { ids, visitor, gateOpen, toggle, submitGate, closeGate, ensure };
+  return {
+    ids,
+    visitor,
+    gateOpen,
+    toggle,
+    submitGate,
+    closeGate,
+    ensure,
+    serverApprovals,
+  };
 }

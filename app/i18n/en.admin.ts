@@ -73,6 +73,14 @@ export const enAdmin = {
   "admin.edit.section.versions": "Versions",
   "admin.edit.section.options": "Options",
   "admin.edit.section.photos": "Photos",
+  "admin.edit.section.approvals": "Approvals",
+  "admin.edit.approvals.summary.one":
+    "{approved} of {total} photo approved in its latest version",
+  "admin.edit.approvals.summary.other":
+    "{approved} of {total} photos approved in their latest version",
+  "admin.edit.approvals.pending": "{pending} to review",
+  "admin.edit.approvals.hint":
+    "Each photo counts once, however many people approved it. A new version goes back to review.",
   "admin.edit.section.issues": "Sync notices",
   "admin.edit.confirmSlug":
     "Changing the slug breaks links and QR codes that were already shared. Continue?",

@@ -2,6 +2,7 @@ import { ISSUE_KEYS } from "../../../lib/admin-gallery";
 import { useT } from "../../../i18n/use-t";
 import type { GalleryActionResult } from "../../../lib/server/admin-galleries";
 import { PhotoReorder } from "../PhotoReorder";
+import { ApprovalsSection } from "./ApprovalsSection";
 import type { EditGallery, GalleryEditData } from "./types";
 import { Feedback, Section } from "./ui";
 
@@ -46,7 +47,7 @@ export function PhotosTab({
   coverId,
   actionData,
 }: {
-  data: Pick<GalleryEditData, "photos" | "version" | "issues">;
+  data: Pick<GalleryEditData, "photos" | "version" | "issues" | "approvals">;
   g: EditGallery;
   coverId: string | null;
   actionData: GalleryActionResult | undefined;
@@ -74,6 +75,7 @@ export function PhotosTab({
           </>
         )}
       </Section>
+      {data.approvals && <ApprovalsSection summary={data.approvals} />}
       <Section title={t("admin.edit.section.issues")}>
         {data.issues.total === 0 ? (
           <p className="text-small text-grey-600">

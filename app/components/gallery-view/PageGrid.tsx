@@ -17,6 +17,7 @@ export function PageGrid({
   onFavorite,
   onDownload,
   isFavorite,
+  approvedAt,
 }: {
   gridRef: Ref<HTMLElement>;
   gallery: OpenGallery;
@@ -28,6 +29,8 @@ export function PageGrid({
   onFavorite: (id: string) => void;
   onDownload?: (id: string) => void;
   isFavorite: (id: string) => boolean;
+  /** Versioned albums (T6.53f): the version a photo is approved at, when it is the shown one. */
+  approvedAt?: (photo: GalleryPhoto) => number | null;
 }) {
   const gap = GAP_PX[gallery.gridGap];
   return (
@@ -49,6 +52,7 @@ export function PageGrid({
           onFavorite={onFavorite}
           onDownload={onDownload}
           isFavorite={isFavorite}
+          approvedAt={approvedAt}
           protect={protect}
           originalDownload={gallery.allowHighres}
           layout={gallery.gridStyle}

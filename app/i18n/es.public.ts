@@ -115,6 +115,14 @@ export const esPublic = {
   "compare.loading": "Cargando vistas previas…",
   "compare.error": "No se pudo cargar una de las vistas previas",
 
+  "approvals.approve": "Aprobar v{n}",
+  "approvals.approved": "Aprobada en v{n}",
+  "approvals.announceOn": "Versión {n} aprobada",
+  "approvals.announceOff": "Aprobación de la versión {n} quitada",
+  "approvals.error": "No se pudo guardar la aprobación. Probá de nuevo.",
+  "approvals.stale":
+    "Hay una versión nueva de esta foto. Actualizá la página para revisarla.",
+
   "lightbox.close": "Cerrar",
   "lightbox.previous": "Anterior",
   "lightbox.next": "Siguiente",

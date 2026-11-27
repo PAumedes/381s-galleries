@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { getDb, schema } from "../app/db";
+import { VERSIONED_APPROVALS_D1_QUERIES } from "../app/lib/server/d1-limits";
 import { loadGalleryEdit } from "../app/lib/server/admin-galleries";
 import { migrateDb, resetTables } from "./support/d1";
 import { countingEnv, noRatePrune } from "./support/warm";
@@ -79,6 +80,7 @@ describe("T6.53c admin: Prueba falls back to an earlier version (count warning, 
     await db.update(schema.galleries).set({ versioning: true });
     const on = countingEnv(env);
     expect(await warning(on.e)).toBeDefined();
-    expect(on.count() - off.count()).toBe(1);
+    // The version rows (T6.53c) plus the approvals summary (T6.53f), both versioned-only.
+    expect(on.count() - off.count()).toBe(1 + VERSIONED_APPROVALS_D1_QUERIES);
   });
 });

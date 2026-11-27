@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { enabledSizes } from "../DownloadMenu";
+import { useApprovals } from "../use-approvals";
 import { useFavorites } from "../use-favorites";
 import { useToast } from "../use-gallery-chrome";
 import type { GalleryPhoto, OpenGallery } from "../types";
@@ -28,6 +29,14 @@ export function useGalleryView(
     () => showToast("favorites.error"),
     preview,
   );
+  const approvals = useApprovals({
+    slug: gallery.slug,
+    enabled: gallery.approvals === true,
+    offline: preview,
+    ensure: favs.ensure,
+    loaded: favs.serverApprovals,
+    onError: showToast,
+  });
   const favCount = useMemo(
     () => photos.filter((p) => favs.ids.has(p.id)).length,
     [photos, favs.ids],
@@ -59,6 +68,7 @@ export function useGalleryView(
     sheet,
     setSheet,
     favs,
+    approvals,
     favCount,
     isFavorite,
     visible,

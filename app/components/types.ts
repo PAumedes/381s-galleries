@@ -88,4 +88,6 @@ export type OpenGallery = {
   sets: { name: string; count: number }[];
   /** Versioned albums (T6.53c): number of the newest delivery round shown ("Ronda N"); absent otherwise. */
   round?: number;
+  /** Versioned albums (T6.53f): visitors can approve the shown version of a photo; absent otherwise. */
+  approvals?: true;
 };
