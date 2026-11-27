@@ -281,18 +281,32 @@ describe("T6.58 wizard: es and en say the same thing", () => {
       const a = dictOf(esWizard)[k]!;
       const b = dictOf(enWizard)[k]!;
       expect(ph(b), k).toEqual(ph(a));
-      expect(
-        tokenizeHelp(a)
-          .filter((x) => x.kind === "code")
-          .map((x) => x.text),
-        k,
-      ).toEqual(
-        tokenizeHelp(b)
-          .filter((x) => x.kind === "code")
-          .map((x) => x.text),
-      );
+      // Folder names are the same in both languages, except the example session name.
+      if (k !== "admin.wizard.folders.l1")
+        expect(
+          tokenizeHelp(a)
+            .filter((x) => x.kind === "code")
+            .map((x) => x.text),
+          k,
+        ).toEqual(
+          tokenizeHelp(b)
+            .filter((x) => x.kind === "code")
+            .map((x) => x.text),
+        );
       if (a === b && /[a-z]{4,}/i.test(a)) same.push(k);
     }
     expect(same).toEqual([]);
+  });
+});
+
+describe("T6.58 wizard: English reads like English, for a desktop", () => {
+  it("no Tap, English example names", () => {
+    for (const [k, v] of Object.entries(enWizard)) {
+      expect(v, k).not.toMatch(/\btap(s|ped)?\b/i);
+      expect(v, k).not.toMatch(/\bBoda\b|Martín/);
+    }
+    expect(enWizard["admin.wizard.folders.l1"]).toContain("Wedding-Ana");
+    expect(enWizard["admin.wizard.client.l1"]).toContain("Ana and Martin");
+    expect(enWizard["admin.wizard.drive.l1"]).toMatch(/Click|Press/);
   });
 });

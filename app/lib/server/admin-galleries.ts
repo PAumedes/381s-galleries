@@ -21,7 +21,11 @@ import type {
 } from "./admin-galleries/actions/shared";
 
 // Public facade: the intents live one per file in admin-galleries/.
-export { countGalleries, listGalleries } from "./admin-galleries/list";
+export {
+  countGalleries,
+  countGalleryTotals,
+  listGalleries,
+} from "./admin-galleries/list";
 export type { GalleryListRow } from "./admin-galleries/list";
 export { loadGalleryEdit, photoSetVersion } from "./admin-galleries/edit";
 export type { EditPhoto } from "./admin-galleries/edit";

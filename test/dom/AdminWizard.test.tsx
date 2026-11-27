@@ -12,7 +12,12 @@ import { es } from "../../app/i18n/es";
 import type { WizardData } from "../../app/lib/server/admin-wizard";
 import { HELP_SECTIONS } from "../../app/lib/help";
 import { SYNC_INTERVAL_MINUTES } from "../../app/lib/server/sync-types";
-import { wizardStates } from "../../app/lib/wizard";
+import { makeT } from "../../app/i18n/t";
+import {
+  WIZARD_STEPS,
+  wizardMetaTitle,
+  wizardStates,
+} from "../../app/lib/wizard";
 
 // T6.58: the wizard on screen (Spanish by default).
 
@@ -54,6 +59,7 @@ const target = {
   url: "https://gallery.test/ana/boda",
   clientName: "Ana",
   clientUrl: "https://gallery.test/ana",
+  clientPin: false,
 };
 
 function show(d: WizardData, actionData?: unknown) {
@@ -351,9 +357,57 @@ describe("T6.58 WizardView: steps", () => {
     ).toHaveLength(2);
   });
 
-  it("6 share: a draft says to publish first (and still shows the link)", async () => {
+  it("6 share: a draft says to publish first and offers no link and no copy button", async () => {
     show(data({ step: 6, target }));
     expect(document.body.textContent).toContain(es["admin.wizard.share.draft"]);
+    expect(document.querySelector("input[readonly]")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: es["admin.share.copy"] }),
+    ).toBeNull();
+    expect(document.body.textContent).not.toContain("gallery.test");
+  });
+
+  it("6 share: a PIN on the gallery or on its client adds a line to send it separately", async () => {
+    const pub = { ...target, status: "published" as const };
+    show(data({ step: 6, target: pub }));
+    expect(document.body.textContent).not.toContain(
+      es["admin.wizard.share.pin"],
+    );
+    cleanup();
+    show(data({ step: 6, target: { ...pub, pin: true } }));
+    expect(document.body.textContent).toContain(es["admin.wizard.share.pin"]);
+    cleanup();
+    show(data({ step: 6, target: { ...pub, clientPin: true } }));
+    expect(document.body.textContent).toContain(
+      es["admin.wizard.share.clientPin"],
+    );
+    cleanup();
+    setFallbackMessages(en);
+    show(data({ step: 6, target: { ...pub, pin: true } }));
+    expect(document.body.textContent).toContain(en["admin.wizard.share.pin"]);
+  });
+
+  it("the step heading can take focus and carries the step title", async () => {
+    for (let n = 1; n <= 6; n++) {
+      show(data({ step: n }));
+      const h = document.querySelector("h2")!;
+      expect(h.getAttribute("tabindex")).toBe("-1");
+      expect(h.id).toBe(`wizard-${WIZARD_STEPS[n - 1]!.id}`);
+      cleanup();
+    }
+  });
+
+  it("each step has its own document title, in both languages", () => {
+    for (const [lang, d] of [
+      ["es", es],
+      ["en", en],
+    ] as const) {
+      const t = makeT(lang, d);
+      const titles = WIZARD_STEPS.map((_, i) => wizardMetaTitle(t, i + 1));
+      expect(new Set(titles).size).toBe(6);
+      for (const x of titles) expect(x).toContain(d["admin.meta.wizard"]);
+    }
+    expect(wizardMetaTitle(makeT("es", es), 99)).toBe(es["admin.meta.wizard"]);
   });
 
   it("6 share: no gallery, no link field", async () => {

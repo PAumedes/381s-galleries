@@ -46,6 +46,8 @@ export interface WizardTarget {
   expiresAt: string | null;
   url: string;
   clientName: string | null;
+  /** Whether the album's client has a PIN (the hash never leaves the server). */
+  clientPin: boolean;
   /** The client page, only when the album has a client whose page is on. */
   clientUrl: string | null;
 }
@@ -91,25 +93,33 @@ async function counts(env: Env) {
 async function newest(env: Env) {
   const g = schema.galleries;
   const c = schema.clients;
-  return getDb(env)
-    .select({
-      id: g.id,
-      title: g.title,
-      slug: g.slug,
-      status: g.status,
-      mode: g.mode,
-      pin: sql<number>`${g.pinHash} IS NOT NULL`,
-      downloads: sql<number>`(${g.allowHighres} OR ${g.allowWeb} OR ${g.allowIg} OR ${g.allowBulk})`,
-      expiresAt: g.expiresAt,
-      clientName: c.name,
-      clientSlug: c.slug,
-      pageEnabled: c.pageEnabled,
-    })
-    .from(g)
-    .leftJoin(c, eq(c.id, g.clientId))
-    .where(notArchived)
-    .orderBy(desc(g.createdAt), desc(g.id))
-    .limit(RECENT_MAX);
+  return (
+    getDb(env)
+      .select({
+        id: g.id,
+        title: g.title,
+        slug: g.slug,
+        status: g.status,
+        mode: g.mode,
+        pin: sql<number>`${g.pinHash} IS NOT NULL`,
+        downloads: sql<number>`(${g.allowHighres} OR ${g.allowWeb} OR ${g.allowIg} OR ${g.allowBulk})`,
+        expiresAt: g.expiresAt,
+        clientName: c.name,
+        clientSlug: c.slug,
+        pageEnabled: c.pageEnabled,
+        clientPin: sql<number>`${c.pinHash} IS NOT NULL`,
+      })
+      .from(g)
+      .leftJoin(c, eq(c.id, g.clientId))
+      .where(notArchived)
+      // Published first: steps 5 and 6 talk about the gallery the client can actually open.
+      .orderBy(
+        desc(sql`${g.status} = 'published'`),
+        desc(g.createdAt),
+        desc(g.id),
+      )
+      .limit(RECENT_MAX)
+  );
 }
 
 /** `/admin/empezar` loader: admin login, then the real state of every step. */
@@ -166,6 +176,7 @@ export async function loadWizard(
           expiresAt: first.expiresAt,
           url: publicGalleryUrl(env, request, first.slug, first.clientSlug),
           clientName: first.clientName,
+          clientPin: !!first.clientPin,
           clientUrl:
             first.clientSlug && first.pageEnabled
               ? `${publicOrigin(env, request)}${galleryPath(first.clientSlug)}`

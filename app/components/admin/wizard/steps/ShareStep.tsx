@@ -19,18 +19,28 @@ export function ShareStep({
   return (
     <StepFrame step={step}>
       {g ? (
-        <>
-          {g.status !== "published" && (
-            <StatusNote>{t("admin.wizard.share.draft")}</StatusNote>
-          )}
-          <CopyField label={t("admin.wizard.share.linkLabel")} value={g.url} />
-          {g.clientUrl && (
+        g.status !== "published" ? (
+          <StatusNote>{t("admin.wizard.share.draft")}</StatusNote>
+        ) : (
+          <>
             <CopyField
-              label={t("admin.wizard.share.clientLinkLabel")}
-              value={g.clientUrl}
+              label={t("admin.wizard.share.linkLabel")}
+              value={g.url}
             />
-          )}
-        </>
+            {g.clientUrl && (
+              <CopyField
+                label={t("admin.wizard.share.clientLinkLabel")}
+                value={g.clientUrl}
+              />
+            )}
+            {g.pin && (
+              <p className="text-base">{t("admin.wizard.share.pin")}</p>
+            )}
+            {g.clientPin && (
+              <p className="text-base">{t("admin.wizard.share.clientPin")}</p>
+            )}
+          </>
+        )
       ) : (
         <>
           <StatusNote>{t("admin.wizard.share.noGallery")}</StatusNote>

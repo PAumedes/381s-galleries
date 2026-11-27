@@ -37,15 +37,16 @@ export const enWizard = {
   "admin.wizard.drive.title": "Connect Google Drive",
   "admin.wizard.drive.a":
     "That is where your photos live. The app only looks at them: it never changes or deletes them.",
-  "admin.wizard.drive.l1": "Tap {connect} and accept the Google permission.",
+  "admin.wizard.drive.l1": "Click {connect} and accept the Google permission.",
   "admin.wizard.drive.l2":
     "Then, in {settings}, paste the link of your sessions folder into {rootLabel}.",
-  "admin.wizard.drive.l3": "Tap {rootSave}.",
+  "admin.wizard.drive.l3": "Click {rootSave}.",
 
   "admin.wizard.folders.title": "Set up your folders in Capture One",
   "admin.wizard.folders.a":
     "Each session is a folder inside your Drive folder. Inside it, Capture One saves one folder for each photo size.",
-  "admin.wizard.folders.l1": "One folder per session, for example `Boda-Ana`.",
+  "admin.wizard.folders.l1":
+    "One folder per session, for example `Wedding-Ana`.",
   "admin.wizard.folders.l2":
     "Inside, only `high-res` is required: it is the big photo.",
   "admin.wizard.folders.l3":
@@ -70,7 +71,7 @@ export const enWizard = {
     "It is not created by hand: every new Drive folder becomes a gallery. The app checks Drive by itself every {syncMinutes} minutes.",
   "admin.wizard.gallery.l1":
     "Export the photos of a session from Capture One to your Drive folder.",
-  "admin.wizard.gallery.l2": "If you do not want to wait, tap {syncNow}.",
+  "admin.wizard.gallery.l2": "If you do not want to wait, click {syncNow}.",
   "admin.wizard.gallery.l3":
     "A new gallery starts as {draft}: nobody sees it until you publish it.",
   "admin.wizard.gallery.none": "No gallery has shown up yet.",
@@ -115,6 +116,10 @@ export const enWizard = {
   "admin.wizard.share.noGallery": "There is no gallery to share yet.",
   "admin.wizard.share.draft":
     "This gallery is still a draft: publish it before sending the link.",
+  "admin.wizard.share.pin":
+    "This gallery has a PIN: send it separately, not together with the link.",
+  "admin.wizard.share.clientPin":
+    "Its client also has a PIN: send it separately.",
   "admin.wizard.share.linkLabel": "Gallery link",
   "admin.wizard.share.clientLinkLabel": "Client page link",
 } as const satisfies Record<keyof typeof esWizard, string>;

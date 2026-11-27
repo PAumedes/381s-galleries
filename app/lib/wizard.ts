@@ -194,6 +194,8 @@ export const WIZARD_PAGE_KEYS = [
   "admin.wizard.val.expiryAt",
   "admin.wizard.share.noGallery",
   "admin.wizard.share.draft",
+  "admin.wizard.share.pin",
+  "admin.wizard.share.clientPin",
   "admin.wizard.share.linkLabel",
   "admin.wizard.share.clientLinkLabel",
 ] as const satisfies readonly MessageKey[];
@@ -211,4 +213,11 @@ export function resolveWizardText(
         : tok.text,
     )
     .join("");
+}
+
+/** Document title of a step ("Conectá Google Drive · Primeros pasos"); the plain title for a number out of range. */
+export function wizardMetaTitle(t: TFunction, step: number): string {
+  const s = WIZARD_STEPS[step - 1];
+  const base = t("admin.meta.wizard");
+  return s ? `${t(wizardStepKeys(s).title)} · ${base}` : base;
 }

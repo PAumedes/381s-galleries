@@ -7,7 +7,10 @@ import { requestT } from "../i18n/dictionaries";
 import { useT } from "../i18n/use-t";
 import type { MessageKey } from "../i18n/t";
 import { adminHeaders } from "../lib/server/admin";
-import { countGalleries, listGalleries } from "../lib/server/admin-galleries";
+import {
+  countGalleryTotals,
+  listGalleries,
+} from "../lib/server/admin-galleries";
 import { listClientChoices } from "../lib/server/admin-galleries/client-choices";
 import { requireAdmin } from "../lib/server/auth";
 import { isGoogleConnected } from "../lib/server/google-auth";
@@ -50,7 +53,7 @@ export async function adminIndexData(request: Request, env: Env) {
   const search = (q.get("q") ?? "").trim().slice(0, 100);
   const clientFilter = parseClientFilter(q.get("cliente"));
   const connected = await isGoogleConnected(env);
-  const total = await countGalleries(env);
+  const totals = await countGalleryTotals(env);
   return {
     connected,
     message,
@@ -59,8 +62,12 @@ export async function adminIndexData(request: Request, env: Env) {
     clientFilter,
     clients: await listClientChoices(env, clientFilter || null),
     galleries: await listGalleries(env, filter, search, clientFilter),
-    total,
-    wizard: await wizardBannerVisible(env, { connected, galleries: total }),
+    total: totals.all,
+    // The wizard counts galleries that are not archived, like its step 4.
+    wizard: await wizardBannerVisible(env, {
+      connected,
+      galleries: totals.active,
+    }),
     rootName: (await getSetting(env, SETTINGS_KEYS.driveRootName)) ?? null,
   };
 }

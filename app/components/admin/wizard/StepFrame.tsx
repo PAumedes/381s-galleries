@@ -45,7 +45,11 @@ export function StepFrame({
       aria-labelledby={`wizard-${step.id}`}
       className="flex flex-col gap-4"
     >
-      <h2 id={`wizard-${step.id}`} className="text-ink text-xl font-semibold">
+      <h2
+        id={`wizard-${step.id}`}
+        tabIndex={-1}
+        className="text-ink text-xl font-semibold focus:outline-none"
+      >
         {t(k.title)}
       </h2>
       <p className="text-ink max-w-prose text-base leading-relaxed">

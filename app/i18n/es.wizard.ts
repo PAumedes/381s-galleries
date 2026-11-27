@@ -118,6 +118,10 @@ export const esWizard = {
     "Todavía no hay ninguna galería para compartir.",
   "admin.wizard.share.draft":
     "Esta galería sigue en borrador: publicala antes de mandar el enlace.",
+  "admin.wizard.share.pin":
+    "Esta galería tiene PIN: mandáselo aparte, no junto al enlace.",
+  "admin.wizard.share.clientPin":
+    "Su cliente también tiene PIN: mandáselo aparte.",
   "admin.wizard.share.linkLabel": "Enlace de la galería",
   "admin.wizard.share.clientLinkLabel": "Enlace de la página del cliente",
 } as const;

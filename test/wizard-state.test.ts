@@ -142,6 +142,92 @@ describe("T6.58 wizard data: the state of each step", () => {
   });
 });
 
+describe("T6.58 wizard data: the target is the published gallery when there is one", () => {
+  const stamp = (id: string, at: string) =>
+    run("UPDATE galleries SET created_at = ?2 WHERE id = ?1", id, at);
+
+  it("a newer draft does not hide an older published gallery (steps 5 and 6 describe the same one)", async () => {
+    await connect();
+    await addGallery("old", "publicada", "published");
+    await addGallery("new", "borrador", "draft");
+    await stamp("old", "2024-01-01T00:00:00.000Z");
+    await stamp("new", "2025-01-01T00:00:00.000Z");
+    const d = await loadWizard(get("/admin/empezar?paso=6"), live);
+    expect(d.states[4]).toBe("done");
+    expect(d.target).toMatchObject({ id: "old", status: "published" });
+    expect(d.target?.url).toContain("/publicada");
+  });
+
+  it("the newest published wins among several", async () => {
+    await addGallery("a", "a", "published");
+    await addGallery("b", "b", "published");
+    await stamp("a", "2024-01-01T00:00:00.000Z");
+    await stamp("b", "2025-01-01T00:00:00.000Z");
+    expect((await loadWizard(get(), live)).target?.id).toBe("b");
+  });
+
+  it("only drafts: the newest draft", async () => {
+    await addGallery("a", "a");
+    await addGallery("b", "b");
+    await stamp("a", "2024-01-01T00:00:00.000Z");
+    await stamp("b", "2025-01-01T00:00:00.000Z");
+    const d = await loadWizard(get(), live);
+    expect(d.target).toMatchObject({ id: "b", status: "draft" });
+    expect(d.states[4]).toBe("todo");
+  });
+
+  it("an archived gallery is never the target until it is restored", async () => {
+    await addGallery("a", "a", "archived");
+    expect((await loadWizard(get(), live)).target).toBeNull();
+    await run("UPDATE galleries SET status = 'draft' WHERE id = 'a'");
+    expect((await loadWizard(get(), live)).target?.id).toBe("a");
+  });
+
+  it("tells whether the gallery or its client has a PIN, never the hash", async () => {
+    const c = await createClient(live, { name: "Ana", slug: "ana" });
+    await addGallery("g1", "boda", "published", { client_id: c.id });
+    expect((await loadWizard(get(), live)).target).toMatchObject({
+      pin: false,
+      clientPin: false,
+    });
+    await run("UPDATE clients SET pin_hash = 'pbkdf2$client-secret'");
+    const d = await loadWizard(get(), live);
+    expect(d.target?.clientPin).toBe(true);
+    expect(JSON.stringify(d)).not.toContain("client-secret");
+  });
+});
+
+describe("T6.58 wizard data: done is not always true", () => {
+  it("each step flips with its own fact, and only with it", async () => {
+    const at = async () => (await loadWizard(get(), live)).states;
+    expect(await at()).toEqual([
+      "todo",
+      "read",
+      "optional",
+      "todo",
+      "todo",
+      "read",
+    ]);
+    await connect();
+    expect((await at())[0]).toBe("done");
+    expect((await at()).slice(1)).toEqual([
+      "read",
+      "optional",
+      "todo",
+      "todo",
+      "read",
+    ]);
+    await createClient(live, { name: "Ana" });
+    expect((await at())[2]).toBe("done");
+    expect((await at())[3]).toBe("todo");
+    await addGallery("g1", "boda");
+    expect((await at())[3]).toBe("done");
+    expect((await at())[4]).toBe("todo");
+    await run("UPDATE galleries SET status = 'published'");
+    expect((await at())[4]).toBe("done");
+  });
+});
+
 describe("T6.58 wizard data: which step is shown", () => {
   it("?paso=N picks the step; bad values fall back to the first open step", async () => {
     expect((await loadWizard(get("/admin/empezar?paso=3"), live)).step).toBe(3);
@@ -326,6 +412,12 @@ describe("T6.58 banner on the admin home", () => {
 
   it("shows when there is no gallery yet (demo mode counts as connected)", async () => {
     expect((await home(mock)).wizard).toBe(true);
+  });
+
+  it("an archived-only studio sees the same story as step 4: banner on, wizard says no gallery", async () => {
+    await addGallery("a", "a", "archived");
+    expect((await home(mock)).wizard).toBe(true);
+    expect((await loadWizard(get(), mock)).galleries.count).toBe(0);
   });
 
   it("is hidden once there is a gallery and Drive works", async () => {
