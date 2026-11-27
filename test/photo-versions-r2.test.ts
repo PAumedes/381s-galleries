@@ -13,6 +13,7 @@ import { getDb, schema } from "../app/db";
 import { createMockDrive } from "../app/lib/server/drive-mock";
 import { FOLDER_MIME } from "../app/lib/server/drive-types";
 import type { MockEntry } from "../app/lib/server/fixtures";
+import { galleryAction } from "../app/lib/server/admin-galleries";
 import { deleteGallery } from "../app/lib/server/gallery-delete";
 import { runSync } from "../app/lib/server/sync";
 import { clearCache } from "./support/cache";
@@ -154,5 +155,81 @@ describe("T6.53c gallery delete: R2 calls", () => {
       .from(schema.photoVersions)
       .where(eq(schema.photoVersions.galleryId, GID));
     expect(left).toEqual([]);
+  });
+});
+
+describe("T6.55 R2 objects of versions >= 2 never outlive the album, whatever the versioning flag says", () => {
+  const M = { ...env, DRIVE_MODE: "mock", ALLOW_DEV_ADMIN: "1" } as Env;
+  beforeEach(() =>
+    resetTables("photo_versions", "delivery_rounds", "ignored_folders"),
+  );
+  const seedOff = async () => {
+    await seedVersioned(GID, "A", [{ n: 1 }, { n: 2 }, { n: 3 }]);
+    await seedVersioned(GID, "B", [{ n: 1 }, { n: 2, missing: true }], {
+      sort: 1,
+    });
+    await put("A", "", "/v2", "/v3");
+    await put("B", "", "/v2");
+    await db.update(schema.galleries).set({ versioning: false });
+  };
+
+  it("deleteGallery with versioning off (switched off after v2+ existed) removes every v<N> key", async () => {
+    await seedOff();
+    expect(await deleteGallery(M, GID)).toBe("deleted");
+    expect(await keys()).toEqual([]);
+  });
+
+  it("deleteGallery with versioning off resumes under a small budget", async () => {
+    await seedOff();
+    let out = await deleteGallery(M, GID, { r2CallsMax: 1 });
+    for (let i = 0; out === "continue" && i < 10; i++)
+      out = await deleteGallery(M, GID, { r2CallsMax: 1 });
+    expect(out).toBe("deleted");
+    expect(await keys()).toEqual([]);
+  });
+
+  it("an album that never had a version >= 2 costs the same D1 and R2 calls as before", async () => {
+    await db.update(schema.galleries).set({ versioning: false });
+    for (const id of ["A", "B"]) await seedVersioned(GID, id, [{ n: 1 }]);
+    const del = vi.spyOn(env.CACHE, "delete");
+    const prep = vi.spyOn(env.DB, "prepare");
+    const batch = vi.spyOn(env.DB, "batch");
+    expect(await deleteGallery(M, GID)).toBe("deleted");
+    expect(del).toHaveBeenCalledTimes(1);
+    // pinned on main: 5 statements outside the batches, 3 batches
+    expect({ prepare: prep.mock.calls.length, batch: batch.mock.calls.length })
+      .toMatchInlineSnapshot(`
+        {
+          "batch": 2,
+          "prepare": 19,
+        }
+      `);
+  });
+
+  it("switching versioning OFF queues the v>=2 keys, so a later sync (or delete) cleans them even for photos removed meanwhile", async () => {
+    await db.update(schema.galleries).set({ versioning: true });
+    await sync(["A.jpg", "A_v2.jpg", "B.jpg"], T0);
+    const a = (await db.select().from(schema.photos)).find(
+      (p) => p.baseName === "A",
+    )!;
+    await put(a.id, "", "/v2");
+    const res = await galleryAction(
+      new Request(`http://localhost/admin/g/${GID}`, {
+        method: "POST",
+        body: new URLSearchParams({ intent: "versioning", versioning: "0" }),
+      }),
+      M,
+      GID,
+    );
+    expect(res).toMatchObject({ ok: true });
+    // the version rows are kept (turning it back on re-reads Drive anyway)
+    expect(
+      (await db.select().from(schema.photoVersions)).filter(
+        (v) => v.version >= 2,
+      ),
+    ).toHaveLength(1);
+    await sync(["B.jpg"], after(10)); // photo A removed with versioning off
+    await sync(["B.jpg"], after(10 + 90));
+    expect(await keys()).toEqual([]);
   });
 });
