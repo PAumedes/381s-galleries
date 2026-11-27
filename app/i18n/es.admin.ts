@@ -71,6 +71,14 @@ export const esAdmin = {
   "admin.edit.section.versions": "Versiones",
   "admin.edit.section.options": "Opciones",
   "admin.edit.section.photos": "Fotos",
+  "admin.edit.section.approvals": "Aprobaciones",
+  "admin.edit.approvals.summary.one":
+    "{approved} de {total} foto aprobada en su última versión",
+  "admin.edit.approvals.summary.other":
+    "{approved} de {total} fotos aprobadas en su última versión",
+  "admin.edit.approvals.pending": "{pending} por revisar",
+  "admin.edit.approvals.hint":
+    "Cada foto cuenta una vez, aunque la hayan aprobado varias personas. Una versión nueva vuelve a quedar por revisar.",
   "admin.edit.section.issues": "Avisos de sincronización",
   "admin.edit.confirmSlug":
     "Cambiar la dirección web rompe los enlaces y códigos QR ya compartidos. ¿Continuar?",

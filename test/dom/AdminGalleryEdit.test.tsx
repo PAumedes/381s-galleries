@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { createRoutesStub } from "react-router";
 import { describe, expect, it } from "vitest";
 import {
@@ -350,6 +350,20 @@ describe("GalleryEditView", () => {
     expect(await screen.findByText(/Falta la versión web/)).toBeTruthy();
     expect(screen.getByText(/IMG_9/)).toBeTruthy();
     expect(screen.getByText(/Fiesta/)).toBeTruthy();
+  });
+  it("T6.53f versioned album: the Fotos panel carries the approvals summary; an unversioned one does not", async () => {
+    show(
+      { approvals: { approved: 1, total: 2, pending: 1 } },
+      undefined,
+      "/admin/g/g1?tab=fotos",
+    );
+    expect(
+      await screen.findByText("1 de 2 fotos aprobadas en su última versión"),
+    ).toBeTruthy();
+    cleanup();
+    show({}, undefined, "/admin/g/g1?tab=fotos");
+    await screen.findByText(/Falta la versión web/);
+    expect(screen.queryByText(/aprobadas en su última versión/)).toBeNull();
   });
   it("no issues: says so (Fotos panel)", async () => {
     show(
