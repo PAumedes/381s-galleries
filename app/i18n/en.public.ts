@@ -116,6 +116,14 @@ export const enPublic = {
   "compare.loading": "Loading previews…",
   "compare.error": "One of the previews could not be loaded",
 
+  "approvals.approve": "Approve v{n}",
+  "approvals.approved": "Approved in v{n}",
+  "approvals.announceOn": "Version {n} approved",
+  "approvals.announceOff": "Approval of version {n} removed",
+  "approvals.error": "Couldn't save the approval. Please try again.",
+  "approvals.stale":
+    "There is a new version of this photo. Reload the page to review it.",
+
   "lightbox.close": "Close",
   "lightbox.previous": "Previous",
   "lightbox.next": "Next",

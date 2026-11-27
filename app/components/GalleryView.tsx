@@ -80,6 +80,9 @@ export function GalleryView(props: GalleryViewProps) {
         onFavorite={favs.toggle}
         onDownload={view.openSingle}
         isFavorite={view.isFavorite}
+        approvedAt={
+          view.approvals.enabled ? view.approvals.approvedAt : undefined
+        }
       />
       <PageFooter />
       {!preview && <AddToHomeHint slug={gallery.slug} gridRef={gridRef} />}

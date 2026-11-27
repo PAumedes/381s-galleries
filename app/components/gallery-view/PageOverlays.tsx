@@ -40,6 +40,7 @@ export function PageOverlays({
           onFavorite={favs.toggle}
           onDownload={view.openSingle}
           isFavorite={view.isFavorite}
+          approvals={view.approvals}
           protect={view.proofing}
           originalDownload={gallery.allowHighres}
         />

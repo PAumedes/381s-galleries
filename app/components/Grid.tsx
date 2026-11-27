@@ -29,6 +29,8 @@ export type GridProps = {
   onFavorite?: (id: string) => void;
   onDownload?: (id: string) => void;
   isFavorite?: (id: string) => boolean;
+  /** Versioned albums (T6.53f): the version a photo is approved at, when it is the shown one (badge). */
+  approvedAt?: (photo: GalleryPhoto) => number | null;
   initialWidth?: number;
   /** Filas (justified rows, default), Cuadricula (squares) or Columnas (masonry). */
   layout?: GridStyle;
@@ -85,6 +87,7 @@ export function Grid({
   onFavorite,
   onDownload,
   isFavorite,
+  approvedAt,
   initialWidth = DEFAULT_GRID_WIDTH,
   layout: style = "filas",
   gap = GAP,
@@ -120,6 +123,7 @@ export function Grid({
             onFavorite={onFavorite}
             onDownload={onDownload}
             favorite={isFavorite?.(photo.id) ?? false}
+            approved={approvedAt?.(photo) ?? null}
             protect={protect}
             originalDownload={originalDownload}
           />
@@ -138,6 +142,8 @@ type TileProps = {
   onFavorite?: (id: string) => void;
   onDownload?: (id: string) => void;
   favorite: boolean;
+  /** Version this photo is approved at (the shown one), or null. */
+  approved: number | null;
   protect: boolean;
   originalDownload: boolean;
 };
@@ -213,7 +219,7 @@ function Tile(props: TileProps) {
           imgRef={img.imgRef}
         />
       )}
-      <TileBadges photo={photo} index={index} t={t} />
+      <TileBadges photo={photo} index={index} t={t} approved={props.approved} />
       {img.failed && !photo.noPreview && (
         <RetryButton
           index={index}
