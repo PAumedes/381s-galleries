@@ -7,10 +7,8 @@ import { requestT } from "../i18n/dictionaries";
 import { useT } from "../i18n/use-t";
 import type { MessageKey } from "../i18n/t";
 import { adminHeaders } from "../lib/server/admin";
-import {
-  countGalleryTotals,
-  listGalleries,
-} from "../lib/server/admin-galleries";
+import { listGalleries } from "../lib/server/admin-galleries";
+import { countGalleryTotals } from "../lib/server/admin-galleries/list";
 import { listClientChoices } from "../lib/server/admin-galleries/client-choices";
 import { requireAdmin } from "../lib/server/auth";
 import { isGoogleConnected } from "../lib/server/google-auth";
