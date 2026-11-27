@@ -31,7 +31,7 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -71,7 +71,7 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -92,7 +92,7 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -114,7 +114,7 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -136,7 +136,7 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -158,7 +158,7 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -210,7 +210,7 @@ exports[`gallery editor characterization: snapshots per state > pending state (s
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -348,7 +348,7 @@ exports[`gallery editor characterization: snapshots per state > renders comparti
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Compartir</h2>
-<a href="/admin/ayuda#albums-share" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-share" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo comparto la galería con mi cliente?" title="Ayuda: ¿Cómo comparto la galería con mi cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -516,7 +516,7 @@ exports[`gallery editor characterization: snapshots per state > renders comparti
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Share</h2>
-<a href="/admin/ayuda#albums-share" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-share" target="_blank" rel="noopener" aria-label="Help: How do I share the gallery with my client?" title="Help: How do I share the gallery with my client?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -684,7 +684,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -724,7 +724,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -740,7 +740,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -762,7 +762,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -784,7 +784,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -806,7 +806,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -858,7 +858,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ar
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -996,7 +996,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1036,7 +1036,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1057,7 +1057,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1079,7 +1079,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1101,7 +1101,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1123,7 +1123,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1175,7 +1175,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1314,7 +1314,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1354,7 +1354,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1375,7 +1375,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1397,7 +1397,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1419,7 +1419,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1441,7 +1441,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1493,7 +1493,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos de
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1632,7 +1632,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1672,7 +1672,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1693,7 +1693,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1715,7 +1715,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1737,7 +1737,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1759,7 +1759,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1811,7 +1811,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos dr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1949,7 +1949,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Details</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Help: How do I change the title, date or web address?" title="Help: How do I change the title, date or web address?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -1989,7 +1989,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Status</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Help: How do I publish a gallery?" title="Help: How do I publish a gallery?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2010,7 +2010,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Access PIN</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Help: How do I put a PIN on a gallery?" title="Help: How do I put a PIN on a gallery?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2032,7 +2032,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Public home</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Help: How do I show a gallery on the home page?" title="Help: How do I show a gallery on the home page?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2054,7 +2054,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versions</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Help: How do I turn on versions in a gallery?" title="Help: How do I turn on versions in a gallery?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2076,7 +2076,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Options</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Help: Which sizes can the client download?" title="Help: Which sizes can the client download?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2128,7 +2128,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos en
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Delete gallery</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Help: How do I delete a gallery?" title="Help: How do I delete a gallery?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2266,7 +2266,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2310,7 +2310,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2331,7 +2331,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2353,7 +2353,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2375,7 +2375,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2397,7 +2397,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2449,7 +2449,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos fi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2587,7 +2587,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2627,7 +2627,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2648,7 +2648,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2670,7 +2670,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2692,7 +2692,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2714,7 +2714,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2766,7 +2766,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos no
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2903,7 +2903,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2943,7 +2943,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2965,7 +2965,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -2987,7 +2987,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3009,7 +3009,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3031,7 +3031,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3083,7 +3083,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos ok
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3221,7 +3221,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3261,7 +3261,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3282,7 +3282,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3306,7 +3306,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3328,7 +3328,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3350,7 +3350,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3402,7 +3402,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pi
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3540,7 +3540,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3580,7 +3580,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3601,7 +3601,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3623,7 +3623,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3645,7 +3645,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3667,7 +3667,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3722,7 +3722,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3866,7 +3866,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3906,7 +3906,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3927,7 +3927,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3949,7 +3949,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3971,7 +3971,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -3993,7 +3993,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4048,7 +4048,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4192,7 +4192,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4232,7 +4232,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4253,7 +4253,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4275,7 +4275,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4297,7 +4297,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4319,7 +4319,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4373,7 +4373,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4517,7 +4517,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4557,7 +4557,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4578,7 +4578,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4600,7 +4600,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4622,7 +4622,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4644,7 +4644,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4698,7 +4698,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pr
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4842,7 +4842,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4882,7 +4882,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4903,7 +4903,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4925,7 +4925,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4947,7 +4947,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -4969,7 +4969,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5021,7 +5021,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5159,7 +5159,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5199,7 +5199,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5220,7 +5220,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5242,7 +5242,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5264,7 +5264,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5286,7 +5286,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5338,7 +5338,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5476,7 +5476,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5516,7 +5516,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5537,7 +5537,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5564,7 +5564,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5586,7 +5586,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5608,7 +5608,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5660,7 +5660,7 @@ exports[`gallery editor characterization: snapshots per state > renders datos pu
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -5798,7 +5798,7 @@ exports[`gallery editor characterization: snapshots per state > renders diseno e
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Design</h2>
-<a href="/admin/ayuda#albums-design" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-design" target="_blank" rel="noopener" aria-label="Help: How do I change the colors and design of the gallery?" title="Help: How do I change the colors and design of the gallery?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -6192,7 +6192,7 @@ exports[`gallery editor characterization: snapshots per state > renders diseno e
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Diseño</h2>
-<a href="/admin/ayuda#albums-design" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-design" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio los colores y el diseño de la galería?" title="Ayuda: ¿Cómo cambio los colores y el diseño de la galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -6586,7 +6586,7 @@ exports[`gallery editor characterization: snapshots per state > renders diseno f
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Diseño</h2>
-<a href="/admin/ayuda#albums-design" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-design" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio los colores y el diseño de la galería?" title="Ayuda: ¿Cómo cambio los colores y el diseño de la galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -6981,7 +6981,7 @@ exports[`gallery editor characterization: snapshots per state > renders fotos em
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Fotos</h2>
-<a href="/admin/ayuda#photos-order" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#photos-order" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el orden de las fotos?" title="Ayuda: ¿Cómo cambio el orden de las fotos?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -6990,7 +6990,7 @@ exports[`gallery editor characterization: snapshots per state > renders fotos em
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Avisos de sincronización</h2>
-<a href="/admin/ayuda#updates-issues" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#updates-issues" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué son los avisos de sincronización?" title="Ayuda: ¿Qué son los avisos de sincronización?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -7031,7 +7031,7 @@ exports[`gallery editor characterization: snapshots per state > renders fotos en
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Photos</h2>
-<a href="/admin/ayuda#photos-order" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#photos-order" target="_blank" rel="noopener" aria-label="Help: How do I change the order of the photos?" title="Help: How do I change the order of the photos?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -7246,7 +7246,7 @@ exports[`gallery editor characterization: snapshots per state > renders fotos en
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Sync notices</h2>
-<a href="/admin/ayuda#updates-issues" target="_blank" rel="noopener" aria-label="Help" title="Help" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#updates-issues" target="_blank" rel="noopener" aria-label="Help: What are the notices about files?" title="Help: What are the notices about files?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -7295,7 +7295,7 @@ exports[`gallery editor characterization: snapshots per state > renders fotos es
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Fotos</h2>
-<a href="/admin/ayuda#photos-order" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#photos-order" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el orden de las fotos?" title="Ayuda: ¿Cómo cambio el orden de las fotos?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -7510,7 +7510,7 @@ exports[`gallery editor characterization: snapshots per state > renders fotos es
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Avisos de sincronización</h2>
-<a href="/admin/ayuda#updates-issues" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#updates-issues" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué son los avisos de sincronización?" title="Ayuda: ¿Qué son los avisos de sincronización?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -7930,7 +7930,7 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Datos</h2>
-<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-details" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" title="Ayuda: ¿Cómo cambio el título, la fecha o la dirección web?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -7970,7 +7970,7 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Estado</h2>
-<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-publish" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo publico una galería?" title="Ayuda: ¿Cómo publico una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -7991,7 +7991,7 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">PIN de acceso</h2>
-<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#access-pin-album" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo pongo un PIN a una galería?" title="Ayuda: ¿Cómo pongo un PIN a una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -8013,7 +8013,7 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Portada pública</h2>
-<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-home" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo muestro una galería en la página de inicio?" title="Ayuda: ¿Cómo muestro una galería en la página de inicio?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -8035,7 +8035,7 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Versiones</h2>
-<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#versions-on" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo activo las versiones en una galería?" title="Ayuda: ¿Cómo activo las versiones en una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -8057,7 +8057,7 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Opciones</h2>
-<a href="/admin/ayuda#proof-modes" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#proof-sizes" target="_blank" rel="noopener" aria-label="Ayuda: ¿Qué tamaños puede descargar el cliente?" title="Ayuda: ¿Qué tamaños puede descargar el cliente?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>
@@ -8109,7 +8109,7 @@ exports[`gallery editor characterization: snapshots per state > renders unknown 
 <section class="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
 <div class="flex items-center gap-3">
 <h2 class="text-micro text-grey-700 uppercase">Eliminar galería</h2>
-<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda" title="Ayuda" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
+<a href="/admin/ayuda#albums-delete" target="_blank" rel="noopener" aria-label="Ayuda: ¿Cómo elimino una galería?" title="Ayuda: ¿Cómo elimino una galería?" data-compact="true" class="group focus-visible:outline-ink -my-3 inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 md:my-0 md:min-h-8 md:min-w-8">
 <span aria-hidden="true" class="border-grey-500 text-grey-800 text-small group-hover:border-ink group-hover:text-ink inline-flex size-6 items-center justify-center rounded-full border">?</span>
 </a>
 </div>

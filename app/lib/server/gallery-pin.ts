@@ -1,6 +1,7 @@
 /** PIN unlock of a locked gallery (POST), with its two rate limits. */
 import { asLang } from "../../i18n/lang";
 import { galleryPath } from "../gallery-path";
+import { PIN_MAX_ATTEMPTS } from "../pin-rules";
 import {
   clientGateClosed,
   clientIpHash,
@@ -25,7 +26,7 @@ import {
 type GalleryEnv = AccessEnv;
 
 const UNKNOWN_GALLERY = "unknown";
-export const PIN_MAX_ATTEMPTS = 5;
+export { PIN_MAX_ATTEMPTS };
 export const PIN_WINDOW_MS = 10 * 60 * 1000;
 /** Per gallery, across all IPs (a 4-digit PIN is otherwise guessable by rotating IPs). */
 export const PIN_GALLERY_MAX_ATTEMPTS = 100;

@@ -12,7 +12,10 @@ import {
   type HelpItem,
 } from "../app/lib/help";
 import { resolveHelpItem } from "../app/lib/help-text";
-import { PIN_MAX, PIN_MIN } from "../app/lib/pin-rules";
+import { PIN_MAX, PIN_MAX_ATTEMPTS, PIN_MIN } from "../app/lib/pin-rules";
+import { DL_TOKEN_TTL_SECONDS } from "../app/lib/server/download-shared";
+import { LOGO_MAX_BYTES } from "../app/lib/server/logo-types";
+import { SYNC_DELETE_GRACE_MS } from "../app/lib/server/sync-types";
 
 // T6.57: the in-app help for the studio owner (not a developer).
 
@@ -57,6 +60,19 @@ const FORBIDDEN = [
   "deploy",
   "query",
   "payload",
+  // The app says "vence", never these.
+  "caducar",
+  "caduca",
+  "caducidad",
+  "expira",
+  "expirar",
+  "metadatos",
+  "metadata",
+  "bucket",
+  "dns",
+  "ssl",
+  "html",
+  "css",
 ];
 const forbiddenRe = (w: string) =>
   new RegExp(`(^|[^\\p{L}\\p{N}])${w}($|[^\\p{L}\\p{N}])`, "iu");
@@ -113,6 +129,7 @@ describe.each(LANGS)("T6.57 help: dictionary (%s)", (lang, all, help) => {
     for (const { item } of items) {
       const k = helpItemKeys(item);
       expected.add(k.q);
+      expected.add(k.k);
       if (k.a) expected.add(k.a);
       k.steps.forEach((x) => expected.add(x));
     }
@@ -305,7 +322,6 @@ describe("T6.57 help: covers every aspect", () => {
     "clients-delete",
     "versions-on",
     "versions-names",
-    "versions-rounds",
     "versions-compare",
     "versions-approvals",
     "versions-tiff",
@@ -314,7 +330,18 @@ describe("T6.57 help: covers every aspect", () => {
     "trouble-pin",
     "trouble-download",
     "trouble-link",
-    "trouble-back-button",
+    "start-logout",
+    "start-brand",
+    "drive-rename",
+    "drive-disconnect",
+    "albums-reinclude",
+    "albums-find",
+    "photos-add",
+    "photos-remove",
+    "photos-view-as",
+    "clients-rename",
+    "trouble-client-page",
+    "trouble-home",
   ];
   it("has the anchors for every topic", () => {
     const ids = new Set(items.map((i) => i.item.id));
@@ -324,5 +351,118 @@ describe("T6.57 help: covers every aspect", () => {
   it("the troubleshooting section lists the usual problems", () => {
     const trouble = HELP_SECTIONS.find((s) => s.id === "trouble");
     expect(trouble?.items.length).toBeGreaterThanOrEqual(10);
+  });
+});
+
+describe("T6.57 help: search words", () => {
+  it.each(["es", "en"] as const)(
+    "every question has hidden search words (%s), plain lowercase words",
+    (lang) => {
+      for (const { item } of items) {
+        const k = (lang === "es" ? esHelp : enHelp)[
+          helpItemKeys(item).k as keyof typeof esHelp
+        ] as string;
+        expect(k.trim().length, item.id).toBeGreaterThan(3);
+        expect(k, item.id).toBe(k.toLowerCase());
+        expect(k, item.id).not.toMatch(/[.,;:!?{}«»`"]/);
+      }
+    },
+  );
+});
+
+describe("T6.57 help: wording", () => {
+  const CLIENT_SCREENS = /^clients-/;
+  it("says galería / gallery (the admin's word); album only on the clients screens", () => {
+    for (const { item } of items) {
+      if (CLIENT_SCREENS.test(item.id)) continue;
+      for (const lang of ["es", "en"] as const) {
+        const t = rawTexts(lang, item);
+        for (const text of [t.q, t.a, ...t.steps])
+          expect(text ?? "", `${lang} ${item.id}`).not.toMatch(
+            lang === "es" ? /álbum/i : /\balbum/i,
+          );
+      }
+    }
+  });
+  it("the page intro says once that a gallery is an album", () => {
+    expect(esHelp["admin.help.intro"]).toContain("galería (álbum)");
+    expect(enHelp["admin.help.intro"]).toContain("gallery (album)");
+  });
+  it("no number that the server defines is typed by hand: it is a value", () => {
+    const need: Record<string, string[]> = {
+      "start-brand": ["logoKb"],
+      "drive-root-change": ["graceMinutes"],
+      "photos-remove": ["graceMinutes"],
+      "trouble-photo-missing": ["graceMinutes"],
+      "trouble-pin": ["pinMaxAttempts"],
+      "trouble-download": ["dlMinutes"],
+      "access-pin-album": ["pinMin", "pinMax"],
+    };
+    for (const [id, names] of Object.entries(need)) {
+      const item = items.find((i) => i.item.id === id)!.item;
+      for (const n of names)
+        expect(item.values, `${id} ${n}`).toHaveProperty(n);
+      for (const lang of ["es", "en"] as const) {
+        const t = rawTexts(lang, item);
+        const all = [t.q, t.a ?? "", ...t.steps].join(" ");
+        for (const n of names)
+          expect(all, `${lang} ${id} {${n}}`).toContain(`{${n}}`);
+        expect(all, `${lang} ${id}`).not.toMatch(
+          /\b(512|60 min|5 (intentos|wrong))/,
+        );
+      }
+    }
+    expect(
+      items.find((i) => i.item.id === "trouble-download")!.item.values,
+    ).toEqual({ dlMinutes: DL_TOKEN_TTL_SECONDS / 60 });
+    expect(items.find((i) => i.item.id === "start-brand")!.item.values).toEqual(
+      { logoKb: LOGO_MAX_BYTES / 1024 },
+    );
+    expect(
+      items.find((i) => i.item.id === "photos-remove")!.item.values,
+    ).toEqual({ graceMinutes: SYNC_DELETE_GRACE_MS / 60000 });
+    expect(items.find((i) => i.item.id === "trouble-pin")!.item.values).toEqual(
+      { pinMaxAttempts: PIN_MAX_ATTEMPTS },
+    );
+  });
+  it("names of panels, tabs, states and modes are never typed by hand (they are placeholders)", () => {
+    const PREFIXES = [
+      "admin.nav.",
+      "admin.tabs.",
+      "admin.edit.section.",
+      "admin.setup.section.",
+      "admin.clients.section.",
+      "admin.state.",
+      "admin.mode.",
+      "admin.filter.",
+    ];
+    for (const lang of ["es", "en"] as const) {
+      const dict = (lang === "es" ? es : en) as Record<string, string>;
+      const names = new Set(
+        Object.entries(dict)
+          .filter(([k]) => PREFIXES.some((p) => k.startsWith(p)))
+          .map(([, v]) => v)
+          .filter((v) => v.length >= 4 && !v.includes("{") && !/[.:]/.test(v)),
+      );
+      const ALLOWED = new Set(["Google Drive"]); // the product, not a panel
+      for (const { item } of items)
+        for (const text of Object.values(rawTexts(lang, item)).flat()) {
+          if (typeof text !== "string") continue;
+          const plain = text.replace(/`[^`]*`/g, " ").replace(/\{\w+\}/g, " ");
+          for (const n of names) {
+            if (ALLOWED.has(n)) continue;
+            const re = new RegExp(`(^|[^\\p{L}])${n}($|[^\\p{L}])`, "gu");
+            for (const m of plain.matchAll(re)) {
+              // A capital at the start of a sentence is just grammar.
+              const before = plain.slice(0, m.index + m[1].length);
+              if (/(^|[.!?:]\s*)$/.test(before)) continue;
+              expect.fail(`${lang} ${item.id}: "${n}" typed by hand`);
+            }
+          }
+          expect(plain, `${lang} ${item.id}`).not.toMatch(
+            /(secci[oó]n|section) Google Drive|Google Drive (section|secci)/,
+          );
+        }
+    }
   });
 });

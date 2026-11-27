@@ -152,7 +152,7 @@ describe("adminDictionaryKeys", () => {
     const { keys, values } = adminDictionaryKeys(path.resolve("app/i18n"));
     expect(keys).toContain("admin.help.title");
     expect(keys).toContain("admin.help.albums-publish.q");
-    expect(values).toContain("¿Cómo publico un álbum?");
+    expect(values).toContain("¿Cómo publico una galería?");
   });
 });
 

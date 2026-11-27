@@ -31,6 +31,8 @@ export interface HelpTexts {
   q: string;
   a?: string;
   steps: string[];
+  /** Hidden search words (never shown). */
+  k?: string;
 }
 
 /** Texts as written in the dictionary (placeholders still in place). */
@@ -40,6 +42,7 @@ export function rawHelpItem(item: HelpItem, t: TFunction): HelpTexts {
     q: t(k.q),
     ...(k.a ? { a: t(k.a) } : {}),
     steps: k.steps.map((key) => t(key)),
+    k: t(k.k),
   };
 }
 
@@ -72,6 +75,7 @@ export function resolveHelpItem(item: HelpItem, t: TFunction): HelpTexts {
     q: plain(raw.q, item, t),
     ...(raw.a !== undefined ? { a: plain(raw.a, item, t) } : {}),
     steps: raw.steps.map((s) => plain(s, item, t)),
+    k: raw.k,
   };
 }
 
@@ -80,10 +84,12 @@ export function foldForSearch(text: string): string {
   return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 }
 
-/** Every word of the query appears somewhere in the question, answer or steps. */
+/** Every word of the query appears in the question, answer, steps or hidden search words. */
 export function helpMatches(texts: HelpTexts, query: string): boolean {
   const words = foldForSearch(query).split(/\s+/).filter(Boolean);
   if (words.length === 0) return true;
-  const hay = foldForSearch([texts.q, texts.a ?? "", ...texts.steps].join(" "));
+  const hay = foldForSearch(
+    [texts.q, texts.a ?? "", ...texts.steps, texts.k ?? ""].join(" "),
+  );
   return words.every((w) => hay.includes(w));
 }

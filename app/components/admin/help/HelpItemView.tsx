@@ -6,21 +6,13 @@ import { HelpText } from "./HelpText";
 const BODY = "text-ink text-base leading-relaxed";
 
 /** One question: a native details (works without scripts, opens with Enter and Space). */
-export function HelpItemView({
-  item,
-  open,
-}: {
-  item: HelpItem;
-  /** Forced open (search results); undefined leaves it to the reader. */
-  open?: true;
-}) {
+export function HelpItemView({ item }: { item: HelpItem }) {
   const t = useT();
   const raw = rawHelpItem(item, t);
   const List = item.bullets ? "ul" : "ol";
   return (
     <details
       id={item.id}
-      open={open}
       className="group border-grey-200 scroll-mt-4 border-b"
     >
       <summary className="text-ink focus-visible:outline-ink flex min-h-[3.25rem] cursor-pointer list-none items-center justify-between gap-4 py-3 text-lg leading-snug font-medium focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">

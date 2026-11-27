@@ -1,8 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { afterAll, describe, expect, it } from "vitest";
 import { bundlePage } from "../support/bundle-page.mjs";
 import { connectCdp, launchChrome, until } from "../support/chrome.mjs";
+import { classesOf, css, sourcesOf } from "../support/tailwind-css.mjs";
 
 // T6.57 in real Chrome: the real HelpView at a phone (390) and a desktop (1280)
 // width. Native details open by tap and by keyboard, steps show numbers (the
@@ -191,19 +191,19 @@ describe.skipIf(!HAS_CHROME).each([390, 1280])(
 );
 
 describe("T6.57 production CSS carries the help classes", () => {
-  // After `pnpm build`: the classes used by the help page are in the built sheet.
-  const dir = "build/client/assets";
-  const built = existsSync(dir)
-    ? readdirSync(dir).filter((f) => f.endsWith(".css"))
-    : [];
-  it.skipIf(built.length === 0)(
-    "has list-decimal, text-lg and the details styles",
-    () => {
-      const css = built
-        .map((f) => readFileSync(`${dir}/${f}`, "utf8"))
-        .join("\n");
-      for (const c of [".list-decimal", ".list-disc", ".text-lg"])
-        expect(css, c).toContain(c);
-    },
-  );
+  // Built the way production builds it (app.css scans app/), from the help sources.
+  it("has the details styles, list styles and reading width", async () => {
+    const out = await css(classesOf(sourcesOf("app/components/admin/help")));
+    for (const c of [
+      ".group-open\\:rotate-45",
+      ".scroll-mt-4",
+      ".max-w-prose",
+      ".motion-reduce\\:transition-none",
+      ".\\[\\&\\:\\:-webkit-details-marker\\]\\:hidden",
+      ".list-decimal",
+      ".list-disc",
+      ".text-lg",
+    ])
+      expect(out, c).toContain(c);
+  });
 });

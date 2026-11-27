@@ -1,5 +1,8 @@
 import type { MessageKey } from "../i18n/t";
-import { PIN_MAX, PIN_MIN } from "./pin-rules";
+import { LOGO_MAX_BYTES } from "./server/logo-types";
+import { DL_TOKEN_TTL_SECONDS } from "./server/download-shared";
+import { SYNC_DELETE_GRACE_MS } from "./server/sync-types";
+import { PIN_MAX, PIN_MAX_ATTEMPTS, PIN_MIN } from "./pin-rules";
 
 /**
  * The help for the studio owner (T6.57): which sections and questions exist.
@@ -55,6 +58,13 @@ const CLIENTS = "admin.nav.clients";
 const HOME_LABEL = "admin.edit.home.label";
 const UNAVAILABLE = "unavailable.title";
 const SAVE_DETAILS = "admin.edit.saveDetails";
+const DRIVE_SECTION = "admin.setup.section.drive";
+const CLIENT_SAVE = "admin.clients.save";
+
+// Numbers that the server also uses: one definition, shown in minutes / KB.
+const GRACE_MINUTES = SYNC_DELETE_GRACE_MS / 60_000;
+const DL_MINUTES = DL_TOKEN_TTL_SECONDS / 60;
+const LOGO_KB = LOGO_MAX_BYTES / 1024;
 
 export const HELP_SECTIONS: readonly HelpSection[] = [
   {
@@ -80,9 +90,13 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
           brandName: "admin.setup.brand.name",
           saveName: "admin.setup.brand.save",
           upload: "admin.setup.logo.upload",
+          onLight: "admin.setup.logo.onLight",
+          onDark: "admin.setup.logo.onDark",
+          logoReset: "admin.setup.logo.reset",
         },
-        { steps: 3, lead: true },
+        { steps: 4, lead: true, values: { logoKb: LOGO_KB } },
       ),
+      item("start-logout"),
     ],
   },
   {
@@ -92,6 +106,7 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
         "drive-connect",
         {
           settings: SETTINGS,
+          driveSection: DRIVE_SECTION,
           connect: "admin.setup.connect",
           connected: "admin.status.connected",
         },
@@ -107,11 +122,22 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
         },
         { steps: 4, lead: true },
       ),
-      item("drive-root-change", { archived: "admin.filter.archivadas" }),
+      item(
+        "drive-root-change",
+        { archived: "admin.filter.archivadas" },
+        { values: { graceMinutes: GRACE_MINUTES } },
+      ),
       item("drive-folders", undefined, { steps: 6, lead: true, bullets: true }),
       item("drive-names"),
       item("drive-captureone", undefined, { steps: 5 }),
       item("drive-sets"),
+      item("drive-rename", { details: DETAILS }),
+      item("drive-disconnect", {
+        settings: SETTINGS,
+        driveSection: DRIVE_SECTION,
+        disconnect: "admin.setup.disconnect",
+        connect: "admin.setup.connect",
+      }),
       item("updates-when", {
         syncNow: SYNC_NOW,
         draft: DRAFT,
@@ -207,12 +233,20 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
           details: DETAILS,
           danger: "admin.edit.section.danger",
           deleteButton: "admin.edit.delete.button",
-          settings: SETTINGS,
-          ignored: "admin.setup.section.ignored",
-          reinclude: "admin.setup.ignored.reinclude",
         },
-        { steps: 5, lead: true },
+        { steps: 4, lead: true },
       ),
+      item("albums-reinclude", {
+        settings: SETTINGS,
+        ignored: "admin.setup.section.ignored",
+        reinclude: "admin.setup.ignored.reinclude",
+      }),
+      item("albums-find", {
+        galleries: "admin.nav.galleries",
+        fPublished: "admin.filter.publicadas",
+        fDrafts: "admin.filter.borradores",
+        fArchived: "admin.filter.archivadas",
+      }),
       item(
         "photos-order",
         {
@@ -223,9 +257,17 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
         },
         { steps: 4 },
       ),
+      item("photos-add", { syncNow: SYNC_NOW }),
+      item("photos-remove", undefined, {
+        values: { graceMinutes: GRACE_MINUTES },
+      }),
       item(
         "photos-cover",
-        { photos: PHOTOS, useCover: "admin.reorder.useAsCover" },
+        {
+          photos: PHOTOS,
+          tileCover: "admin.reorder.tileCover",
+          tileMobile: "admin.reorder.tileMobile",
+        },
         { steps: 3, lead: true },
       ),
       item(
@@ -237,6 +279,11 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
         cover: COVER,
         mobileCover: "admin.cover.deviceMobile",
         chooseMobile: "admin.cover.chooseMobile",
+      }),
+      item("photos-view-as", {
+        viewAs: "admin.preview.device",
+        desktop: "admin.cover.desktop",
+        mobile: "admin.cover.mobile",
       }),
     ],
   },
@@ -343,14 +390,23 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
         },
         { steps: 3, lead: true },
       ),
-      item("clients-page", {
-        pageEnabled: "admin.clients.field.pageEnabled",
-        saveClient: "admin.clients.save",
-      }),
+      item(
+        "clients-page",
+        {
+          pageEnabled: "admin.clients.field.pageEnabled",
+          saveClient: CLIENT_SAVE,
+        },
+        { steps: 2, lead: true, bullets: true },
+      ),
       item("clients-defaults", {
         delivery: DELIVERY,
         proofing: PROOFING,
         applyAll: "admin.clients.apply.button",
+      }),
+      item("clients-rename", {
+        clients: CLIENTS,
+        clientDetails: "admin.clients.section.details",
+        saveClient: CLIENT_SAVE,
       }),
       item(
         "clients-delete",
@@ -366,7 +422,7 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
   {
     id: "versions",
     items: [
-      item("versions-what"),
+      item("versions-what", { newInRound: "grid.newInRound" }),
       item(
         "versions-on",
         {
@@ -380,7 +436,6 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
         { steps: 4, lead: true },
       ),
       item("versions-names"),
-      item("versions-rounds", { newInRound: "grid.newInRound" }),
       item("versions-compare", {
         flip: "compare.flip",
         slide: "compare.slide",
@@ -389,7 +444,7 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
         approvals: "admin.edit.section.approvals",
         photos: PHOTOS,
       }),
-      item("versions-tiff"),
+      item("versions-tiff", { highres: "admin.edit.opt.highres" }),
       item("versions-tiff-client", {
         tiffCard: "preview.tiff",
         tiffDownload: "preview.download",
@@ -400,17 +455,23 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
   {
     id: "trouble",
     items: [
-      item("trouble-photo-missing", {
-        syncNow: SYNC_NOW,
-        issues: "admin.edit.section.issues",
-      }),
+      item(
+        "trouble-photo-missing",
+        {
+          syncNow: SYNC_NOW,
+          issues: "admin.edit.section.issues",
+        },
+        { values: { graceMinutes: GRACE_MINUTES } },
+      ),
       item("trouble-order", {
         photos: PHOTOS,
         saveOrder: "admin.reorder.save",
       }),
       item("trouble-old-photo"),
       item("trouble-blank-proof", { proofing: PROOFING }),
-      item("trouble-pin"),
+      item("trouble-pin", undefined, {
+        values: { pinMaxAttempts: PIN_MAX_ATTEMPTS },
+      }),
       item(
         "trouble-download",
         {
@@ -418,11 +479,11 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
           delivery: DELIVERY,
           options: OPTIONS,
           saveOptions: SAVE_OPTIONS,
+          highres: "admin.edit.opt.highres",
         },
-        { steps: 5, bullets: true },
+        { steps: 5, bullets: true, values: { dlMinutes: DL_MINUTES } },
       ),
       item("trouble-link", { unavailable: UNAVAILABLE, share: SHARE }),
-      item("trouble-back-button"),
       item("trouble-sync-error", {
         syncNow: SYNC_NOW,
         settings: SETTINGS,
@@ -432,6 +493,9 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
         homeLabel: HOME_LABEL,
         details: DETAILS,
         proofing: PROOFING,
+      }),
+      item("trouble-client-page", {
+        pageEnabled: "admin.clients.field.pageEnabled",
       }),
     ],
   },
@@ -448,7 +512,7 @@ export const HELP_PAGE_KEYS = [
   "admin.help.search.count.one",
   "admin.help.search.count.other",
   "admin.help.search.none",
-  "admin.help.link",
+  "admin.help.linkTo",
   "admin.nav.help",
   "admin.meta.help",
 ] as const satisfies readonly MessageKey[];
@@ -461,11 +525,14 @@ export function helpItemKeys(item: HelpItem): {
   q: MessageKey;
   a?: MessageKey;
   steps: MessageKey[];
+  /** Hidden search words: what a person types, even if the text says it differently. */
+  k: MessageKey;
 } {
   const key = (part: string) => `admin.help.${item.id}.${part}` as MessageKey;
   const count = item.steps ?? 0;
   return {
     q: key("q"),
+    k: key("k"),
     ...(count === 0 || item.lead ? { a: key("a") } : {}),
     steps: Array.from({ length: count }, (_, i) => key(`s${i + 1}`)),
   };

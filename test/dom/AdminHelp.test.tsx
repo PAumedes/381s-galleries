@@ -1,4 +1,10 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
@@ -112,9 +118,13 @@ describe("T6.57 HelpView: search", () => {
     );
     expect(visible.length).toBeGreaterThan(0);
     expect(visible.length).toBeLessThan(ITEMS.length);
-    expect(screen.getByRole("status").textContent).toContain(
-      String(visible.length),
+    // The count is announced once typing settles.
+    await waitFor(() =>
+      expect(screen.getByRole("status").textContent).toContain(
+        String(visible.length),
+      ),
     );
+    expect(screen.getByRole("status").getAttribute("aria-live")).toBe("polite");
     // Matching answers are shown open, so the owner sees the answer at once.
     expect((visible[0] as HTMLDetailsElement).open).toBe(true);
     // Sections with no match disappear.
@@ -128,8 +138,10 @@ describe("T6.57 HelpView: search", () => {
     const box = await screen.findByRole("searchbox");
     await user.type(box, "zzzzqqq");
     expect(document.querySelectorAll("details").length).toBe(0);
-    expect(screen.getByRole("status").textContent).toBe(
-      es["admin.help.search.none"],
+    await waitFor(() =>
+      expect(screen.getByRole("status").textContent).toBe(
+        es["admin.help.search.none"],
+      ),
     );
     await user.clear(box);
     expect(document.querySelectorAll("details").length).toBe(ITEMS.length);
@@ -148,6 +160,59 @@ describe("T6.57 HelpView: search", () => {
     const n = document.querySelectorAll("details").length;
     expect(n).toBeGreaterThan(0);
     expect(n).toBeLessThan(ITEMS.length);
+  });
+});
+
+describe("T6.57 HelpView: search keeps what the reader did", () => {
+  it("a question the reader closes stays closed while typing goes on; new matches open", async () => {
+    const user = userEvent.setup();
+    show();
+    const box = await screen.findByRole("searchbox");
+    await user.type(box, "pin");
+    const first = document.querySelector("details") as HTMLDetailsElement;
+    expect(first.open).toBe(true);
+    first.open = false;
+    await user.type(box, "s");
+    expect(
+      (document.getElementById(first.id) as HTMLDetailsElement | null)?.open ??
+        false,
+    ).toBe(false);
+    await user.clear(box);
+    await user.type(box, "descargar");
+    const opened = [...document.querySelectorAll("details")];
+    expect(opened.length).toBeGreaterThan(0);
+    expect(opened.every((d) => d.open)).toBe(true);
+  });
+
+  it("clearing the search closes only what the search opened, not what the reader opened", async () => {
+    const user = userEvent.setup();
+    show();
+    const box = await screen.findByRole("searchbox");
+    const mine = document.getElementById("start-logout") as HTMLDetailsElement;
+    mine.open = true;
+    await user.type(box, "pin");
+    await user.clear(box);
+    expect(mine.open).toBe(true);
+    const others = [...document.querySelectorAll("details")].filter(
+      (d) => d !== mine,
+    );
+    expect(others.every((d) => !d.open)).toBe(true);
+  });
+});
+
+describe("T6.57 HelpView: print", () => {
+  it("opens every answer before printing and closes the ones it opened afterwards", async () => {
+    show();
+    await screen.findByRole("heading", { level: 1 });
+    const mine = document.getElementById("start-logout") as HTMLDetailsElement;
+    mine.open = true;
+    window.dispatchEvent(new Event("beforeprint"));
+    expect([...document.querySelectorAll("details")].every((d) => d.open)).toBe(
+      true,
+    );
+    window.dispatchEvent(new Event("afterprint"));
+    expect(mine.open).toBe(true);
+    expect(document.querySelectorAll("details[open]").length).toBe(1);
   });
 });
 
@@ -191,7 +256,10 @@ describe("T6.57 links to the help", () => {
       { path: "/x", Component: () => <HelpLink topic="access-pin-album" /> },
     ]);
     render(<Stub initialEntries={["/x"]} />);
-    const a = await screen.findByRole("link", { name: es["admin.help.link"] });
+    const a = await screen.findByRole("link", { name: /^Ayuda: / });
+    expect(a.getAttribute("aria-label")).toBe(
+      `Ayuda: ${es["admin.help.access-pin-album.q"]}`,
+    );
     expect(a.getAttribute("href")).toBe("/admin/ayuda#access-pin-album");
     expect(a.textContent).toBe("?");
   });
