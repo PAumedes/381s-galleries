@@ -55,7 +55,7 @@ export function TopBar({
 }: TopBarProps) {
   return (
     <div
-      className={`absolute inset-x-0 top-0 isolate flex items-center justify-between px-4 py-2 ${chrome}`}
+      className={`absolute inset-x-0 top-0 z-10 isolate flex items-center justify-between px-4 py-2 ${chrome}`}
     >
       {/* Phones: a soft dark fade so the bar reads over bright photos. */}
       <div

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 
 import { useFormat } from "../../i18n/use-format";
 import type { TFunction } from "../../i18n/t";
@@ -12,6 +12,10 @@ type Props = {
   photo: GalleryPhoto;
   /** Visibility classes shared with the rest of the chrome. */
   chrome: string;
+  /** The comparison (T6.53e) covers the stage: the panel waits under it, Escape goes to the comparison first. */
+  comparing?: boolean;
+  /** Extra control of the cluster, above the caption (the compare button). */
+  action?: ReactNode;
 };
 
 /** Pointer events inside the panel belong to it, not to the swipe-to-close of the dialog. */
@@ -23,14 +27,21 @@ const keepHere = (e: React.SyntheticEvent) => e.stopPropagation();
  * with round and date). Previews only: nothing here downloads, and only the
  * shown (latest) version is downloadable from the lightbox's own button.
  */
-export function VersionHistory({ t, photo, chrome }: Props) {
+export function VersionHistory({
+  t,
+  photo,
+  chrome,
+  comparing = false,
+  action,
+}: Props) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const versions = photo.versions;
   // While the panel is open Escape closes it first, wherever the focus is: the
   // capture phase runs before the lightbox's own Escape (which closes it all).
+  const panel = open && !comparing;
   useEffect(() => {
-    if (!open) return;
+    if (!panel) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       e.preventDefault();
@@ -39,7 +50,7 @@ export function VersionHistory({ t, photo, chrome }: Props) {
     };
     document.addEventListener("keydown", onKey, true);
     return () => document.removeEventListener("keydown", onKey, true);
-  }, [open]);
+  }, [panel]);
   if (!photo.ver) return null;
   const shown = versions?.find((v) => v.n === photo.ver);
   return (
@@ -51,7 +62,7 @@ export function VersionHistory({ t, photo, chrome }: Props) {
       onPointerUp={keepHere}
       onPointerCancel={keepHere}
     >
-      {open && versions && (
+      {panel && versions && (
         <HistoryPanel
           id={panelId}
           t={t}
@@ -60,6 +71,7 @@ export function VersionHistory({ t, photo, chrome }: Props) {
           current={photo.ver}
         />
       )}
+      {action}
       <div className="flex items-center gap-1">
         <span
           data-testid="lightbox-version"
@@ -74,11 +86,12 @@ export function VersionHistory({ t, photo, chrome }: Props) {
             type="button"
             data-testid="versions-toggle"
             className={`${BTN} w-auto min-w-11 px-2 text-micro uppercase underline`}
-            aria-expanded={open}
-            aria-controls={open ? panelId : undefined}
+            aria-expanded={panel}
+            aria-controls={panel ? panelId : undefined}
+            disabled={comparing}
             onClick={() => setOpen((o) => !o)}
           >
-            {open
+            {panel
               ? t("versions.close")
               : t("versions.history", { n: versions.length })}
           </button>
