@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "../../../../db";
 import type { TFunction } from "../../../../i18n/t";
-import { queueVersionCaches } from "../../r2-pending";
 import { deleteSetting, SETTINGS_KEYS } from "../../settings";
 import { done, fail } from "./shared";
 import type { GalleryRow } from "./shared";
@@ -38,9 +37,6 @@ export async function saveVersioning(
   // Drive may report no change after the switch: forget the changes token so
   // the next sync rescans and reads (or drops) the versions.
   await deleteSetting(env, SETTINGS_KEYS.driveChangesToken);
-  // Switching OFF keeps the version rows but nothing serves their cached
-  // objects any more: queue them for deletion (T6.55).
-  if (!on) await queueVersionCaches(env, g.id);
   return done(
     intent,
     on ? t("admin.msg.versionsOn") : t("admin.msg.versionsOff"),

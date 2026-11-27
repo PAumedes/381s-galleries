@@ -59,8 +59,16 @@ const sync = (names: string[], now: Date) =>
     budget: 200,
   });
 const GID = "g1";
-const keys = async () =>
-  (await env.CACHE.list()).objects.map((o) => o.key).sort();
+const keys = async () => {
+  const out: string[] = [];
+  let cursor: string | undefined;
+  for (;;) {
+    const page = await env.CACHE.list({ cursor });
+    out.push(...page.objects.map((o) => o.key));
+    if (!page.truncated) return out.sort();
+    cursor = page.cursor;
+  }
+};
 const put = async (id: string, ...entries: string[]) =>
   Promise.all(
     entries.flatMap((p) =>
@@ -206,8 +214,35 @@ describe("T6.55 R2 objects of versions >= 2 never outlive the album, whatever th
       `);
   });
 
-  it("switching versioning OFF queues the v>=2 keys, so a later sync (or delete) cleans them even for photos removed meanwhile", async () => {
-    await db.update(schema.galleries).set({ versioning: true });
+  const pending = async () =>
+    (await db.select().from(schema.settings)).find(
+      (r) => r.key === "r2_pending_deletes",
+    );
+  const bulk = async (n: number, opts: { missing?: boolean } = {}) => {
+    const rows: D1PreparedStatement[] = [];
+    for (let i = 0; i < n; i++) {
+      rows.push(
+        env.DB.prepare(
+          "INSERT INTO photos (id, gallery_id, base_name, sort, drive_highres_id, missing_since) VALUES (?1, ?2, ?1, ?3, 'h', ?4)",
+        ).bind(`P${i}`, GID, i, opts.missing ? T : null),
+      );
+      for (const v of [2, 3])
+        rows.push(
+          env.DB.prepare(
+            "INSERT INTO photo_versions (photo_id, gallery_id, version, drive_highres_id) VALUES (?1, ?2, ?3, 'h')",
+          ).bind(`P${i}`, GID, v),
+        );
+    }
+    for (let i = 0; i < rows.length; i += 500)
+      await env.DB.batch(rows.slice(i, i + 500));
+    const puts: Promise<unknown>[] = [];
+    for (let i = 0; i < n; i++)
+      for (const v of ["", "/v2", "/v3"])
+        puts.push(env.CACHE.put(`P${i}${v}/thumb`, "x"));
+    await Promise.all(puts);
+  };
+
+  it("(a) switching OFF only flips the flag: no queue, and a photo removed afterwards by sync leaves no v>=2 key", async () => {
     await sync(["A.jpg", "A_v2.jpg", "B.jpg"], T0);
     const a = (await db.select().from(schema.photos)).find(
       (p) => p.baseName === "A",
@@ -222,7 +257,8 @@ describe("T6.55 R2 objects of versions >= 2 never outlive the album, whatever th
       GID,
     );
     expect(res).toMatchObject({ ok: true });
-    // the version rows are kept (turning it back on re-reads Drive anyway)
+    expect(await pending()).toBeUndefined();
+    // the version rows are kept: they are the source of truth for what R2 holds
     expect(
       (await db.select().from(schema.photoVersions)).filter(
         (v) => v.version >= 2,
@@ -231,5 +267,83 @@ describe("T6.55 R2 objects of versions >= 2 never outlive the album, whatever th
     await sync(["B.jpg"], after(10)); // photo A removed with versioning off
     await sync(["B.jpg"], after(10 + 90));
     expect(await keys()).toEqual([]);
+  });
+
+  it("(b) legacy album already OFF with v2 rows: a removal reads them before the cascade", async () => {
+    await db.update(schema.galleries).set({ versioning: false });
+    await sync(["A.jpg", "B.jpg"], T0);
+    const a = (await db.select().from(schema.photos)).find(
+      (p) => p.baseName === "A",
+    )!;
+    await db.insert(schema.photoVersions).values({
+      photoId: a.id,
+      galleryId: GID,
+      version: 2,
+      driveHighresId: "H2",
+      driveVersions: "{}",
+    });
+    await put(a.id, "", "/v2");
+    await sync(["B.jpg"], after(10));
+    await sync(["B.jpg"], after(100));
+    expect(await keys()).toEqual([]);
+  });
+
+  it("(b2) a sync with no removal costs the same D1 calls with or without v2 rows (the extra read only happens on removal)", async () => {
+    await db.update(schema.galleries).set({ versioning: false });
+    await sync(["A.jpg", "B.jpg"], T0);
+    const prep = vi.spyOn(env.DB, "prepare");
+    await sync(["A.jpg", "B.jpg"], after(5));
+    const n = prep.mock.calls.length;
+    const [a] = await db.select().from(schema.photos);
+    await db.insert(schema.photoVersions).values({
+      photoId: a!.id,
+      galleryId: GID,
+      version: 2,
+      driveHighresId: "H2",
+      driveVersions: "{}",
+    });
+    prep.mockClear();
+    await sync(["A.jpg", "B.jpg"], after(6));
+    expect(prep.mock.calls.length).toBe(n);
+  });
+
+  it("(c) a big album (1001 photos with v2, v3) removed by sync, then another deleted: no key is lost or silently truncated", async () => {
+    await db.update(schema.galleries).set({ versioning: false });
+    await bulk(1001, { missing: true });
+    expect((await keys()).length).toBe(3003);
+    await sync(["Z.jpg"], T0); // every old photo is past its grace
+    expect(await db.select().from(schema.photos)).toHaveLength(1);
+    expect((await keys()).filter((k) => k.startsWith("P"))).toEqual([]);
+    expect(await pending()).toBeUndefined();
+  }, 120_000);
+
+  it("(c2) the same big album under gallery delete loses no key either", async () => {
+    await db.update(schema.galleries).set({ versioning: false });
+    await bulk(1001);
+    expect(await deleteGallery(M, GID)).toBe("deleted");
+    expect(await keys()).toEqual([]);
+  }, 120_000);
+
+  it("(d) a failing flush keeps every removed key pending; the next sync finishes them", async () => {
+    await sync(["A.jpg", "A_v2.jpg", "B.jpg"], T0);
+    const a = (await db.select().from(schema.photos)).find(
+      (p) => p.baseName === "A",
+    )!;
+    await put(a.id, "", "/v2");
+    await db.update(schema.galleries).set({ versioning: false });
+    await sync(["B.jpg"], after(10));
+    const real = env.CACHE.delete.bind(env.CACHE);
+    const del = vi
+      .spyOn(env.CACHE, "delete")
+      .mockRejectedValueOnce(new Error("r2 down"));
+    await sync(["B.jpg"], after(100)); // removal; the flush fails in flight
+    expect(await keys()).toHaveLength(6);
+    expect(JSON.parse((await pending())!.value)).toEqual(
+      expect.arrayContaining([a.id, `${a.id}/v2`]),
+    );
+    del.mockImplementation(real);
+    await sync(["B.jpg"], after(110));
+    expect(await keys()).toEqual([]);
+    expect(await pending()).toBeUndefined();
   });
 });

@@ -354,7 +354,7 @@ describe("T-refactor-runSync: pending R2 delete bookkeeping", () => {
     expect(JSON.parse((await setting("r2_pending_deletes"))!)).toEqual([id]);
   });
 
-  it("the persisted pending list keeps only the newest 2000 ids", async () => {
+  it("T6.55: a full pending list is never truncated: with R2 down the album aborts and every id stays persisted", async () => {
     const { d, id } = await withGoneA2();
     const seeds = Array.from({ length: 2000 }, (_, i) => `s${i}`);
     await putSetting("r2_pending_deletes", JSON.stringify(seeds));
@@ -366,11 +366,10 @@ describe("T-refactor-runSync: pending R2 delete bookkeeping", () => {
         budget: BIG,
         now: LATER,
       }),
-    ).rejects.toThrow("boom");
+    ).rejects.toThrow("could not be flushed");
     const saved = JSON.parse((await setting("r2_pending_deletes"))!);
-    expect(saved).toHaveLength(2000);
-    expect(saved[0]).toBe("s1");
-    expect(saved.at(-1)).toBe(id);
+    expect(saved).toHaveLength(2001);
+    expect(saved).toEqual(expect.arrayContaining([...seeds, id]));
   });
 
   it("duplicate pending ids are deleted once (3 keys, not 6)", async () => {
