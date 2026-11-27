@@ -108,8 +108,11 @@ async function insertApproval(
       .bind(visitor.id, photoId, version)
       .first();
     return have ? "ok" : "limit";
-  } catch {
-    return "gone";
+  } catch (err) {
+    // Only a vanished version/photo/visitor is "gone"; any other failure is ours.
+    if (err instanceof Error && err.message.includes("FOREIGN KEY"))
+      return "gone";
+    throw err;
   }
 }
 
@@ -148,7 +151,12 @@ export async function handleSetApproval(
     visitor = anon.visitor;
     cookie = anon.cookie;
   }
-  const done = await insertApproval(env, g, visitor, photoId, version);
+  let done: Awaited<ReturnType<typeof insertApproval>>;
+  try {
+    done = await insertApproval(env, g, visitor, photoId, version);
+  } catch {
+    return reply({ error: "server_error" }, 500, cookie);
+  }
   if (done === "limit") return reply({ error: "limit" }, 409, cookie);
   if (done === "gone") return reply({ error: "stale" }, 409, cookie);
   return reply({ ok: true }, 200, cookie);

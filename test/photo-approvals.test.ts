@@ -521,3 +521,38 @@ describe("T6.53f approvals flag in the open payload", () => {
     expect(JSON.stringify(off)).not.toMatch(/approv/i);
   });
 });
+
+describe("T6.53f insert failures", () => {
+  const failingWith = (message: string) =>
+    ({
+      ...env,
+      DB: new Proxy(env.DB, {
+        get(t, k) {
+          if (k === "prepare")
+            return (sql: string) => {
+              if (/INSERT OR IGNORE INTO photo_approvals/.test(sql))
+                throw new Error(message);
+              return t.prepare(sql);
+            };
+          const v = (t as never)[k];
+          return typeof v === "function" ? v.bind(t) : v;
+        },
+      }),
+    }) as Env;
+
+  it("a vanished version (FOREIGN KEY failure) is 409 stale; any other error is a 500 the client reports", async () => {
+    await addGallery();
+    await seedVersioned(G, "A", [{ n: 1 }]);
+    const body = { photoId: "A", version: 1, on: true };
+    const h = { "CF-Connecting-IP": "1.1.1.1" };
+    const fk = await approve(
+      body,
+      h,
+      failingWith("D1_ERROR: FOREIGN KEY constraint failed"),
+    );
+    expect(fk.status).toBe(409);
+    const other = await approve(body, h, failingWith("D1_ERROR: network down"));
+    expect(other.status).toBe(500);
+    expect(await other.json()).toEqual({ error: "server_error" });
+  });
+});

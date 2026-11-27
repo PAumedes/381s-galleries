@@ -9,7 +9,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { schema } from "../../db";
 import { D1_IN_CHUNK, VERSION_INSERT_ROWS } from "./d1-limits";
 import { cacheEntry } from "./image-source";
-import { markMissing, missingSinceOf } from "./photo-versions";
+import { markMissing, missingSinceOf, parseVersions } from "./photo-versions";
 import { graceElapsed } from "./sync-archive";
 import { chunk, photoFields } from "./sync-helpers";
 import type { PhotoDraft } from "./sync-helpers";
@@ -159,6 +159,38 @@ const updateVersion = (
       ),
     );
 
+const FILE_COLUMNS = [
+  "driveHighresId",
+  "driveWebId",
+  "driveIgId",
+  "driveThumbId",
+  "driveWmId",
+  "driveThumbWmId",
+  "driveTiffId",
+] as const;
+
+/** `drive_versions` without the `missingSince` mark (a file that left and came back unchanged is not a new file). */
+const stamps = (json: string | null) => {
+  const rest = { ...parseVersions(json) };
+  delete rest.missingSince;
+  return JSON.stringify(rest);
+};
+
+/**
+ * Did the scan replace the files of a stored version row (T6.53f)? Yes when any
+ * file id differs or the Drive modified times differ (ignoring `missingSince`);
+ * width, height, size and round alone are metadata and keep its approvals.
+ */
+function replacesFile(
+  row: VersionState["versions"][number],
+  f: ReturnType<typeof versionFields>,
+): boolean {
+  return (
+    FILE_COLUMNS.some((c) => row[c] !== f[c]) ||
+    stamps(row.driveVersions) !== stamps(f.driveVersions)
+  );
+}
+
 export interface VersionTarget {
   photoId: string;
   draft: PhotoDraft;
@@ -211,8 +243,21 @@ export function versionStatements(
         });
       else if (
         (Object.keys(f) as (keyof typeof f)[]).some((c) => row[c] !== f[c])
-      )
+      ) {
         changes.push(updateVersion(db, photoId, version, f));
+        // The image behind the version changed: nobody approved THIS one.
+        if (replacesFile(row, f))
+          changes.push(
+            db
+              .delete(schema.photoApprovals)
+              .where(
+                and(
+                  eq(schema.photoApprovals.photoId, photoId),
+                  eq(schema.photoApprovals.version, version),
+                ),
+              ),
+          );
+      }
     }
     const absent = [...rows.values()].filter((r) => !wanted.has(r.version));
     const expired: number[] = [];
