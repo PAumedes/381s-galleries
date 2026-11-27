@@ -153,6 +153,15 @@ export const enHelp = {
   "admin.help.updates-issues.a":
     "They are files the app could not use: unknown folders, files that are not JPEG, repeated names or missing sizes. You see them in the gallery list and, inside the gallery, in {photos}, section {issues}. Nothing is lost silently.",
 
+  "admin.help.cleanup-what.q": "What is the {section} section for?",
+  "admin.help.cleanup-what.k": "maintenance clean orphan leftover files space",
+  "admin.help.cleanup-what.a":
+    "It looks for files left over from galleries or photos you deleted a while ago that are no longer used. It only counts them first: nothing is deleted until you confirm. Your Drive files are never touched.",
+  "admin.help.cleanup-when.q": "When should I use {scan}?",
+  "admin.help.cleanup-when.k": "when clean orphan free space delete leftovers",
+  "admin.help.cleanup-when.a":
+    "You rarely need it. It helps if you deleted galleries or photos a while ago. In {settings}, section {section}, tap {scan}, check the result and, if it looks right, tap {delete}.",
+
   // Galleries, photos and cover
   "admin.help.albums-create.q": "How do I create a gallery?",
   "admin.help.albums-create.k": "create new album",

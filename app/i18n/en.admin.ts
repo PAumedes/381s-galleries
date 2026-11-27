@@ -561,6 +561,27 @@ export const enAdmin = {
   "admin.msg.reincluded":
     "Folder included again: the next sync will create the gallery from scratch.",
   "admin.msg.reincludeConfirm": "Confirm to include the folder again.",
+  "admin.setup.section.sweep": "Maintenance",
+  "admin.setup.sweep.note":
+    "If you deleted galleries or photos a while ago, some leftover files may remain that are no longer used. They are searched first without deleting anything, and then you decide whether to delete them. Your Drive files are never touched.",
+  "admin.setup.sweep.scan": "Find orphan files",
+  "admin.setup.sweep.progress":
+    "Checked {scanned} files. {orphans} orphans found so far.",
+  "admin.setup.sweep.continueScan": "Keep searching",
+  "admin.setup.sweep.found":
+    "Found {orphans} orphan files ({size}). {ignored} files that do not belong to galleries were ignored and {held} are on hold because they are very recent.",
+  "admin.setup.sweep.none": "There are no orphan files: nothing to delete.",
+  "admin.setup.sweep.confirm":
+    "I understand they are deleted for good and this cannot be undone.",
+  "admin.setup.sweep.delete": "Delete orphan files",
+  "admin.setup.sweep.deleting": "{deleted} files deleted so far.",
+  "admin.setup.sweep.continueDelete": "Keep deleting",
+  "admin.setup.sweep.deleted": "Done: {deleted} orphan files were deleted.",
+  "admin.msg.sweepFailed":
+    "Could not finish. Nothing was lost: you can continue where it stopped.",
+  "admin.msg.sweepConfirm": "Tick the box to confirm the deletion.",
+  "admin.msg.sweepNoScan": "First find the orphan files and check the result.",
+
   "admin.msg.deleteFailed":
     "Could not finish deleting the gallery (a service failed). It is already hidden; submit again to continue.",
   "admin.list.deleting": "Continue deletion",

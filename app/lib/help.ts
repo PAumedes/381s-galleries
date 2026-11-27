@@ -147,6 +147,13 @@ export const HELP_SECTIONS: readonly HelpSection[] = [
         issues: "admin.edit.section.issues",
         photos: PHOTOS,
       }),
+      item("cleanup-what", { section: "admin.setup.section.sweep" }),
+      item("cleanup-when", {
+        settings: SETTINGS,
+        section: "admin.setup.section.sweep",
+        scan: "admin.setup.sweep.scan",
+        delete: "admin.setup.sweep.delete",
+      }),
     ],
   },
   {

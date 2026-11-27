@@ -117,7 +117,8 @@ const chunk = <T>(a: T[], n: number): T[][] =>
 const r2Keys = (ids: string[]) =>
   ids.flatMap((id) => IMAGE_VARIANTS.map((v) => `${id}/${v}`));
 
-async function readPending(env: Env): Promise<string[]> {
+/** The R2 entries (`<id>` or `<id>/v<N>`) still waiting to be deleted. */
+export async function readPending(env: Pick<Env, "DB">): Promise<string[]> {
   try {
     const v: unknown = JSON.parse(
       (await getSetting(env, SETTINGS_KEYS.r2PendingDeletes)) ?? "[]",
