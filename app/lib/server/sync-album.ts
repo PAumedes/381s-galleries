@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray } from "drizzle-orm";
 import { schema } from "../../db";
 import { D1_IN_CHUNK, PHOTO_INSERT_ROWS } from "./d1-limits";
 import { uniqueSlug } from "./slug";
@@ -8,7 +8,9 @@ import { graceElapsed } from "./sync-archive";
 import {
   PENDING_DELETES_CAP,
   PENDING_DELETES_KEY,
+  deleteEntriesFromR2,
   flushBatches,
+  flushR2,
 } from "./sync-state";
 import {
   capIssues,
@@ -263,6 +265,55 @@ function versionTargets(
   }));
 }
 
+/**
+ * R2 entries of the version rows >= 2 that an album without versioning still
+ * holds (switched OFF after they existed): read before the photo delete
+ * cascades them away. ONE read per album (bounded by its own version rows, a
+ * count independent of how many photos go), only when a photo is removed.
+ */
+async function storedVersionEntries(
+  { db, op }: SyncRun,
+  galleryId: string,
+  goneIds: string[],
+): Promise<string[]> {
+  if (goneIds.length === 0) return [];
+  const V = schema.photoVersions;
+  op();
+  const rows = await db
+    .select({ id: V.photoId, version: V.version })
+    .from(V)
+    .where(and(eq(V.galleryId, galleryId), gte(V.version, 2)));
+  const gone = new Set(goneIds);
+  return rows
+    .filter((r) => gone.has(r.id))
+    .map((r) => cacheEntry(r.id, r.version));
+}
+
+/**
+ * Queues the removed entries in `r2_pending_deletes` (the statement joins the
+ * row-delete batch). When the list would pass its cap nothing is dropped: the
+ * persisted list is flushed from R2, then the new entries are deleted in
+ * bounded calls inside the run's budget (cache objects only, so doing it before
+ * the row delete is harmless). Returns null when R2 would not take them: the
+ * caller then keeps this album's removals for the next run (the rows still
+ * name every key), so an R2 outage never stops the sync.
+ */
+async function queueGone(
+  run: SyncRun,
+  pass: AlbumPass,
+  entries: string[],
+): Promise<BatchItem[] | null> {
+  const all = [...new Set([...pass.pendingIds, ...entries])];
+  if (all.length <= PENDING_DELETES_CAP)
+    return [pendingDeletesStmt(run.db, pass, entries)];
+  pass.pendingIds = await flushR2(run.env, run.op, pass.pendingIds);
+  if (pass.pendingIds.length) return null;
+  const fresh = [...new Set(entries)];
+  if ((await deleteEntriesFromR2(run.env, run.op, fresh)) < fresh.length)
+    return null;
+  return [];
+}
+
 /** R2 entries of the versions >= 2 of removed photos (read now: the rows cascade away with them). */
 function goneVersionEntries(
   vstate: VersionState | undefined,
@@ -279,14 +330,14 @@ function goneVersionEntries(
  * The photo statements for one album, in the order that keeps every committed
  * prefix consistent: pending-R2 ids, deletes, marks, updates, inserts.
  */
-function photoStatements(
+async function photoStatements(
   run: SyncRun,
   pass: AlbumPass,
   a: AlbumDraft,
   rows: Row[],
   galleryId: string,
   vstate: VersionState | undefined,
-): BatchItem[] {
+): Promise<BatchItem[]> {
   const { db } = run;
   const { result, syncedAt } = pass;
   const { fresh, updates, changed, toDelete, toMark } = diffPhotos(
@@ -295,29 +346,46 @@ function photoStatements(
     a,
     rows,
   );
-  const goneIds = toDelete.map((r) => r.id);
-  result.photos.removed += goneIds.length;
-  result.photos.added += fresh.length;
   const stmts: BatchItem[] = [];
   const freshIds = new Map(fresh.map((p) => [p, crypto.randomUUID()]));
-  const versions = vstate
-    ? versionStatements(
-        run,
-        galleryId,
-        syncedAt,
-        versionTargets(a, rows, freshIds),
-        vstate,
-      )
-    : { before: [], after: [], goneEntries: [] };
+  const targets = vstate ? versionTargets(a, rows, freshIds) : [];
+  const build = (deferExpiry: boolean) =>
+    vstate
+      ? versionStatements(
+          run,
+          galleryId,
+          syncedAt,
+          targets,
+          vstate,
+          deferExpiry,
+        )
+      : { before: [], after: [], goneEntries: [] };
+  let goneIds = toDelete.map((r) => r.id);
+  let versions = build(false);
   // R2 keys to delete: the removed photos' (and, in versioned albums, every
   // version's: `<id>/v<N>/...`) plus those of version rows deleted after their grace.
   const goneEntries = [
     ...goneIds,
-    ...goneVersionEntries(vstate, goneIds),
+    ...(vstate
+      ? goneVersionEntries(vstate, goneIds)
+      : await storedVersionEntries(run, galleryId, goneIds)),
     ...versions.goneEntries,
   ];
-
-  if (goneEntries.length) stmts.push(pendingDeletesStmt(db, pass, goneEntries));
+  if (goneEntries.length) {
+    const queued = await queueGone(run, pass, goneEntries);
+    if (queued) stmts.push(...queued);
+    else {
+      // R2 would not take the keys: keep every removal (photo rows and version
+      // rows past their grace) for the next run; the sync of the rest goes on.
+      console.error(
+        "sync: R2 cleanup deferred, removals kept for the next run",
+      );
+      goneIds = [];
+      versions = build(true);
+    }
+  }
+  result.photos.removed += goneIds.length;
+  result.photos.added += fresh.length;
   for (const ids of chunk(goneIds, D1_IN_CHUNK))
     stmts.push(db.delete(schema.photos).where(inArray(schema.photos.id, ids)));
   for (const ids of chunk(
@@ -396,14 +464,14 @@ async function writeAlbum(
   const stmts = galleryStatements(run, pass, a, ex, galleryId, issuesJson);
   if (!highresEmpty)
     stmts.push(
-      ...photoStatements(
+      ...(await photoStatements(
         run,
         pass,
         a,
         rows,
         galleryId,
         ex?.versioning ? (pass.versions.get(galleryId) ?? EMPTY) : undefined,
-      ),
+      )),
     );
   await flushBatches(run, stmts);
 }

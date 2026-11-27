@@ -183,7 +183,7 @@ async function drainPendingR2(env: Env, calls: number): Promise<number | null> {
 }
 
 /**
- * Versioned albums: deletes the R2 objects of every version >= 2 (`<id>/v<N>/...`,
+ * Albums with version rows >= 2 (even if versioning was switched off since): deletes the R2 objects of every version >= 2 (`<id>/v<N>/...`,
  * read from `photo_versions` before the rows cascade away), in the same batches
  * and call budget as the photo keys. Progress is the version rows already
  * cleaned, which are dropped, so a resumed run does not repeat them. Returns
@@ -269,7 +269,8 @@ async function deleteLocked(
   const [g] = await getDb(env)
     .select({
       folder: schema.galleries.driveFolderId,
-      versioning: schema.galleries.versioning,
+      // Whatever the flag says now: rows of versions >= 2 outlive a switch-off.
+      hasVersions: sql<number>`exists (select 1 from photo_versions pv where pv.gallery_id = ${schema.galleries.id} and pv.version >= 2)`,
     })
     .from(schema.galleries)
     .where(eq(schema.galleries.id, galleryId));
@@ -278,7 +279,7 @@ async function deleteLocked(
 
   let calls = await drainPendingR2(env, Math.max(0, r2CallsMax));
   if (calls === null) return "continue";
-  if (g.versioning) {
+  if (g.hasVersions) {
     calls = await purgeVersionCaches(env, galleryId, calls);
     if (calls === null) return "continue";
   }

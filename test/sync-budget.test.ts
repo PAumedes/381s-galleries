@@ -354,23 +354,27 @@ describe("T-refactor-runSync: pending R2 delete bookkeeping", () => {
     expect(JSON.parse((await setting("r2_pending_deletes"))!)).toEqual([id]);
   });
 
-  it("the persisted pending list keeps only the newest 2000 ids", async () => {
+  it("T6.55: with a full pending list and R2 down the removal is deferred (row kept, nothing lost, sync goes on)", async () => {
     const { d, id } = await withGoneA2();
     const seeds = Array.from({ length: 2000 }, (_, i) => `s${i}`);
     await putSetting("r2_pending_deletes", JSON.stringify(seeds));
     const { ec } = cacheEnv(() => true);
-    await expect(
-      runSync(failingBatchEnv(2, ec.CACHE), {
-        drive: d,
-        force: true,
-        budget: BIG,
-        now: LATER,
-      }),
-    ).rejects.toThrow("boom");
-    const saved = JSON.parse((await setting("r2_pending_deletes"))!);
-    expect(saved).toHaveLength(2000);
-    expect(saved[0]).toBe("s1");
-    expect(saved.at(-1)).toBe(id);
+    const r = await runSync(ec, {
+      drive: d,
+      force: true,
+      budget: BIG,
+      now: LATER,
+    });
+    expect(r.photos.removed).toBe(0);
+    // the removed photo's row is still there (its keys are recomputed from it next run) and the list is untouched
+    const gid = (await galleryByFolder("alpha")).id;
+    expect((await photosOf(gid)).map((p) => p.id)).toContain(id);
+    expect(JSON.parse((await setting("r2_pending_deletes"))!)).toEqual(seeds);
+    // once R2 is back the same run finishes everything
+    const back = cacheEnv(() => false);
+    await runSync(back.ec, { drive: d, force: true, budget: BIG, now: LATER });
+    expect((await photosOf(gid)).map((p) => p.id)).not.toContain(id);
+    expect(await setting("r2_pending_deletes")).toBeUndefined();
   });
 
   it("duplicate pending ids are deleted once (3 keys, not 6)", async () => {

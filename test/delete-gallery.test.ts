@@ -355,6 +355,8 @@ describe("deleteGallery", () => {
 
   it("is resumable: past the per-request R2 budget it hides the gallery, reports 'continue', and a re-submit finishes", async () => {
     await seed(A, "a");
+    // seed() adds a v2 version row whose keys now take the first R2 call (T6.55): drop it to measure the photo budget alone
+    await sql("DELETE FROM photo_versions WHERE gallery_id = ?1", A).run();
     const rows: D1PreparedStatement[] = [];
     for (let i = 0; i < 700; i++)
       rows.push(
@@ -422,6 +424,8 @@ describe("deleteGallery", () => {
 
   it("a fully flushed pending list leaves only the REST of the budget for the photos", async () => {
     await seed(A, "a");
+    // seed() adds a v2 version row whose keys now take the first R2 call (T6.55): drop it to measure the photo budget alone
+    await sql("DELETE FROM photo_versions WHERE gallery_id = ?1", A).run();
     const rows: D1PreparedStatement[] = [];
     for (let i = 0; i < 700; i++)
       rows.push(
