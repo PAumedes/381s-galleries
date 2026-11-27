@@ -157,6 +157,17 @@ export const esHelp = {
   "admin.help.updates-issues.a":
     "Son archivos que la app no pudo usar: carpetas desconocidas, archivos que no son JPEG, nombres repetidos o tamaños que faltan. Los ves en la lista de galerías y, dentro de la galería, en {photos}, sección {issues}. Nada se pierde en silencio.",
 
+  "admin.help.cleanup-what.q": "¿Para qué sirve la sección {section}?",
+  "admin.help.cleanup-what.k":
+    "mantenimiento limpiar huérfanos archivos sobrantes espacio",
+  "admin.help.cleanup-what.a":
+    "Busca archivos que quedaron de galerías o fotos que borraste hace tiempo y ya no sirven. Primero solo los cuenta: no borra nada hasta que lo confirmás. Tus archivos de Drive no se tocan.",
+  "admin.help.cleanup-when.q": "¿Cuándo conviene usar {scan}?",
+  "admin.help.cleanup-when.k":
+    "cuándo limpiar huérfanos liberar espacio borrar sobrantes",
+  "admin.help.cleanup-when.a":
+    "Casi nunca hace falta. Sirve si borraste galerías o fotos hace tiempo. En {settings}, sección {section}, tocá {scan}, mirá el resultado y, si te cierra, tocá {delete}.",
+
   // Galerías, fotos y portada
   "admin.help.albums-create.q": "¿Cómo creo una galería?",
   "admin.help.albums-create.k": "crear nueva álbum",

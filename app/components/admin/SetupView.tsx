@@ -7,6 +7,7 @@ import { DriveSection } from "./setup/DriveSection";
 import { IgnoredSection } from "./setup/IgnoredSection";
 import { LogoCard } from "./setup/LogoCard";
 import { RootSection } from "./setup/RootSection";
+import { SweepSection } from "./setup/SweepSection";
 import { SyncSection } from "./setup/SyncSection";
 import type { SetupActionData, SetupViewData } from "./setup/types";
 
@@ -48,6 +49,7 @@ export function SetupView({
         actionData={actionData}
         busy={busy}
       />
+      <SweepSection actionData={actionData} />
       <BuildInfo />
     </div>
   );

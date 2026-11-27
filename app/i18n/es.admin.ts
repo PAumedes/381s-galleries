@@ -566,6 +566,30 @@ export const esAdmin = {
   "admin.msg.reincluded":
     "Carpeta incluida de nuevo: la próxima sincronización creará la galería desde cero.",
   "admin.msg.reincludeConfirm": "Confirmá para volver a incluir la carpeta.",
+  "admin.setup.section.sweep": "Mantenimiento",
+  "admin.setup.sweep.note":
+    "Si borraste galerías o fotos hace tiempo, pueden haber quedado archivos de más que ya no sirven. Primero se buscan sin borrar nada, y después decidís si los borrás. Tus archivos de Drive no se tocan.",
+  "admin.setup.sweep.scan": "Buscar archivos huérfanos",
+  "admin.setup.sweep.progress":
+    "Revisados {scanned} archivos. Encontrados {orphans} huérfanos hasta ahora.",
+  "admin.setup.sweep.continueScan": "Seguir buscando",
+  "admin.setup.sweep.found":
+    "Se encontraron {orphans} archivos huérfanos ({size}). Se ignoraron {ignored} archivos que no son de las galerías y {held} quedan en espera por ser muy recientes.",
+  "admin.setup.sweep.none":
+    "No hay archivos huérfanos: no hace falta borrar nada.",
+  "admin.setup.sweep.confirm":
+    "Entiendo que se borran para siempre y que no se puede deshacer.",
+  "admin.setup.sweep.delete": "Borrar archivos huérfanos",
+  "admin.setup.sweep.deleting": "Borrados {deleted} archivos hasta ahora.",
+  "admin.setup.sweep.continueDelete": "Seguir borrando",
+  "admin.setup.sweep.deleted":
+    "Listo: se borraron {deleted} archivos huérfanos.",
+  "admin.msg.sweepFailed":
+    "No se pudo completar. No se perdió nada: podés seguir desde donde quedó.",
+  "admin.msg.sweepConfirm": "Marcá la casilla para confirmar el borrado.",
+  "admin.msg.sweepNoScan":
+    "Primero buscá los archivos huérfanos y revisá el resultado.",
+
   "admin.msg.deleteFailed":
     "No se pudo terminar de eliminar la galería (falló un servicio). Ya está oculta; volvé a enviar para continuar.",
   "admin.list.deleting": "Continuar eliminación",

@@ -37,6 +37,8 @@ import {
   putSetting,
   SETTINGS_KEYS,
 } from "../lib/server/settings";
+import { sweepIntent } from "../lib/server/orphan-sweep-action";
+import type { SweepState } from "../lib/server/orphan-sweep-action";
 import { runRecordedSync, SyncBudgetError } from "../lib/server/sync";
 import type { SyncResult } from "../lib/server/sync";
 import { nowIso } from "../db";
@@ -83,6 +85,8 @@ export interface SetupActionResult {
   error?: string;
   message?: string;
   result?: SyncResult;
+  /** Orphan cache sweep progress (T6.59). */
+  sweep?: SweepState;
 }
 
 const fail = (intent: string, error: string): SetupActionResult => ({
@@ -243,6 +247,9 @@ export async function setupAction(
     }
     case "reinclude":
       return reinclude(e, form, t);
+    case "sweepScan":
+    case "sweepDelete":
+      return sweepIntent(e, intent, form, t);
     case "logo":
       return uploadLogo(e, form, t);
     case "logoReset":

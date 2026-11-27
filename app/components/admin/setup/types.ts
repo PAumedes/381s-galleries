@@ -1,3 +1,5 @@
+import type { SweepState } from "../../../lib/server/orphan-sweep-action";
+
 export interface SetupViewData {
   connected: boolean;
   mock: boolean;
@@ -24,4 +26,6 @@ export interface SetupActionData {
     photos: { added: number; updated: number; removed: number };
     issues: number;
   };
+  /** Orphan cache sweep progress (T6.59): numbers only. */
+  sweep?: SweepState;
 }

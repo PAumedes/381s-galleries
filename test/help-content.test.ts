@@ -93,11 +93,11 @@ function rawTexts(lang: "es" | "en", item: HelpItem) {
 }
 
 describe("T6.57 help: structure", () => {
-  it("has a handful of sections and 40-70 questions", () => {
+  it("has a handful of sections and 40-75 questions", () => {
     expect(HELP_SECTIONS.length).toBeGreaterThanOrEqual(5);
     expect(HELP_SECTIONS.length).toBeLessThanOrEqual(10);
     expect(items.length).toBeGreaterThanOrEqual(40);
-    expect(items.length).toBeLessThanOrEqual(70);
+    expect(items.length).toBeLessThanOrEqual(75);
     for (const s of HELP_SECTIONS) expect(s.items.length).toBeGreaterThan(0);
   });
 

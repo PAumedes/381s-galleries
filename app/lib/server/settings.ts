@@ -33,6 +33,8 @@ export const SETTINGS_KEYS = {
   warmPendingPrefix: "warm_pending:",
   /** "1" once the owner dismissed the first-steps banner on the admin home (T6.58). */
   wizardDismissed: "wizard_dismissed",
+  /** ISO time the last orphan-cache scan finished; the delete pass needs a recent one (T6.59). */
+  orphanSweepScanned: "orphan_sweep_scanned",
 } as const;
 
 type SettingsEnv = Pick<Env, "DB">;
