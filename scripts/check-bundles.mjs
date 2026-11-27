@@ -108,8 +108,12 @@ export function adminDictionaryKeys(i18nDir) {
     }
     return entries;
   };
-  // The help texts (T6.57) live in their own admin-only dictionary file.
-  const admin = [...read("es.admin.ts"), ...read("es.help.ts")];
+  // The help (T6.57) and wizard (T6.58) texts live in their own admin-only dictionary files.
+  const admin = [
+    ...read("es.admin.ts"),
+    ...read("es.help.ts"),
+    ...read("es.wizard.ts"),
+  ];
   const publicText = read("es.public.ts")
     .map(([, v]) => v)
     .join("\n");

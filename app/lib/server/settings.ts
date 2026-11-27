@@ -31,6 +31,8 @@ export const SETTINGS_KEYS = {
   warmCursorPrefix: "warm_cursor:",
   /** Prefix: one row per gallery a sync added/changed photos in; value = ISO time. Cleared when its warm walk finishes (warm-after-sync.ts). */
   warmPendingPrefix: "warm_pending:",
+  /** "1" once the owner dismissed the first-steps banner on the admin home (T6.58). */
+  wizardDismissed: "wizard_dismissed",
 } as const;
 
 type SettingsEnv = Pick<Env, "DB">;

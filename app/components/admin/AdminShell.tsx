@@ -19,6 +19,7 @@ const NAV: { to: string; label: MessageKey; end: boolean }[] = [
   { to: "/admin", label: "admin.nav.galleries", end: true },
   { to: "/admin/clients", label: "admin.nav.clients", end: false },
   { to: "/admin/setup", label: "admin.nav.settings", end: false },
+  { to: "/admin/empezar", label: "admin.nav.wizard", end: false },
   { to: "/admin/ayuda", label: "admin.nav.help", end: false },
 ];
 

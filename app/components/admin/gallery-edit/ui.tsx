@@ -51,11 +51,14 @@ export function Field({
   label,
   error,
   hint,
+  large = false,
   children,
 }: {
   label: string;
   error?: string;
   hint?: string;
+  /** 16px label, hint and error (the first-steps wizard) instead of the compact admin size. */
+  large?: boolean;
   children: (p: {
     id: string;
     "aria-invalid"?: true;
@@ -65,12 +68,13 @@ export function Field({
   const id = useId();
   const errId = `${id}-err`;
   const hintId = `${id}-hint`;
+  const size = large ? "text-base" : "text-small";
   const describedBy = [error && errId, hint && hintId]
     .filter(Boolean)
     .join(" ");
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-small">
+      <label htmlFor={id} className={size}>
         {label}
       </label>
       {children({
@@ -79,12 +83,15 @@ export function Field({
         ...(describedBy ? { "aria-describedby": describedBy } : {}),
       })}
       {hint && (
-        <p id={hintId} className="text-small text-grey-600">
+        <p
+          id={hintId}
+          className={`${size} ${large ? "text-grey-800" : "text-grey-600"}`}
+        >
           {hint}
         </p>
       )}
       {error && (
-        <p id={errId} role="alert" className="text-small text-ink font-medium">
+        <p id={errId} role="alert" className={`${size} text-ink font-medium`}>
           {error}
         </p>
       )}

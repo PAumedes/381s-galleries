@@ -6,7 +6,13 @@ import { useT } from "../../../i18n/use-t";
  * One help text on screen: button names (placeholders) in bold between « »,
  * folder names (`code`) in a code style, everything else as plain words.
  */
-export function HelpText({ raw, item }: { raw: string; item: HelpItem }) {
+export function HelpText({
+  raw,
+  item,
+}: {
+  raw: string;
+  item: Pick<HelpItem, "labels" | "values">;
+}) {
   const t = useT();
   return (
     <>

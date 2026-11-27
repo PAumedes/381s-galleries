@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 
 import { GalleryList } from "../components/admin/GalleryList";
+import { WizardBanner } from "../components/admin/wizard/WizardBanner";
 import { parseClientFilter, parseFilter } from "../lib/admin-gallery";
 import { requestT } from "../i18n/dictionaries";
 import { useT } from "../i18n/use-t";
@@ -10,6 +11,7 @@ import { countGalleries, listGalleries } from "../lib/server/admin-galleries";
 import { listClientChoices } from "../lib/server/admin-galleries/client-choices";
 import { requireAdmin } from "../lib/server/auth";
 import { isGoogleConnected } from "../lib/server/google-auth";
+import { wizardBannerVisible } from "../lib/server/admin-wizard";
 import { getSetting, SETTINGS_KEYS } from "../lib/server/settings";
 import type { Route } from "./+types/admin._index";
 
@@ -47,15 +49,18 @@ export async function adminIndexData(request: Request, env: Env) {
   const filter = parseFilter(q.get("estado"));
   const search = (q.get("q") ?? "").trim().slice(0, 100);
   const clientFilter = parseClientFilter(q.get("cliente"));
+  const connected = await isGoogleConnected(env);
+  const total = await countGalleries(env);
   return {
-    connected: await isGoogleConnected(env),
+    connected,
     message,
     filter,
     q: search,
     clientFilter,
     clients: await listClientChoices(env, clientFilter || null),
     galleries: await listGalleries(env, filter, search, clientFilter),
-    total: await countGalleries(env),
+    total,
+    wizard: await wizardBannerVisible(env, { connected, galleries: total }),
     rootName: (await getSetting(env, SETTINGS_KEYS.driveRootName)) ?? null,
   };
 }
@@ -72,6 +77,7 @@ export default function AdminIndex({ loaderData }: Route.ComponentProps) {
           {loaderData.message}
         </p>
       )}
+      {loaderData.wizard && <WizardBanner />}
       <GalleryList
         galleries={loaderData.galleries}
         filter={loaderData.filter}

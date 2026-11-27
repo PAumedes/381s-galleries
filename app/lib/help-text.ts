@@ -48,7 +48,7 @@ export function rawHelpItem(item: HelpItem, t: TFunction): HelpTexts {
 
 /** What a placeholder shows: the button name between « », or the fixed value. */
 export function placeholderText(
-  item: HelpItem,
+  item: Pick<HelpItem, "labels" | "values">,
   name: string,
   t: TFunction,
 ): string {
