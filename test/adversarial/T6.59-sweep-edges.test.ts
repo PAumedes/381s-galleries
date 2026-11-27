@@ -1,9 +1,6 @@
 import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import {
-  emptySweepTotals,
-  sweepPage,
-} from "../../app/lib/server/orphan-sweep";
+import { emptySweepTotals, sweepPage } from "../../app/lib/server/orphan-sweep";
 import { getSetting, SETTINGS_KEYS } from "../../app/lib/server/settings";
 import { setupAction } from "../../app/routes/admin.setup";
 import { migrateDb, resetTables } from "../support/d1";
@@ -32,7 +29,9 @@ describe("T6.59 adversarial", () => {
     );
     expect(r.sweep?.done).toBe(true);
     // a 1-key "scan" unlocks the delete pass for the whole bucket
-    expect(await getSetting(e, SETTINGS_KEYS.orphanSweepScanned)).toBeNull();
+    expect(
+      await getSetting(e, SETTINGS_KEYS.orphanSweepScanned),
+    ).toBeUndefined();
   });
 
   it("truncated=true without a cursor is an incomplete listing, not 'done'", async () => {
@@ -47,7 +46,9 @@ describe("T6.59 adversarial", () => {
     const e = { ...base, CACHE: bucket } as Env;
     const r = await setupAction(post({ intent: "sweepScan" }), e);
     expect(r.ok).toBe(false);
-    expect(await getSetting(e, SETTINGS_KEYS.orphanSweepScanned)).toBeNull();
+    expect(
+      await getSetting(e, SETTINGS_KEYS.orphanSweepScanned),
+    ).toBeUndefined();
   });
 
   it("an Invalid Date `uploaded` must hold the object like a missing one (age protection)", async () => {
@@ -78,11 +79,12 @@ describe("T6.59 adversarial", () => {
       }),
       delete: async () => {},
     } as unknown as R2Bucket;
-    const page = await sweepPage({ ...env, CACHE: bucket } as Env, {
-      mode: "scan",
-      cursor: "c",
-      totals: emptySweepTotals(),
-    });
-    expect(page.cursor).not.toBe("c");
+    await expect(
+      sweepPage({ ...env, CACHE: bucket } as Env, {
+        mode: "scan",
+        cursor: "c",
+        totals: emptySweepTotals(),
+      }),
+    ).rejects.toThrow();
   });
 });

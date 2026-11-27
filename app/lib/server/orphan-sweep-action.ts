@@ -39,6 +39,19 @@ async function scannedRecently(env: Env): Promise<boolean> {
 }
 
 /**
+ * A dry run only counts as a whole walk when it began at the start and every
+ * page followed the cursor the server handed out last: a forged cursor (one
+ * page near the end) never unlocks the delete.
+ */
+async function scanContinues(
+  env: Env,
+  cursor: string | null,
+): Promise<boolean> {
+  if (cursor === null) return true;
+  return (await getSetting(env, SETTINGS_KEYS.orphanSweepNext)) === cursor;
+}
+
+/**
  * Admin intents 'sweepScan' (dry run) and 'sweepDelete' (needs `confirm=1` and a
  * finished scan): one bounded page per call, continued with the posted cursor.
  */
@@ -66,12 +79,18 @@ export async function sweepIntent(
       if (!(await scannedRecently(env)))
         return fail(t("admin.msg.sweepNoScan"));
     }
+    const chained = phase === "scan" && (await scanContinues(env, cursor));
     const page = await sweepPage(env, { mode: phase, cursor, totals });
     const done = page.cursor === null;
-    if (done)
-      if (phase === "scan")
+    if (phase === "delete") {
+      if (done) await deleteSetting(env, SETTINGS_KEYS.orphanSweepScanned);
+    } else if (chained && !done)
+      await putSetting(env, SETTINGS_KEYS.orphanSweepNext, page.cursor ?? "");
+    else {
+      await deleteSetting(env, SETTINGS_KEYS.orphanSweepNext);
+      if (chained)
         await putSetting(env, SETTINGS_KEYS.orphanSweepScanned, nowIso());
-      else await deleteSetting(env, SETTINGS_KEYS.orphanSweepScanned);
+    }
     return {
       intent,
       ok: true,

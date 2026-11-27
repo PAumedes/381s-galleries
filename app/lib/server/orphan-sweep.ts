@@ -218,8 +218,9 @@ function sort(objects: Listed[], pending: Set<string>, youngAfter: number) {
       ignored++;
       continue;
     }
+    // Missing, invalid or unparseable upload times count as young.
     const young =
-      !(o.uploaded instanceof Date) || o.uploaded.getTime() > youngAfter;
+      !(o.uploaded instanceof Date) || !(o.uploaded.getTime() <= youngAfter);
     if (young || pending.has(cacheEntry(parts.photoId, parts.version))) held++;
     else candidates.push({ ...parts, key: o.key, size: o.size });
   }
@@ -261,8 +262,13 @@ export async function sweepPage(
       await env.CACHE.delete(part);
       deleted += part.length;
     }
+  const next = listed.truncated ? (listed.cursor ?? null) : null;
+  // An incomplete listing must never read as "the whole bucket was walked",
+  // and a cursor that does not advance would loop forever.
+  if (listed.truncated && (!next || next === cursor))
+    throw new Error("orphan sweep: listing did not advance");
   return {
-    cursor: listed.truncated ? (listed.cursor ?? null) : null,
+    cursor: next,
     totals: {
       scanned: totals.scanned + listed.objects.length,
       orphans: totals.orphans + orphans.length,

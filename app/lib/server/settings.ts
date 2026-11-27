@@ -35,6 +35,8 @@ export const SETTINGS_KEYS = {
   wizardDismissed: "wizard_dismissed",
   /** ISO time the last orphan-cache scan finished; the delete pass needs a recent one (T6.59). */
   orphanSweepScanned: "orphan_sweep_scanned",
+  /** The cursor the running dry run expects next (`""` = it expects none); a scan that does not follow it never unlocks the delete (T6.59). */
+  orphanSweepNext: "orphan_sweep_next",
 } as const;
 
 type SettingsEnv = Pick<Env, "DB">;
