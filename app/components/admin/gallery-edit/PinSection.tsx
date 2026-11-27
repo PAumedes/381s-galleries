@@ -23,7 +23,7 @@ export function PinSection({
   const t = useT();
 
   return (
-    <Section title={t("admin.edit.section.pin")}>
+    <Section title={t("admin.edit.section.pin")} help="access-pin-album">
       <p className="text-body">
         {hasPin ? t("admin.edit.pin.active") : t("admin.edit.pin.none")}
       </p>

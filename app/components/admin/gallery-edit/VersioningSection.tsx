@@ -17,7 +17,7 @@ export function VersioningSection({
 }) {
   const t = useT();
   return (
-    <Section title={t("admin.edit.section.versions")}>
+    <Section title={t("admin.edit.section.versions")} help="versions-on">
       <Form method="post" className="flex flex-col gap-3">
         <input type="hidden" name="intent" value="versioning" />
         {/* A checkbox submits nothing when off: the hidden 0 comes first. */}

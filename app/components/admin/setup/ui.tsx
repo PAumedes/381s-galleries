@@ -1,3 +1,4 @@
+import { SectionTitle } from "../help/SectionTitle";
 import type { SetupActionData } from "./types";
 
 export const btn =
@@ -8,14 +9,17 @@ export const input =
 
 export function Section({
   title,
+  help,
   children,
 }: {
   title: string;
+  /** Help topic (an item id of lib/help.ts): adds a small "?" next to the title. */
+  help?: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="border-grey-200 flex min-w-0 flex-col gap-3 border p-5">
-      <h2 className="text-micro uppercase text-grey-700">{title}</h2>
+      <SectionTitle title={title} help={help} />
       {children}
     </section>
   );

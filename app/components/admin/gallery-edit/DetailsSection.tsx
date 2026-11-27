@@ -149,7 +149,7 @@ export function DetailsSection({
   const t = useT();
 
   return (
-    <Section title={t("admin.edit.section.details")}>
+    <Section title={t("admin.edit.section.details")} help="albums-details">
       <Form
         method="post"
         className="flex flex-col gap-4"

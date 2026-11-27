@@ -18,7 +18,7 @@ export function DangerSection({
   const t = useT();
 
   return (
-    <Section title={t("admin.edit.section.danger")}>
+    <Section title={t("admin.edit.section.danger")} help="albums-delete">
       <Form
         method="post"
         className="border-ink flex flex-col gap-3 border-2 p-4"

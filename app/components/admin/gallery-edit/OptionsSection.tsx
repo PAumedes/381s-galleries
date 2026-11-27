@@ -168,7 +168,7 @@ export function OptionsSection({
   const t = useT();
 
   return (
-    <Section title={t("admin.edit.section.options")}>
+    <Section title={t("admin.edit.section.options")} help="proof-modes">
       <Form method="post" className="flex flex-col gap-3">
         <input type="hidden" name="intent" value="flags" />
         <ModeFieldset proofing={proofing} onMode={onMode} />

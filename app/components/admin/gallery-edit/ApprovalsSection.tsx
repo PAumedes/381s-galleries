@@ -14,7 +14,10 @@ export function ApprovalsSection({
   const t = useT();
   if (summary.total === 0) return null;
   return (
-    <Section title={t("admin.edit.section.approvals")}>
+    <Section
+      title={t("admin.edit.section.approvals")}
+      help="versions-approvals"
+    >
       <p className="text-small">
         <span>
           {t("admin.edit.approvals.summary", {

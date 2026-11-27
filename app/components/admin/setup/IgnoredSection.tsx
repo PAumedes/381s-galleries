@@ -17,7 +17,7 @@ export function IgnoredSection({
   const t = useT();
   const { dateTime } = useFormat();
   return (
-    <Section title={t("admin.setup.section.ignored")}>
+    <Section title={t("admin.setup.section.ignored")} help="albums-delete">
       <p className="text-small text-grey-600">
         {t("admin.setup.ignored.note")}
       </p>

@@ -19,7 +19,7 @@ export function ShareSections({
   const t = useT();
   return (
     <>
-      <Section title={t("admin.edit.section.share")}>
+      <Section title={t("admin.edit.section.share")} help="albums-share">
         <SharePanel
           url={`${origin ?? window.location.origin}${galleryPath(g.slug, g.clientSlug)}`}
           slug={g.slug}

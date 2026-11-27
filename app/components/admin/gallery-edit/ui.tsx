@@ -1,5 +1,6 @@
 import { useId } from "react";
 
+import { SectionTitle } from "../help/SectionTitle";
 import type { GalleryActionResult } from "../../../lib/server/admin-galleries";
 
 export const btn =
@@ -10,14 +11,17 @@ export const inputCls =
 
 export function Section({
   title,
+  help,
   children,
 }: {
   title: string;
+  /** Help topic (an item id of lib/help.ts): adds a small "?" next to the title. */
+  help?: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="border-grey-200 flex flex-col gap-3 border-t pt-6 first:border-t-0 first:pt-0">
-      <h2 className="text-micro text-grey-700 uppercase">{title}</h2>
+      <SectionTitle title={title} help={help} />
       {children}
     </section>
   );

@@ -19,7 +19,7 @@ export function SyncSection({
   const { dateTime, number } = useFormat();
   const nav = useNavigation();
   return (
-    <Section title={t("admin.setup.section.sync")}>
+    <Section title={t("admin.setup.section.sync")} help="updates-when">
       <p className="text-small text-grey-700">
         {data.lastSyncAt
           ? t("admin.status.lastSync", { time: dateTime(data.lastSyncAt) })
