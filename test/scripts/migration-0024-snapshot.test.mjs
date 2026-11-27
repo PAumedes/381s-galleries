@@ -34,6 +34,6 @@ describe("migration 0024_tiff_original snapshot (T6.53d)", () => {
 
   it("is listed in the journal", () => {
     const j = read("_journal.json");
-    expect(j.entries.at(-1).tag).toBe("0024_tiff_original");
+    expect(j.entries.map((e) => e.tag)).toContain("0024_tiff_original");
   });
 });

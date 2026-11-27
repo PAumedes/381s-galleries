@@ -23,7 +23,9 @@ beforeAll(async () => {
 });
 beforeEach(async () => {
   await resetTables(
+    "photo_approvals",
     "favorites",
+    "photo_approvals",
     "downloads",
     "gallery_views",
     "visitors",
@@ -85,6 +87,14 @@ const SEED: Record<string, (g: string, tag: string) => D1PreparedStatement[]> =
         `${tag}@x.test`,
       ),
     ],
+    photo_approvals: (g, tag) => [
+      sql(
+        "INSERT INTO photo_approvals (gallery_id, photo_id, version, visitor_id) VALUES (?1, ?2, 2, ?3)",
+        g,
+        `ph-${tag}`,
+        `v-${tag}`,
+      ),
+    ],
     favorites: (g, tag) => [
       sql(
         "INSERT INTO favorites (gallery_id, visitor_id, photo_id) VALUES (?1, ?2, ?3)",
@@ -136,6 +146,7 @@ async function seed(g: string, tag: string) {
     "photo_versions",
     "visitors",
     "favorites",
+    "photo_approvals",
     "downloads",
     "gallery_views",
     "rate_limits",
@@ -198,6 +209,14 @@ describe("schema guard: every table tied to a gallery is deleted or exempt", () 
     expect(GALLERY_TABLES.indexOf("delivery_rounds")).toBeLessThan(
       GALLERY_TABLES.indexOf("galleries"),
     );
+  });
+
+  it("T6.53f: approvals are deleted by an explicit statement before visitors and versions", () => {
+    expect(GALLERY_TABLES).toContain("photo_approvals");
+    for (const later of ["visitors", "photo_versions", "photos"])
+      expect(GALLERY_TABLES.indexOf("photo_approvals")).toBeLessThan(
+        GALLERY_TABLES.indexOf(later),
+      );
   });
 
   it("every exempt table states a reason, and none is also deleted", () => {

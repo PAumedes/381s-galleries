@@ -63,6 +63,8 @@ const DELETE_STATEMENTS = {
   rate_limits: `DELETE FROM rate_limits WHERE instr(key, ?1) > 0
     OR key IN (SELECT 'dlj:' || token_id FROM downloads WHERE gallery_id = ?1 AND token_id IS NOT NULL)`,
   favorites: "DELETE FROM favorites WHERE gallery_id = ?1",
+  // Approvals (T6.53f): also reached by the FK cascades; before visitors and versions.
+  photo_approvals: "DELETE FROM photo_approvals WHERE gallery_id = ?1",
   downloads: "DELETE FROM downloads WHERE gallery_id = ?1",
   gallery_views: "DELETE FROM gallery_views WHERE gallery_id = ?1",
   visitors: "DELETE FROM visitors WHERE gallery_id = ?1",

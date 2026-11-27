@@ -388,6 +388,40 @@ export const favorites = sqliteTable(
   ],
 );
 
+// One visitor approved one VERSION of one photo (T6.53f). A new version has no
+// row ("a revisar"). Same-gallery FKs like favorites; (photo_id, version) is an
+// FK to photo_versions so a vanished version takes its approvals along.
+export const photoApprovals = sqliteTable(
+  "photo_approvals",
+  {
+    galleryId: text("gallery_id").notNull(),
+    photoId: text("photo_id").notNull(),
+    version: integer("version").notNull(),
+    visitorId: text("visitor_id").notNull(),
+    approvedAt: createdAt("approved_at"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.photoId, t.version, t.visitorId] }),
+    index("photo_approvals_gallery_visitor_idx").on(t.galleryId, t.visitorId),
+    check(
+      "photo_approvals_version_check",
+      sql`typeof(${t.version}) = 'integer' AND ${t.version} >= 1`,
+    ),
+    foreignKey({
+      columns: [t.galleryId, t.visitorId],
+      foreignColumns: [visitors.galleryId, visitors.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.galleryId, t.photoId],
+      foreignColumns: [photos.galleryId, photos.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.photoId, t.version],
+      foreignColumns: [photoVersions.photoId, photoVersions.version],
+    }).onDelete("cascade"),
+  ],
+);
+
 // Stats tables have no FKs: deleteGallery (gallery-delete.ts) removes their rows explicitly.
 /**
  * What we learn about a visitor's request (0018_visitor_data). Never the raw
@@ -488,6 +522,7 @@ export type PhotoVersion = typeof photoVersions.$inferSelect;
 export type DeliveryRound = typeof deliveryRounds.$inferSelect;
 export type Visitor = typeof visitors.$inferSelect;
 export type NewVisitor = typeof visitors.$inferInsert;
+export type PhotoApproval = typeof photoApprovals.$inferSelect;
 export type Favorite = typeof favorites.$inferSelect;
 export type NewFavorite = typeof favorites.$inferInsert;
 export type Download = typeof downloads.$inferSelect;

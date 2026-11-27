@@ -15,10 +15,11 @@ import {
   type GalleryRow,
   type VisitorRow,
 } from "./access";
+import { approvalsField } from "./approvals-list";
 import { jsonReply } from "./http";
 import { hit, type RateRule } from "./rate-limit";
 
-type FavEnv = AccessEnv;
+export type FavEnv = AccessEnv;
 
 export const FAVORITES_MAX = 2000;
 export const VISITOR_MAX_PER_WINDOW = 30;
@@ -61,7 +62,7 @@ function cleanName(v: unknown): string | null {
   return n || null;
 }
 
-async function readJson(
+export async function readJson(
   request: Request,
 ): Promise<Record<string, unknown> | null> {
   try {
@@ -75,7 +76,7 @@ async function readJson(
 }
 
 /** Gallery by slug through the shared gate (available + PIN session). */
-async function openBySlug(request: Request, slug: string, env: FavEnv) {
+export async function openBySlug(request: Request, slug: string, env: FavEnv) {
   return openGallery(request, await findGallery(env, slug), env);
 }
 
@@ -192,7 +193,12 @@ export async function handleListFavorites(
   if (!open) return notFound();
   const { g, session } = open;
   const { visitor: v } = await requireVisitor(env, g, session);
-  if (!v) return reply({ visitor: null, favorites: [] });
+  if (!v)
+    return reply({
+      visitor: null,
+      favorites: [],
+      ...(await approvalsField(env, g, null)),
+    });
   const rows = await visibleFavoritesQuery(
     getDb(env as Env),
     v.id,
@@ -201,6 +207,7 @@ export async function handleListFavorites(
   return reply({
     visitor: isAnon(v.email) ? null : { email: v.email, name: v.name },
     favorites: rows.map((r) => r.id),
+    ...(await approvalsField(env, g, v.id)),
   });
 }
 

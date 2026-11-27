@@ -35,6 +35,7 @@ export default [
   route("api/g/:slug/manifest.webmanifest", "routes/api.g.$slug.manifest.tsx"),
   route("api/g/:slug/visitor", "routes/api.g.$slug.visitor.tsx"),
   route("api/g/:slug/favorites", "routes/api.g.$slug.favorites.tsx"),
+  route("api/g/:slug/approvals", "routes/api.g.$slug.approvals.tsx"),
   route(
     "api/g/:slug/download-tokens",
     "routes/api.g.$slug.download-tokens.tsx",
